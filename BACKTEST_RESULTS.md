@@ -243,14 +243,16 @@ Why only ATM? It was a liquidity default, never tested. So we tested it:
 | cutoff | signals | active days | sig/day | win% (green) | win% (target) | exp/trade | net% |
 |--------|---------|-------------|---------|--------------|---------------|-----------|------|
 | **1 PM** | 18 | 12/22 | 0.8 | **72%** | 61% | **+4.51** | +81.2 |
+| 1:30 PM | 30 | 15/22 | 1.4 | 60% | 43% | +1.63 | +48.9 |
 | 2 PM | 34 | 17/22 | 1.5 | 62% | 47% | +1.88 | +64.1 |
 
 ### Finding
-- 2 PM ~doubles signals (18→34) and active days (12→17) but **win rate falls 72%→62%**
-  and **expectancy halves** (+4.51→+1.88/trade). Even total net is lower despite 2× trades.
-- The 1–2 PM entries dilute the edge (less time to target before 3:10 close).
-- **Decision: keep 1 PM** — only it clears 70% win and has 2.4× the per-trade expectancy.
-  Frequency-vs-quality trade-off, quantified. (Small samples; relative result is robust.)
+- Win rate falls off a **cliff** right after 1 PM: 1 PM 72% → 1:30 PM 60% → 2 PM 62%.
+  Even 30 extra minutes collapses quality; there is no gentle middle ground.
+- Later cutoffs ~double signals (18→30→34) but expectancy drops to a third (+4.51→+1.6).
+- The morning concentrates the good entries; everything after 1 PM dilutes the edge.
+- **Decision: keep 1 PM** — the only cutoff that clears 70% win, with ~2.5-3× the
+  per-trade expectancy. (Small samples; the relative cliff is robust across all runs.)
 
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
