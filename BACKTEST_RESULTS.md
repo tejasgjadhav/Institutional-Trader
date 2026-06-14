@@ -185,6 +185,27 @@ small-target/wide-stop pattern actually pay (unlike on the underlying).
 - **The honest test is forward**: paper-trade this for 30+ sessions; if 77% holds on a
   real sample after costs, it's an edge. If it reverts to ~50-60%, it was small-sample luck.
 
+## Run G — 30-day option test (the 77% was small-sample luck)
+
+Larger sample (30 days, 14 stock-option trades; Nifty/BankNifty fired 0 signals).
+Tested target +10% with various stops:
+
+| target / stop | win rate (hit target) | win rate (closed green) | exp/trade |
+|---------------|----------------------|-------------------------|-----------|
+| +10% / −10% | **50%** | 64% | +3.56% |
+| +10% / −15% | — | 64% | +2.49% |
+| +10% / −20% | 50% | 71% | +3.47% |
+
+### Conclusion
+- The earlier **77% (13 trades) / 88% (8 trades)** were **small-sample artifacts**. On 30 days
+  nothing clears 70% — real win rate is ~**50–65%**.
+- Tested the user's requested **10%/10% (1:1)** → 50% target-hit / 64% green → **below 70%,
+  NOT implemented** (per the rule "implement only if >70%").
+- Config left at +10% / −20% (the least-bad of the set; 71% green but only 14 trades).
+- Net is positive (+3.5%/trade) but on 14 trades that's not trustworthy, and costs aren't modelled.
+- **Verdict unchanged: promising mechanics, NO proven edge. Only a 30+ session forward
+  paper-test on live premium (with real costs) can settle it.**
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).

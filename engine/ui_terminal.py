@@ -368,9 +368,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "honest evidence, not a proven money-maker.")}
 
 {p(f"<b>Current mode:</b> SIMULATION (paper) · <b>OPTIONS-ONLY, BUY-ONLY</b>. <b>Recording:</b> {rec}.")}
-{p(f"<b style='color:{AMBER}'>Status:</b> Best backtest = +{int(C.PREMIUM_TARGET_PCT)}%/−{int(C.PREMIUM_STOP_PCT)}% "
-   f"premium exit → 77% win rate (recent 20 days, 13 trades — promising but UNPROVEN; "
-   f"needs 30+ forward sessions to confirm after costs).")}
+{p(f"<b style='color:{AMBER}'>Status:</b> +{int(C.PREMIUM_TARGET_PCT)}%/−{int(C.PREMIUM_STOP_PCT)}% "
+   f"premium exit → ~50–65% win rate on 30 days (the earlier 77% was small-sample luck). "
+   f"NO proven edge yet — only a 30+ session forward paper-test with real costs can settle it.")}
 
 {h("1 · WHAT IT DOES (in one breath)")}
 {p("Every 5 minutes during market hours it: (1) pulls fresh prices from Upstox, "
