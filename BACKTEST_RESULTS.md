@@ -254,6 +254,26 @@ Why only ATM? It was a liquidity default, never tested. So we tested it:
 - **Decision: keep 1 PM** — the only cutoff that clears 70% win, with ~2.5-3× the
   per-trade expectancy. (Small samples; the relative cliff is robust across all runs.)
 
+## Run K — Optimal entry-TIME window (9:45-1PM), 30 days, OTM+1
+
+| window | trades | 10/20 win% | 10/10 win% | exp/trade |
+|--------|--------|------------|------------|-----------|
+| 09:45-10:30 | 0 | — | — | — |
+| 10:30-11:30 | 0 | — | — | — |
+| 11:30-12:30 | 5 | 60% | 60% | +1.8 |
+| **12:30-13:00** | **13** | **77%** | **77%** | **+5.6** |
+| ALL 9:45-1PM | 18 | 72% | 72% | +4.5 |
+
+### Findings (overturns the "morning is best" assumption)
+- **ZERO signals before 11:30 AM** — z-scores need ~1h of intraday data; gates only
+  align midday. The strategy structurally cannot trade the morning.
+- **Best window 12:30-1 PM → 77% win** (carries 13 of 18 signals). 11:30-12:30 = 60%.
+- **10/10 ≈ 10/20** on this sample (both 72% overall; 10/10 marginally better exp).
+  Stop width barely matters here — contradicts the earlier 88-vs-50 result (small samples).
+- Caveat: narrowing to 12:30-1PM (77%) drops only 5 trades; the 72→77 gain is within
+  noise on 13-18 trades. Plausibly real (mature-move effect) but not proven.
+- Also tested 3 PM cutoff: 58% win, 35/65 FORCED (kill-switch at 3:10 starves late entries).
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).
