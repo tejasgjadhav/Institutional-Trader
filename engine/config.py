@@ -54,8 +54,10 @@ USE_YAHOO_FALLBACK = True  # If Upstox fails, fall back to Yahoo (15-min delay)
 
 # === TIMING (IST) ===
 MARKET_OPEN = "09:15"
-TRADING_START = "09:45"  # First 30 min is observation only
-NO_NEW_TRADES_AFTER = "13:00"  # No new signals after 1 PM (afternoon entries can't reach target before close)
+TRADING_START = "09:45"  # Scanning/observation starts; trades fire from here to the cutoff
+NO_NEW_TRADES_AFTER = "13:00"  # No new signals after 1 PM (wider 9:45-1PM window kept —
+# Run K showed 12:30-1PM is 77% vs 72% overall, but on only 13 trades = within noise,
+# so we keep the wider, less-overfit window. In practice nothing fires before ~11:30.)
 KILL_SWITCH_TIME = "15:10"  # Force close all positions
 MARKET_CLOSE = "15:30"
 
