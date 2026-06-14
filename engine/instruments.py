@@ -106,6 +106,11 @@ def to_instrument_key(ticker: str) -> str:
 
     Returns None if the symbol can't be resolved.
     """
+    # Already a fully-formed Upstox instrument key (e.g. 'NSE_FO|50593',
+    # 'NSE_EQ|INE...', 'NSE_INDEX|Nifty 50') → pass through unchanged.
+    if "|" in ticker and ticker.split("|", 1)[0] in ("NSE_FO", "NSE_EQ", "NSE_INDEX", "BSE_EQ", "BSE_FO"):
+        return ticker
+
     # Index aliases
     index_aliases = {
         "^NSEI": "NIFTY", "NIFTY": "NIFTY", "NIFTY 50": "NIFTY",
