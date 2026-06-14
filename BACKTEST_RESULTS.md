@@ -113,6 +113,45 @@ one but not both.**
 - Options can't rescue it: option P&L tracks the underlying direction, which is ~random here,
   and options add theta decay on top.
 
+## Run E — Chasing 70%+ win rate (the honest way: train/test + costs)
+
+Request: "take the winners, devise signals for >70% win rate." Fitting rules to
+past winners = overfitting, so instead: split 120 days into LEARN (first 60%) and
+PROVE (last 40%), find the high-win rule on LEARN, validate on unseen PROVE data.
+
+### 70%+ win rate IS achievable — and it survived out-of-sample (not overfit)
+With a **small target + wide stop** exit (target 0.2-0.3%, stop 2-3%):
+| exit | overall win | TRAIN win | TEST (unseen) win |
+|------|-------------|-----------|-------------------|
+| tgt 0.2% / stop 3% | 82% | 81% | **85%** |
+| tgt 0.3% / stop 3% | 73% | — | ~84% |
+
+The win rate held on data the rule never saw → it's a **real structural property**, not
+curve-fitting. (It comes from the EXIT asymmetry, not a predictive signal — entries are
+~random directionally; you just book tiny gains fast and give losers room.)
+
+### But it does NOT make money after costs — the fatal catch
+| target | stop | win% | gross exp%/trade | net @0.05% cost | net @0.10% cost |
+|--------|------|------|------------------|-----------------|-----------------|
+| 0.2% | 3% | 82% | +0.058 | +0.008 | **−0.042** |
+| 0.3% | 3% | 73% | +0.067 | +0.017 | **−0.033** |
+| 0.5% | 3% | 61% | +0.082 | +0.032 | −0.018 |
+
+- 70%+ win rate **requires target ≤0.3%**. But intraday round-trip cost (brokerage + STT +
+  exchange + GST + stamp) is **~0.10%** — larger than the 0.06-0.07% gross edge.
+- So on the **underlying/equity**, the high-win setup is **net-negative after real costs.**
+- On **options**, the leverage cuts BOTH ways: the wide 3% underlying stop becomes a
+  catastrophic premium loss (−30-40%), so 25% losing trades can swamp 75% small wins.
+  Whether option net P&L is positive is **unknown** — it needs forward testing on real
+  option premium (can't backtest expired contracts).
+
+### Honest verdict on "70%+ win rate"
+- ✅ Achievable and out-of-sample robust (~73-85%) via small-target/wide-stop exit.
+- ❌ Not profitable after costs on equity; unproven (likely negative) on options.
+- This is the textbook **"high win rate, no edge"** outcome: the win rate is real, the
+  PROFIT is not. The only honest way to settle the options version is to paper-trade it
+  forward on live option premium for 30+ sessions and read the actual P&L.
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).
