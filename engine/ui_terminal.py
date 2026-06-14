@@ -325,13 +325,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return f"""
 <div style="color:{TEXT};">
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — 3-Family Alpha · NSE Intraday</p>
-{dim("A disciplined paper-trading framework. It watches 95 NSE stocks all day, scores each one, "
-     "and only flags a trade when a stock clears two strict gates. You place every order yourself "
-     "in Upstox — the system never sends orders. It is a process for collecting honest evidence, "
-     "not a proven money-maker.")}
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — 3-Family Alpha · NSE Intraday Options</p>
+{dim("A disciplined paper-trading framework. It scans NIFTY, BANKNIFTY and 95 NSE stocks all day, "
+     "scores each one, and only flags a trade when it clears two strict gates. You place every "
+     "order yourself in Upstox — the system never sends orders. It is a process for collecting "
+     "honest evidence, not a proven money-maker.")}
 
-{p(f"<b>Current mode:</b> SIMULATION (paper). <b>Recording:</b> {rec}.")}
+{p(f"<b>Current mode:</b> SIMULATION (paper) · <b>OPTIONS-ONLY, BUY-ONLY</b>. <b>Recording:</b> {rec}.")}
+{p(f"<b style='color:{AMBER}'>Status:</b> Best backtest = +{int(C.PREMIUM_TARGET_PCT)}%/−{int(C.PREMIUM_STOP_PCT)}% "
+   f"premium exit → 77% win rate (recent 20 days, 13 trades — promising but UNPROVEN; "
+   f"needs 30+ forward sessions to confirm after costs).")}
 
 {h("1 · WHAT IT DOES (in one breath)")}
 {p("Every 5 minutes during market hours it: (1) pulls fresh prices from Upstox, "
@@ -345,7 +348,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p(f"<b>{C.MARKET_OPEN}</b> &nbsp; Market opens — scanning begins, ALPHA + WATCHLIST fill up")}
 {p(f"<b>09:15–{C.TRADING_START}</b> &nbsp; First 30 min is the wildest part of the day — we only watch, no trades")}
 {p(f"<b>{C.TRADING_START}</b> &nbsp; Trading window opens — confirmed signals become real PM DECISIONS")}
-{p(f"<b>every 5 min</b> &nbsp; Re-scan all 95 stocks; at most one new trade per scan")}
+{p(f"<b>every 5 min</b> &nbsp; Re-scan NIFTY + BANKNIFTY + 95 stocks (parallel, batched, cached — a few sec); one new trade per scan")}
 {p(f"<b>{C.NO_NEW_TRADES_AFTER}</b> &nbsp; No new trades after this (afternoon is thin)")}
 {p(f"<b>{C.KILL_SWITCH_TIME}</b> &nbsp; Kill switch — every open position is force-closed")}
 {p(f"<b>{C.MARKET_CLOSE}</b> &nbsp; Market closes — trade log shows the day's wins/losses")}
@@ -359,8 +362,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("• <b>Indices</b>: Nifty 50, Bank Nifty, India VIX — fetched every 5 sec for the top bar & market regime")}
 {dim("Instrument keys are ISIN-based (e.g. NSE_EQ|INE467B01029). The system auto-downloads "
      "Upstox's instrument master and caches it for 7 days, so symbols map to keys automatically.")}
-{sub("NSE public API — options & events (PCR, max-pain, filings)")}
-{dim("Used for the FLOW and EVENT families. (Options-chain integration is the next planned addition.)")}
+{sub("Speed / latency")}
+{dim("LTP is fetched BATCHED (all instruments in one call, ~0.2s vs ~6s) · daily history is cached "
+     "per day · the scan runs on a 12-worker thread pool. A full 97-instrument scan finishes in a "
+     "few seconds, so prices don't drift before a signal is read. (True tick streaming needs a paid "
+     "trading token — not available on the read-only Analytics token.)")}
 {sub("Yahoo Finance — emergency fallback only")}
 {dim("Only used if the Upstox token is missing/expired. It is slower, so it is never the primary path.")}
 
@@ -399,24 +405,25 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "two different techniques must agree before money is risked.")}
 {p("When both gates pass, the stock moves to <b>PM DECISIONS</b>.")}
 
-{h("7 · POSITION-SIZING CALCULATIONS")}
-{p(f"Fixed risk per trade: <b>Rs {C.RISK_PER_TRADE_INR:,}</b>. "
-   f"Stop is capped at <b>{C.STOP_LOSS_CAP_PCT}%</b> from entry.")}
-{p(f"<b>Stop</b> &nbsp;= Entry − {C.STOP_LOSS_CAP_PCT}% of Entry")}
-{p(f"<b>Risk/share</b> = Entry − Stop")}
-{p(f"<b>Quantity</b> = Rs {C.RISK_PER_TRADE_INR:,} ÷ Risk/share &nbsp;(rounded down, min 1)")}
-{p(f"<b>Target</b> depends on the instrument (see below)")}
+{h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY")}
+{p("Every signal becomes a <b>bought option</b> (never sold): "
+   "<b style='color:{0}'>LONG → buy ATM CALL</b>, <b style='color:{1}'>SHORT → buy ATM PUT</b>.".format(GREEN, RED))}
+{p("The PM DECISIONS screen shows the exact order: strike, expiry, live premium, target/stop "
+   "premium, lot size and capital — e.g. <b>BUY NIFTY 23600 CE 16-Jun @ Rs179</b> · tgt Rs197 · "
+   "stop Rs143 · cap Rs11,654.")}
+{dim(f"Strike = at-the-money from the live NSE chain · nearest expiry (Nifty weekly, BankNifty/stocks "
+     f"monthly) · skip if ATM IV > {C.OPTION_IV_THRESHOLD} (premium too expensive). "
+     f"Indices keep capital low: Nifty ~Rs12k/lot, BankNifty ~Rs28k/lot.")}
 
-{h("8 · WHICH INSTRUMENT & TARGET?")}
-{p(f"Stronger conviction → more aggressive instrument. (Retail can't short cash, so SHORTs use futures/puts.)")}
-{p(f"• |alpha-z| {C.ALPHA_Z_THRESHOLD}–{C.OPTION_CONVICTION_THRESHOLD} &nbsp; "
-   f"LONG → <b>Cash Equity, {C.TARGET_PCT_EQUITY:.0f}% target</b> · SHORT → <b>Future, {C.TARGET_PCT_DERIVATIVE:.0f}% target</b>")}
-{p(f"• |alpha-z| above {C.OPTION_CONVICTION_THRESHOLD} &nbsp; "
-   f"LONG → <b>CALL, {C.TARGET_PCT_DERIVATIVE:.0f}% target</b> · SHORT → <b>PUT, {C.TARGET_PCT_DERIVATIVE:.0f}% target</b>")}
-{dim(f"Cash equity is unleveraged → small {C.TARGET_PCT_EQUITY:.0f}% target. Futures & options are leveraged → "
-     f"larger {C.TARGET_PCT_DERIVATIVE:.0f}% underlying target (leverage amplifies the premium gain). "
-     f"Stop stays at {C.STOP_LOSS_CAP_PCT}% for all. Strike = ATM from the live NSE chain; "
-     f"if option IV > {C.OPTION_IV_THRESHOLD}, fall back to Futures.")}
+{h("8 · EXIT — ON THE OPTION PREMIUM (2:1 is NOT how options win)")}
+{p(f"You exit on the option's own price, not the stock:")}
+{p(f"• <b style='color:{GREEN}'>BOOK</b> at premium <b>+{C.PREMIUM_TARGET_PCT:.0f}%</b> &nbsp;(e.g. Rs100 → Rs{100*(1+C.PREMIUM_TARGET_PCT/100):.0f})")}
+{p(f"• <b style='color:{RED}'>CUT</b> at premium <b>−{C.PREMIUM_STOP_PCT:.0f}%</b> &nbsp;(e.g. Rs100 → Rs{100*(1-C.PREMIUM_STOP_PCT/100):.0f})")}
+{p(f"• <b>FORCE-CLOSE</b> at {C.KILL_SWITCH_TIME} regardless")}
+{dim(f"Why small target + wide stop? Option premiums are volatile, so a quick +{C.PREMIUM_TARGET_PCT:.0f}% "
+     f"is hit often (high win rate) while the wider −{C.PREMIUM_STOP_PCT:.0f}% stop avoids getting "
+     f"shaken out by normal premium noise. In the recent backtest this gave ~77% win rate with "
+     f"positive expectancy. The catch: it's only proven on 13 trades — forward sessions decide it.")}
 
 {h("9 · RISK CONTROLS")}
 {p(f"• Max <b>{C.MAX_TRADES_PER_DAY}</b> trades/day")}
@@ -432,6 +439,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "Below that, the edge isn't proven — don't automate.")}
 {dim("Honest note: factor hit-rates are barely above a coin-flip; after brokerage + taxes the edge is thin. "
      "Treat every signal as a hypothesis and judge it by the log over many sessions.")}
+
+{h("11 · HOW IT RUNS (local machine)")}
+{p("Everything runs <b>locally</b> on this Mac — not from the cloud:")}
+{p(f"• <b>08:55 weekdays</b> — Mac wakes itself (pmset schedule)")}
+{p(f"• <b>09:00 weekdays</b> — app auto-launches (launchd: com.sayali.institutionaltrader)")}
+{p(f"• Files live at <b>~/files/institutional-trader</b> · run by the local Python venv")}
+{dim("GitHub (github.com/tejasgjadhav/Institutional-Trader) is the BACKUP / version history only — "
+     "the app does NOT pull from it at runtime. To update what runs, edit the local files (changes "
+     "are pushed to GitHub for safekeeping). Token lives in local .env (never committed).")}
 
 <p style="color:{TEXT_DIM};margin-top:16px;font-size:10px;">
 Last 5 trading days (recording window): {', '.join(str(d) for d in self.last5)} &nbsp;·&nbsp;
