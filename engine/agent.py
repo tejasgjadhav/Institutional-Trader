@@ -138,23 +138,27 @@ class Agent:
             logger.info("Market closed, skipping scan")
             return []
 
+        # Parallelize the per-stock scan — each scan_stock makes independent
+        # network calls, so a thread pool turns ~40s sequential into a few seconds.
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        results = []
+        with ThreadPoolExecutor(max_workers=12) as pool:
+            futures = {pool.submit(self.scan_stock, t): t for t in self.universe}
+            for fut in as_completed(futures):
+                try:
+                    results.append(fut.result())
+                except Exception as e:
+                    logger.warning(f"Scan failed for {futures[fut]}: {e}")
+
         signals_fired = []
-
-        for ticker in self.universe:
-            result = self.scan_stock(ticker)
-
+        for result in results:
             if "error" in result:
                 continue
-
-            # Log ready-to-trade signals
             if result.get("trade_ready") and self.is_trading_window():
                 logger.info(
-                    f"TRADE READY: {ticker} | "
-                    f"α-z={result['alpha_z']:.2f} | "
-                    f"Dir={result['direction']} | "
-                    f"Breadth={result['breadth']}/3 | "
-                    f"ORB={result['vol_ratio']:.1f}×"
-                )
+                    f"TRADE READY: {result['ticker']} | α-z={result['alpha_z']:.2f} | "
+                    f"Dir={result['direction']} | Breadth={result['breadth']}/3 | "
+                    f"ORB={result['vol_ratio']:.1f}×")
                 signals_fired.append(result)
 
         logger.info(f"Scan complete: {len(signals_fired)} signals ready\n")

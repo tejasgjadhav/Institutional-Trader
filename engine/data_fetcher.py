@@ -46,6 +46,41 @@ def _candles_to_df(candles: list) -> pd.DataFrame:
     return df[["Open", "High", "Low", "Close", "Volume"]].astype(float)
 
 
+# ── Batched LTP (low latency — all instruments in one call) ───────────────────
+
+def fetch_ltp_batch(tickers: list, chunk_size: int = 100) -> dict:
+    """
+    Fetch LTP for many instruments in a few batched calls (vs one-per-stock).
+    Upstox accepts comma-separated instrument keys. ~300ms for 100 names vs ~18s.
+    Returns {ticker: price} (missing tickers omitted).
+    """
+    if not UPSTOX_ANALYTICS_TOKEN or not tickers:
+        return {}
+    key_to_ticker = {}
+    for t in tickers:
+        k = to_instrument_key(t)
+        if k:
+            key_to_ticker[k] = t
+    out = {}
+    keys = list(key_to_ticker.keys())
+    for i in range(0, len(keys), chunk_size):
+        chunk = keys[i:i + chunk_size]
+        try:
+            resp = requests.get(f"{UPSTOX_BASE}/v2/market-quote/ltp",
+                                params={"instrument_key": ",".join(chunk)},
+                                headers=_HEADERS, timeout=10)
+            resp.raise_for_status()
+            data = resp.json().get("data", {})
+            for q in data.values():
+                tok = q.get("instrument_token")
+                tk = key_to_ticker.get(tok)
+                if tk and q.get("last_price") is not None:
+                    out[tk] = float(q["last_price"])
+        except Exception as e:
+            logger.warning(f"Batch LTP chunk {i//chunk_size} failed: {e}")
+    return out
+
+
 # ── Real-time LTP ─────────────────────────────────────────────────────────────
 
 def fetch_upstox_ltp(ticker: str) -> dict:
@@ -164,20 +199,28 @@ def fetch_intraday_5min(ticker: str, days: int = 1) -> pd.DataFrame:
     return pd.DataFrame()
 
 
+# Daily bars don't change during the session → cache per (ticker, date) so the
+# 5-min scan loop doesn't refetch 400 days of history every cycle.
+_daily_hist_cache = {}
+
+
 def fetch_historical(ticker: str, days: int = 400) -> pd.DataFrame:
     """
     Daily bars for backtesting / indicator history. Upstox V3 primary.
-    Falls back to Yahoo only if Upstox returns nothing.
+    Cached per calendar day. Falls back to Yahoo only if Upstox returns nothing.
     """
+    cache_key = (ticker, datetime.now(IST).date(), days)
+    if cache_key in _daily_hist_cache:
+        return _daily_hist_cache[cache_key]
+
     from_date = (datetime.now(IST) - timedelta(days=days)).strftime("%Y-%m-%d")
     to_date = datetime.now(IST).strftime("%Y-%m-%d")
     df = fetch_upstox_historical(ticker, unit="days", interval=1, from_date=from_date, to_date=to_date)
+    if df.empty and USE_YAHOO_FALLBACK:
+        df = _yahoo_historical_fallback(ticker, days)
     if not df.empty:
-        return df
-
-    if USE_YAHOO_FALLBACK:
-        return _yahoo_historical_fallback(ticker, days)
-    return pd.DataFrame()
+        _daily_hist_cache[cache_key] = df
+    return df
 
 
 # Backwards-compat alias (older modules import fetch_yahoo_historical)
