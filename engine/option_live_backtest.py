@@ -87,7 +87,9 @@ def collect_option_trades(n_days=20, max_stocks=None, cutoff="13:00", progress=N
 
                 opt_type = "CE" if sig["direction"] == "LONG" else "PE"
                 spot = float(part.Close.iloc[-1])
-                opt = get_atm_option(under, spot, day, opt_type)
+                from engine.config import OPTION_STRIKE_OFFSET
+                opt = get_option_by_offset(under, spot, day, opt_type, OPTION_STRIKE_OFFSET) \
+                      or get_atm_option(under, spot, day, opt_type)
                 if not opt: break
                 prem = fetch_option_premium_5min(opt["key"], day)
                 if prem.empty: break

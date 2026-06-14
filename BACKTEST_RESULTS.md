@@ -238,6 +238,20 @@ Why only ATM? It was a liquidity default, never tested. So we tested it:
 - (Note: `signal_frequency.run_frequency_test` uses a non-chunked 5-min fetch that fails
   on >~21-day ranges — its 30-day count is unreliable. The chunked collection above is correct.)
 
+## Run J — Cutoff comparison (1 PM vs 2 PM), 30 days, OTM+1, +10%/−20%
+
+| cutoff | signals | active days | sig/day | win% (green) | win% (target) | exp/trade | net% |
+|--------|---------|-------------|---------|--------------|---------------|-----------|------|
+| **1 PM** | 18 | 12/22 | 0.8 | **72%** | 61% | **+4.51** | +81.2 |
+| 2 PM | 34 | 17/22 | 1.5 | 62% | 47% | +1.88 | +64.1 |
+
+### Finding
+- 2 PM ~doubles signals (18→34) and active days (12→17) but **win rate falls 72%→62%**
+  and **expectancy halves** (+4.51→+1.88/trade). Even total net is lower despite 2× trades.
+- The 1–2 PM entries dilute the edge (less time to target before 3:10 close).
+- **Decision: keep 1 PM** — only it clears 70% win and has 2.4× the per-trade expectancy.
+  Frequency-vs-quality trade-off, quantified. (Small samples; relative result is robust.)
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).
