@@ -226,6 +226,18 @@ Why only ATM? It was a liquidity default, never tested. So we tested it:
   so ATM's tight-spread advantage is understated and the extreme strikes are overstated.
 - Not conclusive. If choosing on this data: OTM+1 or ATM (liquid, cheap). Forward paper-test decides.
 
+## Run I — OTM+1 implemented · signal frequency reality
+
+- **Strike default changed to OTM+1** (`OPTION_STRIKE_OFFSET = 1`): CALL = one strike
+  above spot, PUT = one below. Best risk-adjusted in Run H. ATM fallback if no data.
+- **Frequency (30 days, 1 PM cutoff):** 14 signals across only **8 active days** of ~22
+  trading days. ~14 days were BLANK. Avg ~0.6 signals/day — **NOT one per day.**
+  Per day: May7:1 May18:2 May22:3 May27:2 May29:1 Jun2:1 Jun9:2 Jun11:2.
+- Cause: the 1 PM cutoff drops afternoon entries (quality filter) but cuts signal count.
+  Pushing the cutoff to 2 PM roughly doubles signals at the cost of later/weaker entries.
+- (Note: `signal_frequency.run_frequency_test` uses a non-chunked 5-min fetch that fails
+  on >~21-day ranges — its 30-day count is unreliable. The chunked collection above is correct.)
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).

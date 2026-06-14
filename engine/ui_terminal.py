@@ -384,7 +384,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p(f"<b>{C.MARKET_OPEN}</b> &nbsp; Market opens — scanning begins, ALPHA + WATCHLIST fill up")}
 {p(f"<b>09:15–{C.TRADING_START}</b> &nbsp; First 30 min is the wildest part of the day — we only watch, no trades")}
 {p(f"<b>{C.TRADING_START}</b> &nbsp; Trading window opens — confirmed signals become real PM DECISIONS")}
-{p(f"<b>every 5 min</b> &nbsp; Re-scan NIFTY + BANKNIFTY + 95 stocks (parallel, batched, cached — a few sec); one new trade per scan")}
+{p(f"<b>every 5 min</b> &nbsp; Re-scan NIFTY + BANKNIFTY + 95 stocks (parallel, batched, cached — a few sec)")}
+{dim("Signals are SPARSE — ~14 over a month, only ~8 days of ~22 have any signal (1 PM cutoff "
+     "trades frequency for quality). Most days may be blank. Pushing the cutoff later raises count.")}
 {p(f"<b>{C.NO_NEW_TRADES_AFTER}</b> &nbsp; No new trades after this (afternoon is thin)")}
 {p(f"<b>{C.KILL_SWITCH_TIME}</b> &nbsp; Kill switch — every open position is force-closed")}
 {p(f"<b>{C.MARKET_CLOSE}</b> &nbsp; Market closes — trade log shows the day's wins/losses")}
@@ -441,14 +443,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "two different techniques must agree before money is risked.")}
 {p("When both gates pass, the stock moves to <b>PM DECISIONS</b>.")}
 
-{h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY")}
+{h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY (OTM+1)")}
 {p("Every signal becomes a <b>bought option</b> (never sold): "
-   "<b style='color:{0}'>LONG → buy ATM CALL</b>, <b style='color:{1}'>SHORT → buy ATM PUT</b>.".format(GREEN, RED))}
-{p("The PM DECISIONS screen shows the exact order: strike, expiry, live premium, target/stop "
-   "premium, lot size and capital — e.g. <b>BUY NIFTY 23600 CE 16-Jun @ Rs179</b> · tgt Rs197 · "
-   "stop Rs143 · cap Rs11,654.")}
-{dim(f"Strike = at-the-money from the live NSE chain · nearest expiry (Nifty weekly, BankNifty/stocks "
-     f"monthly) · skip if ATM IV > {C.OPTION_IV_THRESHOLD} (premium too expensive). "
+   "<b style='color:{0}'>LONG → buy CALL</b>, <b style='color:{1}'>SHORT → buy PUT</b>.".format(GREEN, RED))}
+{p(f"Strike = <b>OTM+1</b> (offset {C.OPTION_STRIKE_OFFSET}): one strike OUT-of-the-money — "
+   f"CALL one strike above spot, PUT one below. Backtest favoured this over ATM (best "
+   f"expectancy + good win rate, cheaper, still liquid). Falls back to ATM if no data.")}
+{p("PM DECISIONS shows the exact order: strike, expiry, live premium, target/stop premium, "
+   "lot, capital — e.g. <b>BUY NIFTY 23650 CE 16-Jun @ Rs…</b> · tgt +10% · stop −20%.")}
+{dim(f"Nearest expiry (Nifty weekly, BankNifty/stocks monthly) · skip if IV > {C.OPTION_IV_THRESHOLD}. "
      f"Indices keep capital low: Nifty ~Rs12k/lot, BankNifty ~Rs28k/lot.")}
 
 {h("8 · EXIT — ON THE OPTION PREMIUM (2:1 is NOT how options win)")}

@@ -143,12 +143,14 @@ def build_live_option_order(ticker: str, spot: float, direction: str) -> dict:
     Returns None if no contract/premium is available. Buy-only:
       LONG  -> ATM CALL,  SHORT -> ATM PUT.
     """
-    from engine.config import PREMIUM_TARGET_PCT, PREMIUM_STOP_PCT
+    from engine.config import PREMIUM_TARGET_PCT, PREMIUM_STOP_PCT, OPTION_STRIKE_OFFSET
     from engine.data_fetcher import fetch_upstox_ltp
     from datetime import date as _date
 
     opt_type = "CE" if direction == "LONG" else "PE"
-    opt = get_atm_option(ticker, spot, _date.today(), opt_type)
+    # OTM+1 by default (config OPTION_STRIKE_OFFSET); falls back to ATM if unavailable.
+    opt = get_option_by_offset(ticker, spot, _date.today(), opt_type, OPTION_STRIKE_OFFSET) \
+          or get_atm_option(ticker, spot, _date.today(), opt_type)
     if not opt:
         return None
 

@@ -88,6 +88,9 @@ OPTIONS_ONLY_MODE   = True    # all signals become buy-CALL / buy-PUT
 PREMIUM_TARGET_PCT  = 10.0    # book profit at +10% on the option premium
 PREMIUM_STOP_PCT    = 20.0    # cut loss at -20% on the option premium
 OPTION_IV_THRESHOLD = 60      # skip if ATM IV too high (very expensive premium)
+# Strike offset from ATM: 0=ATM, +1=one strike OTM, -1=one strike ITM.
+# Backtest (Run H) favoured OTM+1 (best expectancy + good win rate, cheap, liquid).
+OPTION_STRIKE_OFFSET = 1      # OTM+1 (CALL: one strike above spot · PUT: one below)
 
 # Legacy underlying targets (kept for the equity/future path if OPTIONS_ONLY_MODE=False)
 TARGET_PCT_EQUITY     = 1.0
