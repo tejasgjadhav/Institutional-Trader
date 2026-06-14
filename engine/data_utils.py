@@ -1,0 +1,379 @@
+"""
+Data Utilities — Index closes (Nifty/BankNifty/VIX), API health check.
+All via the Upstox market-data API, with Yahoo only as a fallback.
+"""
+import os
+import logging
+import requests
+from datetime import datetime, timedelta
+
+from engine.config import IST, MARKET_OPEN, MARKET_CLOSE, DATA_DIR
+from engine.data_fetcher import (
+    fetch_upstox_ltp, fetch_upstox_intraday, fetch_upstox_historical, fetch_historical,
+    QUOTE_API, _HEADERS, SESSION,
+)
+from engine.instruments import to_instrument_key
+
+logger = logging.getLogger(__name__)
+
+
+def _batch_index_ltp(names: list) -> dict:
+    """
+    One batched LTP call for several indices (NIFTY/BANKNIFTY/VIX) instead of one
+    request each — avoids Upstox 429 rate-limits on the fast live poll.
+    Returns {name: price or None}.
+    """
+    out = {n: None for n in names}
+    keymap = {}  # pipe instrument_key -> our name
+    for n in names:
+        k = to_instrument_key(n)
+        if k:
+            keymap[k] = n
+    if not keymap:
+        return out
+    try:
+        resp = SESSION.get(f"{QUOTE_API}/market-quote/ltp",
+                           params={"instrument_key": ",".join(keymap.keys())}, timeout=6)
+        resp.raise_for_status()
+        data = resp.json().get("data", {})
+        # primary: match by instrument_token (== pipe key); fallback: colon dict-key
+        colon = {k.replace("|", ":"): name for k, name in keymap.items()}
+        for dk, q in data.items():
+            name = keymap.get(q.get("instrument_token")) or colon.get(dk)
+            if name and q.get("last_price") is not None:
+                out[name] = float(q["last_price"])
+    except Exception as e:
+        logger.warning(f"Batch index LTP failed: {e}")
+    return out
+
+
+def _intraday_index_prices(names: list) -> dict:
+    """
+    Last 5-min candle close per index — near-live (<=5 min old) and served by a
+    DIFFERENT Upstox endpoint (historical-candle/intraday) than the LTP quote, so it
+    keeps working even when the LTP endpoint is rate-limited (429). Returns {name: price}.
+    """
+    out = {}
+    for n in names:
+        try:
+            df = fetch_upstox_intraday(n, 5)
+            if not df.empty:
+                out[n] = float(df["Close"].iloc[-1])
+        except Exception:
+            pass
+    return out
+
+
+# Yahoo symbols for the indices — last-resort live-price fallback.
+_YF_INDEX = {"NIFTY": "^NSEI", "BANKNIFTY": "^NSEBANK", "VIX": "^INDIAVIX"}
+
+
+def _yahoo_index_prices(names: list) -> dict:
+    """
+    Latest intraday index price from Yahoo (~15-min delayed) as a fallback when the
+    Upstox LTP is rate-limited. Keeps the dashboard MOVING (and the % correct vs the
+    previous close) even when Upstox returns 429. Returns {name: price}.
+    """
+    out = {}
+    try:
+        import yfinance as yf
+        for n in names:
+            sym = _YF_INDEX.get(n)
+            if not sym:
+                continue
+            try:
+                h = yf.Ticker(sym).history(period="1d", interval="5m")
+                if not h.empty:
+                    out[n] = float(h["Close"].dropna().iloc[-1])
+            except Exception:
+                pass
+    except Exception as e:
+        logger.warning(f"Yahoo index price fallback failed: {e}")
+    return out
+
+
+def _market_is_open() -> bool:
+    """True during NSE trading hours (Mon–Fri, 09:15–15:30 IST) — TIME ONLY (holiday-blind)."""
+    now = datetime.now(IST)
+    if now.weekday() >= 5:
+        return False
+    o = datetime.strptime(MARKET_OPEN, "%H:%M").time()
+    c = datetime.strptime(MARKET_CLOSE, "%H:%M").time()
+    return o <= now.time() <= c
+
+
+_trading_cache = {"date": None, "at": None, "trading": None}
+
+
+def market_is_trading_today() -> bool:
+    """True only if the market is ACTUALLY trading now — weekday + hours AND live intraday data
+    flowing. Distinguishes a real session from an NSE HOLIDAY (when _market_is_open() still says
+    'open' by the clock but no candles form and the LTP is frozen at the prior close). No
+    hardcoded holiday calendar: it infers 'not trading' from the absence of today's data.
+    Cached ~5 min so it costs at most one NIFTY intraday call per cache window."""
+    now = datetime.now(IST)
+    if not _market_is_open():
+        return False
+    # Before ~09:25 the first 5-min candle may not have formed yet — assume trading.
+    if now.time() < datetime.strptime("09:25", "%H:%M").time():
+        return True
+    c = _trading_cache
+    if (c["date"] == now.date() and c["at"] and
+            (now - c["at"]).total_seconds() < 300 and c["trading"] is not None):
+        return c["trading"]
+    df = fetch_upstox_intraday("NIFTY", interval=5)
+    trading = (not df.empty) and (df.index[-1].date() == now.date())
+    _trading_cache.update(date=now.date(), at=now, trading=trading)
+    return trading
+
+
+def _prev_session_close_from_db(index_name: str) -> float:
+    """Previous trading session's close from the engine's OWN stored snapshots (engine.db).
+
+    This is immune to Upstox's daily-feed backfill lag: yesterday's daily candle often isn't in
+    the feed early the next morning, so the feed's "last close" is actually TWO sessions ago,
+    which inflates today's %% (e.g. NIFTY shown +1.5%% vs the real +0.65%%). The engine records
+    a snapshot at the real close every day, so the latest snapshot dated BEFORE today is the
+    correct previous-session close. Returns None if unavailable (caller falls back to the feed).
+    """
+    col = {"NIFTY": "nifty", "BANKNIFTY": "banknifty", "VIX": "vix"}.get(index_name)
+    if not col:
+        return None
+    try:
+        import sqlite3
+        today = datetime.now(IST).date().isoformat()
+        con = sqlite3.connect(os.path.join(DATA_DIR, "engine.db"), timeout=3)
+        row = con.execute(
+            f"SELECT {col} FROM market_snapshots WHERE date < ? AND {col} IS NOT NULL "
+            f"ORDER BY date DESC, ts DESC LIMIT 1", (today,)).fetchone()
+        con.close()
+        return float(row[0]) if row and row[0] else None
+    except Exception:
+        return None
+
+
+def _index_last_close(index_name: str) -> float:
+    """Most recent daily close for an index via Upstox."""
+    df = fetch_upstox_historical(index_name, unit="days", interval=1)
+    if not df.empty:
+        return float(df["Close"].iloc[-1])
+    return 0.0
+
+
+# Cache of daily reference closes per index, refreshed once per calendar day.
+# {index_name: {"date": date, "prev_close": float, "last_close": float}}
+_ref_close_cache = {}
+
+
+def _reference_closes(index_name: str):
+    """
+    (prev_close, last_close) for an index, cached per day.
+    Daily closes don't change intraday, so we fetch them at most once per day —
+    this is what makes the live poll fast (LTP only).
+    """
+    today = datetime.now(IST).date()
+    cached = _ref_close_cache.get(index_name)
+    if cached and cached["date"] == today:
+        return cached["prev_close"], cached["last_close"], cached["last_date"]
+
+    df = fetch_upstox_historical(index_name, unit="days", interval=1)
+    prev_close = last_close = last_date = None
+    if not df.empty and len(df) >= 2:
+        prev_close = float(df["Close"].iloc[-2])
+        last_close = float(df["Close"].iloc[-1])
+        last_date = df.index[-1].date()
+    elif not df.empty:
+        last_close = float(df["Close"].iloc[-1])
+        last_date = df.index[-1].date()
+
+    # Only cache a SUCCESSFUL fetch. If the daily feed failed (e.g. no network at the 8 AM
+    # wake), caching the empty result would freeze the % at 0.0/FLAT for the whole session
+    # because daily closes are fetched at most once per day. Leaving it uncached lets the
+    # next poll retry once the network is up, so the change/pct self-heals within ~5 s.
+    if last_close is not None:
+        _ref_close_cache[index_name] = {
+            "date": today, "prev_close": prev_close, "last_close": last_close, "last_date": last_date,
+        }
+    return prev_close, last_close, last_date
+
+
+def _index_live_or_close(index_name: str, live_price: float = None,
+                         fetch_if_missing: bool = True,
+                         live_source: str = "Upstox (live)") -> dict:
+    """
+    Live price if market open, else last session close — change vs the *previous
+    session* close (absolute + percent + direction).
+
+    `live_price` lets a caller pass a price already fetched in a BATCH/fallback (so we
+    don't make a second per-index call). The % reference is always the PREVIOUS
+    SESSION close (the last daily close dated before today) so a live price is compared
+    to yesterday, never to today's own partial candle.
+    """
+    prev_close, last_close, last_date = _reference_closes(index_name)
+    today = datetime.now(IST).date()
+    # previous-session close = last daily close NOT dated today
+    prev_session = prev_close if last_date == today else last_close
+
+    price = None
+    source = "Upstox (last close)"
+
+    # Prefer a FRESH traded price whenever we can get one — the LTP endpoint works
+    # after hours too and returns the day's last traded price. The daily historical
+    # feed lags T+1, so falling back to last_close would show YESTERDAY's close as if
+    # it were today's. Use LTP both during and after the session.
+    lp = live_price
+    if lp is None and fetch_if_missing:  # only the standalone getters fetch singly
+        ltp = fetch_upstox_ltp(index_name)
+        lp = ltp["price"] if ltp.get("success") else None
+    if lp:
+        price = lp
+        source = live_source if _market_is_open() else "Upstox (last traded)"
+
+    if price is None:
+        # No traded price at all (rare): fall back to last available daily close
+        price = last_close if last_close else 0.0
+
+    # Reference is ALWAYS the previous-session close (compare today vs yesterday).
+    # PREFER the engine's stored close (engine.db) — it's immune to the daily-feed backfill lag
+    # that otherwise uses a 2-sessions-ago close and inflates the %. Fall back to the daily feed.
+    ref = _prev_session_close_from_db(index_name) or (prev_session if prev_session else (prev_close or last_close))
+
+    change = pct = 0.0
+    if ref and price:
+        change = price - ref
+        pct = (change / ref) * 100 if ref else 0.0
+
+    return {
+        "ticker": index_name,
+        "price": price,
+        "change": round(change, 2),
+        "pct": round(pct, 2),
+        "direction": "UP" if change > 0 else ("DOWN" if change < 0 else "FLAT"),
+        "source": source,
+    }
+
+
+def get_nifty_close() -> dict:
+    """NIFTY 50 — live or last close."""
+    d = _index_live_or_close("NIFTY")
+    d["ticker"] = "NIFTY 50"
+    return d
+
+
+def get_banknifty_close() -> dict:
+    """BANKNIFTY — live or last close."""
+    d = _index_live_or_close("BANKNIFTY")
+    d["ticker"] = "BANKNIFTY"
+    return d
+
+
+def get_vix_close() -> dict:
+    """India VIX — live or last close."""
+    d = _index_live_or_close("VIX")
+    d["ticker"] = "VIX"
+    if d["price"] == 0.0:
+        d["price"] = 15.0  # safe default
+    return d
+
+
+def get_market_snapshot() -> dict:
+    """
+    NIFTY + BANKNIFTY + VIX in ONE batched LTP call (vs three separate calls).
+    This is what the live dashboard polls — batching is what keeps it under the
+    Upstox rate-limit so the values update LIVE instead of falling back to last close.
+    """
+    names = ["NIFTY", "BANKNIFTY", "VIX"]
+    open_ = _market_is_open()
+    # LTP works during AND after the session (returns the day's last traded price), so
+    # fetch it unconditionally. Otherwise after-hours we'd fall back to the daily
+    # historical close, which lags T+1 and shows YESTERDAY's value.
+    prices = _batch_index_ltp(names)
+    src = {n: ("Upstox (live)" if open_ else "Upstox (last traded)")
+           for n in names if prices.get(n)}
+
+    # If the LTP quote is rate-limited (429) or empty, fill missing prices so the
+    # dashboard keeps moving and the % stays correct vs the previous close:
+    #   1) Upstox 5-min intraday candle (near-live, separate endpoint, survives 429)
+    #   2) Yahoo (~15-min delayed) as a last resort
+    missing = [n for n in names if not prices.get(n)]
+    if missing:
+        for n, p in _intraday_index_prices(missing).items():
+            prices[n] = p
+            src[n] = "Upstox 5m"
+    missing = [n for n in names if not prices.get(n)]
+    if missing:
+        for n, p in _yahoo_index_prices(missing).items():
+            prices[n] = p
+            src[n] = "Yahoo (~15m delay)"
+
+    def build(name, ticker):
+        d = _index_live_or_close(name, prices.get(name), fetch_if_missing=False,
+                                 live_source=src.get(name, "Upstox (live)"))
+        d["ticker"] = ticker
+        return d
+
+    nifty, bnf, vix = build("NIFTY", "NIFTY 50"), build("BANKNIFTY", "BANKNIFTY"), build("VIX", "VIX")
+    if vix["price"] == 0.0:
+        vix["price"] = 15.0
+    return {"nifty": nifty, "banknifty": bnf, "vix": vix}
+
+
+def check_api_health() -> dict:
+    """Check all Upstox data paths."""
+    health = {
+        "upstox_ltp": False,
+        "upstox_intraday": False,
+        "upstox_historical": False,
+        "nifty": False,
+        "banknifty": False,
+        "vix": False,
+        "timestamp": datetime.now().isoformat(),
+    }
+
+    # Upstox LTP (equity)
+    try:
+        health["upstox_ltp"] = fetch_upstox_ltp("TCS.NS")["success"]
+    except Exception as e:
+        logger.warning(f"LTP health check failed: {e}")
+
+    # Upstox intraday (today's 5-min — empty when market closed, that's OK)
+    try:
+        df = fetch_upstox_intraday("TCS.NS", interval=5)
+        # Treat as healthy if call succeeds (even if empty pre-market)
+        health["upstox_intraday"] = True
+    except Exception as e:
+        logger.warning(f"Intraday health check failed: {e}")
+
+    # Upstox historical (daily)
+    try:
+        df = fetch_historical("TCS.NS", days=10)
+        health["upstox_historical"] = not df.empty
+    except Exception as e:
+        logger.warning(f"Historical health check failed: {e}")
+
+    # Indices
+    try:
+        health["nifty"] = get_nifty_close()["price"] > 0
+    except Exception:
+        pass
+    try:
+        health["banknifty"] = get_banknifty_close()["price"] > 0
+    except Exception:
+        pass
+    try:
+        health["vix"] = get_vix_close()["price"] > 0
+    except Exception:
+        pass
+
+    return health
+
+
+def get_last_5_trading_days() -> list:
+    """Dates of the last 5 weekday trading days (excludes weekends)."""
+    dates = []
+    day = datetime.now()
+    while len(dates) < 5:
+        if day.weekday() < 5:  # Mon–Fri
+            dates.append(day.date())
+        day -= timedelta(days=1)
+    return sorted(dates)

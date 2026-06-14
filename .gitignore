@@ -1,0 +1,37 @@
+# Environment
+.env
+.env.local
+
+# Logs
+logs/
+*.log
+
+# Data written at runtime
+data/
+results/
+reports/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+.venv
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Paper book and caches — keep locally, never commit
+trade_log.json
+signals.json
