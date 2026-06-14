@@ -17,7 +17,7 @@ import pandas as pd
 from engine.config import UNIVERSE, TRADING_START
 from engine.data_fetcher import fetch_upstox_historical
 from engine.signals import compute_all_families, is_orb_confirmed
-from engine.options import get_atm_option, fetch_option_premium_5min
+from engine.options import get_atm_option, get_option_by_offset, fetch_option_premium_5min
 from engine.backtest120 import _fetch_5min_chunked
 
 logger = logging.getLogger(__name__)
@@ -138,6 +138,87 @@ def simulate_option(tr, target_pct, stop_pct):
         if hit_win:
             return ("WIN", round((last_prem/prem0-1)*100, 2))
     return ("FORCED", round((last_prem/prem0-1)*100, 2))
+
+
+def compare_moneyness(n_days=30, cutoff="13:00", offsets=(-1, 0, 1, 2),
+                      target_pct=10, stop_pct=20, progress=None):
+    """
+    For each signal, BUY the same option at several strike offsets (ITM/ATM/OTM)
+    and compare win rate + premium expectancy. offsets: -1=ITM1, 0=ATM, +1=OTM1, +2=OTM2.
+    Returns {offset: {trades, win_rate, exp, net}}.
+    """
+    days = _trading_days(n_days)
+    unders = INDEX_UNDERLYINGS + UNIVERSE
+    from_dt = days[0] - timedelta(days=3); to_dt = days[-1] + timedelta(days=1)
+    from_d, to_d = from_dt.strftime("%Y-%m-%d"), to_dt.strftime("%Y-%m-%d")
+    start_min, cut_min = _hhmm(TRADING_START), _hhmm(cutoff)
+
+    nifty5 = _fetch_5min_chunked("NIFTY", from_dt, to_dt)
+    vixd = fetch_upstox_historical("VIX", unit="days", interval=1, from_date=from_d, to_date=to_d)
+    def npct(day):
+        if nifty5.empty: return 0.0
+        d = nifty5[nifty5.index.date == day]
+        return 0.0 if d.empty else round((float(d.Close.iloc[-1])-float(d.Open.iloc[0]))/float(d.Open.iloc[0])*100,2)
+    def vix(day):
+        if vixd.empty: return 15.0
+        d = vixd[vixd.index.date <= day]; return float(d.Close.iloc[-1]) if not d.empty else 15.0
+
+    # per-offset accumulators
+    res = {o: [] for o in offsets}
+    for k, under in enumerate(unders):
+        if progress: progress(k+1, len(unders), under)
+        daily = fetch_upstox_historical(under, unit="days", interval=1,
+                  from_date=(days[0]-timedelta(days=420)).strftime("%Y-%m-%d"), to_date=to_d)
+        five = _fetch_5min_chunked(under, from_dt, to_dt)
+        if five.empty or daily.empty: continue
+        for day in days:
+            d5 = five[five.index.date == day]; dfd = daily[daily.index.date < day]
+            if len(d5) < 7 or len(dfd) < 30: continue
+            v, np_ = vix(day), npct(day)
+            for i in range(6, len(d5)):
+                ts = d5.index[i]; m = _bmin(ts)
+                if m < start_min: continue
+                if m > cut_min: break
+                part = d5.iloc[:i+1]
+                sig = compute_all_families(under, part, dfd, vix=v, nifty_pct=np_)
+                if not sig["passes_gate_1"]: continue
+                ok, odir, _ = is_orb_confirmed(part)
+                if not (ok and odir == sig["direction"]): continue
+                opt_type = "CE" if sig["direction"] == "LONG" else "PE"
+                spot = float(part.Close.iloc[-1])
+                # try each offset
+                for off in offsets:
+                    opt = get_option_by_offset(under, spot, day, opt_type, off)
+                    if not opt: continue
+                    prem = fetch_option_premium_5min(opt["key"], day)
+                    if prem.empty: continue
+                    sub = prem[prem.index <= ts]
+                    if sub.empty: continue
+                    entry = float(sub.Close.iloc[-1])
+                    if entry <= 0: continue
+                    tgt, stp = entry*(1+target_pct/100), entry*(1-stop_pct/100)
+                    fwd = prem[prem.index > ts]
+                    outcome, pnl = "FORCED", 0.0
+                    last = entry
+                    for b in fwd.itertuples():
+                        last = float(b.Close)
+                        if last <= stp: outcome, pnl = "LOSS", (stp/entry-1)*100; break
+                        if last >= tgt: outcome, pnl = "WIN", (tgt/entry-1)*100; break
+                    else:
+                        pnl = (last/entry-1)*100
+                    res[off].append((outcome, round(pnl, 2)))
+                break  # one signal per stock per day
+    # aggregate
+    summary = {}
+    for off, lst in res.items():
+        n = len(lst)
+        if not n:
+            summary[off] = {"trades": 0, "win_rate": 0, "exp": 0, "net": 0}; continue
+        green = sum(1 for o in lst if o[1] > 0)
+        net = sum(o[1] for o in lst)
+        summary[off] = {"trades": n, "win_rate": round(green/n, 3),
+                        "exp": round(net/n, 2), "net": round(net, 1)}
+    return summary
 
 
 def simulate_premium(tr, prem_target_pct, prem_stop_pct):

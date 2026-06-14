@@ -96,6 +96,38 @@ def get_atm_option(ticker: str, spot: float, on_day: date, opt_type: str) -> dic
     return atm
 
 
+def get_option_by_offset(ticker: str, spot: float, on_day: date, opt_type: str, offset: int) -> dict:
+    """
+    Pick a strike at `offset` steps from ATM in MONEYNESS terms:
+      offset = 0  -> ATM
+      offset > 0  -> OUT-of-the-money (cheaper, jumpier)
+      offset < 0  -> IN-the-money (pricier, steadier)
+    For CALLs OTM = higher strike; for PUTs OTM = lower strike. Returns contract or None.
+    """
+    underlying = to_instrument_key(ticker)
+    if not underlying:
+        return None
+    index = _load_index()
+    contracts = [c for c in index.get(underlying, []) if c["type"] == opt_type]
+    if not contracts:
+        return None
+    day_ms = int(datetime(on_day.year, on_day.month, on_day.day).timestamp() * 1000)
+    future = sorted({c["expiry"] for c in contracts if c["expiry"] >= day_ms})
+    if not future:
+        return None
+    near = future[0]
+    chain = sorted([c for c in contracts if c["expiry"] == near], key=lambda c: c["strike"])
+    strikes = [c["strike"] for c in chain]
+    atm_i = min(range(len(strikes)), key=lambda i: abs(strikes[i] - spot))
+    # CALL: OTM is higher strike (atm_i+offset); PUT: OTM is lower strike (atm_i-offset)
+    idx = atm_i + offset if opt_type == "CE" else atm_i - offset
+    idx = max(0, min(len(chain) - 1, idx))
+    c = dict(chain[idx])
+    c["expiry_date"] = str(datetime.fromtimestamp(near / 1000).date())
+    c["moneyness_offset"] = offset
+    return c
+
+
 def fetch_option_premium_5min(option_key: str, on_day: date):
     """5-min premium candles for an option contract on a single day (oldest-first)."""
     d = on_day.strftime("%Y-%m-%d")

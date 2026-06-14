@@ -206,6 +206,26 @@ Tested target +10% with various stops:
 - **Verdict unchanged: promising mechanics, NO proven edge. Only a 30+ session forward
   paper-test on live premium (with real costs) can settle it.**
 
+## Run H — Strike comparison (ITM vs ATM vs OTM), 30 days, +10%/−20%
+
+Why only ATM? It was a liquidity default, never tested. So we tested it:
+
+| strike | trades | win% (green) | exp/trade | net% |
+|--------|--------|--------------|-----------|------|
+| ITM-2  | 16 | 81% | 3.81 | 61.0 |
+| ITM-1  | 19 | 63% | 2.68 | 51.0 |
+| ATM    | 14 | 71% | 3.47 | 48.6 |
+| OTM+1  | 18 | 72% | **4.51** | **81.2** |
+| OTM+2  | 15 | 73% | 2.83 | 42.4 |
+
+### Findings
+- ATM was **not** optimal: ITM-2 won on win rate (81%), OTM+1 on expectancy/net.
+- **OTM+1** looks best risk-adjusted (72% win, best exp + net, cheap, decent liquidity).
+- **BUT** the win-rate curve is non-monotonic (81/63/71/72/73) → noise-dominated on
+  14-19 trade samples. Bid-ask spreads (wider for ITM-2/OTM+2) and costs are NOT modelled,
+  so ATM's tight-spread advantage is understated and the extreme strikes are overstated.
+- Not conclusive. If choosing on this data: OTM+1 or ATM (liquid, cheap). Forward paper-test decides.
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).
