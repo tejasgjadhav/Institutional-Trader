@@ -74,6 +74,45 @@ there are none to test. To make options trigger, lower OPTION_CONVICTION_THRESHO
 - Options can't be evaluated until the conviction threshold is lowered so they fire.
 - 21 signals is still a small sample.
 
+## Run D — 120 trading days, 2:1 reward:risk (stop = target/2) — THE REAL TEST
+
+Method: 120 days, all 95 stocks, **379 signals** (a genuine sample at last).
+Stop fixed at exactly half the target (your rule: 5%→2.5%, 1%→0.5%). Swept
+conviction (alpha ≥ 0.55-0.85), breadth, cutoff, and target to maximise win rate.
+Signals: 193 CALL · 102 PUT · 29 FUTURE · 55 EQUITY (simulated on the **underlying**
+directional move — 120-day option premium isn't available for expired contracts).
+
+### Win-rate sweep (combos with ≥40 signals = trustworthy), ranked by win rate
+| alpha≥ | breadth | cutoff | target | stop | signals | /day | **win rate** | net% | exp%/trade |
+|--------|---------|--------|--------|------|---------|------|----------|------|------------|
+| 0.75 | 2 | 13:00 | 1.0% | 0.5% | 59 | 0.7 | **34%** | +7.3 | +0.124 |
+| 0.55 | 2 | 13:00 | 1.0% | 0.5% | 75 | 0.9 | 31% | +5.7 | +0.076 |
+| 0.65 | 2 | 13:00 | 1.0% | 0.5% | 69 | 0.8 | 30% | +3.8 | +0.055 |
+| 0.85 | 2 | 15:00 | 0.5% | 0.25% | 228 | 2.6 | 30% | −3.3 | −0.014 |
+| 0.55 | 2 | 15:00 | 0.5% | 0.25% | 379 | 4.3 | 28% | −5.0 | −0.013 |
+
+### THE HARD TRUTH — no durable edge at 2:1 R:R
+- **A 2:1 strategy needs >33.3% win rate just to break even** (risk 1 to make 2 means you
+  break even at 1-in-3). The best combo is **34%** — right at breakeven, no real edge.
+- **~28-34% win rate is exactly what RANDOM entries produce at 2:1.** Over 379 signals the
+  strategy shows essentially no directional edge.
+- Best combo expectancy: **+0.124%/trade** — statistically indistinguishable from zero,
+  and that's the *single best* of 200 combos (likely in-sample luck).
+- Stricter conviction (alpha 0.75) and a 1 PM cutoff help marginally, but not enough.
+
+### Why the earlier "45%" was an illusion
+That 45% used target 0.5% with a **2% stop** — i.e. risking 2% to make 0.5% (R:R 0.25).
+You "win" often but each loss erases four wins. Under your sane 2:1 rule the honest win
+rate is ~30%. **High win rate and good R:R are in tension; without an edge you can have
+one but not both.**
+
+### Bottom line
+- The win rate you can achieve at 2:1 is **~34% (breakeven), not higher.**
+- The strategy does not demonstrate a tradeable edge over 120 days of real data.
+- Trade log for the best combo: `trade_log_120d.csv` (59 trades, +7.3% net over ~6 months).
+- Options can't rescue it: option P&L tracks the underlying direction, which is ~random here,
+  and options add theta decay on top.
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).
