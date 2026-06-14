@@ -84,12 +84,15 @@ class TerminalApp(QMainWindow):
         self.last_scan_results = []
         self.active_screen = 0
         self._mkt_running = False
+        self._scanning = False
+        self.sim_trades = self._load_sim_trades()
 
         self._check_recording_window()
         self._build_ui()
         self._refresh_market_data()
         self._check_apis()
-        self.trigger_scan()
+        self._refresh_log()      # show simulation immediately (or live paper trades)
+        self.trigger_scan()       # only scans if market is open
 
         # timers
         self.scan_timer = QTimer(); self.scan_timer.timeout.connect(self.trigger_scan)
@@ -106,25 +109,37 @@ class TerminalApp(QMainWindow):
         self.recording_mode = datetime.now().date() in last5
         self.last5 = last5
 
+    def _load_sim_trades(self) -> list:
+        """Load the cached last-30-day option simulation (shown when market is closed)."""
+        import json, os
+        from engine.config import DATA_DIR
+        path = os.path.join(DATA_DIR, "sim_option_trades.json")
+        if os.path.exists(path):
+            try:
+                with open(path) as f:
+                    return json.load(f)
+            except Exception:
+                pass
+        return []
+
     # ── stylesheet ────────────────────────────────────────────────────────────
     def _qss(self) -> str:
         return f"""
 QMainWindow, QWidget {{ background-color: {BG}; color: {TEXT};
-    font-family: 'Menlo','Monaco','Courier New',monospace; }}
+    font-family: 'Menlo','Monaco','Courier New',monospace; font-size: 15px; }}
 QLabel {{ color: {TEXT}; }}
 QTableWidget {{ background-color: {PANEL}; alternate-background-color: {PANEL_LIGHT};
     border: 1px solid {BORDER}; gridline-color: {BORDER}; color: {TEXT};
-    selection-background-color: {BORDER}; }}
-QTableWidget::item {{ padding: 4px; border: none; }}
+    selection-background-color: {BORDER}; font-size: 16px; }}
+QTableWidget::item {{ padding: 9px 6px; border: none; }}
 QHeaderView::section {{ background-color: {PANEL_LIGHT}; color: {GREEN};
-    padding: 6px; border: none; border-bottom: 1px solid {BORDER};
-    font-weight: bold; letter-spacing: 1px; }}
+    padding: 9px; border: none; border-bottom: 1px solid {BORDER};
+    font-weight: bold; letter-spacing: 1px; font-size: 14px; }}
 QTableCornerButton::section {{ background-color: {PANEL_LIGHT}; border: none; }}
-QStatusBar {{ background-color: {PANEL}; color: {TEXT_DIM};
-    border-top: 1px solid {BORDER}; }}
+QStatusBar {{ background-color: {PANEL}; color: {TEXT_DIM}; font-size: 14px; }}
 QTextEdit {{ background-color: {PANEL}; color: {TEXT};
-    border: 1px solid {BORDER}; }}
-QScrollBar:vertical {{ background: {PANEL}; width: 10px; }}
+    border: 1px solid {BORDER}; font-size: 15px; }}
+QScrollBar:vertical {{ background: {PANEL}; width: 12px; }}
 QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 """
 
@@ -202,27 +217,19 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         tabs = [("PM DECISIONS", 0), ("WATCHLIST", 1), ("ALPHA", 2), ("TRADE LOG", 3), ("README", 4)]
         for label, idx in tabs:
             b = QPushButton(label)
-            b.setFont(QFont("Menlo", 10, QFont.Weight.Bold))
-            b.setMinimumHeight(38); b.setMinimumWidth(150)
+            b.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+            b.setMinimumHeight(44); b.setMinimumWidth(160)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             b.clicked.connect(lambda _=False, i=idx: self.switch(i))
             self.tab_btns.append(b); h.addWidget(b)
         h.addStretch()
 
-        self.scan_btn = QPushButton("⟳ SCAN")
-        self.scan_btn.setFont(QFont("Menlo", 10, QFont.Weight.Bold))
-        self.scan_btn.setMinimumHeight(38); self.scan_btn.setMinimumWidth(110)
-        self.scan_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.scan_btn.clicked.connect(self.trigger_scan)
-        h.addWidget(self.scan_btn)
-        self._style_scan_idle()
+        # Autonomous — no scan button. A live indicator shows the auto-scan state.
+        self.auto_lbl = QLabel("◇ AUTO")
+        self.auto_lbl.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        self.auto_lbl.setStyleSheet(f"color:{TEXT_DIM}; padding:0 14px;")
+        h.addWidget(self.auto_lbl)
         return w
-
-    def _style_scan_idle(self):
-        self.scan_btn.setStyleSheet(
-            f"QPushButton{{background-color:{PANEL_LIGHT};color:{GREEN};"
-            f"border:1px solid {GREEN};border-radius:3px;}}"
-            f"QPushButton:hover{{background-color:{GREEN};color:{BG};}}")
 
     def _highlight_tab(self, idx: int):
         for i, b in enumerate(self.tab_btns):
@@ -237,25 +244,43 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     # ── screens ───────────────────────────────────────────────────────────────
     def _panel_title(self, text, color=GREEN) -> QLabel:
-        l = QLabel(text); l.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        l = QLabel(text); l.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         l.setStyleSheet(f"color:{color}; padding:10px 4px; letter-spacing:1px;")
         return l
 
-    def _screen_pm(self) -> QWidget:
-        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("▸ LATEST PM DECISIONS   —   trade-ready signals (place manually in Upstox)", AMBER))
-        self.pm_table = QTableWidget()
-        self.pm_table.setColumnCount(10)
-        self.pm_table.setHorizontalHeaderLabels(
-            ["TIME", "ORDER (BUY)", "STRIKE", "EXPIRY", "PREMIUM", "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"])
-        self.pm_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.pm_table.setAlternatingRowColors(True)
-        self.pm_table.verticalHeader().setVisible(False)
-        v.addWidget(self.pm_table)
+    PM_COLS = ["TIME", "ORDER (BUY)", "STRIKE", "EXPIRY", "PREMIUM",
+               "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"]
 
-        self.pm_empty = QLabel("No trade-ready signals. Market scan runs every 5 min · 09:15–15:30 IST.")
-        self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:8px 4px;")
-        self.pm_empty.setFont(QFont("Menlo", 10))
+    def _make_pm_table(self) -> QTableWidget:
+        t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
+        t.setHorizontalHeaderLabels(self.PM_COLS)
+        t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        t.setAlternatingRowColors(True); t.verticalHeader().setVisible(False)
+        t.verticalHeader().setDefaultSectionSize(38)
+        return t
+
+    def _section_label(self, text, color) -> QLabel:
+        l = QLabel(text); l.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
+        l.setStyleSheet(f"color:{color}; padding:8px 4px 2px 4px;")
+        return l
+
+    def _screen_pm(self) -> QWidget:
+        """PM DECISIONS split into NIFTY / BANKNIFTY / STOCK option tables."""
+        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
+        v.addWidget(self._panel_title("▸ LATEST PM DECISIONS — BUY options · place manually in Upstox", AMBER))
+
+        v.addWidget(self._section_label("● NIFTY OPTIONS", CYAN))
+        self.pm_nifty = self._make_pm_table(); self.pm_nifty.setMaximumHeight(150); v.addWidget(self.pm_nifty)
+
+        v.addWidget(self._section_label("● BANKNIFTY OPTIONS", AMBER))
+        self.pm_bnf = self._make_pm_table(); self.pm_bnf.setMaximumHeight(150); v.addWidget(self.pm_bnf)
+
+        v.addWidget(self._section_label("● STOCK OPTIONS", GREEN))
+        self.pm_stock = self._make_pm_table(); v.addWidget(self.pm_stock, 1)
+
+        self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min · 09:15–15:30 IST.")
+        self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
+        self.pm_empty.setFont(QFont("Menlo", 12))
         v.addWidget(self.pm_empty)
         return w
 
@@ -283,20 +308,31 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.alpha_table)
         return w
 
+    LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
+
+    def _make_log_table(self) -> QTableWidget:
+        t = QTableWidget(); t.setColumnCount(len(self.LOG_COLS))
+        t.setHorizontalHeaderLabels(self.LOG_COLS)
+        t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        t.setAlternatingRowColors(True); t.verticalHeader().setVisible(False)
+        t.verticalHeader().setDefaultSectionSize(36)
+        return t
+
     def _screen_log(self) -> QWidget:
-        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("▸ TRADE LOG   —   paper trades + statistics"))
+        """TRADE LOG split into NIFTY / BANKNIFTY / STOCK options."""
+        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
+        v.addWidget(self._panel_title("▸ TRADE LOG — option outcomes by underlying"))
         self.log_stats = QLabel("—")
-        self.log_stats.setFont(QFont("Menlo", 11, QFont.Weight.Bold))
-        self.log_stats.setStyleSheet(f"color:{CYAN}; padding:6px 4px; background-color:{PANEL}; border:1px solid {BORDER};")
+        self.log_stats.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
+        self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(self.log_stats)
-        self.log_table = QTableWidget()
-        self.log_table.setColumnCount(8)
-        self.log_table.setHorizontalHeaderLabels(["TIME", "TICKER", "DIR", "ENTRY", "STOP", "TARGET", "OUTCOME", "P&L"])
-        self.log_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.log_table.setAlternatingRowColors(True)
-        self.log_table.verticalHeader().setVisible(False)
-        v.addWidget(self.log_table)
+
+        v.addWidget(self._section_label("● NIFTY OPTIONS", CYAN))
+        self.log_nifty = self._make_log_table(); self.log_nifty.setMaximumHeight(140); v.addWidget(self.log_nifty)
+        v.addWidget(self._section_label("● BANKNIFTY OPTIONS", AMBER))
+        self.log_bnf = self._make_log_table(); self.log_bnf.setMaximumHeight(140); v.addWidget(self.log_bnf)
+        v.addWidget(self._section_label("● STOCK OPTIONS", GREEN))
+        self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 1)
         return w
 
     def _screen_readme(self) -> QWidget:
@@ -464,18 +500,34 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         self._highlight_tab(idx)
 
     def trigger_scan(self):
-        self.scan_btn.setText("SCANNING…"); self.scan_btn.setEnabled(False)
+        # Autonomous: only scans live during market hours; otherwise stays in
+        # SIMULATION (last-30-day historical option data already loaded).
+        if not self.agent.is_market_open():
+            return
+        if getattr(self, "_scanning", False):
+            return
+        self._scanning = True
+        if hasattr(self, "auto_lbl"):
+            self.auto_lbl.setText("◉ LIVE · scanning…"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
         self.worker = ScanWorker(self.agent)
         self.worker.scan_complete.connect(self._on_scan)
         self.worker.error_occurred.connect(lambda e: self.status.showMessage(f"Scan error: {e}"))
         self.worker.start()
 
     def _on_scan(self, signals: list):
+        self._scanning = False
         self.last_scan_results = signals
         self._refresh_pm(); self._refresh_watchlist(); self._refresh_alpha(); self._refresh_log()
-        self.scan_btn.setText("⟳ SCAN"); self.scan_btn.setEnabled(True); self._style_scan_idle()
+        if hasattr(self, "auto_lbl"):
+            self.auto_lbl.setText("◉ LIVE"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
 
     # ── refreshers ────────────────────────────────────────────────────────────
+    @staticmethod
+    def _underlying_kind(ticker: str) -> str:
+        if ticker == "NIFTY": return "NIFTY"
+        if ticker == "BANKNIFTY": return "BANKNIFTY"
+        return "STOCK"
+
     def _dir_color(self, d):
         return QColor(GREEN) if d == "LONG" else QColor(RED) if d == "SHORT" else QColor(TEXT_DIM)
 
@@ -489,26 +541,31 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
     def _refresh_pm(self):
         ready = [s for s in self.last_scan_results if s.get("trade_ready")]
         self.pm_empty.setVisible(len(ready) == 0)
-        self.pm_table.setRowCount(len(ready))
         from engine.options import build_live_option_order
         from engine.data_fetcher import get_cached_ltp
-        for r, sig in enumerate(ready):
-            spot = get_cached_ltp(sig["ticker"]) or sig.get("entry_price") or 0
-            order = build_live_option_order(sig["ticker"], spot, sig.get("direction", "LONG"))
-            if not order:
+        buckets = {"NIFTY": [], "BANKNIFTY": [], "STOCK": []}
+        for sig in ready:
+            buckets[self._underlying_kind(sig["ticker"])].append(sig)
+
+        for kind, table in (("NIFTY", self.pm_nifty), ("BANKNIFTY", self.pm_bnf), ("STOCK", self.pm_stock)):
+            rows = buckets[kind]
+            table.setRowCount(len(rows))
+            for r, sig in enumerate(rows):
+                spot = get_cached_ltp(sig["ticker"]) or sig.get("entry_price") or 0
+                order = build_live_option_order(sig["ticker"], spot, sig.get("direction", "LONG"))
+                if not order:
+                    vals = [datetime.now(IST).strftime("%H:%M:%S"),
+                            f"{sig['ticker']} {sig.get('direction')}", "—", "—", "n/a",
+                            "—", "—", "—", "—", "no option"]
+                    self._set_row(table, r, vals, fg=QColor(TEXT_DIM)); continue
+                cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
                 vals = [datetime.now(IST).strftime("%H:%M:%S"),
-                        f"{sig['ticker']} {sig.get('direction')}", "—", "—", "n/a",
-                        "—", "—", "—", "—", "no option"]
-                self._set_row(self.pm_table, r, vals, fg=QColor(TEXT_DIM))
-                continue
-            cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
-            vals = [datetime.now(IST).strftime("%H:%M:%S"),
-                    f"BUY {order['symbol']} {order['instrument']}",
-                    f"{int(order['strike'])}", order["expiry"],
-                    f"Rs {order['premium']:.2f}", f"Rs {order['target_premium']:.2f}",
-                    f"Rs {order['stop_premium']:.2f}", order.get("lot_size", "—"),
-                    cap, "● BUY MANUAL"]
-            self._set_row(self.pm_table, r, vals, fg=QColor(AMBER))
+                        f"BUY {order['symbol']} {order['instrument']}",
+                        f"{int(order['strike'])}", order["expiry"],
+                        f"Rs {order['premium']:.2f}", f"Rs {order['target_premium']:.2f}",
+                        f"Rs {order['stop_premium']:.2f}", order.get("lot_size", "—"),
+                        cap, "● BUY MANUAL"]
+                self._set_row(table, r, vals, fg=QColor(AMBER))
 
     def _refresh_watchlist(self):
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
@@ -533,21 +590,45 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                     f"{fam.get('EVENT',{}).get('z_score',0):.2f}"]
             self._set_row(self.alpha_table, r, vals, fg=self._dir_color(sig.get("direction")))
 
+    def _norm_trade(self, t: dict) -> dict:
+        """Normalise a live paper-trade OR a simulation trade to a display row."""
+        if "under" in t:  # simulation trade (from option backtest)
+            return {"time": f"{t.get('day','')} {t.get('entry_time','')}",
+                    "under": t["under"], "opt": t.get("opt_type", ""),
+                    "dir": t.get("direction", ""), "entry": t.get("entry_prem", 0),
+                    "target": round(t.get("entry_prem",0)*1.10, 2),
+                    "stop": round(t.get("entry_prem",0)*0.80, 2),
+                    "outcome": t.get("outcome", ""), "pnl": t.get("pnl_pct", 0), "unit": "%"}
+        return {"time": t.get("signal_time", "")[:19], "under": t.get("ticker", ""),
+                "opt": t.get("instrument", ""), "dir": t.get("direction", ""),
+                "entry": t.get("entry", 0), "target": t.get("target", 0), "stop": t.get("stop", 0),
+                "outcome": t.get("outcome", ""), "pnl": t.get("realized_pnl_inr", 0), "unit": ""}
+
     def _refresh_log(self):
-        st = self.trade_log.get_all_time_stats()
+        live = [t for t in self.trade_log.trades if t.get("outcome")]
+        sim = getattr(self, "sim_trades", [])
+        source = "LIVE PAPER" if live else "SIMULATION (last 30d option data)"
+        allt = [self._norm_trade(t) for t in (live if live else sim)]
+        n = len(allt); w = sum(1 for t in allt if t["outcome"] == "WIN")
+        l = sum(1 for t in allt if t["outcome"] == "LOSS")
+        wr = (w / n * 100) if n else 0
         self.log_stats.setText(
-            f"  TRADES {st['num_trades']}   ·   W {st['num_wins']} / L {st['num_losses']}   ·   "
-            f"WIN {st['win_rate']:.0%}   ·   PF {st['profit_factor']:.2f}   ·   "
-            f"P&L Rs {st['total_pnl']:+.0f}   ·   EXP Rs {st['expectancy']:+.0f}/trade")
-        trades = [t for t in self.trade_log.trades if t.get("outcome")][-25:]
-        self.log_table.setRowCount(len(trades))
-        for r, t in enumerate(trades):
-            oc = t.get("outcome")
-            fg = QColor(GREEN) if oc == "WIN" else QColor(RED) if oc == "LOSS" else QColor(CYAN)
-            vals = [t.get("signal_time","")[:19], t.get("ticker"), t.get("direction"),
-                    f"{t.get('entry',0):.2f}", f"{t.get('stop',0):.2f}", f"{t.get('target',0):.2f}",
-                    oc, f"{t.get('realized_pnl_inr',0):+.0f}"]
-            self._set_row(self.log_table, r, vals, fg=fg)
+            f"  [{source}]   TRADES {n}   ·   WINS {w}  LOSSES {l}   ·   WIN {wr:.0f}%   "
+            f"·   target +10% / stop -20% on premium")
+
+        buckets = {"NIFTY": [], "BANKNIFTY": [], "STOCK": []}
+        for t in allt:
+            buckets[self._underlying_kind(t["under"])].append(t)
+        for kind, table in (("NIFTY", self.log_nifty), ("BANKNIFTY", self.log_bnf), ("STOCK", self.log_stock)):
+            rows = buckets[kind][-40:]
+            table.setRowCount(len(rows))
+            for r, t in enumerate(rows):
+                oc = t["outcome"]
+                fg = QColor(GREEN) if oc == "WIN" else QColor(RED) if oc == "LOSS" else QColor(CYAN)
+                pnl = f"{t['pnl']:+.1f}%" if t["unit"] == "%" else f"Rs {t['pnl']:+.0f}"
+                vals = [t["time"], t["under"].replace(".NS",""), t["opt"], t["dir"],
+                        f"{t['entry']:.2f}", f"{t['target']:.2f}", f"{t['stop']:.2f}", oc, pnl]
+                self._set_row(table, r, vals, fg=fg)
 
     # ── market data + clock ───────────────────────────────────────────────────
     def _refresh_market_data(self):
@@ -600,10 +681,21 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
 
     def _tick(self):
         now = datetime.now(IST)
-        mkt = "OPEN" if self.agent.is_market_open() else "CLOSED"
+        is_open = self.agent.is_market_open()
+        mkt = "OPEN" if is_open else "CLOSED"
+        mode = "LIVE" if is_open else "SIMULATION"
+        # Keep the AUTO badge in sync when idle (scanning sets it to LIVE·scanning)
+        if hasattr(self, "auto_lbl") and not getattr(self, "_scanning", False):
+            if is_open:
+                self.auto_lbl.setText("◉ LIVE · AUTO 5-min"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
+            else:
+                self.auto_lbl.setText("◇ SIMULATION"); self.auto_lbl.setStyleSheet(f"color:{AMBER}; padding:0 14px;")
+        if hasattr(self, "mode_label"):
+            self.mode_label.setText(f"{'● LIVE' if is_open else '◇ SIMULATION'}  ·  9:00–15:30 Mon–Fri auto-live")
+            self.mode_label.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         self.status.showMessage(
-            f"  {now:%a %d %b %Y · %H:%M:%S} IST    ·    MARKET {mkt}    ·    "
-            f"scanned {len(self.last_scan_results)}    ·    "
+            f"  {now:%a %d %b %Y · %H:%M:%S} IST   ·   MARKET {mkt}   ·   MODE {mode}   ·   "
+            f"scanned {len(self.last_scan_results)}   ·   "
             f"ready {sum(1 for s in self.last_scan_results if s.get('trade_ready'))}")
 
 
