@@ -18,6 +18,7 @@ from engine.config import UNIVERSE, TRADING_START
 from engine.data_fetcher import fetch_upstox_historical
 from engine.signals import compute_all_families, is_orb_confirmed
 from engine.options import get_atm_option, fetch_option_premium_5min
+from engine.backtest120 import _fetch_5min_chunked
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +46,13 @@ def collect_option_trades(n_days=20, max_stocks=None, cutoff="13:00", progress=N
     """
     days = _trading_days(n_days)
     unders = INDEX_UNDERLYINGS + (UNIVERSE[:max_stocks] if max_stocks else UNIVERSE)
-    from_d = (days[0] - timedelta(days=3)).strftime("%Y-%m-%d")
-    to_d = (days[-1] + timedelta(days=1)).strftime("%Y-%m-%d")
+    from_dt = days[0] - timedelta(days=3)
+    to_dt = days[-1] + timedelta(days=1)
+    from_d = from_dt.strftime("%Y-%m-%d")
+    to_d = to_dt.strftime("%Y-%m-%d")
     start_min, cut_min = _hhmm(TRADING_START), _hhmm(cutoff)
 
-    nifty5 = fetch_upstox_historical("NIFTY", unit="minutes", interval=5, from_date=from_d, to_date=to_d)
+    nifty5 = _fetch_5min_chunked("NIFTY", from_dt, to_dt)
     vixd = fetch_upstox_historical("VIX", unit="days", interval=1, from_date=from_d, to_date=to_d)
     def npct(day):
         if nifty5.empty: return 0.0
@@ -64,7 +67,7 @@ def collect_option_trades(n_days=20, max_stocks=None, cutoff="13:00", progress=N
         if progress: progress(k+1, len(unders), under)
         daily = fetch_upstox_historical(under, unit="days", interval=1,
                   from_date=(days[0]-timedelta(days=420)).strftime("%Y-%m-%d"), to_date=to_d)
-        five = fetch_upstox_historical(under, unit="minutes", interval=5, from_date=from_d, to_date=to_d)
+        five = _fetch_5min_chunked(under, from_dt, to_dt)
         if five.empty or daily.empty: continue
 
         for day in days:

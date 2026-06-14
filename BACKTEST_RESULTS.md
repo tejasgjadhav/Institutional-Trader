@@ -152,6 +152,39 @@ curve-fitting. (It comes from the EXIT asymmetry, not a predictive signal — en
   PROFIT is not. The only honest way to settle the options version is to paper-trade it
   forward on live option premium for 30+ sessions and read the actual P&L.
 
+## Run F — BUY options on REAL premium (the first encouraging result)
+
+Method: recent 20 sessions (option premium only exists for current contracts).
+For each signal BUY the ATM option (CALL=long, PUT=short), exit on the PREMIUM.
+
+### Premium-exit sweep (ranked by win rate)
+| premium target | premium stop | trades | win rate | exp/trade | net |
+|----------------|--------------|--------|----------|-----------|-----|
+| **+10%** | −20% | 13 | **77%** | +3.74% | +48.6% |
+| +15% | −20% | 13 | 69% | +2.21% | +28.7% |
+| +20% | −20% | 13 | 62% | −0.10% | −1.3% |
+
+**Booking a quick +10% on the option premium with a −20% stop → 77% win rate AND
+positive expectancy (+3.74%/trade) on real data, buying only.** The leverage makes the
+small-target/wide-stop pattern actually pay (unlike on the underlying).
+
+### Caveats (why it's "promising", not "proven")
+- **Only 13 trades / 7 active days** — far too small to trust (77% = 10W/3L).
+- All **stock** options; NIFTY/BANKNIFTY fired 0 signals in 20 days (indices are calmer).
+- **Recent-only** — can't extend back (expired contracts unavailable).
+- **Costs not modelled** — stock-option bid-ask + STT could eat part of +10%
+  (index options have tighter spreads, but those didn't fire).
+
+### Implemented as the live config (forward-test to confirm)
+- `OPTIONS_ONLY_MODE = True` · BUY CALL (long) / PUT (short) only
+- `PREMIUM_TARGET_PCT = 10` · `PREMIUM_STOP_PCT = 20`
+- Dashboard PM screen now shows the exact order: strike, expiry, live premium,
+  target/stop premium, lot, capital — e.g. `BUY NIFTY 23600 CE 16-Jun @ Rs179` ·
+  tgt Rs197 · stop Rs143 · cap Rs11,654.
+- NIFTY/BANKNIFTY added to the scan (low capital: Nifty ~Rs12k/lot, BankNifty ~Rs28k).
+- **The honest test is forward**: paper-trade this for 30+ sessions; if 77% holds on a
+  real sample after costs, it's an edge. If it reverts to ~50-60%, it was small-sample luck.
+
 ## Open questions / next steps
 - **Lower OPTION_CONVICTION_THRESHOLD** (e.g. 0.70 → 0.60) so CALL/PUT actually trigger,
   then re-run the option-premium sweep (the infra is built and proven to fetch premium).

@@ -17,22 +17,26 @@ def decide_instrument(alpha_z: float, direction: str) -> dict:
     """
     Map conviction + direction to instrument and target %.
 
-      |alpha-z| 0.55-0.70  LONG  -> EQUITY  (1% target, unleveraged)
-                           SHORT -> FUTURE  (5% target, leveraged)
-      |alpha-z| > 0.70     LONG  -> CALL    (5% target, leveraged)
-                           SHORT -> PUT     (5% target, leveraged)
+    OPTIONS_ONLY_MODE (default): always BUY an option —
+      LONG -> CALL, SHORT -> PUT, exit on premium (PREMIUM_TARGET_PCT/STOP_PCT).
 
-    Returns {'instrument': str, 'target_pct': float, 'leveraged': bool}.
+    Otherwise (legacy underlying mode):
+      |alpha-z| 0.55-0.70  LONG -> EQUITY (1%) · SHORT -> FUTURE (5%)
+      |alpha-z| > 0.70     LONG -> CALL (5%)   · SHORT -> PUT (5%)
     """
+    from engine.config import OPTIONS_ONLY_MODE, PREMIUM_TARGET_PCT
+    if OPTIONS_ONLY_MODE:
+        inst = "CALL" if direction == "LONG" else "PUT"
+        return {"instrument": inst, "target_pct": PREMIUM_TARGET_PCT,
+                "leveraged": True, "on_premium": True}
+
     strong = abs(alpha_z) > OPTION_CONVICTION_THRESHOLD
     if direction == "LONG":
-        if strong:
-            inst, tpct = "CALL", TARGET_PCT_DERIVATIVE
-        else:
-            inst, tpct = "EQUITY", TARGET_PCT_EQUITY
-    else:  # SHORT — retail can't short cash, so always a derivative
+        inst, tpct = ("CALL", TARGET_PCT_DERIVATIVE) if strong else ("EQUITY", TARGET_PCT_EQUITY)
+    else:
         inst, tpct = ("PUT" if strong else "FUTURE"), TARGET_PCT_DERIVATIVE
-    return {"instrument": inst, "target_pct": tpct, "leveraged": (inst != "EQUITY")}
+    return {"instrument": inst, "target_pct": tpct, "leveraged": (inst != "EQUITY"),
+            "on_premium": inst in ("CALL", "PUT")}
 
 
 class Portfolio:

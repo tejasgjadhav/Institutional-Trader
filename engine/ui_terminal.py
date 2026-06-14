@@ -245,9 +245,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
         v.addWidget(self._panel_title("▸ LATEST PM DECISIONS   —   trade-ready signals (place manually in Upstox)", AMBER))
         self.pm_table = QTableWidget()
-        self.pm_table.setColumnCount(9)
+        self.pm_table.setColumnCount(10)
         self.pm_table.setHorizontalHeaderLabels(
-            ["TIME", "TICKER", "DIR", "ENTRY", "STOP", "TARGET", "QTY", "INSTRUMENT", "STATUS"])
+            ["TIME", "ORDER (BUY)", "STRIKE", "EXPIRY", "PREMIUM", "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"])
         self.pm_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.pm_table.setAlternatingRowColors(True)
         self.pm_table.verticalHeader().setVisible(False)
@@ -474,15 +474,24 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         ready = [s for s in self.last_scan_results if s.get("trade_ready")]
         self.pm_empty.setVisible(len(ready) == 0)
         self.pm_table.setRowCount(len(ready))
-        from engine.portfolio import TradeCalculator
+        from engine.options import build_live_option_order
         from engine.data_fetcher import get_cached_ltp
         for r, sig in enumerate(ready):
-            entry = get_cached_ltp(sig["ticker"]) or 100.0
-            pos = TradeCalculator.calculate_position(entry, sig.get("alpha_z"), None,
-                                                     direction=sig.get("direction", "LONG"))
-            vals = [datetime.now(IST).strftime("%H:%M:%S"), sig.get("ticker"), sig.get("direction"),
-                    f"{pos.get('entry',0):.2f}", f"{pos.get('stop',0):.2f}", f"{pos.get('target',0):.2f}",
-                    pos.get("qty",0), pos.get("instrument",""), "● MANUAL"]
+            spot = get_cached_ltp(sig["ticker"]) or sig.get("entry_price") or 0
+            order = build_live_option_order(sig["ticker"], spot, sig.get("direction", "LONG"))
+            if not order:
+                vals = [datetime.now(IST).strftime("%H:%M:%S"),
+                        f"{sig['ticker']} {sig.get('direction')}", "—", "—", "n/a",
+                        "—", "—", "—", "—", "no option"]
+                self._set_row(self.pm_table, r, vals, fg=QColor(TEXT_DIM))
+                continue
+            cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
+            vals = [datetime.now(IST).strftime("%H:%M:%S"),
+                    f"BUY {order['symbol']} {order['instrument']}",
+                    f"{int(order['strike'])}", order["expiry"],
+                    f"Rs {order['premium']:.2f}", f"Rs {order['target_premium']:.2f}",
+                    f"Rs {order['stop_premium']:.2f}", order.get("lot_size", "—"),
+                    cap, "● BUY MANUAL"]
             self._set_row(self.pm_table, r, vals, fg=QColor(AMBER))
 
     def _refresh_watchlist(self):

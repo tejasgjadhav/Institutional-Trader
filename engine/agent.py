@@ -9,7 +9,7 @@ from pathlib import Path
 
 from engine.config import (
     IST, MARKET_OPEN, TRADING_START, NO_NEW_TRADES_AFTER, KILL_SWITCH_TIME,
-    UNIVERSE, PAPER_TRADING_PHASE, APP_LOG_PATH, SIGNALS_PATH
+    UNIVERSE, PAPER_TRADING_PHASE, APP_LOG_PATH, SIGNALS_PATH, SCAN_INDICES
 )
 from engine.data_fetcher import (
     fetch_intraday_5min, fetch_yahoo_historical, get_cached_vix, get_cached_nifty_pct
@@ -35,7 +35,8 @@ class Agent:
 
     def __init__(self):
         self.trade_log = TradeLog()
-        self.universe = UNIVERSE
+        # Scan indices first (low-capital option plays), then the stock universe
+        self.universe = SCAN_INDICES + UNIVERSE
         self.signals_fired = []
 
     def is_market_open(self) -> bool:

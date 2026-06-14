@@ -101,3 +101,48 @@ def fetch_option_premium_5min(option_key: str, on_day: date):
     d = on_day.strftime("%Y-%m-%d")
     return fetch_upstox_historical(option_key, unit="minutes", interval=5,
                                    from_date=d, to_date=d)
+
+
+def build_live_option_order(ticker: str, spot: float, direction: str) -> dict:
+    """
+    For a live signal, produce the exact BUY-option order with correct strike,
+    expiry, live premium, premium target/stop, lot size and capital required.
+
+    Returns None if no contract/premium is available. Buy-only:
+      LONG  -> ATM CALL,  SHORT -> ATM PUT.
+    """
+    from engine.config import PREMIUM_TARGET_PCT, PREMIUM_STOP_PCT
+    from engine.data_fetcher import fetch_upstox_ltp
+    from datetime import date as _date
+
+    opt_type = "CE" if direction == "LONG" else "PE"
+    opt = get_atm_option(ticker, spot, _date.today(), opt_type)
+    if not opt:
+        return None
+
+    # live premium (LTP on the option contract); fall back to last candle close
+    ltp = fetch_upstox_ltp(opt["key"])
+    premium = ltp["price"] if ltp.get("success") and ltp.get("price") else None
+    if premium is None:
+        df = fetch_option_premium_5min(opt["key"], _date.today())
+        premium = float(df["Close"].iloc[-1]) if not df.empty else None
+    if not premium or premium <= 0:
+        return None
+
+    lot = opt.get("lot", 0) or 0
+    target = round(premium * (1 + PREMIUM_TARGET_PCT / 100), 2)
+    stop = round(premium * (1 - PREMIUM_STOP_PCT / 100), 2)
+    sym = ticker.replace(".NS", "")
+    return {
+        "instrument": "CALL" if opt_type == "CE" else "PUT",
+        "symbol": sym,
+        "strike": opt["strike"],
+        "expiry": opt["expiry_date"],
+        "option_key": opt["key"],
+        "premium": round(premium, 2),
+        "target_premium": target,      # book +PREMIUM_TARGET_PCT%
+        "stop_premium": stop,          # cut -PREMIUM_STOP_PCT%
+        "lot_size": lot,
+        "capital": round(premium * lot, 0) if lot else None,
+        "order": f"BUY {sym} {int(opt['strike'])} {opt_type} {opt['expiry_date']} @ Rs {round(premium,2)}",
+    }

@@ -45,6 +45,9 @@ UNIVERSE = [
 ]
 assert len(UNIVERSE) == 95, "Universe should have 95 stocks"
 
+# Index underlyings to scan for options (low capital, liquid weekly/monthly expiries)
+SCAN_INDICES = ["NIFTY", "BANKNIFTY"]
+
 # === DATA SOURCES ===
 UPSTOX_ANALYTICS_TOKEN = os.getenv("UPSTOX_ANALYTICS_TOKEN")
 USE_YAHOO_FALLBACK = True  # If Upstox fails, fall back to Yahoo (15-min delay)
@@ -76,18 +79,24 @@ MAX_TRADES_PER_DAY = 3
 CONSECUTIVE_LOSS_HALT = 3  # Halt trading after 3 stops in a row
 STOP_LOSS_CAP_PCT = 1.0  # Stop can't be more than 1% away from entry
 
-# === TARGETS BY INSTRUMENT (underlying % move) ===
-# Cash equity is unleveraged → small 1% target.
-# Futures & options are leveraged → larger 5% underlying target (premium/contract
-# gain is amplified by leverage, so a 5% underlying move is the exit trigger).
-TARGET_PCT_EQUITY     = 1.0   # cash equity (|alpha-z| 0.55-0.70 LONG)
-TARGET_PCT_DERIVATIVE = 5.0   # futures + CALL/PUT options (SHORT, or |alpha-z| > 0.70)
+# === OPTIONS-ONLY BUYING MODE (validated profile) ===
+# We BUY options only (never sell): LONG signal -> ATM CALL, SHORT signal -> ATM PUT.
+# Exit on the OPTION PREMIUM (what you actually trade), NOT the underlying.
+# Recent 20-day backtest on real premium: +10% target / -20% stop = 77% win rate,
+# +3.74%/trade expectancy (13 trades — promising, must be confirmed forward).
+OPTIONS_ONLY_MODE   = True    # all signals become buy-CALL / buy-PUT
+PREMIUM_TARGET_PCT  = 10.0    # book profit at +10% on the option premium
+PREMIUM_STOP_PCT    = 20.0    # cut loss at -20% on the option premium
+OPTION_IV_THRESHOLD = 60      # skip if ATM IV too high (very expensive premium)
+
+# Legacy underlying targets (kept for the equity/future path if OPTIONS_ONLY_MODE=False)
+TARGET_PCT_EQUITY     = 1.0
+TARGET_PCT_DERIVATIVE = 5.0
 
 # === INSTRUMENT SELECTION ===
-# Conviction levels determine instrument type
-# LONG: 0.55-0.70 = equity, >0.70 = CALL
-# SHORT: 0.55-0.70 = future, >0.70 = PUT
-OPTION_IV_THRESHOLD = 40  # If IV > 40, fall back to futures (options too expensive)
+# In OPTIONS_ONLY_MODE the instrument is always CALL (LONG) or PUT (SHORT).
+# Otherwise: |alpha-z| 0.55-0.70 LONG=equity / SHORT=future; >0.70 = CALL/PUT.
+OPTION_CONVICTION_THRESHOLD_NOTE = "see OPTION_CONVICTION_THRESHOLD above"
 
 # === FACTOR WEIGHTS (backtested on 30-day history) ===
 # Each family produces a z-score; families are weighted by real hit-rate
