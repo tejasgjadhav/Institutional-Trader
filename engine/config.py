@@ -16,7 +16,11 @@ IST = pytz.timezone("Asia/Kolkata")
 EXECUTION_MODE = "PAPER"  # "PAPER" = signals only (manual orders in Upstox), "LIVE" = auto orders (not yet implemented)
 PAPER_TRADING_PHASE = True  # If True, paper-log all signals before going live
 PAPER_TRADING_MIN_SIGNALS = 30
-PAPER_TRADING_MIN_WIN_RATE = 0.52
+# Go-live bar. With +10% target / -20% stop the reward:risk is 0.5:1, so the
+# BREAKEVEN win rate is stop/(target+stop) = 20/30 = ~67%. We require 70% (a
+# margin above breakeven) — NOT the old generic 52%, which would lose money here.
+PAPER_TRADING_BREAKEVEN_WIN_RATE = 0.67
+PAPER_TRADING_MIN_WIN_RATE = 0.70
 PAPER_TRADING_MIN_PF = 1.0
 
 # === UNIVERSE ===

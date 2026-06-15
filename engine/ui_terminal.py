@@ -500,13 +500,27 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("10 · PAPER TRADING & GO-LIVE RULE")}
 {p("For the first month the system records every signal to its outcome (WIN at target, LOSS at stop, "
    "or FORCED at 3:10 PM). The TRADE LOG is your honest scorecard.")}
-{p(f"<b style='color:{GREEN}'>Go-live bar:</b> win rate ≥ {C.PAPER_TRADING_MIN_WIN_RATE:.0%} "
-   f"AND profit factor > {C.PAPER_TRADING_MIN_PF} across {C.PAPER_TRADING_MIN_SIGNALS}+ signals. "
-   "Below that, the edge isn't proven — don't automate.")}
-{dim("Honest note: factor hit-rates are barely above a coin-flip; after brokerage + taxes the edge is thin. "
-     "Treat every signal as a hypothesis and judge it by the log over many sessions.")}
+{p(f"<b>Why the bar is high:</b> with a +{int(C.PREMIUM_TARGET_PCT)}% target and −{int(C.PREMIUM_STOP_PCT)}% "
+   f"stop you risk {int(C.PREMIUM_STOP_PCT)}% to make {int(C.PREMIUM_TARGET_PCT)}%, so the BREAKEVEN win rate is "
+   f"{int(C.PREMIUM_STOP_PCT)}/({int(C.PREMIUM_TARGET_PCT)}+{int(C.PREMIUM_STOP_PCT)}) = "
+   f"<b>~{C.PAPER_TRADING_BREAKEVEN_WIN_RATE:.0%}</b>. Below that you LOSE money.")}
+{p(f"<b style='color:{GREEN}'>Go-live bar:</b> win rate ≥ <b>{C.PAPER_TRADING_MIN_WIN_RATE:.0%}</b> "
+   f"(a margin above breakeven) AND profit factor > {C.PAPER_TRADING_MIN_PF} across "
+   f"{C.PAPER_TRADING_MIN_SIGNALS}+ signals. Below that, the edge isn't proven — don't automate.")}
+{dim("Honest note: backtests show ~72% on tiny samples but no proven edge. After brokerage + taxes the "
+     "edge is thin. Treat every signal as a hypothesis and judge it by the live log over many sessions.")}
 
-{h("11 · HOW IT RUNS (local machine)")}
+{h("11 · SPEED — how fast is a scan?")}
+{p("The strategy logic is essentially instant; the only real cost is fetching data over the network.")}
+{p("<b>Per stock:</b> score 3 families + alpha-z + both gates + instrument choice = <b>~1.6 ms</b> (CPU). "
+   "Fetching that stock's 5-min candles = <b>~440 ms</b> (network) — 99% of the time.")}
+{p(f"<b>Full scan of NIFTY + BANKNIFTY + {len(C.UNIVERSE)} stocks:</b> ~3–4 seconds. We get there with "
+   "12 parallel threads, a daily-history cache (fetched once per day), and batched live prices (all in one "
+   "call). Sequential it would take ~43 seconds.")}
+{dim("A 3–4 second scan inside a 5-minute window means a signal is seen almost the instant a candle closes — "
+     "prices barely drift before the order appears. (First scan of the day ~6–7s for one-time cache warmup.)")}
+
+{h("12 · HOW IT RUNS (local machine)")}
 {p("Everything runs <b>locally</b> on this Mac — not from the cloud:")}
 {p(f"• <b>08:55 weekdays</b> — Mac wakes itself (pmset schedule)")}
 {p(f"• <b>09:00 weekdays</b> — app auto-launches (launchd: com.sayali.institutionaltrader)")}

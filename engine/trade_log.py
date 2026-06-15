@@ -183,20 +183,22 @@ class TradeLog:
     def should_go_live(self) -> tuple:
         """
         Decision: should we automate and go live?
-        Rule: win_rate ≥ 52% AND profit_factor > 1.0 across ≥ 30 signals
+        With +10%/-20% the breakeven win rate is ~67%, so the bar is 70%.
+        Rule: win_rate >= 70% AND profit_factor > 1.0 across >= 30 signals.
         Returns: (go_live: bool, reason: str, stats: dict)
         """
+        from engine.config import (PAPER_TRADING_MIN_SIGNALS, PAPER_TRADING_MIN_WIN_RATE,
+                                    PAPER_TRADING_MIN_PF)
         stats = self.get_all_time_stats()
 
-        min_signals = 30
-        if stats["num_trades"] < min_signals:
-            return False, f"Need {min_signals} signals, have {stats['num_trades']}", stats
+        if stats["num_trades"] < PAPER_TRADING_MIN_SIGNALS:
+            return False, f"Need {PAPER_TRADING_MIN_SIGNALS} signals, have {stats['num_trades']}", stats
 
-        if stats["win_rate"] < 0.52:
-            return False, f"Win rate {stats['win_rate']:.1%} < 52%", stats
+        if stats["win_rate"] < PAPER_TRADING_MIN_WIN_RATE:
+            return False, f"Win rate {stats['win_rate']:.0%} < {PAPER_TRADING_MIN_WIN_RATE:.0%}", stats
 
-        if stats["profit_factor"] <= 1.0:
-            return False, f"Profit factor {stats['profit_factor']:.2f} ≤ 1.0", stats
+        if stats["profit_factor"] <= PAPER_TRADING_MIN_PF:
+            return False, f"Profit factor {stats['profit_factor']:.2f} <= {PAPER_TRADING_MIN_PF}", stats
 
         return True, "Go live: all gates passed", stats
 

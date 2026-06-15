@@ -366,8 +366,50 @@ story.append(lesson("The most professional outcome is sometimes 'not proven'",
     "maturity. Protecting capital from a false positive is worth more than any backtest."))
 story.append(PageBreak())
 
-# ── 12. LESSONS SUMMARY ────────────────────────────────────────────────────
-story.append(h1("12.  Ten Lessons to Take Away"))
+# ── 12. PERFORMANCE / SPEED ────────────────────────────────────────────────
+story.append(h1("12.  Performance — How Fast Is a Scan?"))
+story.append(para(
+    "A common student question: if the system scans 95 stocks every five minutes, is it fast enough that "
+    "prices don't move before you act? We measured every step. The answer reveals where the real cost lies — "
+    "and it is NOT the strategy maths."))
+story.append(h2("Per-stock timings (measured)"))
+story.append(dtable([
+    ["Step","What happens","Time","Type"],
+    ["2","Fetch the stock's 5-min candles","~440 ms","Network"],
+    ["-","Daily history (cached after 1st fetch)","~0 ms","Memory"],
+    ["3-4","Score 3 families + compute alpha-z","1.4 ms","CPU"],
+    ["5","Gate 1 (alpha check)","~0 ms","CPU"],
+    ["6","Gate 2 (opening-range breakout + volume)","0.2 ms","CPU"],
+    ["7","Choose instrument (CALL / PUT)","~0 ms","CPU"],
+], [14*mm, 75*mm, 26*mm, 24*mm]))
+story.append(sp(6))
+story.append(callout("The decision is instant; the data is the cost",
+    "Steps 3-7 — the entire 'brain' of the strategy (scoring, both gates, instrument choice) — take about "
+    "<b>1.6 milliseconds</b> per stock. More than 99% of the time is just the network waiting for the broker "
+    "to return candles (~440 ms). The maths is effectively free.", LIGHTA, AMBER))
+story.append(h2("Scanning all 95 stocks + 2 indices"))
+story.append(dtable([
+    ["Approach","Time taken"],
+    ["One stock at a time (naive)","~43 seconds"],
+    ["12 parallel threads + daily cache + batched prices","~3-4 seconds"],
+    ["First scan of the day (one-time cache warm-up)","~6-7 seconds"],
+], [105*mm, 50*mm]))
+story.append(sp(8))
+story.append(lesson("Optimise the bottleneck, not the obvious part",
+    "A beginner might try to speed up the 'algorithm'. But the algorithm was already 1.6 ms — invisible. All "
+    "the engineering effort went into the NETWORK: running fetches in parallel, caching data that does not "
+    "change during the day, and asking for all live prices in a single batched request. A 3-4 second scan "
+    "inside a 5-minute window means a signal is seen almost the instant a candle closes, so prices barely "
+    "drift before the order appears. Lesson: profile first, then optimise what actually dominates."))
+story.append(note("A note on breakeven and the go-live bar",
+    "Because the option exit is +10% target / -20% stop, you risk 20% to make 10%. The breakeven win rate is "
+    "therefore 20 / (10 + 20) = about 67%. That is why the go-live bar is set to 70% (a margin above "
+    "breakeven), not the generic 52% you might see elsewhere — at 52% with this payoff you would steadily "
+    "lose money. Always derive your required win rate from your actual reward-to-risk."))
+story.append(PageBreak())
+
+# ── 13. LESSONS SUMMARY ────────────────────────────────────────────────────
+story.append(h1("13.  Ten Lessons to Take Away"))
 lessons = [
     ("Version-control everything from day one.", "The original code was lost because it lived untracked inside another project's folder. We rebuilt it and gave it its own git repository plus an off-site backup. Never trust a single copy."),
     ("A clean dashboard proves nothing.", "The biggest bug produced zero trades while looking perfectly alive. Test outputs, not appearances."),
