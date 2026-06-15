@@ -38,6 +38,32 @@ class Agent:
         # Scan indices first (low-capital option plays), then the stock universe
         self.universe = SCAN_INDICES + UNIVERSE
         self.signals_fired = []
+        self._event_thread = None
+        # Kick off an initial event scrape in the background at startup.
+        self.maybe_refresh_events(force=True)
+
+    def maybe_refresh_events(self, force: bool = False):
+        """
+        Refresh NSE event scores at ~9 AM and then hourly until 1 PM, in a
+        background thread so it never blocks the 5-min signal scan.
+        """
+        import threading
+        from engine import events
+        now = datetime.now(IST)
+        in_window = (9 * 60) <= (now.hour * 60 + now.minute) <= (13 * 60 + 5)  # 09:00-13:05
+        stale = events.cache_age_minutes() >= 55  # at most once an hour
+        if not force and not (in_window and stale):
+            return
+        if self._event_thread and self._event_thread.is_alive():
+            return  # a refresh is already running
+
+        def _work():
+            try:
+                events.refresh_event_scores()
+            except Exception as e:
+                logger.warning(f"Event refresh failed: {e}")
+        self._event_thread = threading.Thread(target=_work, daemon=True)
+        self._event_thread.start()
 
     def is_market_open(self) -> bool:
         """Check if market is open (Mon-Fri, 9:15-15:30 IST)"""
@@ -90,11 +116,15 @@ class Agent:
             vix = get_cached_vix()
             nifty_pct = get_cached_nifty_pct()
 
+            # EVENT family — real NSE announcement sentiment (scraped hourly)
+            from engine.events import get_event_score
+            news_sentiment, has_event = get_event_score(ticker)
+
             # Compute signal
             signal = compute_all_families(
                 ticker, df_5min, df_daily,
                 vix=vix, nifty_pct=nifty_pct,
-                news_sentiment=0.0, has_event=False  # TODO: fetch news/events
+                news_sentiment=news_sentiment, has_event=has_event
             )
 
             # Gate 1: alpha-z + breadth
@@ -139,6 +169,9 @@ class Agent:
         if not self.is_market_open():
             logger.info("Market closed, skipping scan")
             return []
+
+        # Refresh NSE event scores hourly (9 AM-1 PM), in the background
+        self.maybe_refresh_events()
 
         # Parallelize the per-stock scan — each scan_stock makes independent
         # network calls, so a thread pool turns ~40s sequential into a few seconds.

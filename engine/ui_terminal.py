@@ -443,7 +443,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;(weight {C.FAMILY_WEIGHTS['FLOW']['weight']}) — what are big players doing? "
    "options positioning (PCR / max-pain) + market regime (Nifty, VIX)")}
 {p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;(weight {C.FAMILY_WEIGHTS['EVENT']['weight']}) — any news driving it? "
-   "headlines + live NSE filings  (experimental — can't be backtested on free data)")}
+   "<b>LIVE</b>: NSE corporate announcements scraped at ~9 AM and refreshed hourly to 1 PM, "
+   "scored by keywords (orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0).")}
 {dim("A 4th family (mean-reversion) was removed — it won only 47.6% in backtests. A family that doesn't win has no place here.")}
 
 {h("5 · THE ALPHA-Z CALCULATION")}

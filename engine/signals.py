@@ -132,17 +132,12 @@ def compute_event_family(news_sentiment: float = 0.0, has_corporate_event: bool 
     NOTE: This family cannot be backtested on free data; treat as experimental.
     Returns: {"z_score": float, "verdict": "LONG" | "SHORT" | "NEUTRAL", "components": {...}}
     """
-    event_z = 0.0
-
-    # ── News Sentiment ──────────────────────────────────────────
-    # sentiment: 1.0 = bullish, -1.0 = bearish, 0 = neutral
-    event_z += news_sentiment * 0.5
-
-    # ── Corporate Events ────────────────────────────────────────
-    # Binary: has event = +0.5, else 0
-    if has_corporate_event:
-        event_z += 0.5
-
+    # EVENT is driven by the DIRECTION of the news, not merely its presence.
+    # news_sentiment is the scraped NSE-announcement score in [-1, +1]:
+    #   +1 = clearly bullish filing, -1 = clearly bearish, 0 = neutral/no event.
+    # A neutral filing (has_corporate_event but sentiment 0) stays NEUTRAL — it
+    # must NOT bias the vote bullish.
+    event_z = float(news_sentiment)
     verdict = "LONG" if event_z > 0.1 else ("SHORT" if event_z < -0.1 else "NEUTRAL")
 
     return {
