@@ -9,7 +9,8 @@ import pandas as pd
 from scipy import stats
 from engine.config import (
     FAMILY_WEIGHTS, ALPHA_Z_THRESHOLD, MIN_FAMILIES_AGREE,
-    ORB_LOOKBACK_MINUTES, ORB_BREAKOUT_THRESHOLD_PCT, VOLUME_SURGE_MULTIPLIER
+    ORB_LOOKBACK_MINUTES, ORB_BREAKOUT_THRESHOLD_PCT, VOLUME_SURGE_MULTIPLIER,
+    MOMENTUM_BARS,
 )
 
 
@@ -41,8 +42,8 @@ def compute_trend_family(df_5min: pd.DataFrame, df_daily: pd.DataFrame) -> dict:
     close_now = float(df_5min["Close"].iloc[-1])
 
     # ── Momentum ──────────────────────────────────────────────────
-    # Series of 1-hour (12-bar) intraday returns; z-score the latest.
-    ret_1h = df_5min["Close"].pct_change(12) * 100
+    # Series of ~1-hour (MOMENTUM_BARS) intraday returns; z-score the latest.
+    ret_1h = df_5min["Close"].pct_change(MOMENTUM_BARS) * 100
     momentum_z = _zscore_latest(ret_1h)
 
     # ── Trend Quality ─────────────────────────────────────────────
@@ -237,7 +238,7 @@ def is_orb_confirmed(df_5min: pd.DataFrame) -> tuple:
 
     Returns: (confirmed: bool, direction: str, volume_ratio: float)
     """
-    from engine.config import ORB_BARS, VOL_LOOKBACK_BARS
+    from engine.config import ORB_BARS, VOL_LOOKBACK_BARS, VOLUME_BENCHMARK_MODE
     if df_5min.empty or len(df_5min) < ORB_BARS + 1:
         return False, "NEUTRAL", 0.0
 
@@ -248,10 +249,13 @@ def is_orb_confirmed(df_5min: pd.DataFrame) -> tuple:
     latest_close = float(df_5min["Close"].iloc[-1])
     latest_volume = float(df_5min["Volume"].iloc[-1])
 
-    # Volume surge vs the RECENT rolling average (exclude the latest bar)
-    recent = df_5min["Volume"].iloc[-(VOL_LOOKBACK_BARS + 1):-1]
-    recent_avg = float(recent.mean()) if len(recent) else 0.0
-    volume_ratio = latest_volume / recent_avg if recent_avg > 0 else 0.0
+    # Volume benchmark: 'opening' (strict, opening-range avg) or 'rolling' (recent ~50 min)
+    if VOLUME_BENCHMARK_MODE == "opening":
+        bench = float(df_5min["Volume"].iloc[:ORB_BARS].mean())
+    else:
+        recent = df_5min["Volume"].iloc[-(VOL_LOOKBACK_BARS + 1):-1]
+        bench = float(recent.mean()) if len(recent) else 0.0
+    volume_ratio = latest_volume / bench if bench > 0 else 0.0
 
     is_above_orb = latest_close > orb_high * (1 + ORB_BREAKOUT_THRESHOLD_PCT)
     is_below_orb = latest_close < orb_low * (1 - ORB_BREAKOUT_THRESHOLD_PCT)

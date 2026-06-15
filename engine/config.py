@@ -143,8 +143,14 @@ ORB_BREAKOUT_THRESHOLD_PCT = 0.01  # Close must be > ORB High (or < ORB Low) by 
 # Volume surge is now measured vs a ROLLING RECENT average (last VOL_LOOKBACK_BARS),
 # NOT the opening range — so a genuine MIDDAY breakout (when alpha signals form, but
 # opening-level volume has faded) can still confirm.
-VOLUME_SURGE_MULTIPLIER = 1.2  # latest bar volume must be >= 1.2x the recent average
+VOLUME_SURGE_MULTIPLIER = 1.2  # latest bar volume must be >= 1.2x the benchmark
 VOL_LOOKBACK_BARS = 10         # recent-volume baseline window (last ~50 min)
+# Volume benchmark: "rolling" = recent ~50 min (more signals); "opening" = the
+# opening-range average (stricter — only the strongest breakouts pass, fewer signals).
+VOLUME_BENCHMARK_MODE = "rolling"
+# Bars used for the intraday momentum factor (12 x 5-min = 60 min). Made configurable
+# so it can scale when the candle timeframe changes (e.g. 6 bars on 10-min = 60 min).
+MOMENTUM_BARS = 12
 
 # === BACKTEST CONFIG ===
 BACKTEST_MIN_WIN_RATE = 0.60  # Minimum win rate to include in PF>1 universe

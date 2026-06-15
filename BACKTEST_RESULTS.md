@@ -3,6 +3,11 @@
 Honest record of what the strategy actually produced on real Upstox data.
 Updated whenever parameters change.
 
+> **See also:** [`studies/WIN_RATE_RESEARCH_LOG.md`](studies/WIN_RATE_RESEARCH_LOG.md) —
+> a structured record of the full win-rate optimization research (risk-reward sweep,
+> timeframe study, ORB+VWAP on index options, and the 17-factor decorrelation study),
+> including the methods, out-of-sample results, and the bugs/mirages caught along the way.
+
 ## Configuration tested
 - Cutoff: **no new trades after 1:00 PM**
 - Targets: **1% (cash equity)**, **5% (futures + CALL/PUT options)** — measured on the *underlying* price
