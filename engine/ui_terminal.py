@@ -368,9 +368,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "honest evidence, not a proven money-maker.")}
 
 {p(f"<b>Current mode:</b> SIMULATION (paper) · <b>OPTIONS-ONLY, BUY-ONLY</b>. <b>Recording:</b> {rec}.")}
-{p(f"<b style='color:{AMBER}'>Status:</b> +{int(C.PREMIUM_TARGET_PCT)}%/−{int(C.PREMIUM_STOP_PCT)}% "
-   f"premium exit → ~50–65% win rate on 30 days (the earlier 77% was small-sample luck). "
-   f"NO proven edge yet — only a 30+ session forward paper-test with real costs can settle it.")}
+{p(f"<b>Tuned config:</b> BUY OTM+1 · +{int(C.PREMIUM_TARGET_PCT)}% target / −{int(C.PREMIUM_STOP_PCT)}% stop "
+   f"on premium · cutoff 1 PM · scans NIFTY + BANKNIFTY + {len(C.UNIVERSE)} stocks.")}
+{p(f"<b style='color:{AMBER}'>Status:</b> best backtest ~72% win (OTM+1, 1 PM) — but on only 18 trades, "
+   f"so UNPROVEN. Larger 30-day samples read 50–65%; the 120-day underlying test showed no edge at 2:1. "
+   f"Win rate is real-looking on small samples but not yet bankable — a 30+ session forward paper-test "
+   f"with real costs is the only honest judge. (Full study: BACKTEST_RESULTS.md + the teaching PDF.)")}
 
 {h("1 · WHAT IT DOES (in one breath)")}
 {p("Every 5 minutes during market hours it: (1) pulls fresh prices from Upstox, "
@@ -385,8 +388,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p(f"<b>09:15–{C.TRADING_START}</b> &nbsp; First 30 min is the wildest part of the day — we only watch, no trades")}
 {p(f"<b>{C.TRADING_START}</b> &nbsp; Trading window opens — confirmed signals become real PM DECISIONS")}
 {p(f"<b>every 5 min</b> &nbsp; Re-scan NIFTY + BANKNIFTY + 95 stocks (parallel, batched, cached — a few sec)")}
-{dim("Signals are SPARSE — ~14 over a month, only ~8 days of ~22 have any signal (1 PM cutoff "
-     "trades frequency for quality). Most days may be blank. Pushing the cutoff later raises count.")}
+{dim("Signals are SPARSE — ~18 over a month, ~12 of 22 days have a signal (1 PM cutoff trades "
+     "frequency for quality). Nothing fires before ~11:30 AM (scores need an hour of data); most "
+     "cluster 12:30-1 PM. Blank days are normal for a selective strategy.")}
 {p(f"<b>{C.NO_NEW_TRADES_AFTER}</b> &nbsp; No new trades after this (afternoon is thin)")}
 {p(f"<b>{C.KILL_SWITCH_TIME}</b> &nbsp; Kill switch — every open position is force-closed")}
 {p(f"<b>{C.MARKET_CLOSE}</b> &nbsp; Market closes — trade log shows the day's wins/losses")}
