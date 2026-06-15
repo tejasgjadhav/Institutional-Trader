@@ -30,14 +30,15 @@ SIGNALS = ["RS", "VWAP", "GAP", "MOM", "VOL", "ORB"]
 
 
 def _premium_outcome(prem, ts):
+    """prem is a pandas Series of premium closes indexed by timestamp."""
     sub = prem[prem.index <= ts]
     if sub.empty: return None
-    entry = float(sub.Close.iloc[-1])
+    entry = float(sub.iloc[-1])
     if entry <= 0: return None
     tgt, stp = entry*(1+PREMIUM_TARGET_PCT/100), entry*(1-PREMIUM_STOP_PCT/100)
     last = entry
-    for b in prem[prem.index > ts].itertuples():
-        last = float(b.Close)
+    for val in prem[prem.index > ts]:
+        last = float(val)
         if last <= stp: return ("LOSS", round((stp/entry-1)*100, 2))
         if last >= tgt: return ("WIN", round((tgt/entry-1)*100, 2))
     return ("FORCED", round((last/entry-1)*100, 2))

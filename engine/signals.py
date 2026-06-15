@@ -228,30 +228,35 @@ def compute_all_families(ticker: str, df_5min: pd.DataFrame, df_daily: pd.DataFr
 
 def is_orb_confirmed(df_5min: pd.DataFrame) -> tuple:
     """
-    ORB confirmation: latest 5-min bar must close beyond ORB High/Low with volume surge.
+    ORB confirmation: latest 5-min bar closes beyond the 30-min opening range
+    (first 6 bars) with a volume surge vs the RECENT rolling average.
+
+    The volume benchmark is the recent VOL_LOOKBACK_BARS (not the opening range),
+    so a real midday breakout — when alpha signals actually form but opening-level
+    volume has faded — can still confirm.
+
     Returns: (confirmed: bool, direction: str, volume_ratio: float)
     """
-    if df_5min.empty or len(df_5min) < ORB_LOOKBACK_MINUTES + 1:
+    from engine.config import ORB_BARS, VOL_LOOKBACK_BARS
+    if df_5min.empty or len(df_5min) < ORB_BARS + 1:
         return False, "NEUTRAL", 0.0
 
-    # ORB bounds (9:15-9:44 AM = first 6 bars in 5-min chart)
-    orb_high = float(df_5min["High"].iloc[:ORB_LOOKBACK_MINUTES].max())
-    orb_low = float(df_5min["Low"].iloc[:ORB_LOOKBACK_MINUTES].min())
+    # Opening range = first 6 bars (9:15-9:44)
+    orb_high = float(df_5min["High"].iloc[:ORB_BARS].max())
+    orb_low = float(df_5min["Low"].iloc[:ORB_BARS].min())
 
-    # Latest bar
     latest_close = float(df_5min["Close"].iloc[-1])
     latest_volume = float(df_5min["Volume"].iloc[-1])
 
-    # Average volume during ORB
-    orb_vol_avg = float(df_5min["Volume"].iloc[:ORB_LOOKBACK_MINUTES].mean())
-    volume_ratio = latest_volume / orb_vol_avg if orb_vol_avg > 0 else 0.0
+    # Volume surge vs the RECENT rolling average (exclude the latest bar)
+    recent = df_5min["Volume"].iloc[-(VOL_LOOKBACK_BARS + 1):-1]
+    recent_avg = float(recent.mean()) if len(recent) else 0.0
+    volume_ratio = latest_volume / recent_avg if recent_avg > 0 else 0.0
 
-    # Breakout check
     is_above_orb = latest_close > orb_high * (1 + ORB_BREAKOUT_THRESHOLD_PCT)
     is_below_orb = latest_close < orb_low * (1 - ORB_BREAKOUT_THRESHOLD_PCT)
     vol_confirmed = volume_ratio >= VOLUME_SURGE_MULTIPLIER
 
     confirmed = (is_above_orb or is_below_orb) and vol_confirmed
     direction = "LONG" if (is_above_orb and vol_confirmed) else ("SHORT" if (is_below_orb and vol_confirmed) else "NEUTRAL")
-
     return confirmed, direction, round(volume_ratio, 2)

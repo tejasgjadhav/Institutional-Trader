@@ -137,9 +137,14 @@ total_weight = sum(f["weight"] for f in FAMILY_WEIGHTS.values())
 assert 0.95 < total_weight < 1.05, f"Family weights sum to {total_weight}, should be ~1.0"
 
 # === TECHNICAL FILTERS ===
-ORB_LOOKBACK_MINUTES = 30  # 9:15-9:44 AM
+ORB_BARS = 6               # opening range = first 6 bars of 5-min = 30 min (9:15-9:44)
+ORB_LOOKBACK_MINUTES = 6   # kept for backward-compat; now a BAR count (= ORB_BARS)
 ORB_BREAKOUT_THRESHOLD_PCT = 0.01  # Close must be > ORB High (or < ORB Low) by this %
-VOLUME_SURGE_MULTIPLIER = 1.2  # 5-min volume must be ≥ 1.2× average (conservative)
+# Volume surge is now measured vs a ROLLING RECENT average (last VOL_LOOKBACK_BARS),
+# NOT the opening range — so a genuine MIDDAY breakout (when alpha signals form, but
+# opening-level volume has faded) can still confirm.
+VOLUME_SURGE_MULTIPLIER = 1.2  # latest bar volume must be >= 1.2x the recent average
+VOL_LOOKBACK_BARS = 10         # recent-volume baseline window (last ~50 min)
 
 # === BACKTEST CONFIG ===
 BACKTEST_MIN_WIN_RATE = 0.60  # Minimum win rate to include in PF>1 universe
