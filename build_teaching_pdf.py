@@ -394,7 +394,84 @@ t.setStyle(TableStyle([
     ("LEFTPADDING",(0,0),(-1,-1),7),("RIGHTPADDING",(0,0),(-1,-1),7),
 ]))
 story.append(t)
-story.append(sp(16))
+
+# ── APPENDIX: BACKTEST RESULT TABLES ───────────────────────────────────────
+story.append(PageBreak())
+story.append(h1("Appendix — The Backtest Result Tables"))
+story.append(para(
+    "These are the actual numbers behind the lessons, on real Upstox data. Read them with the "
+    "sample-size warning from Chapter 9 in mind: most rows rest on 13–34 trades and exclude transaction "
+    "costs, so they show <b>direction and relative differences</b>, not bankable absolute returns."))
+
+story.append(h2("A1.  Underlying direction at 2:1 reward-to-risk (120 days, 379 trades)"))
+story.append(para(
+    "The largest, most trustworthy sample. At a sane 2:1 reward-to-risk, the best win rate was only 34% — "
+    "and breakeven for 2:1 is 33%. Conclusion: <b>no directional edge.</b>"))
+story.append(dtable([
+    ["Conviction / cutoff","Target / stop","Trades","Win rate","Verdict"],
+    ["alpha >= 0.75, 1 PM","1% / 0.5%","59","34%","~breakeven"],
+    ["alpha >= 0.55, 1 PM","1% / 0.5%","75","31%","below breakeven"],
+    ["alpha >= 0.55, 3 PM","0.5% / 0.25%","379","28%","random baseline"],
+], [50*mm, 30*mm, 20*mm, 24*mm, 37*mm]))
+
+story.append(h2("A2.  Buying options — premium exit sweep (recent 20 days)"))
+story.append(para(
+    "Switching to options changes the picture: a small target with a wide stop wins often because premiums "
+    "are volatile. Note how a tighter stop LOWERS the win rate."))
+story.append(dtable([
+    ["Premium target","Premium stop","Trades","Win rate","Expectancy"],
+    ["+10%","-20%","13","77%","+3.74%/trade"],
+    ["+10%","-10%","8","75%","+4.62%/trade"],
+    ["+10%","-5%","8","50%","+2.12%/trade"],
+    ["+15%","-20%","13","69%","+2.21%/trade"],
+    ["+20%","-20%","13","62%","-0.10%/trade"],
+], [30*mm, 28*mm, 20*mm, 24*mm, 36*mm]))
+
+story.append(PageBreak())
+story.append(h2("A3.  Strike comparison — ITM vs ATM vs OTM (30 days, +10% / -20%)"))
+story.append(para(
+    "Why we chose OTM+1 over the at-the-money default. Note the jagged, non-monotonic win column — a "
+    "fingerprint of small-sample noise, which is why this was treated as suggestive, not conclusive."))
+story.append(dtable([
+    ["Strike","Trades","Win rate","Expectancy","Net"],
+    ["ITM-2 (deep in-money)","16","81%","+3.81%","+61.0%"],
+    ["ITM-1","19","63%","+2.68%","+51.0%"],
+    ["ATM (old default)","14","71%","+3.47%","+48.6%"],
+    ["OTM+1  (chosen)","18","72%","+4.51%","+81.2%"],
+    ["OTM+2","15","73%","+2.83%","+42.4%"],
+], [48*mm, 22*mm, 24*mm, 28*mm, 28*mm]))
+
+story.append(h2("A4.  Entry cutoff — frequency vs quality (30 days, OTM+1)"))
+story.append(para(
+    "Trading later in the day gives MORE signals but WORSE ones. The win rate falls off a cliff right after "
+    "1 PM, so 1 PM was kept despite the lower signal count."))
+story.append(dtable([
+    ["Cutoff","Signals","Signals/day","Win rate","Expectancy"],
+    ["1:00 PM","18","0.8","72%","+4.51%"],
+    ["1:30 PM","30","1.4","60%","+1.63%"],
+    ["2:00 PM","34","1.5","62%","+1.88%"],
+    ["3:00 PM","65","3.0","58%","+1.59%"],
+], [30*mm, 24*mm, 28*mm, 24*mm, 30*mm]))
+
+story.append(h2("A5.  Entry-time window — when do the winners happen?"))
+story.append(para(
+    "A surprise: the strategy produces NOTHING before 11:30 AM (the scores need an hour of intraday data). "
+    "Signals cluster 12:30-1 PM, which is also the strongest window."))
+story.append(dtable([
+    ["Window","Trades","Win rate (+10%/-20%)"],
+    ["09:45 - 10:30","0","no signals"],
+    ["10:30 - 11:30","0","no signals"],
+    ["11:30 - 12:30","5","60%"],
+    ["12:30 - 1:00 PM","13","77%  (strongest)"],
+], [50*mm, 26*mm, 60*mm]))
+story.append(sp(8))
+story.append(note("How to read these tables in class",
+    "Every table tells a real story, but the absolute win rates are fragile (small samples, no costs). The "
+    "durable lessons are the RELATIVE patterns: wider stops beat tighter ones, OTM beats ATM here, earlier "
+    "cutoffs beat later ones, and a bigger sample (A1) erased the edge that small samples (A2-A5) suggested. "
+    "That tension between small-sample hope and large-sample reality is the lesson."))
+
+story.append(sp(14))
 story.append(HRFlowable(width="100%", thickness=0.8, color=BLUE))
 story.append(sp(6))
 story.append(Paragraph(
