@@ -111,7 +111,7 @@ OPTION_CONVICTION_THRESHOLD_NOTE = "see OPTION_CONVICTION_THRESHOLD above"
 # Each family produces a z-score; families are weighted by real hit-rate
 FAMILY_WEIGHTS = {
     "TREND": {
-        "weight": 0.65,  # sum of momentum(0.37) + trend_quality(0.24) + microstructure(0.04)
+        "weight": 0.72,  # raised from 0.65 (the proven, dominant family)
         "factors": ["momentum", "trend_quality", "microstructure"],
         "factor_weights": {
             "momentum": 0.37,
@@ -120,11 +120,14 @@ FAMILY_WEIGHTS = {
         },
     },
     "FLOW": {
-        "weight": 0.17,  # options PCR + macro regime (VIX, Nifty, FII/DII)
+        "weight": 0.18,  # macro regime (VIX, Nifty trend) + volume
         "factors": ["pcr_ratio", "macro_regime"],
     },
     "EVENT": {
-        "weight": 0.18,  # news + filings (unbacktested, use with caution)
+        # Lowered 0.18 -> 0.10: live NSE-announcement sentiment is kept informative
+        # but down-weighted — a 30-day historical test showed it didn't lift win rate
+        # (crude keyword scoring), so it must not drag the vote. Still shown on ALPHA.
+        "weight": 0.10,
         "factors": ["news_sentiment", "corporate_events"],
     },
 }

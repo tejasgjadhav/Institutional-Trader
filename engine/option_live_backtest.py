@@ -38,11 +38,15 @@ def _bmin(ts): return ts.hour * 60 + ts.minute
 def _hhmm(s): h, m = map(int, s.split(":")); return h*60+m
 
 
-def collect_option_trades(n_days=20, max_stocks=None, cutoff="13:00", progress=None):
+def collect_option_trades(n_days=20, max_stocks=None, cutoff="13:00", progress=None,
+                          event_scores=None):
     """
     Replay gates on indices + stocks over recent days. For each signal, BUY the
     ATM option and capture the aligned premium path. Returns trade dicts with the
     premium series so exits can be swept.
+
+    event_scores (optional): {(day_iso, symbol): score} to feed the EVENT family
+    during the backtest. None = EVENT off (default), matching prior runs.
     """
     days = _trading_days(n_days)
     unders = INDEX_UNDERLYINGS + (UNIVERSE[:max_stocks] if max_stocks else UNIVERSE)
@@ -80,7 +84,13 @@ def collect_option_trades(n_days=20, max_stocks=None, cutoff="13:00", progress=N
                 if m < start_min: continue
                 if m > cut_min: break
                 part = d5.iloc[:i+1]
-                sig = compute_all_families(under, part, dfd, vix=v, nifty_pct=np_)
+                ev, has_ev = 0.0, False
+                if event_scores is not None:
+                    sym = under.replace(".NS", "")
+                    if (str(day), sym) in event_scores:
+                        ev = float(event_scores[(str(day), sym)]); has_ev = True
+                sig = compute_all_families(under, part, dfd, vix=v, nifty_pct=np_,
+                                           news_sentiment=ev, has_event=has_ev)
                 if not sig["passes_gate_1"]: continue
                 ok, odir, _ = is_orb_confirmed(part)
                 if not (ok and odir == sig["direction"]): continue
