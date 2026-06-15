@@ -20,8 +20,7 @@ from engine.config import IST
 from engine.agent import Agent
 from engine.trade_log import TradeLog
 from engine.data_utils import (
-    get_nifty_close, get_banknifty_close, get_vix_close,
-    check_api_health, get_last_5_trading_days
+    get_nifty_close, get_banknifty_close, get_vix_close, get_last_5_trading_days
 )
 
 logger = logging.getLogger(__name__)
@@ -90,7 +89,6 @@ class TerminalApp(QMainWindow):
         self._check_recording_window()
         self._build_ui()
         self._refresh_market_data()
-        self._check_apis()
         self._refresh_log()      # show simulation immediately (or live paper trades)
         self.trigger_scan()       # only scans if market is open
 
@@ -195,11 +193,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         for lbl in (self.nifty_lbl, self.bnf_lbl, self.vix_lbl):
             h.addWidget(lbl)
         h.addStretch()
-
-        self.api_lbl = QLabel("API ···")
-        self.api_lbl.setFont(QFont("Menlo", 9, QFont.Weight.Bold))
-        self.api_lbl.setStyleSheet(f"color:{TEXT_DIM};")
-        h.addWidget(self.api_lbl)
         return w
 
     def _ticker_label(self, name, value, color=None) -> QLabel:
@@ -319,9 +312,23 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return t
 
     def _screen_log(self) -> QWidget:
-        """TRADE LOG split into NIFTY / BANKNIFTY / STOCK options."""
+        """TRADE LOG — LIVE paper trades and SIMULATION kept separate, split by underlying."""
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
-        v.addWidget(self._panel_title("▸ TRADE LOG — option outcomes by underlying"))
+        v.addWidget(self._panel_title("▸ TRADE LOG — LIVE paper vs SIMULATION (kept separate)"))
+
+        # LIVE / SIMULATION toggle
+        self.log_view = "live"
+        toggle = QWidget(); th = QHBoxLayout(toggle); th.setContentsMargins(0, 0, 0, 0); th.setSpacing(6)
+        self.log_live_btn = QPushButton("● LIVE PAPER TRADES")
+        self.log_sim_btn = QPushButton("◇ SIMULATION (30-day historical)")
+        for b in (self.log_live_btn, self.log_sim_btn):
+            b.setFont(QFont("Menlo", 11, QFont.Weight.Bold)); b.setMinimumHeight(34)
+            b.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.log_live_btn.clicked.connect(lambda: self._set_log_view("live"))
+        self.log_sim_btn.clicked.connect(lambda: self._set_log_view("sim"))
+        th.addWidget(self.log_live_btn); th.addWidget(self.log_sim_btn); th.addStretch()
+        v.addWidget(toggle)
+
         self.log_stats = QLabel("—")
         self.log_stats.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
@@ -333,7 +340,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_bnf = self._make_log_table(); self.log_bnf.setMaximumHeight(140); v.addWidget(self.log_bnf)
         v.addWidget(self._section_label("● STOCK OPTIONS", GREEN))
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 1)
+        self._style_log_toggle()
         return w
+
+    def _style_log_toggle(self):
+        for b, key in ((self.log_live_btn, "live"), (self.log_sim_btn, "sim")):
+            if self.log_view == key:
+                b.setStyleSheet(f"background-color:{GREEN}; color:{BG}; border:none; padding:4px 14px;")
+            else:
+                b.setStyleSheet(f"background-color:{PANEL_LIGHT}; color:{TEXT_DIM}; "
+                                f"border:1px solid {BORDER}; padding:4px 14px;")
+
+    def _set_log_view(self, view: str):
+        self.log_view = view
+        self._style_log_toggle()
+        self._refresh_log()
 
     def _screen_readme(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
@@ -614,13 +635,30 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
     def _refresh_log(self):
         live = [t for t in self.trade_log.trades if t.get("outcome")]
         sim = getattr(self, "sim_trades", [])
-        source = "LIVE PAPER" if live else "SIMULATION (last 30d option data)"
-        allt = [self._norm_trade(t) for t in (live if live else sim)]
+        # LIVE and SIMULATION are kept STRICTLY separate — never mixed.
+        view = getattr(self, "log_view", "live")
+        chosen = live if view == "live" else sim
+        # keep the toggle labels showing each set's count
+        if hasattr(self, "log_live_btn"):
+            self.log_live_btn.setText(f"● LIVE PAPER TRADES ({len(live)})")
+            self.log_sim_btn.setText(f"◇ SIMULATION 30-day ({len(sim)})")
+
+        if not chosen:
+            empty_msg = ("No live paper trades yet — they appear here once the system fires real "
+                         "signals during market hours." if view == "live"
+                         else "No simulation data cached yet.")
+            self.log_stats.setText(f"  [{'LIVE PAPER' if view=='live' else 'SIMULATION (30-day historical)'}]   {empty_msg}")
+            for table in (self.log_nifty, self.log_bnf, self.log_stock):
+                table.setRowCount(0)
+            return
+
+        allt = [self._norm_trade(t) for t in chosen]
         n = len(allt); w = sum(1 for t in allt if t["outcome"] == "WIN")
         l = sum(1 for t in allt if t["outcome"] == "LOSS")
         wr = (w / n * 100) if n else 0
+        tag = "LIVE PAPER" if view == "live" else "SIMULATION (30-day historical · reference only)"
         self.log_stats.setText(
-            f"  [{source}]   TRADES {n}   ·   WINS {w}  LOSSES {l}   ·   WIN {wr:.0f}%   "
+            f"  [{tag}]   TRADES {n}   ·   WINS {w}  LOSSES {l}   ·   WIN {wr:.0f}%   "
             f"·   target +10% / stop -20% on premium")
 
         buckets = {"NIFTY": [], "BANKNIFTY": [], "STOCK": []}
@@ -677,14 +715,6 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         pct = d.get("pct", 0.0)
         lbl.setText(f"{name}  {d['price']:,.2f}   {arrow} {chg:+,.2f} ({pct:+.2f}%)")
         lbl.setStyleSheet(f"color:{color};")
-
-    def _check_apis(self):
-        h = check_api_health()
-        keys = ["upstox_ltp", "upstox_intraday", "upstox_historical", "nifty", "banknifty", "vix"]
-        active = sum(1 for k in keys if h.get(k)); total = len(keys)
-        color = GREEN if active >= 4 else (AMBER if active >= 2 else RED)
-        self.api_lbl.setText(f"API {active}/{total} ●")
-        self.api_lbl.setStyleSheet(f"color:{color};")
 
     def _tick(self):
         now = datetime.now(IST)
