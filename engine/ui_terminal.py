@@ -258,18 +258,19 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return l
 
     def _screen_pm(self) -> QWidget:
-        """PM DECISIONS split into NIFTY / BANKNIFTY / STOCK option tables."""
+        """PM DECISIONS — STOCK options on top (most signals), then NIFTY / BANKNIFTY."""
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("▸ LATEST PM DECISIONS — BUY options · place manually in Upstox", AMBER))
 
-        v.addWidget(self._section_label("● NIFTY OPTIONS", CYAN))
-        self.pm_nifty = self._make_pm_table(); self.pm_nifty.setMaximumHeight(150); v.addWidget(self.pm_nifty)
-
-        v.addWidget(self._section_label("● BANKNIFTY OPTIONS", AMBER))
-        self.pm_bnf = self._make_pm_table(); self.pm_bnf.setMaximumHeight(150); v.addWidget(self.pm_bnf)
-
-        v.addWidget(self._section_label("● STOCK OPTIONS", GREEN))
+        # STOCK options first — they generate the large majority of signals
+        v.addWidget(self._section_label("● STOCK OPTIONS  (most signals)", GREEN))
         self.pm_stock = self._make_pm_table(); v.addWidget(self.pm_stock, 1)
+
+        v.addWidget(self._section_label("● NIFTY OPTIONS  (rare)", CYAN))
+        self.pm_nifty = self._make_pm_table(); self.pm_nifty.setMaximumHeight(130); v.addWidget(self.pm_nifty)
+
+        v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (rare)", AMBER))
+        self.pm_bnf = self._make_pm_table(); self.pm_bnf.setMaximumHeight(130); v.addWidget(self.pm_bnf)
 
         self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min · 09:15–15:30 IST.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
@@ -334,12 +335,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(self.log_stats)
 
-        v.addWidget(self._section_label("● NIFTY OPTIONS", CYAN))
-        self.log_nifty = self._make_log_table(); self.log_nifty.setMaximumHeight(140); v.addWidget(self.log_nifty)
-        v.addWidget(self._section_label("● BANKNIFTY OPTIONS", AMBER))
-        self.log_bnf = self._make_log_table(); self.log_bnf.setMaximumHeight(140); v.addWidget(self.log_bnf)
-        v.addWidget(self._section_label("● STOCK OPTIONS", GREEN))
+        # STOCK first — most trades come from stocks
+        v.addWidget(self._section_label("● STOCK OPTIONS  (most trades)", GREEN))
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 1)
+        v.addWidget(self._section_label("● NIFTY OPTIONS  (rare)", CYAN))
+        self.log_nifty = self._make_log_table(); self.log_nifty.setMaximumHeight(120); v.addWidget(self.log_nifty)
+        v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (rare)", AMBER))
+        self.log_bnf = self._make_log_table(); self.log_bnf.setMaximumHeight(120); v.addWidget(self.log_bnf)
         self._style_log_toggle()
         return w
 
