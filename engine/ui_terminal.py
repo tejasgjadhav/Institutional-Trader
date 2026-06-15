@@ -560,7 +560,21 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
 
     def _on_scan(self, signals: list):
         self._scanning = False
-        self.last_scan_results = signals
+        self.last_scan_results = signals  # ALL scored stocks (ALPHA shows everything)
+
+        # Log + notify any NEW trade-ready signal (not already logged today).
+        ready = [s for s in signals if s.get("trade_ready") and self.agent.is_trading_window()]
+        new_ready = [s for s in ready if s.get("ticker") not in getattr(self, "_notified_today", set())]
+        if new_ready:
+            if not hasattr(self, "_notified_today"):
+                self._notified_today = set()
+            for s in new_ready:
+                self._notified_today.add(s["ticker"])
+            try:
+                self.agent.execute_signals(new_ready)  # writes trade log + fires notifications
+            except Exception as e:
+                logger.warning(f"execute_signals failed: {e}")
+
         self._refresh_pm(); self._refresh_watchlist(); self._refresh_alpha(); self._refresh_log()
         if hasattr(self, "auto_lbl"):
             self.auto_lbl.setText("◉ LIVE"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")

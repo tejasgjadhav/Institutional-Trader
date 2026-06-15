@@ -116,6 +116,8 @@ class Agent:
                 "orb_confirmed": orb_confirmed,
                 "vol_ratio": vol_ratio,
                 "trade_ready": trade_ready,
+                "families_detail": signal.get("families_detail", {}),  # for ALPHA tab columns
+                "current_price": signal.get("current_price"),
                 "signal_details": signal,
                 "vix": vix,
                 "nifty_pct": nifty_pct,
@@ -150,19 +152,20 @@ class Agent:
                 except Exception as e:
                     logger.warning(f"Scan failed for {futures[fut]}: {e}")
 
-        signals_fired = []
-        for result in results:
-            if "error" in result:
-                continue
-            if result.get("trade_ready") and self.is_trading_window():
-                logger.info(
-                    f"TRADE READY: {result['ticker']} | α-z={result['alpha_z']:.2f} | "
-                    f"Dir={result['direction']} | Breadth={result['breadth']}/3 | "
-                    f"ORB={result['vol_ratio']:.1f}×")
-                signals_fired.append(result)
+        # Keep ALL scored stocks (drop only hard errors) so the ALPHA tab shows the
+        # full scan, WATCHLIST shows Gate-1 passers, and PM DECISIONS shows trade-ready.
+        scored = [r for r in results if "error" not in r]
+        # Sort by conviction (|alpha-z|) so the strongest sit on top of ALPHA.
+        scored.sort(key=lambda r: abs(r.get("alpha_z", 0)), reverse=True)
 
-        logger.info(f"Scan complete: {len(signals_fired)} signals ready\n")
-        return signals_fired
+        ready = [r for r in scored if r.get("trade_ready") and self.is_trading_window()]
+        gate1 = [r for r in scored if r.get("passes_gate_1")]
+        for r in ready:
+            logger.info(
+                f"TRADE READY: {r['ticker']} | α-z={r['alpha_z']:.2f} | "
+                f"Dir={r['direction']} | Breadth={r['breadth']}/3 | ORB={r['vol_ratio']:.1f}×")
+        logger.info(f"Scan complete: {len(scored)} scored · {len(gate1)} on watchlist · {len(ready)} trade-ready\n")
+        return scored
 
     def execute_signals(self, signals: list):
         """
@@ -235,9 +238,10 @@ class Agent:
             logger.info("Market closed")
             return
 
-        signals = self.run_scan()
-        if signals and self.is_trading_window():
-            self.execute_signals(signals)
+        scored = self.run_scan()
+        ready = [s for s in scored if s.get("trade_ready")]
+        if ready and self.is_trading_window():
+            self.execute_signals(ready)
 
         # Print status
         self.trade_log.print_status()
