@@ -216,6 +216,16 @@ class Agent:
                 f"Instrument={trade_dict['instrument']}"
             )
 
+            # ── Notify (Telegram / WhatsApp / phone call) — each only if configured ──
+            try:
+                from engine.options import build_live_option_order
+                from engine.notifications import notify_signal
+                order = build_live_option_order(ticker, trade_dict.get("entry") or 0, direction)
+                if order:
+                    notify_signal(order)
+            except Exception as e:
+                logger.warning(f"Notification failed for {ticker}: {e}")
+
             if PAPER_TRADING_PHASE:
                 logger.info(f"PAPER MODE: Place order manually in Upstox app")
 
