@@ -150,6 +150,61 @@ Decorrelation collapsed 17 factors → 12 (momentum, RSI, VWAP-distance, ORB-dis
 
 ---
 
+## 8b. Study H — Practical execution: capital, stop-loss, expiry, moneyness (`capital_pnl.py`, `stop_opt.py`, `nifty60.py`, `build60.py`, `nifty_may_grid.py`)
+
+**Question:** for someone actually trading the index-option signal, what stop, what expiry, and what moneyness — and what capital and P&L result?
+
+**Dataset:** NIFTY+BANKNIFTY ORB+VWAP, ATM, 1 lot, ~60 days (Apr 1 – Jun 15). 65 signals (NIFTY 38, BANKNIFTY 27).
+
+**Capital:** because trades are intraday, capital *recycles daily* — the meaningful figure is **peak single-day capital (~₹85k for both indices)**, not the cumulative outlay (₹12.7L+).
+
+**Stop-loss sweep (book winners at EOD, the key finding):**
+| Stop | BOTH net | Note |
+|------|----------|------|
+| 10% | −₹3,103 | too tight — stopped out on noise (your first test) |
+| **15%** | **+₹23,718** | sweet spot |
+| 25% | +₹11,044 | |
+| none (hold EOD) | −₹7,704 | winners give it all back |
+
+- A **10% stop loses** (an ATM index option routinely swings 10% intraday without being wrong); **15% is the floor**, 15–25% the profitable band.
+- Best general policy on this window: **+25% target / −15% stop** (+2.3% on capital).
+- **NIFTY vs BANKNIFTY differ:** NIFTY trends clean and rewards a **12% trailing stop** (74% win, +5.9% on that sample); BANKNIFTY is whippy and *loses* with trailing — it wants a fixed 15% stop + 25% target.
+
+**Full-sample reality check (+25/−15 over all ~52 trading days):**
+| | Trades | Win % | Net P&L | Return |
+|---|---|---|---|---|
+| NIFTY | 38 | 53% | **−₹6,328** | −0.51% |
+| BANKNIFTY | 27 | 56% | +₹3,514 | +0.33% |
+| BOTH | 65 | 54% | −₹2,814 | −0.12% |
+
+The recent **19-day** NIFTY result was +₹11,297 (+2.91%); over the **full 52 days it flips to −₹6,328 (−0.51%)** — the small-sample warning made concrete (partly genuine variance, partly the April/May monthly-contract backfill, which moves less in %).
+
+**Expiry × moneyness (NIFTY, May, +25/−15, 17 trades) — all negative; ranked least-bad:**
+- **Expiry:** longer-dated **next-month (28-JUL, ~72 DTE) bled least (−1.5%)**; the shorter **30-JUN monthly (44 DTE) was worst (−3.8 to −4.7%)**. Shorter-dated = bigger % swings = harder stop-outs. *True near-weeklies (1–7 DTE) for May are unavailable on a read-only token (expired contracts), so "weekly" couldn't be tested for May.*
+- **Moneyness:** **ATM least-bad, ITM next, OTM consistently worst** (cheap, jumpy, decays fastest — exactly wrong for a tight stop).
+
+**Deliverable:** `studies/NIFTY_BANKNIFTY_Signals_60d.xlsx` — every signal day-wise with Target%/Stop% as live assumption cells driving Excel formulas (validated to match the bar-by-bar backtest 100%), plus full premium paths.
+
+---
+
+## 8c. Study I — CALL vs PUT directional breakdown
+
+**Question:** is the edge one-sided? Split the 65 signals (33 CALL / 32 PUT) by direction at +25/−15.
+
+| Slice | n | Win % | Net P&L | Return | avg MaxGain | avg MaxLoss |
+|-------|---|-------|---------|--------|-------------|-------------|
+| CALL (all) | 33 | 52% | **+₹6,273** | **+0.50%** | +11.8% | −12.0% |
+| PUT (all) | 32 | **56%** | **−₹9,087** | **−0.87%** | +13.5% | **−16.2%** |
+| BANKNIFTY CALL | 13 | 54% | +₹9,643 | +1.78% | | |
+| BANKNIFTY PUT | 14 | 57% | −₹6,129 | −1.18% | | |
+
+**Findings:**
+1. **Higher win rate ≠ profit — a clean live example.** PUTs had the *higher* win rate (56% vs 52%) yet **lost money**, because when they lost they lost *bigger* (avg max adverse −16.2% vs −12.0% for calls). This is the win-rate-vs-expectancy lesson in one table.
+2. **CALLs net-positive, PUTs net-negative over Apr–Jun 2026.** This is **regime-dependent**, not a durable rule: the window drifted up / chopped, so short bets (puts) repeatedly faced adverse moves. In a trending-down month the sign would reverse. It is *not* evidence that "calls beat puts" as a permanent edge.
+3. Reinforces Study A–G: the directional signal has no durable standalone edge; outcomes track the market regime of the sample.
+
+---
+
 ## 9. Cross-cutting findings
 
 1. **The ~52–57% wall is real and method-invariant.** It appears in individual signals, confluence, composites, ML, three timeframes, ORB+VWAP, and a 17-factor decorrelated study. That consistency is itself strong evidence it's a market property: intraday direction off price/volume is near-random out-of-sample.
@@ -191,6 +246,12 @@ All study scripts are in this `studies/` directory and run against the live `eng
 | `probe.py`, `probefut.py` | E | data-availability probes (index volume, option premiums, futures) |
 | `orbvwap.py` | E | ORB+VWAP index-option strategy, 4 exit modes |
 | `factor_study.py` | F, G | 17-factor decorrelation + composite, 30/38-day windows |
+| `capital_pnl.py` | H | capital + P&L if you take every signal (NIFTY/BANKNIFTY/both) |
+| `stop_opt.py` | H | stop-loss optimization (stop-only, target+stop, breakeven, trailing) |
+| `nifty60.py` | H | NIFTY 60-day +25/−15 capital & P&L with validation |
+| `build60.py` | H, I | builds the day-wise Excel (dynamic Target/Stop cells) |
+| `nifty_may_grid.py` | H | NIFTY May expiry × moneyness (ITM/ATM/OTM) grid |
+| `NIFTY_BANKNIFTY_Signals_60d.xlsx` | H, I | deliverable: every signal day-wise, live recalc |
 
 **Run:** `.venv/bin/python studies/<script>.py` from the repo root. All require a valid `UPSTOX_ANALYTICS_TOKEN` in `.env` (gitignored — never committed).
 
@@ -201,4 +262,4 @@ All study scripts are in this `studies/` directory and run against the live `eng
 
 ---
 
-*Last updated: 2026-06-15. All P&L gross of bid-ask spread. TEST = held-out out-of-sample days; TRAIN shown to expose overfitting. Sample sizes are small (≤38 trading days available) — treat all numbers as directional, not definitive.*
+*Last updated: 2026-06-16. All P&L gross of bid-ask spread. TEST = held-out out-of-sample days; TRAIN shown to expose overfitting. All studies cover both CALLs (long signals) and PUTs (short signals), ~50/50. Sample sizes are small (≤~52 trading days available; near-weekly option history limited to recent weeks on a read-only token) — treat all numbers as directional, not definitive.*
