@@ -1,20 +1,23 @@
-# Institutional Trader — 3-Family Alpha · NSE Intraday
+# Institutional Trader — 3-Family Alpha · NSE Intraday Options
 
-A disciplined **paper-trading** framework. It watches 95 NSE stocks all day, scores
-each one, and only flags a trade when a stock clears two strict gates. **You place
-every order yourself in Upstox** — the system never sends orders. It is a process for
-collecting honest evidence, not a proven money-maker.
+A disciplined **paper-trading** system for NSE intraday. It scans NIFTY, BANKNIFTY
+and 95 liquid stocks every 5 minutes, scores each with a 3-family model, and only
+flags a trade when it clears two strict gates. Every trade is a **bought option**
+(CALL/PUT) and you place the order yourself in Upstox — the software never sends
+orders. It is a process for collecting honest evidence, not a proven money-maker.
 
-> The same content is available in-app on the **README** tab of the dashboard.
+> Full plain-language walkthrough is also on the **README tab** inside the dashboard.
+> The complete research story (with the mistakes) is in **`How_We_Built_The_Strategy.pdf`**
+> and the numbers are in **`BACKTEST_RESULTS.md`**.
 
 ---
 
 ## Quick Start
 
 ```bash
-cd /Users/sayali/files/institutional-trader
+cd ~/files/institutional-trader
 
-# Desktop terminal (default)
+# Desktop dashboard (default)
 .venv/bin/python main.py
 
 # CLI single scan / continuous / stats
@@ -22,171 +25,143 @@ cd /Users/sayali/files/institutional-trader
 .venv/bin/python main.py --loop
 .venv/bin/python main.py --status
 
-# API health check
+# Health & tools
 .venv/bin/python -c "from engine.api_diagnostics import diagnose; diagnose()"
+.venv/bin/python -m engine.events          # refresh NSE event scores now
+.venv/bin/python -m engine.notifications   # show alert channels + send test
 ```
 
-Auto-start weekdays at 09:00:
+Auto-start weekdays (Mac wakes 8:55, app launches 9:00):
 ```bash
 launchctl load ~/Library/LaunchAgents/com.sayali.institutionaltrader.plist
 ```
 
 ---
 
-## 1 · What It Does (in one breath)
+## What It Does (in one breath)
 
-Every 5 minutes during market hours it:
-1. pulls fresh prices from **Upstox**,
-2. gives each stock a single score called **alpha-z**,
-3. checks if the score is strong and broad enough (**Gate 1**),
-4. checks if the price is actually breaking out right now (**Gate 2**).
-
-If both gates pass, the stock appears on **PM DECISIONS** with exact entry, stop,
-target and quantity. You place that order manually in Upstox.
+Every 5 minutes during market hours it (1) pulls fresh prices from **Upstox**, (2)
+scores each stock into one number, **alpha-z**, (3) checks the score is strong and
+broad enough (**Gate 1**), (4) checks the price is breaking out *now* (**Gate 2**).
+Both gates pass → the stock appears on **PM DECISIONS** as a **buy-option order**
+(strike, expiry, live premium, target, stop, capital) for you to place manually.
 
 ---
 
-## 2 · The Daily Clock (all times IST)
+## The Daily Clock (IST)
 
 | Time | What happens |
 |------|--------------|
-| 08:55 | Mac wakes up automatically |
-| 09:00 | App auto-launches |
-| **09:15** | Market opens — scanning begins, ALPHA + WATCHLIST fill up |
-| 09:15–09:45 | First 30 min is the wildest part — we only watch, no trades |
-| **09:45** | Trading window opens — confirmed signals become PM DECISIONS |
-| every 5 min | Re-scan all 95 stocks; at most one new trade per scan |
-| **15:00** | No new trades after this (afternoon is thin) |
-| **15:10** | Kill switch — every open position is force-closed |
-| 15:30 | Market closes — trade log shows the day's wins/losses |
-| 15:35 | Re-rank the tradeable universe on the latest 60-day history |
+| 08:55 | Mac wakes itself (pmset) |
+| 09:00 | App auto-launches (launchd) |
+| 09:00 | First NSE **event scrape** (then refreshed hourly to 1 PM) |
+| **09:15** | Market opens — scanning begins, ALPHA fills |
+| 09:15–09:45 | Wildest part of the day — watch only |
+| **09:45** | Trading window opens |
+| every 5 min | Re-scan NIFTY + BANKNIFTY + 95 stocks (~3–4 sec) |
+| **13:00** | No new trades after 1 PM |
+| **15:10** | Kill switch — force-close everything |
+| 15:30 | Market closes |
+
+In practice nothing fires before ~11:30 AM (scores need an hour of data); signals
+cluster **12:30–1 PM**.
 
 ---
 
-## 3 · Data Sources & API Schedule
+## Data Sources
 
-### Upstox V3 — primary feed (low latency)
-- **Live LTP** — checked continuously to watch stops & targets
-- **5-min candles** — heartbeat of the scan: breakout + volume checks every 5 min
-- **Daily history** — ~400 days for trend/momentum maths and the 60-day backtest
-- **Indices** — Nifty 50, Bank Nifty, India VIX, fetched every 5 sec for the top bar & regime
-
-Instrument keys are **ISIN-based** (e.g. `NSE_EQ|INE467B01029`). The system
-auto-downloads Upstox's instrument master and caches it for 7 days, so symbols map
-to keys automatically (`engine/instruments.py`).
-
-### NSE public API — options & events
-PCR, max-pain, corporate filings — used by the FLOW and EVENT families.
-*(Options-chain integration is the next planned addition.)*
-
-### Yahoo Finance — emergency fallback only
-Only used if the Upstox token is missing/expired. Slower, so never the primary path.
+- **Upstox V3 (primary, low latency)** — live LTP, 5-min candles, daily history, and
+  index data (NIFTY / BANKNIFTY / VIX). ISIN-based instrument keys, auto-resolved
+  from Upstox's instrument master (cached weekly).
+- **NSE corporate-announcements (live scraper)** — feeds the EVENT family; scraped at
+  ~9 AM and refreshed hourly to 1 PM (`engine/events.py`).
+- **Yahoo Finance** — emergency fallback only (slower; never primary).
 
 ---
 
-## 4 · The 3 Families
+## The 3 Families (all live)
 
-Seven small checks grouped into 3 independent **families**. Each votes LONG, SHORT, or
-NEUTRAL. Grouping avoids fake breadth — momentum, trend and the volume-break all move
-together, so they count as one idea.
+Seven checks grouped into three independent families; each votes LONG / SHORT / NEUTRAL.
 
-| Family | Weight | Asks |
-|--------|--------|------|
-| **TREND** | 0.65 | Is it moving strongly? momentum + trend quality + opening-range microstructure |
-| **FLOW** | 0.17 | What are big players doing? options positioning (PCR/max-pain) + regime (Nifty, VIX) |
-| **EVENT** | 0.18 | Any news driving it? headlines + live NSE filings *(experimental)* |
+| Family | Weight | What it measures |
+|--------|--------|------------------|
+| **TREND** | 0.65 | Momentum + trend quality + opening-range breakout |
+| **FLOW** | 0.17 | Market regime (VIX, Nifty trend) + volume |
+| **EVENT** | 0.18 | **Live** NSE announcements, keyword-scored: orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0 |
 
-A 4th family (mean-reversion) was removed — it won only 47.6% in backtests.
-
----
-
-## 5 · The Alpha-Z Calculation
-
-Each family produces a **z-score**: how unusual the reading is.
-`0 = average · +1 = bullish · −1 = bearish · ±2 = extreme`
-
-Blend into one number, the **alpha-z**, as a weighted average:
-
-```
-alpha-z = Σ(family z × family weight) ÷ Σ(weights)
-```
-
-**Worked example (bearish stock):**
-```
-TREND z=−0.9 (w 0.65) · FLOW z=−0.6 (w 0.17) · EVENT z=+0.2 (w 0.18)
-top    = (−0.9×0.65) + (−0.6×0.17) + (0.2×0.18) = −0.651
-bottom = 0.65 + 0.17 + 0.18 = 1.00
-alpha-z = −0.65   → bearish, above 0.55 bar, 2/3 agree SHORT → PASSES Gate 1
-```
-Sign = direction, size = conviction.
+Each family yields a **z-score**; the weighted average is the **alpha-z** (sign =
+direction, size = conviction).
 
 ---
 
-## 6 · The Two Gates
+## The Two Gates
 
-**Gate 1 — Alpha Gate**
-- `|alpha-z|` strictly greater than **0.55**
-- at least **2 of 3** families agree on direction
-- stock is in the proven universe (top **10** by expectancy)
-
-→ puts the stock on the **WATCHLIST**, awaiting ORB breakout.
-
-**Gate 2 — ORB Breakout + Volume**
-- latest 5-min candle closes beyond the opening-range (above high = LONG, below low = SHORT)
-- with a volume surge
-
-Two independent methods must agree before money is risked. Both gates pass → **PM DECISIONS**.
+**Gate 1 — Alpha:** `|alpha-z| > 0.55` AND ≥ 2 of 3 families agree.
+**Gate 2 — Confirmation:** the latest 5-min candle breaks the opening range with a
+volume surge, same direction. Two independent methods must agree.
 
 ---
 
-## 7 · Position-Sizing Calculations
+## Instrument & Exit — Buy Options Only
 
-Fixed risk **₹2,000/trade** · Reward:Risk **2:1** · stop capped at **1%** so the
-target stays reachable intraday.
+Every signal becomes a **bought option** (never sold):
 
-```
-Stop       = Entry − 1% of Entry
-Risk/share = Entry − Stop
-Quantity   = ₹2,000 ÷ Risk/share        (rounded down, min 1)
-Target     = Entry + 2 × Risk/share
-```
+- **LONG → buy CALL · SHORT → buy PUT**
+- **Strike: OTM+1** (one strike out-of-the-money — best risk-adjusted in testing)
+- **Nearest expiry** (Nifty weekly, BankNifty/stocks monthly)
+- **Exit on the option premium:** **+10% target / −20% stop**
 
-**Example at Entry = ₹1,000:** Stop 990 · Risk/share 10 · Qty 200 · Target 1,020.
+You exit on the option's own price, not the stock — leverage means a small underlying
+move swings the premium 10%+.
 
 ---
 
-## 8 · Which Instrument?
+## Risk, Breakeven & Go-Live Bar
 
-| Conviction \|alpha-z\| | LONG | SHORT |
-|---|---|---|
-| 0.55–0.70 | Cash Equity | Future |
-| above 0.70 | CALL option | PUT option |
-
-Strike = at-the-money from the live NSE chain. If option IV > 40 (too expensive),
-falls back to Futures.
+- Max 3 trades/day · halt after 3 stop-outs · force-close 15:10 · never overnight.
+- **Breakeven:** with +10% target / −20% stop you risk 20% to make 10%, so the
+  breakeven win rate is `20 / (10+20) = ~67%`. **Below that you lose money.**
+- **Go-live bar:** win rate **≥ 70%** AND profit factor > 1 across 30+ signals —
+  a margin above breakeven, NOT the generic 52% you see elsewhere.
 
 ---
 
-## 9 · Risk Controls
+## Performance
 
-- Max **3** trades/day
-- **3** stop-outs in a row → halt for the day
-- Every position force-closed at **15:10** — never hold overnight
-- Position size derived from the stop distance, not guesswork
+The strategy logic is essentially instant; the cost is the network.
+
+| Step | Time |
+|------|------|
+| Score 3 families + both gates + instrument (per stock) | **~1.6 ms** (CPU) |
+| Fetch one stock's 5-min candles | ~440 ms (network) |
+| **Full 95-stock scan** | **~3–4 sec** (12 threads + daily cache + batched prices) |
+| Sequential (no optimisation) | ~43 sec |
+
+A 3–4 sec scan inside a 5-minute window means a signal is seen almost the instant a
+candle closes — prices barely drift.
 
 ---
 
-## 10 · Paper Trading & Go-Live Rule
+## Signal Notifications (optional, free-first)
 
-For the first month the system records every signal to its outcome (WIN at target,
-LOSS at stop, FORCED at 3:10 PM). The TRADE LOG is your honest scorecard.
+Every trade-ready signal can alert you on multiple channels (`engine/notifications.py`).
+Each fires only if its keys are set in `.env`:
 
-**Go-live bar:** win rate ≥ **52%** AND profit factor > **1** across **30+** signals.
-Below that, the edge isn't proven — don't automate.
+- **Telegram** — free, reliable (Bot API).
+- **WhatsApp** — free (CallMeBot).
+- **Phone call** — CallMeBot free TTS (best-effort) or Twilio (paid, reliable).
+- *(WhatsApp voice calls are not possible — no third-party API.)*
 
-> Honest note: factor hit-rates are barely above a coin-flip; after brokerage + taxes
-> the edge is thin. Treat every signal as a hypothesis and judge it by the log over
-> many sessions.
+Run `python -m engine.notifications` for the one-time setup steps.
+
+---
+
+## Paper Trading
+
+The dashboard keeps **LIVE paper trades** and the **30-day historical simulation**
+strictly separate (a toggle in the TRADE LOG tab). Run it forward for 30+ sessions and
+judge the live log against the go-live bar. Honest status: backtests show ~72% on tiny
+samples (13–34 trades) — **no proven edge yet**; only forward, costed data settles it.
 
 ---
 
@@ -194,22 +169,25 @@ Below that, the edge isn't proven — don't automate.
 
 ```
 engine/
-  config.py            all strategy parameters (edit here)
-  instruments.py       symbol → Upstox ISIN key resolver (auto-cached)
-  data_fetcher.py      Upstox V3 (LTP, 5-min, daily, indices) + Yahoo fallback
-  data_utils.py        index closes + API health
-  signals.py           3-family scoring + alpha-z + ORB
-  portfolio.py         position sizing, risk
-  trade_log.py         paper log, win rate, PF, expectancy
-  agent.py             orchestrator (5-min scan)
-  ui_terminal.py       dark terminal dashboard (default)
-  api_diagnostics.py   data-source health checks
+  config.py            all strategy parameters
+  instruments.py       symbol -> Upstox ISIN key resolver (cached)
+  data_fetcher.py      Upstox V3 (LTP, 5-min, daily, indices) + batched LTP + cache
+  data_utils.py        index closes (live/last, day change)
+  events.py            NSE announcement scraper + keyword scoring (EVENT family)
+  signals.py           3-family scoring + alpha-z + ORB gate
+  options.py           ATM/offset strike resolver + live option order builder
+  portfolio.py         instrument decision + sizing
+  trade_log.py         paper log: win rate, PF, expectancy, go-live check
+  notifications.py     Telegram / WhatsApp / phone-call alerts
+  agent.py             5-min scan orchestrator (parallel) + hourly event refresh
+  ui_terminal.py       dark dashboard (default)
+  api_diagnostics.py / signal_frequency.py / backtest120.py / option_live_backtest.py
 main.py                launcher
-.env                   Upstox Analytics Token (DO NOT COMMIT)
-data/                  trade_log.json, instrument cache
-logs/                  app.log
+How_We_Built_The_Strategy.pdf   teaching casebook (with the mistakes)
+BACKTEST_RESULTS.md             every backtest run, honestly documented
+.env                            Upstox token + notification keys (DO NOT COMMIT)
 ```
 
 ---
 
-*For educational use only. Not financial advice.*
+*For educational use only. Not financial advice. Markets carry risk of loss.*
