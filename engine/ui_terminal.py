@@ -88,6 +88,7 @@ class TerminalApp(QMainWindow):
         self._build_ui()
         self._refresh_market_data()
         self._refresh_log()      # show simulation immediately (or live paper trades)
+        self._refresh_pm()        # show today's already-fired signals (seeded from log)
         self.trigger_scan()       # only scans if market is open
 
         # timers
