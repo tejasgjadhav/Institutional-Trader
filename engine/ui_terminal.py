@@ -87,6 +87,7 @@ class TerminalApp(QMainWindow):
         self._check_recording_window()
         self._build_ui()
         self._refresh_market_data()
+        self._resolve_outcomes()  # close any resolvable PENDING trades on startup
         self._refresh_log()      # show simulation immediately (or live paper trades)
         self._refresh_pm()        # show today's already-fired signals (seeded from log)
         self.trigger_scan()       # only scans if market is open
@@ -601,9 +602,20 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             except Exception as e:
                 logger.warning(f"execute_signals failed: {e}")
 
+        self._resolve_outcomes()   # close PENDING paper trades (WIN/LOSS) on the premium
         self._refresh_pm(); self._refresh_watchlist(); self._refresh_alpha(); self._refresh_log()
         if hasattr(self, "auto_lbl"):
             self.auto_lbl.setText("◉ LIVE"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
+
+    def _resolve_outcomes(self):
+        """Mark PENDING paper trades WIN/LOSS by replaying the option premium."""
+        try:
+            from engine.paper_resolver import resolve_pending
+            n = resolve_pending(self.agent.trade_log)
+            if n:
+                logger.info(f"Resolved {n} paper-trade outcome(s)")
+        except Exception as e:
+            logger.warning(f"resolve outcomes failed: {e}")
 
     # ── refreshers ────────────────────────────────────────────────────────────
     @staticmethod
@@ -802,10 +814,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         return {"time": t.get("signal_time", "")[:19], "under": t.get("ticker", ""),
                 "opt": t.get("instrument", ""), "dir": t.get("direction", ""),
                 "entry": t.get("entry", 0), "target": t.get("target", 0), "stop": t.get("stop", 0),
-                "outcome": t.get("outcome", ""), "pnl": t.get("realized_pnl_inr", 0), "unit": ""}
+                "outcome": t.get("outcome") or "OPEN", "pnl": t.get("realized_pnl_inr", 0), "unit": ""}
 
     def _refresh_log(self):
-        live = [t for t in self.trade_log.trades if t.get("outcome")]
+        self.trade_log._load()   # reload from disk — agent + resolver write to it
+        live = [t for t in self.trade_log.trades if t.get("signal_time")]  # OPEN + closed
         sim = getattr(self, "sim_trades", [])
         # LIVE and SIMULATION are kept STRICTLY separate — never mixed.
         view = getattr(self, "log_view", "live")
@@ -827,10 +840,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         allt = [self._norm_trade(t) for t in chosen]
         n = len(allt); w = sum(1 for t in allt if t["outcome"] == "WIN")
         l = sum(1 for t in allt if t["outcome"] == "LOSS")
-        wr = (w / n * 100) if n else 0
+        opn = sum(1 for t in allt if t["outcome"] == "OPEN")
+        closed = w + l
+        wr = (w / closed * 100) if closed else 0
         tag = "LIVE PAPER" if view == "live" else "SIMULATION (30-day historical · reference only)"
+        openstr = f"  ·   OPEN {opn}" if (view == "live" and opn) else ""
         self.log_stats.setText(
-            f"  [{tag}]   TRADES {n}   ·   WINS {w}  LOSSES {l}   ·   WIN {wr:.0f}%   "
+            f"  [{tag}]   TRADES {n}   ·   WINS {w}  LOSSES {l}{openstr}   ·   WIN {wr:.0f}%   "
             f"·   target +10% / stop -20% on premium")
 
         buckets = {"NIFTY": [], "BANKNIFTY": [], "STOCK": []}
