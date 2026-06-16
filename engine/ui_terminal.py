@@ -20,7 +20,7 @@ from engine.config import IST
 from engine.agent import Agent
 from engine.trade_log import TradeLog
 from engine.data_utils import (
-    get_nifty_close, get_banknifty_close, get_vix_close, get_last_5_trading_days
+    get_market_snapshot, get_last_5_trading_days
 )
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,7 @@ AMBER       = "#ffb300"   # warnings / VIX / PM highlight
 CYAN        = "#29b6f6"   # info
 TEXT        = "#d7dde5"   # body text
 TEXT_DIM    = "#6b7785"   # secondary text
+PURPLE      = "#b388ff"   # ORB+VWAP parallel strategy
 
 
 class ScanWorker(QThread):
@@ -62,11 +63,8 @@ class MarketDataWorker(QThread):
 
     def run(self):
         try:
-            self.data_ready.emit({
-                "nifty": get_nifty_close(),
-                "banknifty": get_banknifty_close(),
-                "vix": get_vix_close(),
-            })
+            # ONE batched LTP call for all three indices (was 3 separate calls → 429s)
+            self.data_ready.emit(get_market_snapshot())
         except Exception as e:
             logger.warning(f"Market data worker failed: {e}")
 
@@ -99,7 +97,7 @@ class TerminalApp(QMainWindow):
         self.clock_timer.start(1000)
         # Market data: poll fast (2s) when open, slow (20s) when closed.
         self.mkt_timer = QTimer(); self.mkt_timer.timeout.connect(self._refresh_market_data)
-        self.mkt_timer.start(2000)
+        self.mkt_timer.start(3000)
 
     # ── recording window ──────────────────────────────────────────────────────
     def _check_recording_window(self):
@@ -243,6 +241,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     PM_COLS = ["TIME", "ORDER (BUY)", "STRIKE", "EXPIRY", "PREMIUM",
                "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"]
+    ORBVWAP_COLS = ["TIME", "INDEX", "TYPE", "STRIKE", "EXPIRY", "ENTRY",
+                    "TARGET +20%", "STOP -20%", "CURRENT", "LOT", "STATUS"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -262,15 +262,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("▸ LATEST PM DECISIONS — BUY options · place manually in Upstox", AMBER))
 
-        # STOCK options first — they generate the large majority of signals
-        v.addWidget(self._section_label("● STOCK OPTIONS  (most signals)", GREEN))
+        # STOCK options — the 3-Family system (stocks only; indices handled below)
+        v.addWidget(self._section_label("● STOCK OPTIONS  (3-Family system)", GREEN))
         self.pm_stock = self._make_pm_table(); v.addWidget(self.pm_stock, 1)
 
-        v.addWidget(self._section_label("● NIFTY OPTIONS  (rare)", CYAN))
-        self.pm_nifty = self._make_pm_table(); self.pm_nifty.setMaximumHeight(130); v.addWidget(self.pm_nifty)
-
-        v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (rare)", AMBER))
-        self.pm_bnf = self._make_pm_table(); self.pm_bnf.setMaximumHeight(130); v.addWidget(self.pm_bnf)
+        # NIFTY & BANKNIFTY index options — handled by the ORB+VWAP strategy below
+        v.addWidget(self._section_label("● ORB+VWAP INDEX STRATEGY  (parallel · paper forward-test · ATM · +20%/−20%)", PURPLE))
+        self.pm_orbvwap = QTableWidget(); self.pm_orbvwap.setColumnCount(len(self.ORBVWAP_COLS))
+        self.pm_orbvwap.setHorizontalHeaderLabels(self.ORBVWAP_COLS)
+        self.pm_orbvwap.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pm_orbvwap.setAlternatingRowColors(True); self.pm_orbvwap.verticalHeader().setVisible(False)
+        self.pm_orbvwap.verticalHeader().setDefaultSectionSize(34)
+        self.pm_orbvwap.setMaximumHeight(120); v.addWidget(self.pm_orbvwap)
 
         self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min · 09:15–15:30 IST.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
@@ -385,14 +388,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <div style="color:{TEXT};">
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — 3-Family Alpha · NSE Intraday Options</p>
-{dim("A disciplined paper-trading framework. It scans NIFTY, BANKNIFTY and 95 NSE stocks all day, "
-     "scores each one, and only flags a trade when it clears two strict gates. You place every "
-     "order yourself in Upstox — the system never sends orders. It is a process for collecting "
-     "honest evidence, not a proven money-maker.")}
+{dim("A disciplined paper-trading framework. The 3-Family system scans 95 NSE stocks all day and "
+     "only flags a trade when it clears two strict gates; NIFTY &amp; BANKNIFTY are handled by a "
+     "separate parallel ORB+VWAP strategy. You place every order yourself in Upstox — the system "
+     "never sends orders. It is a process for collecting honest evidence, not a proven money-maker.")}
 
 {p(f"<b>Current mode:</b> SIMULATION (paper) · <b>OPTIONS-ONLY, BUY-ONLY</b>. <b>Recording:</b> {rec}.")}
-{p(f"<b>Tuned config:</b> BUY OTM+1 · +{int(C.PREMIUM_TARGET_PCT)}% target / −{int(C.PREMIUM_STOP_PCT)}% stop "
-   f"on premium · cutoff 1 PM · scans NIFTY + BANKNIFTY + {len(C.UNIVERSE)} stocks.")}
+{p(f"<b>Tuned config:</b> STOCKS — BUY OTM+1 · +{int(C.PREMIUM_TARGET_PCT)}% / −{int(C.PREMIUM_STOP_PCT)}% on premium · "
+   f"cutoff 1 PM · {len(C.UNIVERSE)} stocks. &nbsp; INDEX — ORB+VWAP · BUY ATM · "
+   f"+{int(C.ORB_VWAP_TARGET_PCT)}% / −{int(C.ORB_VWAP_STOP_PCT)}% · NIFTY &amp; BANKNIFTY.")}
 {p(f"<b style='color:{AMBER}'>Status:</b> best backtest ~72% win (OTM+1, 1 PM) — but on only 18 trades, "
    f"so UNPROVEN. Larger 30-day samples read 50–65%; the 120-day underlying test showed no edge at 2:1. "
    f"Win rate is real-looking on small samples but not yet bankable — a 30+ session forward paper-test "
@@ -403,6 +407,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "(2) gives each stock a single score called <b>alpha-z</b>, (3) checks if the score is strong "
    "and broad enough (Gate 1), (4) checks if the price is actually breaking out right now (Gate 2). "
    "If both gates pass, the stock appears on <b>PM DECISIONS</b> with exact entry, stop, target and quantity.")}
+
+{h("1b · PARALLEL STRATEGY — ORB+VWAP INDEX (forward-test)")}
+{p("Running ALONGSIDE the 3-Family system is a second, independent strategy on NIFTY &amp; BANKNIFTY "
+   "<b>index options only</b>. Each scan it checks a 15-min Opening-Range Breakout confirmed by VWAP and "
+   "the 30-min trend (entries before 11 AM, skipping 0-DTE expiry-day spikes), buys the <b>ATM</b> CALL/PUT, "
+   "and exits <b>+20% / −20%</b> on premium. It shows in its own purple section on <b>PM DECISIONS</b> "
+   "with a live status: WATCHING → ACTIVE → TARGET +20% / STOPPED −20%.")}
+{dim("VWAP needs volume and the spot index reports none on Upstox, so the VWAP line is drawn from the index "
+     "FUTURES feed — but nothing except OPTIONS is ever traded. Honest note: Apr–Jun 2026 backtests show this "
+     "is roughly breakeven (NIFTY −0.5%, BANKNIFTY +0.3%); it runs live to FORWARD-TEST it, not because it is "
+     "proven. Full study: studies/WIN_RATE_RESEARCH_LOG.md.")}
 
 {h("2 · THE DAILY CLOCK (all times IST)")}
 {p(f"<b>08:55</b> &nbsp; Mac wakes up automatically")}
@@ -602,29 +617,48 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         self.pm_empty.setVisible(len(ready) == 0)
         from engine.options import build_live_option_order
         from engine.data_fetcher import get_cached_ltp
-        buckets = {"NIFTY": [], "BANKNIFTY": [], "STOCK": []}
-        for sig in ready:
-            buckets[self._underlying_kind(sig["ticker"])].append(sig)
-
-        for kind, table in (("NIFTY", self.pm_nifty), ("BANKNIFTY", self.pm_bnf), ("STOCK", self.pm_stock)):
-            rows = buckets[kind]
-            table.setRowCount(len(rows))
-            for r, sig in enumerate(rows):
-                spot = get_cached_ltp(sig["ticker"]) or sig.get("entry_price") or 0
-                order = build_live_option_order(sig["ticker"], spot, sig.get("direction", "LONG"))
-                if not order:
-                    vals = [datetime.now(IST).strftime("%H:%M:%S"),
-                            f"{sig['ticker']} {sig.get('direction')}", "—", "—", "n/a",
-                            "—", "—", "—", "—", "no option"]
-                    self._set_row(table, r, vals, fg=QColor(TEXT_DIM)); continue
-                cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
+        # 3-Family system is stock-only now; show its trade-ready stock options.
+        rows = [s for s in ready if self._underlying_kind(s["ticker"]) == "STOCK"]
+        self.pm_stock.setRowCount(len(rows))
+        for r, sig in enumerate(rows):
+            spot = get_cached_ltp(sig["ticker"]) or sig.get("entry_price") or 0
+            order = build_live_option_order(sig["ticker"], spot, sig.get("direction", "LONG"))
+            if not order:
                 vals = [datetime.now(IST).strftime("%H:%M:%S"),
-                        f"BUY {order['symbol']} {order['instrument']}",
-                        f"{int(order['strike'])}", order["expiry"],
-                        f"Rs {order['premium']:.2f}", f"Rs {order['target_premium']:.2f}",
-                        f"Rs {order['stop_premium']:.2f}", order.get("lot_size", "—"),
-                        cap, "● BUY MANUAL"]
-                self._set_row(table, r, vals, fg=QColor(AMBER))
+                        f"{sig['ticker']} {sig.get('direction')}", "—", "—", "n/a",
+                        "—", "—", "—", "—", "no option"]
+                self._set_row(self.pm_stock, r, vals, fg=QColor(TEXT_DIM)); continue
+            cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
+            vals = [datetime.now(IST).strftime("%H:%M:%S"),
+                    f"BUY {order['symbol']} {order['instrument']}",
+                    f"{int(order['strike'])}", order["expiry"],
+                    f"Rs {order['premium']:.2f}", f"Rs {order['target_premium']:.2f}",
+                    f"Rs {order['stop_premium']:.2f}", order.get("lot_size", "—"),
+                    cap, "● BUY MANUAL"]
+            self._set_row(self.pm_stock, r, vals, fg=QColor(AMBER))
+
+        self._refresh_orbvwap()
+
+    def _refresh_orbvwap(self):
+        """Render the parallel ORB+VWAP index strategy rows on PM DECISIONS."""
+        rows = getattr(self.agent, "orbvwap_signals", []) or []
+        self.pm_orbvwap.setRowCount(len(rows))
+        for r, s in enumerate(rows):
+            status = s.get("status", "—")
+            if s.get("entry"):  # an active/closed signal
+                cur = f"Rs {s['current']:.2f}" if s.get("current") else "—"
+                kind = s.get("kind", "—")
+                vals = [s.get("time", "—"), s.get("index", "—"), kind,
+                        s.get("strike", "—"), s.get("expiry", "—"),
+                        f"Rs {s['entry']:.2f}", f"Rs {s['target']:.2f}",
+                        f"Rs {s['stop']:.2f}", cur, s.get("lot", "—"), status]
+                # CALL = green, PUT = red — so the option type is obvious at a glance
+                fg = QColor(GREEN) if kind == "CALL" else QColor(RED)
+            else:  # watching / skip / no-data placeholder
+                vals = [datetime.now(IST).strftime("%H:%M"), s.get("index", "—"),
+                        "—", "—", "—", "—", "—", "—", "—", "—", status]
+                fg = QColor(TEXT_DIM)
+            self._set_row(self.pm_orbvwap, r, vals, fg=fg)
 
     def _refresh_watchlist(self):
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
@@ -719,7 +753,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         # Adapt cadence to market state (timer may not exist on the very first call)
         timer = getattr(self, "mkt_timer", None)
         if timer is not None:
-            interval = 2000 if self.agent.is_market_open() else 20000
+            interval = 3000 if self.agent.is_market_open() else 20000
             if timer.interval() != interval:
                 timer.setInterval(interval)
 
@@ -733,18 +767,26 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         x = d["vix"]
         xdir = x.get("direction", "FLAT")
         arrow = "▲" if xdir == "UP" else ("▼" if xdir == "DOWN" else "•")
-        self.vix_lbl.setText(f"INDIA VIX  {x['price']:.2f}  {arrow} {x.get('pct',0):+.2f}%")
+        self.vix_lbl.setText(f"INDIA VIX  {x['price']:.2f}  {arrow} {x.get('pct',0):+.2f}%{self._src_tag(x.get('source'))}")
         # For VIX, falling is risk-on(green); keep amber as neutral base for readability
         self.vix_lbl.setStyleSheet(f"color:{AMBER};")
 
+    @staticmethod
+    def _src_tag(source: str) -> str:
+        sl = (source or "").lower()
+        if "5m" in sl:    return "  · 5m"
+        if "yahoo" in sl: return "  · ~15m"
+        if "live" in sl:  return ""
+        return "  · prev close"   # live unavailable → showing previous session
+
     def _set_ticker(self, lbl, name, d: dict):
-        """Render an index ticker with colored up/down vs previous close."""
+        """Render an index ticker with colored up/down vs the previous session close."""
         direction = d.get("direction", "FLAT")
         color = GREEN if direction == "UP" else (RED if direction == "DOWN" else TEXT_DIM)
         arrow = "▲" if direction == "UP" else ("▼" if direction == "DOWN" else "•")
         chg = d.get("change", 0.0)
         pct = d.get("pct", 0.0)
-        lbl.setText(f"{name}  {d['price']:,.2f}   {arrow} {chg:+,.2f} ({pct:+.2f}%)")
+        lbl.setText(f"{name}  {d['price']:,.2f}   {arrow} {chg:+,.2f} ({pct:+.2f}%){self._src_tag(d.get('source'))}")
         lbl.setStyleSheet(f"color:{color};")
 
     def _tick(self):

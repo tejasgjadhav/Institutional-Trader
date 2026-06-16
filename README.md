@@ -40,11 +40,18 @@ launchctl load ~/Library/LaunchAgents/com.sayali.institutionaltrader.plist
 
 ## What It Does (in one breath)
 
-Every 5 minutes during market hours it (1) pulls fresh prices from **Upstox**, (2)
-scores each stock into one number, **alpha-z**, (3) checks the score is strong and
-broad enough (**Gate 1**), (4) checks the price is breaking out *now* (**Gate 2**).
-Both gates pass → the stock appears on **PM DECISIONS** as a **buy-option order**
-(strike, expiry, live premium, target, stop, capital) for you to place manually.
+Two strategies run in parallel, both reported on **PM DECISIONS**, both options-only,
+both manual-execution:
+
+- **3-Family system (95 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
+  (2) scores each stock into one number, **alpha-z**, (3) checks the score is strong
+  and broad enough (**Gate 1**), (4) checks the price is breaking out *now* (**Gate 2**).
+  Both gates pass → a **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
+- **ORB+VWAP system (NIFTY & BANKNIFTY):** a separate index strategy — 15-min ORB +
+  VWAP + 30-min trend, buy **ATM**, **+20%/−20%** (see the section below).
+
+The 3-Family system scans **stocks only**; the indices are handled exclusively by the
+ORB+VWAP strategy.
 
 ---
 
@@ -116,6 +123,27 @@ move swings the premium 10%+.
 
 ---
 
+## Parallel Strategy — ORB+VWAP Index (forward-test)
+
+A second, independent strategy runs **alongside** the 3-Family system on **NIFTY &
+BANKNIFTY index options only**, shown in its own section on **PM DECISIONS**:
+
+- **Signal:** 15-min Opening-Range Breakout + hold VWAP + aligned with the 30-min trend
+- **Filters:** entries before 11:00 AM · skip 0-DTE expiry-day spikes · one signal/index/day
+- **Instrument:** buy **ATM** CALL/PUT (LONG→CALL, SHORT→PUT)
+- **Exit:** **+20% / −20%** on the option premium
+- **Live status:** WATCHING → ACTIVE → TARGET +20% / STOPPED −20%
+
+**Options-only execution.** VWAP needs volume and the spot index reports none on Upstox,
+so the VWAP line is computed from the index **futures** feed — but nothing except options
+is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb_vwap_live.py`.
+
+> **Honest note:** Apr–Jun 2026 backtests show this is roughly breakeven (NIFTY −0.5%,
+> BANKNIFTY +0.3%). It runs live to **forward-test** it, not because it is proven. Full
+> study: [`studies/WIN_RATE_RESEARCH_LOG.md`](studies/WIN_RATE_RESEARCH_LOG.md).
+
+---
+
 ## Risk, Breakeven & Go-Live Bar
 
 - Max 3 trades/day · halt after 3 stop-outs · force-close 15:10 · never overnight.
@@ -175,6 +203,7 @@ engine/
   data_utils.py        index closes (live/last, day change)
   events.py            NSE announcement scraper + keyword scoring (EVENT family)
   signals.py           3-family scoring + alpha-z + ORB gate
+  orb_vwap_live.py     PARALLEL ORB+VWAP index strategy (ATM, +20/-20, PM DECISIONS)
   options.py           ATM/offset strike resolver + live option order builder
   portfolio.py         instrument decision + sizing
   trade_log.py         paper log: win rate, PF, expectancy, go-live check
@@ -185,6 +214,7 @@ engine/
 main.py                launcher
 How_We_Built_The_Strategy.pdf   teaching casebook (with the mistakes)
 BACKTEST_RESULTS.md             every backtest run, honestly documented
+studies/                        win-rate research log + reproducible study scripts
 .env                            Upstox token + notification keys (DO NOT COMMIT)
 ```
 

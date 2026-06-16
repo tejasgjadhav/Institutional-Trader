@@ -35,9 +35,12 @@ class Agent:
 
     def __init__(self):
         self.trade_log = TradeLog()
-        # Scan indices first (low-capital option plays), then the stock universe
-        self.universe = SCAN_INDICES + UNIVERSE
+        # 3-Family system scans the STOCK universe only. NIFTY/BANKNIFTY are now
+        # handled EXCLUSIVELY by the parallel ORB+VWAP index strategy (orb_vwap_live).
+        self.universe = list(UNIVERSE)
         self.signals_fired = []
+        # ORB+VWAP index strategy rows (runs in parallel, shown on PM DECISIONS)
+        self.orbvwap_signals = []
         self._event_thread = None
         # Kick off an initial event scrape in the background at startup.
         self.maybe_refresh_events(force=True)
@@ -173,9 +176,19 @@ class Agent:
         # Refresh NSE event scores hourly (9 AM-1 PM), in the background
         self.maybe_refresh_events()
 
+        # Kick off the ORB+VWAP INDEX strategy concurrently — it runs in PARALLEL
+        # with the 3-Family stock scan and is reported in its own PM DECISIONS section.
+        from concurrent.futures import ThreadPoolExecutor, as_completed
+        ix_pool = ThreadPoolExecutor(max_workers=1)
+        ix_future = None
+        try:
+            from engine.orb_vwap_live import scan_index_orbvwap
+            ix_future = ix_pool.submit(scan_index_orbvwap)
+        except Exception as e:
+            logger.warning(f"ORB+VWAP submit failed: {e}")
+
         # Parallelize the per-stock scan — each scan_stock makes independent
         # network calls, so a thread pool turns ~40s sequential into a few seconds.
-        from concurrent.futures import ThreadPoolExecutor, as_completed
         results = []
         with ThreadPoolExecutor(max_workers=12) as pool:
             futures = {pool.submit(self.scan_stock, t): t for t in self.universe}
@@ -184,6 +197,15 @@ class Agent:
                     results.append(fut.result())
                 except Exception as e:
                     logger.warning(f"Scan failed for {futures[fut]}: {e}")
+
+        # Collect the ORB+VWAP index result (ran alongside the stock scan)
+        if ix_future is not None:
+            try:
+                self.orbvwap_signals = ix_future.result(timeout=30)
+            except Exception as e:
+                logger.warning(f"ORB+VWAP scan failed: {e}")
+                self.orbvwap_signals = []
+        ix_pool.shutdown(wait=False)
 
         # Keep ALL scored stocks (drop only hard errors) so the ALPHA tab shows the
         # full scan, WATCHLIST shows Gate-1 passers, and PM DECISIONS shows trade-ready.

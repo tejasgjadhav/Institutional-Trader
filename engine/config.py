@@ -102,6 +102,19 @@ OPTION_STRIKE_OFFSET = 1      # OTM+1 (CALL: one strike above spot · PUT: one b
 TARGET_PCT_EQUITY     = 1.0
 TARGET_PCT_DERIVATIVE = 5.0
 
+# === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
+# Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own
+# section on PM DECISIONS. Signal: 15-min ORB break on the index FUTURES + hold VWAP
+# + 30-min trend aligned + entry before the cutoff. Buys ATM, exits +/-20% on premium.
+# NOTE: Apr-Jun 2026 backtests show this is ~breakeven (NIFTY -0.5%, BANKNIFTY +0.3%);
+# it runs LIVE here to forward-test it, NOT because it is proven profitable.
+ORB_VWAP_ENABLED      = True
+ORB_VWAP_TARGET_PCT   = 20.0   # +20% premium target
+ORB_VWAP_STOP_PCT     = 20.0   # -20% premium stop
+ORB_VWAP_ENTRY_CUTOFF = "11:00"  # no new ORB+VWAP entries after this (first-90-min filter)
+ORB_VWAP_STRIKE_OFFSET = 0     # 0=ATM, -1=ITM, +1=OTM
+ORB_VWAP_TREND_BARS    = 6     # 30-min trend filter (6 x 5-min bars)
+
 # === INSTRUMENT SELECTION ===
 # In OPTIONS_ONLY_MODE the instrument is always CALL (LONG) or PUT (SHORT).
 # Otherwise: |alpha-z| 0.55-0.70 LONG=equity / SHORT=future; >0.70 = CALL/PUT.
