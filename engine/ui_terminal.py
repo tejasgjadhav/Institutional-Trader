@@ -486,21 +486,29 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "two different techniques must agree before money is risked.")}
 {p("When both gates pass, the stock moves to <b>PM DECISIONS</b>.")}
 
-{h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY (OTM+1)")}
-{p("Every signal becomes a <b>bought option</b> (never sold): "
+{h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY (two strategies)")}
+{p("Every signal — in either strategy — becomes a <b>bought option</b> (never sold): "
    "<b style='color:{0}'>LONG → buy CALL</b>, <b style='color:{1}'>SHORT → buy PUT</b>.".format(GREEN, RED))}
-{p(f"Strike = <b>OTM+1</b> (offset {C.OPTION_STRIKE_OFFSET}): one strike OUT-of-the-money — "
-   f"CALL one strike above spot, PUT one below. Backtest favoured this over ATM (best "
-   f"expectancy + good win rate, cheaper, still liquid). Falls back to ATM if no data.")}
-{p("PM DECISIONS shows the exact order: strike, expiry, live premium, target/stop premium, "
-   "lot, capital — e.g. <b>BUY NIFTY 23650 CE 16-Jun @ Rs…</b> · tgt +10% · stop −20%.")}
+{sub("STOCK OPTIONS — 3-Family system (95 stocks)")}
+{p(f"Strike = <b>OTM+1</b> (offset {C.OPTION_STRIKE_OFFSET}): one strike OUT-of-the-money — CALL one "
+   f"above spot, PUT one below. Exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / −{int(C.PREMIUM_STOP_PCT)}%</b> "
+   f"on premium. Shown in the green STOCK OPTIONS section on PM DECISIONS, "
+   f"e.g. <b>BUY RELIANCE 1300 CE @ Rs…</b>.")}
+{sub("INDEX OPTIONS — ORB+VWAP strategy (NIFTY &amp; BANKNIFTY)")}
+{p(f"Strike = <b>ATM</b>. A 15-min Opening-Range Breakout that holds VWAP and aligns with the 30-min "
+   f"trend (before 11 AM, skipping expiry-day) buys the ATM CALL/PUT. Exit "
+   f"<b>+{int(C.ORB_VWAP_TARGET_PCT)}% / −{int(C.ORB_VWAP_STOP_PCT)}%</b> on premium. Shown in the purple "
+   f"ORB+VWAP section, colour-coded CALL green / PUT red, e.g. <b>BUY BANKNIFTY 57100 PUT @ Rs…</b>.")}
 {dim(f"Nearest expiry (Nifty weekly, BankNifty/stocks monthly) · skip if IV > {C.OPTION_IV_THRESHOLD}. "
      f"Indices keep capital low: Nifty ~Rs12k/lot, BankNifty ~Rs28k/lot.")}
 
 {h("8 · EXIT — ON THE OPTION PREMIUM (2:1 is NOT how options win)")}
-{p(f"You exit on the option's own price, not the stock:")}
-{p(f"• <b style='color:{GREEN}'>BOOK</b> at premium <b>+{C.PREMIUM_TARGET_PCT:.0f}%</b> &nbsp;(e.g. Rs100 → Rs{100*(1+C.PREMIUM_TARGET_PCT/100):.0f})")}
-{p(f"• <b style='color:{RED}'>CUT</b> at premium <b>−{C.PREMIUM_STOP_PCT:.0f}%</b> &nbsp;(e.g. Rs100 → Rs{100*(1-C.PREMIUM_STOP_PCT/100):.0f})")}
+{p(f"You exit on the option's own price, not the underlying:")}
+{p(f"• <b style='color:{GREEN}'>STOCKS</b> &nbsp; BOOK <b>+{int(C.PREMIUM_TARGET_PCT)}%</b> / CUT "
+   f"<b>−{int(C.PREMIUM_STOP_PCT)}%</b> on premium (e.g. Rs100 → Rs{100*(1+C.PREMIUM_TARGET_PCT/100):.0f} / "
+   f"Rs{100*(1-C.PREMIUM_STOP_PCT/100):.0f})")}
+{p(f"• <b style='color:{PURPLE}'>INDEX (ORB+VWAP)</b> &nbsp; BOOK <b>+{int(C.ORB_VWAP_TARGET_PCT)}%</b> / CUT "
+   f"<b>−{int(C.ORB_VWAP_STOP_PCT)}%</b> on premium (symmetric)")}
 {p(f"• <b>FORCE-CLOSE</b> at {C.KILL_SWITCH_TIME} regardless")}
 {dim(f"Why small target + wide stop? Option premiums are volatile, so a quick +{C.PREMIUM_TARGET_PCT:.0f}% "
      f"is hit often (high win rate) while the wider −{C.PREMIUM_STOP_PCT:.0f}% stop avoids getting "
