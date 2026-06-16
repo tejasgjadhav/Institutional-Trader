@@ -631,6 +631,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             self._fired_day = today
             self._fired_today = []
             self._seed_fired_from_log(today)
+            try:    # refresh the daily CSV snapshot of signals.db
+                from engine import signal_db
+                signal_db.export_csv()
+            except Exception:
+                pass
 
     def _seed_fired_from_log(self, today):
         try:
@@ -653,6 +658,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                     "direction": t.get("direction"),
                     "instrument": t.get("instrument") or ("CALL" if t.get("direction") == "LONG" else "PUT"),
                     "kind": self._underlying_kind(tk), "order": None,
+                    "alpha_z": t.get("alpha_z"), "breadth": t.get("breadth"), "vol_ratio": None,
                 })
         except Exception as e:
             logger.warning(f"Seed fired-from-log failed: {e}")
@@ -676,6 +682,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             "direction": sig.get("direction"),
             "instrument": "CALL" if sig.get("direction") == "LONG" else "PUT",
             "kind": self._underlying_kind(tk), "order": order,
+            "alpha_z": sig.get("alpha_z"), "breadth": sig.get("breadth"),
+            "vol_ratio": sig.get("vol_ratio"),
         })
 
     def _refresh_pm(self):
@@ -696,6 +704,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                 except Exception:
                     order = None
             sym = f["ticker"].replace(".NS", "")
+            self._db_record_stock(f, order, sym)   # persist to signals.db
             if not order:
                 vals = [f["time"], f"BUY {sym} {f.get('instrument', '')}",
                         "—", "—", "—", "—", "—", "—", "—", "● FIRED"]
@@ -710,6 +719,22 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
 
         self._refresh_orbvwap()
 
+    @staticmethod
+    def _db_record_stock(f, order, sym):
+        try:
+            from engine import signal_db
+            o = order or {}
+            signal_db.record_signal(
+                time=f.get("time"), strategy="3-Family", symbol=sym,
+                direction=f.get("direction"), opt_type=f.get("instrument"),
+                strike=o.get("strike"), expiry=o.get("expiry"),
+                entry_premium=o.get("premium"), target_premium=o.get("target_premium"),
+                stop_premium=o.get("stop_premium"), lot=o.get("lot_size"),
+                capital=o.get("capital"), alpha_z=f.get("alpha_z"),
+                breadth=f.get("breadth"), vol_ratio=f.get("vol_ratio"), status="FIRED")
+        except Exception:
+            pass
+
     def _refresh_orbvwap(self):
         """Render the parallel ORB+VWAP index strategy rows on PM DECISIONS."""
         rows = getattr(self.agent, "orbvwap_signals", []) or []
@@ -717,6 +742,17 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         for r, s in enumerate(rows):
             status = s.get("status", "—")
             if s.get("entry"):  # an active/closed signal
+                try:
+                    from engine import signal_db
+                    signal_db.record_signal(
+                        time=s.get("time"), strategy="ORB+VWAP", symbol=s.get("index"),
+                        direction=s.get("direction"), opt_type=s.get("kind"),
+                        strike=s.get("strike"), expiry=s.get("expiry"),
+                        entry_premium=s.get("entry"), target_premium=s.get("target"),
+                        stop_premium=s.get("stop"), lot=s.get("lot"),
+                        capital=s.get("capital"), status=s.get("status"))
+                except Exception:
+                    pass
                 cur = f"Rs {s['current']:.2f}" if s.get("current") else "—"
                 kind = s.get("kind", "—")
                 vals = [s.get("time", "—"), s.get("index", "—"), kind,

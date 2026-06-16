@@ -207,6 +207,7 @@ engine/
   options.py           ATM/offset strike resolver + live option order builder
   portfolio.py         instrument decision + sizing
   trade_log.py         paper log: win rate, PF, expectancy, go-live check
+  signal_db.py         SQLite DB of every PM signal (Gate-2 stocks + ORB+VWAP index), accrues daily
   notifications.py     Telegram / WhatsApp / phone-call alerts
   agent.py             5-min scan orchestrator (parallel) + hourly event refresh
   ui_terminal.py       dark dashboard (default)
@@ -215,6 +216,7 @@ main.py                launcher
 How_We_Built_The_Strategy.pdf   teaching casebook (with the mistakes)
 BACKTEST_RESULTS.md             every backtest run, honestly documented
 studies/                        win-rate research log + reproducible study scripts
+data/signals.db                 SQLite log of all PM signals (gitignored; `python -m engine.signal_db`)
 .env                            Upstox token + notification keys (DO NOT COMMIT)
 ```
 
