@@ -594,6 +594,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                 self._notified_today = set()
             for s in new_ready:
                 self._notified_today.add(s["ticker"])
+                self._record_fired(s)   # persist on PM DECISIONS for the whole day
             try:
                 self.agent.execute_signals(new_ready)  # writes trade log + fires notifications
             except Exception as e:
@@ -620,29 +621,90 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             if bg: it.setBackground(QBrush(bg))
             table.setItem(row, col, it)
 
+    # ── PM DECISIONS persists the DAY'S fired signals (not just the current scan) ──
+    def _ensure_fired_today(self):
+        """Reset the day's fired-signal list at rollover; seed from the trade log so a
+        mid-day app restart doesn't lose signals that already fired today."""
+        today = datetime.now(IST).date()
+        if getattr(self, "_fired_day", None) != today:
+            self._fired_day = today
+            self._fired_today = []
+            self._seed_fired_from_log(today)
+
+    def _seed_fired_from_log(self, today):
+        try:
+            import os, json
+            from engine.config import TRADE_LOG_PATH
+            if not os.path.exists(TRADE_LOG_PATH):
+                return
+            with open(TRADE_LOG_PATH) as f:
+                data = json.load(f)
+            trades = data.get("trades", []) if isinstance(data, dict) else data
+            for t in trades:
+                st = str(t.get("signal_time", ""))
+                tk = t.get("ticker")
+                if not tk or not st.startswith(today.isoformat()):
+                    continue
+                if any(x["ticker"] == tk for x in self._fired_today):
+                    continue
+                self._fired_today.append({
+                    "time": st[11:19] if len(st) >= 19 else st, "ticker": tk,
+                    "direction": t.get("direction"),
+                    "instrument": t.get("instrument") or ("CALL" if t.get("direction") == "LONG" else "PUT"),
+                    "kind": self._underlying_kind(tk), "order": None,
+                })
+        except Exception as e:
+            logger.warning(f"Seed fired-from-log failed: {e}")
+
+    def _record_fired(self, sig):
+        """Capture a freshly-fired signal so it stays on PM DECISIONS all day."""
+        self._ensure_fired_today()
+        tk = sig.get("ticker")
+        if not tk or any(x["ticker"] == tk for x in self._fired_today):
+            return
+        order = None
+        try:
+            from engine.options import build_live_option_order
+            from engine.data_fetcher import get_cached_ltp
+            spot = get_cached_ltp(tk) or sig.get("entry_price") or 0
+            order = build_live_option_order(tk, spot, sig.get("direction", "LONG"))
+        except Exception:
+            pass
+        self._fired_today.append({
+            "time": datetime.now(IST).strftime("%H:%M:%S"), "ticker": tk,
+            "direction": sig.get("direction"),
+            "instrument": "CALL" if sig.get("direction") == "LONG" else "PUT",
+            "kind": self._underlying_kind(tk), "order": order,
+        })
+
     def _refresh_pm(self):
-        ready = [s for s in self.last_scan_results if s.get("trade_ready")]
-        self.pm_empty.setVisible(len(ready) == 0)
+        self._ensure_fired_today()
         from engine.options import build_live_option_order
         from engine.data_fetcher import get_cached_ltp
-        # 3-Family system is stock-only now; show its trade-ready stock options.
-        rows = [s for s in ready if self._underlying_kind(s["ticker"]) == "STOCK"]
-        self.pm_stock.setRowCount(len(rows))
-        for r, sig in enumerate(rows):
-            spot = get_cached_ltp(sig["ticker"]) or sig.get("entry_price") or 0
-            order = build_live_option_order(sig["ticker"], spot, sig.get("direction", "LONG"))
+        fired = sorted([f for f in self._fired_today if f["kind"] == "STOCK"],
+                       key=lambda f: f["time"], reverse=True)   # newest on top
+        self.pm_empty.setVisible(len(fired) == 0)
+        self.pm_stock.setRowCount(len(fired))
+        for r, f in enumerate(fired):
+            order = f.get("order")
+            if order is None:  # seeded-from-log row — try to build the option order now
+                try:
+                    spot = get_cached_ltp(f["ticker"]) or 0
+                    order = build_live_option_order(f["ticker"], spot, f.get("direction", "LONG"))
+                    f["order"] = order
+                except Exception:
+                    order = None
+            sym = f["ticker"].replace(".NS", "")
             if not order:
-                vals = [datetime.now(IST).strftime("%H:%M:%S"),
-                        f"{sig['ticker']} {sig.get('direction')}", "—", "—", "n/a",
-                        "—", "—", "—", "—", "no option"]
-                self._set_row(self.pm_stock, r, vals, fg=QColor(TEXT_DIM)); continue
+                vals = [f["time"], f"BUY {sym} {f.get('instrument', '')}",
+                        "—", "—", "—", "—", "—", "—", "—", "● FIRED"]
+                self._set_row(self.pm_stock, r, vals, fg=QColor(AMBER)); continue
             cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
-            vals = [datetime.now(IST).strftime("%H:%M:%S"),
-                    f"BUY {order['symbol']} {order['instrument']}",
+            vals = [f["time"], f"BUY {order['symbol']} {order['instrument']}",
                     f"{int(order['strike'])}", order["expiry"],
                     f"Rs {order['premium']:.2f}", f"Rs {order['target_premium']:.2f}",
                     f"Rs {order['stop_premium']:.2f}", order.get("lot_size", "—"),
-                    cap, "● BUY MANUAL"]
+                    cap, "● FIRED"]
             self._set_row(self.pm_stock, r, vals, fg=QColor(AMBER))
 
         self._refresh_orbvwap()
