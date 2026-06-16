@@ -814,7 +814,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         return {"time": t.get("signal_time", "")[:19], "under": t.get("ticker", ""),
                 "opt": t.get("instrument", ""), "dir": t.get("direction", ""),
                 "entry": t.get("entry", 0), "target": t.get("target", 0), "stop": t.get("stop", 0),
-                "outcome": t.get("outcome") or "OPEN", "pnl": t.get("realized_pnl_inr", 0), "unit": ""}
+                "outcome": t.get("outcome") or "OPEN", "pnl": t.get("realized_pnl_inr") or 0, "unit": ""}
 
     def _refresh_log(self):
         self.trade_log._load()   # reload from disk — agent + resolver write to it
@@ -857,8 +857,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             table.setRowCount(len(rows))
             for r, t in enumerate(rows):
                 oc = t["outcome"]
-                fg = QColor(GREEN) if oc == "WIN" else QColor(RED) if oc == "LOSS" else QColor(CYAN)
-                pnl = f"{t['pnl']:+.1f}%" if t["unit"] == "%" else f"Rs {t['pnl']:+.0f}"
+                fg = (QColor(GREEN) if oc == "WIN" else QColor(RED) if oc == "LOSS"
+                      else QColor(AMBER) if oc == "OPEN" else QColor(CYAN))
+                if oc == "OPEN":
+                    pnl = "—"
+                else:
+                    pnl = f"{t['pnl']:+.1f}%" if t["unit"] == "%" else f"Rs {t['pnl']:+.0f}"
                 vals = [t["time"], t["under"].replace(".NS",""), t["opt"], t["dir"],
                         f"{t['entry']:.2f}", f"{t['target']:.2f}", f"{t['stop']:.2f}", oc, pnl]
                 self._set_row(table, r, vals, fg=fg)
