@@ -85,46 +85,75 @@ def compute_trend_family(df_5min: pd.DataFrame, df_daily: pd.DataFrame) -> dict:
     }
 
 
-def compute_flow_family(df_5min: pd.DataFrame, vix: float = None, nifty_pct: float = None) -> dict:
+def compute_flow_family(df_5min: pd.DataFrame = None, vix: float = None,
+                        nifty_pct: float = None, flow_data: dict = None) -> dict:
     """
-    FLOW family = options PCR + macro regime (VIX, Nifty, FII/DII)
-    Returns: {"z_score": float, "verdict": "LONG" | "SHORT" | "NEUTRAL", "components": {...}}
+    FLOW family. When real per-stock OPTIONS FLOW (`flow_data` from the option chain) is
+    available, FLOW = PCR + OI-buildup positioning. Otherwise falls back to the old
+    VIX/Nifty/volume regime proxy (used by backtests that don't fetch the chain).
+    Returns: {"z_score": float, "verdict": ..., "components": {...}}
     """
-    components = {}
-    parts = []  # collect available sub-signals, then average
+    if flow_data:
+        return _flow_from_options(flow_data)
+    return _flow_legacy(df_5min, vix, nifty_pct)
 
-    # ── Macro regime: VIX ───────────────────────────────────────
+
+def _flow_from_options(fd: dict) -> dict:
+    """
+    Real per-stock options flow. OI-writing view: writers SELL puts expecting support
+    (bullish) and SELL calls expecting resistance (bearish). So put OI accumulating /
+    PCR rising = bullish; call OI accumulating / PCR falling = bearish.
+    """
+    comp, parts = {}, []
+    pcr = fd.get("pcr")
+    pcr_prev = fd.get("pcr_prev")
+    ce_chg = fd.get("ce_oi_chg", 0.0)
+    pe_chg = fd.get("pe_oi_chg", 0.0)
+
+    # 1) OI buildup — which side are writers adding to? (puts > calls = bullish)
+    if ce_chg or pe_chg:
+        net = pe_chg - ce_chg
+        oi_z = 1.0 if net > 0 else (-1.0 if net < 0 else 0.0)
+        comp["oi_buildup_z"] = oi_z
+        parts.append(oi_z)
+
+    # 2) PCR trend — put OI growing vs call OI (rising PCR = bullish)
+    if pcr and pcr_prev:
+        d = pcr - pcr_prev
+        pcr_z = 1.0 if d > 0.02 else (-1.0 if d < -0.02 else 0.0)
+        comp["pcr_trend_z"] = pcr_z
+        parts.append(pcr_z)
+
+    # 3) PCR level extremes — contrarian (very put-heavy oversold = bullish)
+    if pcr:
+        lvl = 1.0 if pcr > 1.3 else (-1.0 if pcr < 0.5 else 0.0)
+        comp["pcr_level_z"] = lvl
+        parts.append(lvl)
+        comp["pcr"] = round(pcr, 2)
+
+    flow_z = sum(parts) / len(parts) if parts else 0.0
+    verdict = "LONG" if flow_z > 0.1 else ("SHORT" if flow_z < -0.1 else "NEUTRAL")
+    return {"z_score": round(flow_z, 2), "verdict": verdict, "components": comp}
+
+
+def _flow_legacy(df_5min, vix, nifty_pct) -> dict:
+    """Legacy market-wide regime proxy (VIX + Nifty + volume) — backtest fallback only."""
+    components, parts = {}, []
     if vix is not None:
-        # VIX < 15 = calm (risk-on, bullish), VIX > 18 = fear (bearish)
         vix_z = 1.0 if vix < 15 else (-1.0 if vix > 18 else 0.0)
-        components["vix_z"] = round(vix_z, 2)
-        parts.append(vix_z)
-
-    # ── Macro regime: Nifty trend ───────────────────────────────
+        components["vix_z"] = round(vix_z, 2); parts.append(vix_z)
     if nifty_pct is not None:
         nifty_z = 1.0 if nifty_pct > 0.3 else (-1.0 if nifty_pct < -0.3 else 0.0)
-        components["nifty_z"] = round(nifty_z, 2)
-        parts.append(nifty_z)
-
-    # ── Volume confirmation ─────────────────────────────────────
-    if not df_5min.empty and len(df_5min) >= 10:
+        components["nifty_z"] = round(nifty_z, 2); parts.append(nifty_z)
+    if df_5min is not None and not df_5min.empty and len(df_5min) >= 10:
         vol_recent = df_5min["Volume"].iloc[-5:].mean()
         vol_avg = df_5min["Volume"].iloc[:-5].mean()
         vol_ratio = vol_recent / vol_avg if vol_avg > 0 else 1.0
         vol_z = 1.0 if vol_ratio > 1.2 else (-1.0 if vol_ratio < 0.8 else 0.0)
-        components["volume_z"] = round(vol_z, 2)
-        parts.append(vol_z)
-
-    # Average of available sub-signals → keeps FLOW in [-1, 1]
+        components["volume_z"] = round(vol_z, 2); parts.append(vol_z)
     flow_z = sum(parts) / len(parts) if parts else 0.0
-
     verdict = "LONG" if flow_z > 0.1 else ("SHORT" if flow_z < -0.1 else "NEUTRAL")
-
-    return {
-        "z_score": round(flow_z, 2),
-        "verdict": verdict,
-        "components": components,
-    }
+    return {"z_score": round(flow_z, 2), "verdict": verdict, "components": components}
 
 
 def compute_event_family(news_sentiment: float = 0.0, has_corporate_event: bool = False) -> dict:
@@ -205,12 +234,15 @@ def compute_alpha_z(trend: dict, flow: dict, event: dict) -> dict:
 
 def compute_all_families(ticker: str, df_5min: pd.DataFrame, df_daily: pd.DataFrame,
                          vix: float = None, nifty_pct: float = None,
-                         news_sentiment: float = 0.0, has_event: bool = False) -> dict:
+                         news_sentiment: float = 0.0, has_event: bool = False,
+                         flow_data: dict = None) -> dict:
     """
-    Full signal computation: 3 families → alpha-z → Gate 1 verdict
+    Full signal computation: 3 families → alpha-z → Gate 1 verdict.
+    `flow_data` = real per-stock options flow (PCR + OI buildup); when absent FLOW
+    falls back to the VIX/Nifty regime proxy.
     """
     trend = compute_trend_family(df_5min, df_daily)
-    flow = compute_flow_family(df_5min, vix, nifty_pct)
+    flow = compute_flow_family(df_5min=df_5min, vix=vix, nifty_pct=nifty_pct, flow_data=flow_data)
     event = compute_event_family(news_sentiment, has_event)
     alpha_result = compute_alpha_z(trend, flow, event)
 

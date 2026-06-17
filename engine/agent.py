@@ -123,11 +123,16 @@ class Agent:
             from engine.events import get_event_score
             news_sentiment, has_event = get_event_score(ticker)
 
+            # FLOW family — real per-stock options flow (PCR + OI buildup) from the chain
+            from engine.options_flow import fetch_options_flow
+            flow_data = fetch_options_flow(ticker)
+
             # Compute signal
             signal = compute_all_families(
                 ticker, df_5min, df_daily,
                 vix=vix, nifty_pct=nifty_pct,
-                news_sentiment=news_sentiment, has_event=has_event
+                news_sentiment=news_sentiment, has_event=has_event,
+                flow_data=flow_data,
             )
 
             # Gate 1: alpha-z + breadth

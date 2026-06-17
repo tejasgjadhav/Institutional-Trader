@@ -93,7 +93,7 @@ Seven checks grouped into three independent families; each votes LONG / SHORT / 
 | Family | Weight | What it measures |
 |--------|--------|------------------|
 | **TREND** | 0.65 | Momentum + trend quality + opening-range breakout |
-| **FLOW** | 0.17 | Market regime (VIX, Nifty trend) + volume |
+| **FLOW** | 0.18 | Per-stock options flow: PCR + OI buildup (writers' put/call positioning) from the live option chain |
 | **EVENT** | 0.18 | **Live** NSE announcements, keyword-scored: orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0 |
 
 Each family yields a **z-score**; the weighted average is the **alpha-z** (sign =

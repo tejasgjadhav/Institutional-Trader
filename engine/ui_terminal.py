@@ -458,7 +458,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p(f"<b style='color:{GREEN}'>TREND</b> &nbsp;(weight {C.FAMILY_WEIGHTS['TREND']['weight']}) — is it moving strongly? "
    "momentum + trend quality + opening-range microstructure")}
 {p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;(weight {C.FAMILY_WEIGHTS['FLOW']['weight']}) — what are big players doing? "
-   "options positioning (PCR / max-pain) + market regime (Nifty, VIX)")}
+   "<b>LIVE per-stock options flow</b> from the option chain: PCR (put/call OI ratio), PCR trend, and "
+   "OI buildup — writers add puts for support (bullish) / calls for resistance (bearish). "
+   "Each stock gets its own real reading (no longer a market-wide constant).")}
 {p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;(weight {C.FAMILY_WEIGHTS['EVENT']['weight']}) — any news driving it? "
    "<b>LIVE</b>: NSE corporate announcements scraped at ~9 AM and refreshed hourly to 1 PM, "
    "scored by keywords (orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0).")}
