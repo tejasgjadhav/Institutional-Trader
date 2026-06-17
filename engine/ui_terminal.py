@@ -432,8 +432,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "frequency for quality). Nothing fires before ~11:30 AM (scores need an hour of data); most "
      "cluster 12:30-1 PM. Blank days are normal for a selective strategy.")}
 {p(f"<b>{C.NO_NEW_TRADES_AFTER}</b> &nbsp; No new trades after this (afternoon is thin)")}
-{p(f"<b>{C.KILL_SWITCH_TIME}</b> &nbsp; Kill switch — every open position is force-closed")}
-{p(f"<b>{C.MARKET_CLOSE}</b> &nbsp; Market closes — trade log shows the day's wins/losses")}
+{p(f"<b>{C.KILL_SWITCH_TIME}</b> &nbsp; Kill-switch guideline — don't hold into the volatile last 20 min")}
+{p(f"<b>{C.MARKET_CLOSE}</b> &nbsp; Market closes — <b>every OPEN paper trade is force-booked WIN/LOSS at the close</b> "
+   "(Mon–Fri, daily), unless its +target/−stop already hit. Then the trade log shows the day's result.")}
 {p(f"<b>{C.BACKTEST_REFRESH_TIME}</b> &nbsp; Re-rank the tradeable universe on the latest {C.BACKTEST_LOOKBACK_DAYS}-day history")}
 
 {h("2b · REFRESH CADENCE & LATENCY (how fresh each number is)")}
@@ -940,8 +941,28 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         lbl.setText(f"{name}  {d['price']:,.2f}   {arrow} {chg:+,.2f} ({pct:+.2f}%){self._src_tag(d.get('source'))}")
         lbl.setStyleSheet(f"color:{color};")
 
+    def _maybe_eod_book(self, now):
+        """Force-close every OPEN paper trade at end of day, Mon–Fri, exactly once a day.
+        Runs from the 1-sec clock (not the scan loop) so it ALWAYS fires. Books just after
+        the 15:30 close using the full session's premium — unless target/stop already hit."""
+        if now.weekday() >= 5:                       # Sat / Sun
+            return
+        m = now.hour * 60 + now.minute
+        if not (15 * 60 + 31 <= m <= 15 * 60 + 55):  # 15:31–15:55 window
+            return
+        if getattr(self, "_eod_booked", None) == now.date():
+            return
+        self._eod_booked = now.date()
+        logger.info("EOD daily booking — force-closing open paper trades at the 15:30 close")
+        try:
+            self._resolve_outcomes()                 # resolver force-closes (past kill switch)
+            self._refresh_log(); self._refresh_pm()
+        except Exception as e:
+            logger.warning(f"EOD booking failed: {e}")
+
     def _tick(self):
         now = datetime.now(IST)
+        self._maybe_eod_book(now)                     # daily 15:30 force-close (Mon–Fri)
         is_open = self.agent.is_market_open()
         mkt = "OPEN" if is_open else "CLOSED"
         mode = "LIVE" if is_open else "SIMULATION"

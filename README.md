@@ -43,7 +43,7 @@ launchctl load ~/Library/LaunchAgents/com.sayali.institutionaltrader.plist
 Two strategies run in parallel, both reported on **PM DECISIONS**, both options-only,
 both manual-execution:
 
-- **3-Family system (95 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
+- **3-Family system (94 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
   (2) scores each stock into one number, **alpha-z**, (3) checks the score is strong
   and broad enough (**Gate 1**), (4) checks the price is breaking out *now* (**Gate 2**).
   Both gates pass → a **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
@@ -67,8 +67,8 @@ ORB+VWAP strategy.
 | **09:45** | Trading window opens |
 | every 5 min | Re-scan NIFTY + BANKNIFTY + 94 stocks (~0.6–2.7 sec) |
 | **13:00** | No new trades after 1 PM |
-| **15:10** | Kill switch — force-close everything |
-| 15:30 | Market closes |
+| **15:10** | Kill switch — exit guideline (don't hold into the last 20 min) |
+| **15:30** | Market closes — **every OPEN paper trade is force-booked WIN/LOSS at the close** (Mon–Fri) |
 
 In practice nothing fires before ~11:30 AM (scores need an hour of data); signals
 cluster **12:30–1 PM**.
@@ -165,7 +165,8 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 
 ## Risk, Breakeven & Go-Live Bar
 
-- Max 3 trades/day · halt after 3 stop-outs · force-close 15:10 · never overnight.
+- Max 3 trades/day · halt after 3 stop-outs · never overnight.
+- **Daily EOD booking:** every open paper trade is force-closed WIN/LOSS at the **15:30 close** (Mon–Fri), unless its +target/−stop hit earlier. Runs off the 1-sec clock, so it always fires (`paper_resolver` + `ui._maybe_eod_book`).
 - **Breakeven:** with +10% target / −20% stop you risk 20% to make 10%, so the
   breakeven win rate is `20 / (10+20) = ~67%`. **Below that you lose money.**
 - **Go-live bar:** win rate **≥ 70%** AND profit factor > 1 across 30+ signals —

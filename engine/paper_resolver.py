@@ -10,7 +10,7 @@ import logging
 from datetime import datetime
 
 from engine.config import (IST, OPTION_STRIKE_OFFSET, PREMIUM_TARGET_PCT,
-                           PREMIUM_STOP_PCT, KILL_SWITCH_TIME)
+                           PREMIUM_STOP_PCT, MARKET_CLOSE)
 from engine.data_fetcher import fetch_upstox_intraday, fetch_upstox_historical
 from engine.options import get_option_by_offset, fetch_option_premium_5min
 
@@ -24,12 +24,20 @@ def _to_dt(iso: str):
         return None
 
 
+def _opt_prem(opt_key, sig_date, today):
+    """Option premium 5-min series for the signal date. TODAY must use the intraday
+    endpoint (the historical endpoint lags T+1, so it's empty for today)."""
+    if sig_date == today:
+        return fetch_upstox_intraday(opt_key, 5)
+    return fetch_option_premium_5min(opt_key, sig_date)
+
+
 def resolve_pending(trade_log) -> int:
     """Resolve PENDING paper trades on the option premium, using each trade's OWN
     signal-date data (so yesterday's open trades close too). Returns count closed."""
     now = datetime.now(IST)
     today = now.date()
-    kill = datetime.strptime(KILL_SWITCH_TIME, "%H:%M").time()
+    close_t = datetime.strptime(MARKET_CLOSE, "%H:%M").time()  # 15:30 — book at the close
     resolved = 0
 
     for t in trade_log.trades:
@@ -41,13 +49,13 @@ def resolve_pending(trade_log) -> int:
             continue
         sig_date = st.date()
         # a past session is fully settled; today's only after the kill switch / weekend
-        session_over = (sig_date < today) or (now.time() >= kill) or (now.weekday() >= 5)
+        session_over = (sig_date < today) or (now.time() >= close_t) or (now.weekday() >= 5)
         try:
             # ── signals carrying their own option key + premium levels (ORB+VWAP) ──
             opt_key = t.get("option_key")
             tgt_prem, stp_prem = t.get("target_premium"), t.get("stop_premium")
             if opt_key and tgt_prem and stp_prem:
-                prem = fetch_option_premium_5min(opt_key, sig_date)
+                prem = _opt_prem(opt_key, sig_date, today)
                 if prem.empty:
                     continue
                 esub = prem["Close"][prem.index <= st]
@@ -92,7 +100,7 @@ def resolve_pending(trade_log) -> int:
             opt = get_option_by_offset(ticker, spot, sig_date, opt_type, OPTION_STRIKE_OFFSET)
             if not opt:
                 continue
-            prem = fetch_option_premium_5min(opt["key"], sig_date)
+            prem = _opt_prem(opt["key"], sig_date, today)
             if prem.empty:
                 continue
 
