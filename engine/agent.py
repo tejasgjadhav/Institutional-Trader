@@ -265,40 +265,52 @@ class Agent:
                 logger.warning(f"Position calc failed for {ticker}: {position['error']}")
                 continue
 
-            # Format for log
+            # Build the live OPTION order — captures the OPTION premium AT SIGNAL TIME
+            # (the price you actually pay), the strike/expiry, and the contract key so
+            # the trade resolves on the exact option later.
+            order = None
+            try:
+                from engine.options import build_live_option_order
+                order = build_live_option_order(ticker, entry, direction)
+            except Exception as e:
+                logger.warning(f"Option order build failed for {ticker}: {e}")
+
             trade_dict = {
                 "ticker": ticker,
                 "direction": direction,
                 "alpha_z": alpha_z,
                 "breadth": sig["breadth"],
-                "entry": position["entry"],
+                "entry": position["entry"],            # underlying price (reference)
                 "stop": position["stop"],
                 "target": position["target"],
                 "qty": position["qty"],
                 "reward_risk": position["reward_risk_ratio"],
-                "instrument": position["instrument"],
+                "instrument": (order["instrument"] if order else position["instrument"]),
                 "vix": sig.get("vix"),
                 "nifty_pct": sig.get("nifty_pct"),
             }
+            if order:
+                trade_dict.update({
+                    "strategy": "3-Family",
+                    "option_key": order["option_key"],
+                    "strike": order["strike"],
+                    "expiry": order["expiry"],
+                    "entry_premium": order["premium"],          # LIVE option premium at signal
+                    "target_premium": order["target_premium"],
+                    "stop_premium": order["stop_premium"],
+                    "qty": order["lot_size"] or position["qty"],  # OPTION lot for P&L
+                })
 
-            # Add to paper log
             self.trade_log.add_signal(trade_dict)
 
-            # Print to console
             logger.info(
-                f"SIGNAL: {ticker} {direction} | "
-                f"Entry={trade_dict['entry']} | "
-                f"Stop={trade_dict['stop']} | "
-                f"Target={trade_dict['target']} | "
-                f"Qty={trade_dict['qty']} | "
-                f"Instrument={trade_dict['instrument']}"
-            )
+                f"SIGNAL: {ticker} {direction} {trade_dict['instrument']} | "
+                f"entry premium={trade_dict.get('entry_premium', '?')} | "
+                f"underlying={trade_dict['entry']}")
 
             # ── Notify (Telegram / WhatsApp / phone call) — each only if configured ──
             try:
-                from engine.options import build_live_option_order
                 from engine.notifications import notify_signal
-                order = build_live_option_order(ticker, trade_dict.get("entry") or 0, direction)
                 if order:
                     notify_signal(order)
             except Exception as e:

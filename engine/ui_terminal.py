@@ -836,9 +836,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                     "target": round(t.get("entry_prem",0)*1.10, 2),
                     "stop": round(t.get("entry_prem",0)*0.80, 2),
                     "outcome": t.get("outcome", ""), "pnl": t.get("pnl_pct", 0), "unit": "%"}
+        # Show the OPTION premium (what you actually pay), not the underlying price.
+        ep = t.get("entry_premium")
+        entry = ep if ep is not None else t.get("entry", 0)
+        tgt = t.get("target_premium") if t.get("target_premium") is not None else t.get("target", 0)
+        stp = t.get("stop_premium") if t.get("stop_premium") is not None else t.get("stop", 0)
         return {"time": t.get("signal_time", "")[:19], "under": t.get("ticker", ""),
                 "opt": t.get("instrument", ""), "dir": t.get("direction", ""),
-                "entry": t.get("entry", 0), "target": t.get("target", 0), "stop": t.get("stop", 0),
+                "entry": entry, "target": tgt, "stop": stp,
                 "outcome": t.get("outcome") or "OPEN", "pnl": t.get("realized_pnl_inr") or 0, "unit": ""}
 
     def _refresh_log(self):
