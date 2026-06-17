@@ -456,14 +456,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("Seven small checks are grouped into 3 independent <b>families</b>. Each family votes LONG, SHORT, or NEUTRAL. "
    "Grouping avoids fake breadth — momentum, trend and the volume-break all move together, so they count as one idea.")}
 {p(f"<b style='color:{GREEN}'>TREND</b> &nbsp;(weight {C.FAMILY_WEIGHTS['TREND']['weight']}) — is it moving strongly? "
-   "momentum + trend quality + opening-range microstructure")}
-{p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;(weight {C.FAMILY_WEIGHTS['FLOW']['weight']}) — what are big players doing? "
-   "<b>LIVE per-stock options flow</b> from the option chain: PCR (put/call OI ratio), PCR trend, and "
-   "OI buildup — writers add puts for support (bullish) / calls for resistance (bearish). "
-   "Each stock gets its own real reading (no longer a market-wide constant).")}
+   "Three factors, each z-scored vs its own history: <b>momentum</b> (60-min intraday return), "
+   "<b>trend quality</b> (daily EMA-9 vs EMA-21 spread), <b>microstructure</b> (15-min opening-range breakout, ±1). "
+   f"Factor weights — momentum {C.FAMILY_WEIGHTS['TREND']['factor_weights']['momentum']}, "
+   f"trend {C.FAMILY_WEIGHTS['TREND']['factor_weights']['trend_quality']}, "
+   f"micro {C.FAMILY_WEIGHTS['TREND']['factor_weights']['microstructure']}.")}
+{p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;(weight {C.FAMILY_WEIGHTS['FLOW']['weight']}) — what are option writers doing? "
+   "<b>LIVE per-stock options flow</b> from the chain (cached ~10 min): <b>OI-buildup imbalance</b> "
+   "(are writers adding puts or calls?) + <b>PCR trend</b> (put/call OI ratio rising or falling). "
+   "Writers add puts for support = bullish (+); add calls for resistance = bearish (−). "
+   "Symmetric &amp; per-stock — equally positive or negative, no market-wide constant.")}
 {p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;(weight {C.FAMILY_WEIGHTS['EVENT']['weight']}) — any news driving it? "
-   "<b>LIVE</b>: NSE corporate announcements scraped at ~9 AM and refreshed hourly to 1 PM, "
-   "scored by keywords (orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0).")}
+   "<b>LIVE</b>: NSE corporate announcements scraped at startup then hourly 9 AM–1 PM, "
+   "keyword-scored (orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0). "
+   "Down-weighted on purpose — keyword scoring is crude, so it informs but never decides.")}
 {dim("A 4th family (mean-reversion) was removed — it won only 47.6% in backtests. A family that doesn't win has no place here.")}
 
 {h("5 · THE ALPHA-Z CALCULATION")}

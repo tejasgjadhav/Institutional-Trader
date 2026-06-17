@@ -88,13 +88,32 @@ cluster **12:30–1 PM**.
 
 ## The 3 Families (all live)
 
-Seven checks grouped into three independent families; each votes LONG / SHORT / NEUTRAL.
+Three independent families; each votes LONG / SHORT / NEUTRAL, then blends into alpha-z
+by weight: `alpha-z = Σ(family z × weight) ÷ Σ(weights)`.
 
 | Family | Weight | What it measures |
 |--------|--------|------------------|
-| **TREND** | 0.65 | Momentum + trend quality + opening-range breakout |
-| **FLOW** | 0.18 | Per-stock options flow: PCR + OI buildup (writers' put/call positioning) from the live option chain |
-| **EVENT** | 0.18 | **Live** NSE announcements, keyword-scored: orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0 |
+| **TREND** | 0.72 | Three factors z-scored vs own history: **momentum** (60-min return, 0.37), **trend quality** (daily EMA-9 vs EMA-21 spread, 0.24), **microstructure** (15-min ORB breakout ±1, 0.04) |
+| **FLOW** | 0.18 | **Live per-stock options flow** from the option chain (cached ~10 min): **OI-buildup imbalance** (writers adding puts vs calls) + **PCR trend** (put/call OI ratio rising/falling). Puts→support→bullish(+), calls→resistance→bearish(−). Symmetric, change-based |
+| **EVENT** | 0.10 | **Live** NSE announcements scraped at startup + hourly 9 AM–1 PM, keyword-scored: orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0. Down-weighted (crude scoring) |
+
+### TREND — `signals.compute_trend_family()`
+Momentum = z-score of the latest 60-min intraday return vs the day's distribution.
+Trend quality = z-score of the daily EMA-9 − EMA-21 spread. Microstructure = +1/−1 on a
+15-min opening-range breakout. Combined by the factor weights above.
+
+### FLOW — `signals._flow_from_options()` + `options_flow.fetch_options_flow()`
+Pulls the live Upstox option chain per stock and computes, from current vs previous OI:
+**OI-buildup imbalance** `(ΔputOI − ΔcallOI) / (|ΔputOI|+|ΔcallOI|)` (±0.2 thresholds) and
+**PCR trend** `PCR − PCR_prev` (±0.02). OI-writing view: writers sell puts expecting
+support (bullish) and calls expecting resistance (bearish). Symmetric and scale-free —
+no absolute-PCR-level term (stock PCRs sit below 1.0, which would bias it). Falls back to
+the legacy VIX/Nifty proxy only if the chain is unavailable.
+
+### EVENT — `events.refresh_event_scores()` + `signals.compute_event_family()`
+Scrapes NSE corporate announcements (startup, then hourly 9 AM–1 PM), keyword-scores each
+to [−1, +1], and the EVENT z = the stock's sentiment. A neutral filing stays 0 (it does
+not bias the vote). Deliberately the lowest weight — informative, not decisive.
 
 Each family yields a **z-score**; the weighted average is the **alpha-z** (sign =
 direction, size = conviction).

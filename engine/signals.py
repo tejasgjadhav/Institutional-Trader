@@ -100,9 +100,11 @@ def compute_flow_family(df_5min: pd.DataFrame = None, vix: float = None,
 
 def _flow_from_options(fd: dict) -> dict:
     """
-    Real per-stock options flow. OI-writing view: writers SELL puts expecting support
-    (bullish) and SELL calls expecting resistance (bearish). So put OI accumulating /
-    PCR rising = bullish; call OI accumulating / PCR falling = bearish.
+    Real per-stock options flow — SYMMETRIC (treats calls and puts identically, can be
+    equally positive or negative). OI-writing view: writers SELL puts expecting support
+    (bullish) and SELL calls expecting resistance (bearish). Uses only CHANGE-based,
+    scale-free signals — no absolute-PCR-level term (stock PCRs structurally sit below
+    1.0, so an absolute threshold would bias the reading bearish).
     """
     comp, parts = {}, []
     pcr = fd.get("pcr")
@@ -110,26 +112,26 @@ def _flow_from_options(fd: dict) -> dict:
     ce_chg = fd.get("ce_oi_chg", 0.0)
     pe_chg = fd.get("pe_oi_chg", 0.0)
 
-    # 1) OI buildup — which side are writers adding to? (puts > calls = bullish)
-    if ce_chg or pe_chg:
-        net = pe_chg - ce_chg
-        oi_z = 1.0 if net > 0 else (-1.0 if net < 0 else 0.0)
+    # 1) OI buildup imbalance — which side added more OI, as a -1..+1 share (symmetric).
+    #    +ve = puts accumulating (bullish), -ve = calls accumulating (bearish).
+    tot = abs(pe_chg) + abs(ce_chg)
+    if tot > 0:
+        imb = (pe_chg - ce_chg) / tot
+        oi_z = 1.0 if imb > 0.2 else (-1.0 if imb < -0.2 else 0.0)
         comp["oi_buildup_z"] = oi_z
+        comp["oi_imbalance"] = round(imb, 2)
         parts.append(oi_z)
 
-    # 2) PCR trend — put OI growing vs call OI (rising PCR = bullish)
+    # 2) PCR trend — rising PCR (puts growing vs calls) = bullish; falling = bearish.
+    #    Symmetric thresholds around 0.
     if pcr and pcr_prev:
         d = pcr - pcr_prev
         pcr_z = 1.0 if d > 0.02 else (-1.0 if d < -0.02 else 0.0)
         comp["pcr_trend_z"] = pcr_z
         parts.append(pcr_z)
 
-    # 3) PCR level extremes — contrarian (very put-heavy oversold = bullish)
-    if pcr:
-        lvl = 1.0 if pcr > 1.3 else (-1.0 if pcr < 0.5 else 0.0)
-        comp["pcr_level_z"] = lvl
-        parts.append(lvl)
-        comp["pcr"] = round(pcr, 2)
+    if pcr is not None:
+        comp["pcr"] = round(pcr, 2)   # shown for context, NOT scored (avoids regime bias)
 
     flow_z = sum(parts) / len(parts) if parts else 0.0
     verdict = "LONG" if flow_z > 0.1 else ("SHORT" if flow_z < -0.1 else "NEUTRAL")
