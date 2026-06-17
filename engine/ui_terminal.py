@@ -343,9 +343,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # STOCK first — most trades come from stocks
         v.addWidget(self._section_label("● STOCK OPTIONS  (most trades)", GREEN))
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 1)
-        v.addWidget(self._section_label("● NIFTY OPTIONS  (rare)", CYAN))
+        v.addWidget(self._section_label("● NIFTY OPTIONS  (ORB+VWAP)", CYAN))
         self.log_nifty = self._make_log_table(); self.log_nifty.setMaximumHeight(120); v.addWidget(self.log_nifty)
-        v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (rare)", AMBER))
+        v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (ORB+VWAP)", AMBER))
         self.log_bnf = self._make_log_table(); self.log_bnf.setMaximumHeight(120); v.addWidget(self.log_bnf)
         self._style_log_toggle()
         return w
@@ -845,9 +845,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         wr = (w / closed * 100) if closed else 0
         tag = "LIVE PAPER" if view == "live" else "SIMULATION (30-day historical · reference only)"
         openstr = f"  ·   OPEN {opn}" if (view == "live" and opn) else ""
+        if view == "live":
+            s = self.trade_log.pnl_summary(chosen)
+            extra = (f"·   CAPITAL Rs {s['capital']:,.0f}   ·   P&L Rs {s['pnl']:+,.0f}   "
+                     f"·   {'GAIN' if s['pnl'] >= 0 else 'LOSS'} {s['pct']:+.1f}%")
+        else:
+            extra = "·   reference only"
         self.log_stats.setText(
-            f"  [{tag}]   TRADES {n}   ·   WINS {w}  LOSSES {l}{openstr}   ·   WIN {wr:.0f}%   "
-            f"·   target +10% / stop -20% on premium")
+            f"  [{tag}]   TRADES {n}   ·   WINS {w}  LOSSES {l}{openstr}   ·   WIN {wr:.0f}%   {extra}")
 
         buckets = {"NIFTY": [], "BANKNIFTY": [], "STOCK": []}
         for t in allt:

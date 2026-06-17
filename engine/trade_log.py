@@ -203,6 +203,33 @@ class TradeLog:
             "expectancy": round(expectancy, 2),
         }
 
+    @staticmethod
+    def pnl_summary(trades: list) -> dict:
+        """
+        Capital invested, realized P&L and % return for a list of trades.
+        Capital per trade = entry option premium x lot (qty). P&L = realized_pnl_inr.
+        % return = total P&L / total capital invested x 100. Computed over CLOSED trades.
+        """
+        closed = [t for t in trades if t.get("outcome") in ("WIN", "LOSS")]
+
+        def _cap(t):
+            ep = t.get("entry_premium")
+            if ep is None:
+                ep = t.get("entry") or 0
+            # OPTION lot (resolver stores it); fall back to qty only if absent
+            lot = t.get("lot") if t.get("lot") is not None else t.get("qty")
+            return float(ep or 0) * float(lot or 0)
+
+        capital = sum(_cap(t) for t in closed)
+        pnl = sum(float(t.get("realized_pnl_inr") or 0) for t in closed)
+        pct = (pnl / capital * 100.0) if capital else 0.0
+        return {
+            "n_closed": len(closed),
+            "capital": round(capital, 2),
+            "pnl": round(pnl, 2),
+            "pct": round(pct, 2),
+        }
+
     def should_go_live(self) -> tuple:
         """
         Decision: should we automate and go live?

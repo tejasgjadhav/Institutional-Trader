@@ -56,6 +56,7 @@ def resolve_pending(trade_log) -> int:
                 if not entry or entry <= 0:
                     continue
                 lot = int(t.get("qty", 0) or 0)
+                t["lot"] = lot   # option lot for the capital/P&L calc
                 outcome = exitp = None
                 for px in prem["Close"][prem.index > st]:
                     px = float(px)
@@ -100,6 +101,7 @@ def resolve_pending(trade_log) -> int:
             if entry <= 0:
                 continue
             lot = int(opt.get("lot", 0) or t.get("qty", 0) or 0)
+            t["lot"] = lot   # option lot (NOT the underlying share qty) for capital/P&L
             tgt = entry * (1 + PREMIUM_TARGET_PCT / 100)
             stp = entry * (1 - PREMIUM_STOP_PCT / 100)
 
