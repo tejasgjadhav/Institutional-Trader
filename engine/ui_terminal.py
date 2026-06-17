@@ -193,6 +193,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         for lbl in (self.nifty_lbl, self.bnf_lbl, self.vix_lbl):
             h.addWidget(lbl)
         h.addStretch()
+        # live clock (top-right) — ticks every second
+        self.clock_lbl = QLabel("—")
+        self.clock_lbl.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
+        self.clock_lbl.setStyleSheet(f"color:{CYAN};")
+        h.addWidget(self.clock_lbl)
         return w
 
     def _ticker_label(self, name, value, color=None) -> QLabel:
@@ -965,6 +970,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         self._maybe_eod_book(now)                     # daily 15:30 force-close (Mon–Fri)
         is_open = self.agent.is_market_open()
         mkt = "OPEN" if is_open else "CLOSED"
+        # live clock in the index bar (top-right), green when market is open
+        if hasattr(self, "clock_lbl"):
+            self.clock_lbl.setText(f"{now:%a %d %b · %H:%M:%S} IST   {'● OPEN' if is_open else '○ CLOSED'}")
+            self.clock_lbl.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         mode = "LIVE" if is_open else "SIMULATION"
         # Keep the AUTO badge in sync when idle (scanning sets it to LIVE·scanning)
         if hasattr(self, "auto_lbl") and not getattr(self, "_scanning", False):
