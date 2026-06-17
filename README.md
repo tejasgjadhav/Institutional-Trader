@@ -1,7 +1,7 @@
 # Institutional Trader — 3-Family Alpha · NSE Intraday Options
 
 A disciplined **paper-trading** system for NSE intraday. It scans NIFTY, BANKNIFTY
-and 95 liquid stocks every 5 minutes, scores each with a 3-family model, and only
+and 94 liquid stocks every 5 minutes, scores each with a 3-family model, and only
 flags a trade when it clears two strict gates. Every trade is a **bought option**
 (CALL/PUT) and you place the order yourself in Upstox — the software never sends
 orders. It is a process for collecting honest evidence, not a proven money-maker.
@@ -65,7 +65,7 @@ ORB+VWAP strategy.
 | **09:15** | Market opens — scanning begins, ALPHA fills |
 | 09:15–09:45 | Wildest part of the day — watch only |
 | **09:45** | Trading window opens |
-| every 5 min | Re-scan NIFTY + BANKNIFTY + 95 stocks (~2–6 sec) |
+| every 5 min | Re-scan NIFTY + BANKNIFTY + 94 stocks (~0.6–2.7 sec) |
 | **13:00** | No new trades after 1 PM |
 | **15:10** | Kill switch — force-close everything |
 | 15:30 | Market closes |
@@ -179,7 +179,7 @@ How often each piece updates and how fresh the data is:
 
 | Component | Recompute cadence | Data freshness |
 |-----------|-------------------|----------------|
-| **Full scan** (3 families, 95 stocks + 2 indices) | **every 5 min** (`scan_timer`) | — |
+| **Full scan** (3 families, 94 stocks + 2 indices) | **every 5 min** (`scan_timer`) | — |
 | **TREND** | every 5 min | live 5-min candles · daily EMA cached per day |
 | **FLOW** | every 5 min | option chain cached **~10 min** (`options_flow._TTL`) → OI/PCR ≤10 min old |
 | **EVENT** | score read every 5 min | NSE scrape at **startup + hourly 9 AM–1 PM** → sentiment ≤1 hour old |
@@ -192,13 +192,13 @@ How often each piece updates and how fresh the data is:
 | Step | Time |
 |------|------|
 | Score 3 families + both gates (per stock, CPU) | ~1.6 ms |
-| One stock's full scan incl. all fetches | ~1.1 sec |
-| **Full 95-stock scan — cold cache** | **~6 sec** |
-| **Full 95-stock scan — warm cache** | **~2 sec** |
+| One stock's full scan incl. all fetches | ~1.1 sec (cold) / ~0.17 sec (warm) |
+| **Full 94-stock scan — cold cache** | **~2.7 sec** (16 workers, pooled keep-alive) |
+| **Full 94-stock scan — warm cache** | **~0.6 sec** |
 | Sequential (no parallelism) | ~43 sec |
 
 **Bottom line:** signal granularity = the **5-min candle**; a new signal surfaces within **≤5 min**
-of forming, and the scan compute itself is **2–6 sec**. Header is near-real-time (3 sec). Options
+of forming, and the scan compute itself is **0.6–2.7 sec**. Header is near-real-time (3 sec). Options
 flow is ≤10 min old; events ≤1 hour old.
 
 ---

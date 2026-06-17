@@ -45,9 +45,11 @@ UNIVERSE = [
     "SUNPHARMA.NS", "DRREDDY.NS", "CIPLA.NS", "DIVISLAB.NS", "APOLLOHOSP.NS",
     "LUPIN.NS", "TORNTPHARM.NS", "AUROPHARMA.NS", "ZYDUSLIFE.NS",
     "TITAN.NS", "DMART.NS", "TRENT.NS", "JUBLFOOD.NS",
-    "BHARTIARTL.NS", "NAUKRI.NS", "INDIGO.NS", "DLF.NS", "GODREJPROP.NS", "ZOMATO.NS",
+    "BHARTIARTL.NS", "NAUKRI.NS", "INDIGO.NS", "DLF.NS", "GODREJPROP.NS",
 ]
-assert len(UNIVERSE) == 95, "Universe should have 95 stocks"
+# ZOMATO removed — renamed to ETERNAL; the old symbol has no Upstox key and fails
+# (Yahoo retry) on every scan, wasting a worker slot.
+assert len(UNIVERSE) == 94, "Universe should have 94 stocks"
 
 # Index underlyings to scan for options (low capital, liquid weekly/monthly expiries)
 SCAN_INDICES = ["NIFTY", "BANKNIFTY"]

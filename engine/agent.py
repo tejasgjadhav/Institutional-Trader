@@ -195,7 +195,7 @@ class Agent:
         # Parallelize the per-stock scan — each scan_stock makes independent
         # network calls, so a thread pool turns ~40s sequential into a few seconds.
         results = []
-        with ThreadPoolExecutor(max_workers=12) as pool:
+        with ThreadPoolExecutor(max_workers=16) as pool:
             futures = {pool.submit(self.scan_stock, t): t for t in self.universe}
             for fut in as_completed(futures):
                 try:

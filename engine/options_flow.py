@@ -22,6 +22,7 @@ from datetime import datetime
 from engine.config import IST, UPSTOX_ANALYTICS_TOKEN
 from engine.instruments import to_instrument_key
 from engine.options import _load_index
+from engine.data_fetcher import SESSION
 
 logger = logging.getLogger(__name__)
 
@@ -60,9 +61,8 @@ def fetch_options_flow(ticker: str) -> dict:
         exp = _nearest_expiry(und)
         if not exp:
             return {}
-        r = requests.get(f"{_BASE}/v2/option/chain",
-                         params={"instrument_key": und, "expiry_date": exp},
-                         headers=_H, timeout=10)
+        r = SESSION.get(f"{_BASE}/v2/option/chain",
+                        params={"instrument_key": und, "expiry_date": exp}, timeout=10)
         r.raise_for_status()
         data = r.json().get("data", [])
         if not data:

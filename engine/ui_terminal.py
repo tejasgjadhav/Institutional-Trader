@@ -437,9 +437,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p(f"<b>{C.BACKTEST_REFRESH_TIME}</b> &nbsp; Re-rank the tradeable universe on the latest {C.BACKTEST_LOOKBACK_DAYS}-day history")}
 
 {h("2b · REFRESH CADENCE & LATENCY (how fresh each number is)")}
-{p("<b>Full scan — every 5 minutes.</b> All three families recompute for 95 stocks + NIFTY/BANKNIFTY "
-   "each cycle. One scan finishes in <b>~2–6 seconds</b> (12 parallel workers · ~6s cold, ~2s warm cache), "
-   "so a new signal surfaces within <b>≤5 min</b> of forming. Signal granularity = the 5-min candle.")}
+{p("<b>Full scan — every 5 minutes.</b> All three families recompute for 94 stocks + NIFTY/BANKNIFTY "
+   "each cycle. One scan finishes in <b>~0.6–2.7 seconds</b> (16 workers + pooled keep-alive connections · "
+   "~2.7s cold, ~0.6s warm cache), so a new signal surfaces within <b>≤5 min</b> of forming. "
+   "Signal granularity = the 5-min candle.")}
 {p(f"<b style='color:{GREEN}'>TREND</b> &nbsp;recomputed every 5 min · live 5-min candles (daily EMA cached per day)")}
 {p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;recomputed every 5 min · option chain cached ~10 min, so OI/PCR is ≤10 min old")}
 {p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;score read every 5 min · NSE scrape at startup then hourly 9 AM–1 PM, so sentiment is ≤1 hour old")}

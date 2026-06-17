@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from engine.config import IST, MARKET_OPEN, MARKET_CLOSE
 from engine.data_fetcher import (
     fetch_upstox_ltp, fetch_upstox_intraday, fetch_upstox_historical, fetch_historical,
-    UPSTOX_BASE, _HEADERS,
+    UPSTOX_BASE, _HEADERS, SESSION,
 )
 from engine.instruments import to_instrument_key
 
@@ -31,9 +31,8 @@ def _batch_index_ltp(names: list) -> dict:
     if not keymap:
         return out
     try:
-        resp = requests.get(f"{UPSTOX_BASE}/v2/market-quote/ltp",
-                            params={"instrument_key": ",".join(keymap.keys())},
-                            headers=_HEADERS, timeout=6)
+        resp = SESSION.get(f"{UPSTOX_BASE}/v2/market-quote/ltp",
+                           params={"instrument_key": ",".join(keymap.keys())}, timeout=6)
         resp.raise_for_status()
         data = resp.json().get("data", {})
         # primary: match by instrument_token (== pipe key); fallback: colon dict-key
