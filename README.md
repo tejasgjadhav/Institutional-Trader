@@ -65,7 +65,7 @@ ORB+VWAP strategy.
 | **09:15** | Market opens — scanning begins, ALPHA fills |
 | 09:15–09:45 | Wildest part of the day — watch only |
 | **09:45** | Trading window opens |
-| every 5 min | Re-scan NIFTY + BANKNIFTY + 95 stocks (~3–4 sec) |
+| every 5 min | Re-scan NIFTY + BANKNIFTY + 95 stocks (~2–6 sec) |
 | **13:00** | No new trades after 1 PM |
 | **15:10** | Kill switch — force-close everything |
 | 15:30 | Market closes |
@@ -173,19 +173,33 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 
 ---
 
-## Performance
+## Refresh Cadence & Latency
 
-The strategy logic is essentially instant; the cost is the network.
+How often each piece updates and how fresh the data is:
+
+| Component | Recompute cadence | Data freshness |
+|-----------|-------------------|----------------|
+| **Full scan** (3 families, 95 stocks + 2 indices) | **every 5 min** (`scan_timer`) | — |
+| **TREND** | every 5 min | live 5-min candles · daily EMA cached per day |
+| **FLOW** | every 5 min | option chain cached **~10 min** (`options_flow._TTL`) → OI/PCR ≤10 min old |
+| **EVENT** | score read every 5 min | NSE scrape at **startup + hourly 9 AM–1 PM** → sentiment ≤1 hour old |
+| **ORB+VWAP index** | every 5 min | futures intraday (live, 5-min bars) |
+| **Market header** (NIFTY/BANKNIFTY/VIX) | **every 3 sec** (`mkt_timer`) | live LTP → 5-min candle → prev close |
+| Clock / status | every 1 sec | — |
+
+**System update latency** (measured, full universe, 12 parallel workers):
 
 | Step | Time |
 |------|------|
-| Score 3 families + both gates + instrument (per stock) | **~1.6 ms** (CPU) |
-| Fetch one stock's 5-min candles | ~440 ms (network) |
-| **Full 95-stock scan** | **~3–4 sec** (12 threads + daily cache + batched prices) |
-| Sequential (no optimisation) | ~43 sec |
+| Score 3 families + both gates (per stock, CPU) | ~1.6 ms |
+| One stock's full scan incl. all fetches | ~1.1 sec |
+| **Full 95-stock scan — cold cache** | **~6 sec** |
+| **Full 95-stock scan — warm cache** | **~2 sec** |
+| Sequential (no parallelism) | ~43 sec |
 
-A 3–4 sec scan inside a 5-minute window means a signal is seen almost the instant a
-candle closes — prices barely drift.
+**Bottom line:** signal granularity = the **5-min candle**; a new signal surfaces within **≤5 min**
+of forming, and the scan compute itself is **2–6 sec**. Header is near-real-time (3 sec). Options
+flow is ≤10 min old; events ≤1 hour old.
 
 ---
 
