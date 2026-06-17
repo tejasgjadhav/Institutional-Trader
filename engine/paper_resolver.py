@@ -43,6 +43,38 @@ def resolve_pending(trade_log) -> int:
         # a past session is fully settled; today's only after the kill switch / weekend
         session_over = (sig_date < today) or (now.time() >= kill) or (now.weekday() >= 5)
         try:
+            # ── signals carrying their own option key + premium levels (ORB+VWAP) ──
+            opt_key = t.get("option_key")
+            tgt_prem, stp_prem = t.get("target_premium"), t.get("stop_premium")
+            if opt_key and tgt_prem and stp_prem:
+                prem = fetch_option_premium_5min(opt_key, sig_date)
+                if prem.empty:
+                    continue
+                esub = prem["Close"][prem.index <= st]
+                entry = t.get("entry_premium") or (float(esub.iloc[-1]) if len(esub)
+                                                   else float(prem["Close"].iloc[0]))
+                if not entry or entry <= 0:
+                    continue
+                lot = int(t.get("qty", 0) or 0)
+                outcome = exitp = None
+                for px in prem["Close"][prem.index > st]:
+                    px = float(px)
+                    if px <= float(stp_prem):
+                        outcome, exitp = "LOSS", float(stp_prem); break
+                    if px >= float(tgt_prem):
+                        outcome, exitp = "WIN", float(tgt_prem); break
+                if outcome is None:
+                    if not session_over:
+                        continue
+                    exitp = float(prem["Close"].iloc[-1])
+                    outcome = "WIN" if exitp > entry else "LOSS"
+                t["entry_premium"] = round(entry, 2)
+                t["exit_premium"] = round(exitp, 2)
+                trade_log.update_trade_outcome(t["signal_time"], outcome, (exitp - entry) * lot)
+                resolved += 1
+                continue
+
+            # ── stock 3-Family signals — reconstruct OTM+1 / +10-20 from the underlying ──
             # stock 5-min for the SIGNAL date (intraday endpoint if today, else historical)
             if sig_date == today:
                 d5 = fetch_upstox_intraday(ticker, 5)

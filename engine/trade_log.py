@@ -58,6 +58,29 @@ class TradeLog:
         self._save()
         logger.info(f"Signal logged: {trade_dict['ticker']} {trade_dict['direction']} @ {trade_dict['entry']}")
 
+    def log_signal_once(self, trade_dict: dict) -> bool:
+        """
+        Append a signal IF not already logged for (ticker, date, direction). Idempotent —
+        used for both 3-Family and ORB+VWAP signals so re-scans don't duplicate. Returns
+        True if a new row was added.
+        """
+        st = trade_dict.get("signal_time") or datetime.now(IST).isoformat()
+        trade_dict["signal_time"] = st
+        dstr = str(st)[:10]
+        tk, dr = trade_dict.get("ticker"), trade_dict.get("direction")
+        for t in self.trades:
+            if (t.get("ticker") == tk and str(t.get("signal_time", ""))[:10] == dstr
+                    and t.get("direction") == dr):
+                return False
+        trade_dict.setdefault("outcome", None)
+        trade_dict.setdefault("outcome_time", None)
+        trade_dict.setdefault("realized_pnl_inr", None)
+        trade_dict.setdefault("status", "PENDING")
+        self.trades.append(trade_dict)
+        self._save()
+        logger.info(f"Signal logged ({trade_dict.get('strategy','?')}): {tk} {dr}")
+        return True
+
     def update_trade_outcome(self, signal_time: str, outcome: str, realized_pnl: float):
         """
         Update a trade outcome (WIN / LOSS / FORCED_CLOSE)

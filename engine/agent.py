@@ -207,6 +207,21 @@ class Agent:
                 self.orbvwap_signals = []
         ix_pool.shutdown(wait=False)
 
+        # Log each ACTIVE ORB+VWAP index signal to the paper trade log (idempotent),
+        # so it shows in the TRADE LOG and is resolved to WIN/LOSS like stock signals.
+        for s in (self.orbvwap_signals or []):
+            if not s.get("entry"):
+                continue
+            self.trade_log.log_signal_once({
+                "ticker": s.get("index"), "direction": s.get("direction"),
+                "instrument": s.get("kind"), "strategy": "ORB+VWAP",
+                "option_key": s.get("option_key"),
+                "entry": s.get("entry"), "entry_premium": s.get("entry"),
+                "target": s.get("target"), "stop": s.get("stop"),
+                "target_premium": s.get("target"), "stop_premium": s.get("stop"),
+                "qty": s.get("lot"), "signal_time": s.get("fire_iso"),
+            })
+
         # Keep ALL scored stocks (drop only hard errors) so the ALPHA tab shows the
         # full scan, WATCHLIST shows Gate-1 passers, and PM DECISIONS shows trade-ready.
         scored = [r for r in results if "error" not in r]

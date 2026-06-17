@@ -118,8 +118,9 @@ def _build_row(index: str, direction: str, ets, fut_spot: float) -> dict:
     lot = int(opt.get("lot", 0) or 0)
     kind = "CALL" if opt_type == "CE" else "PUT"
     return {
-        "index": index, "direction": direction, "kind": kind,
+        "index": index, "direction": direction, "kind": kind, "option_key": opt["key"],
         "time": ets.strftime("%H:%M") if hasattr(ets, "strftime") else str(ets),
+        "fire_iso": ets.isoformat() if hasattr(ets, "isoformat") else None,
         "order_label": f"BUY {index} {int(opt['strike'])} {kind}",
         "strike": int(opt["strike"]), "expiry": opt.get("expiry_date", "—"),
         "entry": round(entry, 2), "target": round(target, 2), "stop": round(stop, 2),
