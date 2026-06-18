@@ -61,7 +61,7 @@ ORB+VWAP strategy.
 |------|--------------|
 | 08:55 | Mac wakes itself (pmset) |
 | 09:00 | App auto-launches (launchd) |
-| 09:00 | First NSE **event scrape** (then refreshed hourly to 1 PM) |
+| 09:00 | First NSE **event scrape** (then refreshed ~every 20 min to 1 PM) |
 | **09:15** | Market opens — scanning begins, ALPHA fills |
 | 09:15–09:45 | Wildest part of the day — watch only |
 | **09:45** | Trading window opens |
@@ -81,7 +81,7 @@ cluster **12:30–1 PM**.
   index data (NIFTY / BANKNIFTY / VIX). ISIN-based instrument keys, auto-resolved
   from Upstox's instrument master (cached weekly).
 - **NSE corporate-announcements (live scraper)** — feeds the EVENT family; scraped at
-  ~9 AM and refreshed hourly to 1 PM (`engine/events.py`).
+  ~9 AM and refreshed ~every 20 min to 1 PM (`engine/events.py`).
 - **Yahoo Finance** — emergency fallback only (slower; never primary).
 
 ---
@@ -95,7 +95,7 @@ by weight: `alpha-z = Σ(family z × weight) ÷ Σ(weights)`.
 |--------|--------|------------------|
 | **TREND** | 0.72 | Three factors z-scored vs own history: **momentum** (60-min return, 0.37), **trend quality** (daily EMA-9 vs EMA-21 spread, 0.24), **microstructure** (15-min ORB breakout ±1, 0.04) |
 | **FLOW** | 0.18 | **Live per-stock options flow** from the option chain (cached ~10 min): **OI-buildup imbalance** (writers adding puts vs calls) + **PCR trend** (put/call OI ratio rising/falling). Puts→support→bullish(+), calls→resistance→bearish(−). Symmetric, change-based |
-| **EVENT** | 0.10 | **Live** NSE announcements scraped at startup + hourly 9 AM–1 PM, keyword-scored: orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0. Down-weighted (crude scoring) |
+| **EVENT** | 0.10 | **Live** NSE announcements scraped at startup + ~every 20 min, 9 AM–1 PM, keyword-scored: orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0. Down-weighted (crude scoring) |
 
 ### TREND — `signals.compute_trend_family()`
 Momentum = z-score of the latest 60-min intraday return vs the day's distribution.
@@ -111,7 +111,7 @@ no absolute-PCR-level term (stock PCRs sit below 1.0, which would bias it). Fall
 the legacy VIX/Nifty proxy only if the chain is unavailable.
 
 ### EVENT — `events.refresh_event_scores()` + `signals.compute_event_family()`
-Scrapes NSE corporate announcements (startup, then hourly 9 AM–1 PM), keyword-scores each
+Scrapes NSE corporate announcements (startup, then ~every 20 min, 9 AM–1 PM), keyword-scores each
 to [−1, +1], and the EVENT z = the stock's sentiment. A neutral filing stays 0 (it does
 not bias the vote). Deliberately the lowest weight — informative, not decisive.
 
@@ -183,7 +183,7 @@ How often each piece updates and how fresh the data is:
 | **Full scan** (3 families, 94 stocks + 2 indices) | **every 5 min** (`scan_timer`) | — |
 | **TREND** | every 5 min | live 5-min candles · daily EMA cached per day |
 | **FLOW** | every 5 min | option chain cached **~10 min** (`options_flow._TTL`) → OI/PCR ≤10 min old |
-| **EVENT** | score read every 5 min | NSE scrape at **startup + hourly 9 AM–1 PM** → sentiment ≤1 hour old |
+| **EVENT** | score read every 5 min | NSE scrape at **startup + ~every 20 min, 9 AM–1 PM** → sentiment ≤1 hour old |
 | **ORB+VWAP index** | every 5 min | futures intraday (live, 5-min bars) |
 | **Market header** (NIFTY/BANKNIFTY/VIX) | **every 3 sec** (`mkt_timer`) | live LTP → 5-min candle → prev close |
 | Clock / status | every 1 sec | — |

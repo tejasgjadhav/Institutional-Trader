@@ -54,7 +54,10 @@ class Agent:
         from engine import events
         now = datetime.now(IST)
         in_window = (9 * 60) <= (now.hour * 60 + now.minute) <= (13 * 60 + 5)  # 09:00-13:05
-        stale = events.cache_age_minutes() >= 55  # at most once an hour
+        # Poll ~every 20 min: NSE only shows the latest ~20 announcements, so frequent
+        # polling + accumulation (see events.refresh_event_scores) catches large-cap
+        # filings before they scroll out of the window.
+        stale = events.cache_age_minutes() >= 20
         if not force and not (in_window and stale):
             return
         if self._event_thread and self._event_thread.is_alive():

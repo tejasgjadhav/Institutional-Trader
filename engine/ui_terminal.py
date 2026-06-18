@@ -449,7 +449,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "Signal granularity = the 5-min candle.")}
 {p(f"<b style='color:{GREEN}'>TREND</b> &nbsp;recomputed every 5 min · live 5-min candles (daily EMA cached per day)")}
 {p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;recomputed every 5 min · option chain cached ~10 min, so OI/PCR is ≤10 min old")}
-{p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;score read every 5 min · NSE scrape at startup then hourly 9 AM–1 PM, so sentiment is ≤1 hour old")}
+{p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;score read every 5 min · NSE scrape at startup then ~every 20 min, 9 AM–1 PM, so sentiment is ≤1 hour old")}
 {p("<b>Market header</b> (NIFTY / BANKNIFTY / VIX) refreshes every <b>3 seconds</b> (live LTP, 5-min-candle fallback); the clock ticks every 1 second.")}
 {dim("Summary — header: ~3s · signals/families: 5-min · options flow: ≤10 min · events: ≤1 hour. Scan compute itself: 2–6s.")}
 
@@ -484,7 +484,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "Writers add puts for support = bullish (+); add calls for resistance = bearish (−). "
    "Symmetric &amp; per-stock — equally positive or negative, no market-wide constant.")}
 {p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;(weight {C.FAMILY_WEIGHTS['EVENT']['weight']}) — any news driving it? "
-   "<b>LIVE</b>: NSE corporate announcements scraped at startup then hourly 9 AM–1 PM, "
+   "<b>LIVE</b>: NSE corporate announcements scraped at startup then ~every 20 min, 9 AM–1 PM, "
    "keyword-scored (orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0). "
    "Down-weighted on purpose — keyword scoring is crude, so it informs but never decides.")}
 {dim("A 4th family (mean-reversion) was removed — it won only 47.6% in backtests. A family that doesn't win has no place here.")}

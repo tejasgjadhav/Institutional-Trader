@@ -111,23 +111,31 @@ def refresh_event_scores() -> dict:
         if sym not in universe_syms:
             continue
         agg.setdefault(sym, []).append(_score_text(a["text"]))
-    scores = {}
-    for sym, lst in agg.items():
-        net = sum(lst)
-        scores[sym] = max(-1, min(1, net))   # clip
+    new_scores = {sym: max(-1, min(1, sum(lst))) for sym, lst in agg.items()}
+
+    # MERGE with today's existing scores. NSE returns only the latest ~20 announcements,
+    # so a large-cap event seen earlier in the day scrolls OUT of the window. We must keep
+    # every event seen TODAY (strongest signal per stock) so it stays marked all session
+    # rather than vanishing on the next refresh.
+    prev = _load_cache()
+    today = str(datetime.now(IST).date())
+    merged = dict(prev.get("scores", {})) if prev.get("date") == today else {}
+    for sym, val in new_scores.items():
+        if sym not in merged or abs(val) > abs(merged[sym]):
+            merged[sym] = val
 
     cache = {
         "refreshed_at": datetime.now(IST).isoformat(),
-        "date": str(datetime.now(IST).date()),
-        "scores": scores,
+        "date": today,
+        "scores": merged,
         "n_announcements": len(anns),
     }
     os.makedirs(DATA_DIR, exist_ok=True)
     with open(CACHE_PATH, "w") as f:
         json.dump(cache, f, indent=2)
-    logger.info(f"Event scores refreshed: {len(scores)} stocks with events "
-                f"(of {len(anns)} announcements)")
-    return scores
+    logger.info(f"Event scores: {len(merged)} stocks marked today "
+                f"({len(new_scores)} new this scrape, of {len(anns)} announcements)")
+    return merged
 
 
 def _load_cache() -> dict:
