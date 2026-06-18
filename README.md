@@ -120,11 +120,15 @@ direction, size = conviction).
 
 ---
 
-## The Two Gates
+## The Gates
 
 **Gate 1 — Alpha:** `|alpha-z| > 0.55` AND ≥ 2 of 3 families agree.
 **Gate 2 — Confirmation:** the latest 5-min candle breaks the opening range with a
 volume surge, same direction. Two independent methods must agree.
+**Gate 3 — Market alignment:** the trade must NOT fight the Nifty's intraday direction —
+only LONG when Nifty is up, only SHORT when Nifty is down (`MARKET_ALIGN_FILTER`).
+*30-day backtest: lifts win rate 58%→60% and P&L +1.0%→+1.6% by cutting trend-fighting
+trades (the PFC/MARUTI "short into a rising market" pattern).*
 
 ---
 

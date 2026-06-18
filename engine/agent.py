@@ -145,8 +145,15 @@ class Agent:
             orb_confirmed, orb_dir, vol_ratio = is_orb_confirmed(df_5min)
             gate_2 = orb_confirmed and (orb_dir == signal["direction"])
 
-            # Both gates?
-            trade_ready = gate_1 and gate_2
+            # Gate 3: MARKET ALIGNMENT — don't fight the Nifty's intraday direction
+            from engine.config import MARKET_ALIGN_FILTER
+            direction = signal["direction"]
+            nifty_dir = 1 if (nifty_pct or 0) > 0 else (-1 if (nifty_pct or 0) < 0 else 0)
+            aligned = ((direction == "LONG" and nifty_dir == 1) or
+                       (direction == "SHORT" and nifty_dir == -1))
+
+            # All gates? (alignment only enforced when the filter is on)
+            trade_ready = gate_1 and gate_2 and (aligned or not MARKET_ALIGN_FILTER)
 
             return {
                 "ticker": ticker,
@@ -156,6 +163,8 @@ class Agent:
                 "passes_gate_1": gate_1,
                 "orb_confirmed": orb_confirmed,
                 "vol_ratio": vol_ratio,
+                "aligned": aligned,
+                "nifty_dir": nifty_dir,
                 "trade_ready": trade_ready,
                 "families_detail": signal.get("families_detail", {}),  # for ALPHA tab columns
                 "current_price": signal.get("current_price"),

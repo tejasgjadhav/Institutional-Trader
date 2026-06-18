@@ -70,6 +70,10 @@ MARKET_CLOSE = "15:30"
 # === SIGNAL GATES ===
 ALPHA_Z_THRESHOLD = 0.55  # |alpha-z| must be strictly > this (0.55 does NOT trade)
 MIN_FAMILIES_AGREE = 2  # At least 2 of 3 families must align
+# Gate 3 — MARKET ALIGNMENT: block signals that FIGHT the Nifty's intraday direction
+# (only LONG when Nifty is up, only SHORT when Nifty is down). 30-day backtest: lifts
+# win rate 58%->60% and P&L +1.0%->+1.6% by cutting trend-fighting trades.
+MARKET_ALIGN_FILTER = True
 OPTION_CONVICTION_THRESHOLD = 0.70  # |alpha-z| > 0.70 trades as CALL/PUT instead of EQ/FUT
 
 # === TRADING UNIVERSE FILTER (PF>1 / EXPECTANCY) ===

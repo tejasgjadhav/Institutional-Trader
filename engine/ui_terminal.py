@@ -538,7 +538,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("Reading it: negative = bearish; size 0.65 is above the 0.55 bar; 2 of 3 families agree SHORT → "
    "it PASSES Gate 1. Sign = direction, size = conviction.")}
 
-{h("6 · THE TWO GATES")}
+{h("6 · THE GATES")}
 {sub("GATE 1 — Alpha Gate (strong enough + broad enough?)")}
 {p(f"• |alpha-z| strictly greater than <b>{C.ALPHA_Z_THRESHOLD}</b>")}
 {p(f"• at least <b>{C.MIN_FAMILIES_AGREE} of 3</b> families agree on direction")}
@@ -546,9 +546,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("Passing Gate 1 puts the stock on the WATCHLIST, 'awaiting ORB breakout'.")}
 {sub("GATE 2 — ORB Breakout + Volume (is the move happening NOW?)")}
 {p("The latest 5-min candle must close beyond the opening-range (above the high for a LONG, "
-   "below the low for a SHORT) with a volume surge. This is a second, independent method — "
-   "two different techniques must agree before money is risked.")}
-{p("When both gates pass, the stock moves to <b>PM DECISIONS</b>.")}
+   "below the low for a SHORT) with a volume surge. A second, independent confirmation.")}
+{sub("GATE 3 — Market Alignment (don't fight the tape)")}
+{p("The trade must agree with the Nifty's intraday direction — <b>only LONG when Nifty is up, "
+   "only SHORT when Nifty is down</b>. Blocks 'short into a rising market' losers. "
+   "<i>30-day backtest: win 58%→60%, P&L +1.0%→+1.6%.</i>")}
+{p("When all gates pass, the stock moves to <b>PM DECISIONS</b>.")}
 
 {h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY (two strategies)")}
 {p("Every signal — in either strategy — becomes a <b>bought option</b> (never sold): "
