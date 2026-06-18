@@ -57,6 +57,19 @@ class ScanWorker(QThread):
             self.error_occurred.emit(str(e))
 
 
+class IndexScanWorker(QThread):
+    """Runs the ORB+VWAP index scan off the UI thread — REGARDLESS of market hours, so
+    the PM index section still shows the day's signals after the 15:30 close / a restart."""
+    done = Signal(list)
+
+    def run(self):
+        try:
+            from engine.orb_vwap_live import scan_index_orbvwap
+            self.done.emit(scan_index_orbvwap())
+        except Exception:
+            self.done.emit([])
+
+
 class MarketDataWorker(QThread):
     """Fetch index data off the UI thread."""
     data_ready = Signal(dict)
@@ -91,6 +104,7 @@ class TerminalApp(QMainWindow):
         self._refresh_log()      # show simulation immediately (or live paper trades)
         self._refresh_pm()        # show today's already-fired signals (seeded from log)
         self.trigger_scan()       # only scans if market is open
+        self._refresh_index_signals()   # populate the ORB+VWAP index section now
 
         # timers
         self.scan_timer = QTimer(); self.scan_timer.timeout.connect(self.trigger_scan)
@@ -100,6 +114,23 @@ class TerminalApp(QMainWindow):
         # Market data: poll fast (2s) when open, slow (20s) when closed.
         self.mkt_timer = QTimer(); self.mkt_timer.timeout.connect(self._refresh_market_data)
         self.mkt_timer.start(3000)
+        # ORB+VWAP index signals — refresh every 60s independent of the market-gated scan
+        self.idx_timer = QTimer(); self.idx_timer.timeout.connect(self._refresh_index_signals)
+        self.idx_timer.start(60_000)
+
+    def _refresh_index_signals(self):
+        if getattr(self, "_idx_running", False):
+            return
+        self._idx_running = True
+        self.idx_worker = IndexScanWorker()
+        self.idx_worker.done.connect(self._on_index_signals)
+        self.idx_worker.finished.connect(lambda: setattr(self, "_idx_running", False))
+        self.idx_worker.start()
+
+    def _on_index_signals(self, rows):
+        if rows:
+            self.agent.orbvwap_signals = rows
+        self._refresh_orbvwap()
 
     # ── recording window ──────────────────────────────────────────────────────
     def _check_recording_window(self):
