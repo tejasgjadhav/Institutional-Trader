@@ -112,22 +112,19 @@ def _flow_from_options(fd: dict) -> dict:
     ce_chg = fd.get("ce_oi_chg", 0.0)
     pe_chg = fd.get("pe_oi_chg", 0.0)
 
-    # 1) OI buildup imbalance — which side added more OI, as a -1..+1 share (symmetric).
-    #    +ve = puts accumulating (bullish), -ve = calls accumulating (bearish).
+    # 1) OI-buildup imbalance — CONTINUOUS in [-1, +1] (not a ±1 bucket), so FLOW is
+    #    fine-grained. +ve = puts accumulating (bullish), -ve = calls accumulating (bearish).
     tot = abs(pe_chg) + abs(ce_chg)
     if tot > 0:
         imb = (pe_chg - ce_chg) / tot
-        oi_z = 1.0 if imb > 0.2 else (-1.0 if imb < -0.2 else 0.0)
-        comp["oi_buildup_z"] = oi_z
-        comp["oi_imbalance"] = round(imb, 2)
-        parts.append(oi_z)
+        comp["oi_buildup_z"] = round(imb, 2)
+        parts.append(imb)
 
-    # 2) PCR trend — rising PCR (puts growing vs calls) = bullish; falling = bearish.
-    #    Symmetric thresholds around 0.
+    # 2) PCR trend — CONTINUOUS: scaled so a ~0.05 PCR shift ≈ ±1, clipped to [-1, +1].
+    #    Rising PCR (puts growing vs calls) = bullish; falling = bearish.
     if pcr and pcr_prev:
-        d = pcr - pcr_prev
-        pcr_z = 1.0 if d > 0.02 else (-1.0 if d < -0.02 else 0.0)
-        comp["pcr_trend_z"] = pcr_z
+        pcr_z = max(-1.0, min(1.0, (pcr - pcr_prev) * 20))
+        comp["pcr_trend_z"] = round(pcr_z, 2)
         parts.append(pcr_z)
 
     if pcr is not None:
