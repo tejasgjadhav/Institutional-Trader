@@ -11,7 +11,7 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTableWidget, QTableWidgetItem, QLabel, QPushButton, QStatusBar,
-    QHeaderView, QStackedWidget, QTextEdit, QFrame
+    QHeaderView, QStackedWidget, QTextEdit, QFrame, QScrollArea
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QThread
 from PySide6.QtGui import QFont, QColor, QBrush
@@ -151,12 +151,23 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._tab_bar())
 
         self.stack = QStackedWidget()
-        self.stack.addWidget(self._screen_pm())        # 0
-        self.stack.addWidget(self._screen_watchlist())  # 1
-        self.stack.addWidget(self._screen_alpha())      # 2
-        self.stack.addWidget(self._screen_log())        # 3
-        self.stack.addWidget(self._screen_readme())     # 4
+        self.stack.addWidget(self._scrollable(self._screen_pm()))        # 0
+        self.stack.addWidget(self._scrollable(self._screen_watchlist()))  # 1
+        self.stack.addWidget(self._scrollable(self._screen_alpha()))      # 2
+        self.stack.addWidget(self._scrollable(self._screen_log()))        # 3
+        self.stack.addWidget(self._scrollable(self._screen_readme()))     # 4
         v.addWidget(self.stack, 1)
+
+    def _scrollable(self, w: QWidget) -> QScrollArea:
+        """Wrap a screen so it scrolls when content exceeds the window height."""
+        sa = QScrollArea()
+        sa.setWidget(w)
+        sa.setWidgetResizable(True)
+        sa.setFrameShape(QFrame.Shape.NoFrame)
+        sa.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        sa.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        sa.setStyleSheet(f"QScrollArea {{ background:{BG}; border:none; }}")
+        return sa
 
         self.status = QStatusBar(); self.setStatusBar(self.status)
         self.setCentralWidget(root)
@@ -246,7 +257,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         l.setStyleSheet(f"color:{color}; padding:10px 4px; letter-spacing:1px;")
         return l
 
-    PM_COLS = ["TIME", "ORDER (BUY)", "STRIKE", "EXPIRY", "PREMIUM",
+    PM_COLS = ["TIME", "STOCK", "TYPE", "STRIKE", "EXPIRY", "ENTRY PREM", "CURRENT",
                "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"]
     ORBVWAP_COLS = ["TIME", "INDEX", "TYPE", "STRIKE", "EXPIRY", "ENTRY",
                     "TARGET +20%", "STOP -20%", "CURRENT", "LOT", "STATUS"]
@@ -271,7 +282,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK options — the 3-Family system (stocks only; indices handled below)
         v.addWidget(self._section_label("● STOCK OPTIONS  (3-Family system)", GREEN))
-        self.pm_stock = self._make_pm_table(); v.addWidget(self.pm_stock, 1)
+        self.pm_stock = self._make_pm_table(); v.addWidget(self.pm_stock)
 
         # NIFTY & BANKNIFTY index options — handled by the ORB+VWAP strategy below
         v.addWidget(self._section_label("● ORB+VWAP INDEX STRATEGY  (parallel · paper forward-test · ATM · +20%/−20%)", PURPLE))
@@ -280,11 +291,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_orbvwap.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.pm_orbvwap.setAlternatingRowColors(True); self.pm_orbvwap.verticalHeader().setVisible(False)
         self.pm_orbvwap.verticalHeader().setDefaultSectionSize(34)
-        self.pm_orbvwap.setMaximumHeight(120); v.addWidget(self.pm_orbvwap)
+        v.addWidget(self.pm_orbvwap)
 
         self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min · 09:15–15:30 IST.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
+        v.addStretch()
         v.addWidget(self.pm_empty)
         return w
 
@@ -347,11 +359,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK first — most trades come from stocks
         v.addWidget(self._section_label("● STOCK OPTIONS  (most trades)", GREEN))
-        self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 1)
+        self.log_stock = self._make_log_table(); v.addWidget(self.log_stock)
         v.addWidget(self._section_label("● NIFTY OPTIONS  (ORB+VWAP)", CYAN))
-        self.log_nifty = self._make_log_table(); self.log_nifty.setMaximumHeight(120); v.addWidget(self.log_nifty)
+        self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty)
         v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (ORB+VWAP)", AMBER))
-        self.log_bnf = self._make_log_table(); self.log_bnf.setMaximumHeight(120); v.addWidget(self.log_bnf)
+        self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf)
+        v.addStretch()
         self._style_log_toggle()
         return w
 
@@ -723,10 +736,19 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             "vol_ratio": sig.get("vol_ratio"),
         })
 
+    @staticmethod
+    def _fit_table(table):
+        """Size a table to show ALL its rows (no internal clipping) — the surrounding
+        QScrollArea then scrolls the whole tab so nothing is hidden at the bottom."""
+        hdr = table.horizontalHeader().height()
+        rows = sum(table.rowHeight(r) for r in range(table.rowCount()))
+        table.setMinimumHeight(hdr + rows + 6)
+        table.setMaximumHeight(16777215)   # clear any earlier cap
+
     def _refresh_pm(self):
         self._ensure_fired_today()
         from engine.options import build_live_option_order
-        from engine.data_fetcher import get_cached_ltp
+        from engine.data_fetcher import get_cached_ltp, fetch_upstox_ltp
         fired = sorted([f for f in self._fired_today if f["kind"] == "STOCK"],
                        key=lambda f: f["time"], reverse=True)   # newest on top
         self.pm_empty.setVisible(len(fired) == 0)
@@ -742,18 +764,27 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                     order = None
             sym = f["ticker"].replace(".NS", "")
             self._db_record_stock(f, order, sym)   # persist to signals.db
+            kind = (order["instrument"] if order else f.get("instrument", ""))
+            fg = QColor(GREEN) if kind == "CALL" else (QColor(RED) if kind == "PUT" else QColor(AMBER))
             if not order:
-                vals = [f["time"], f"BUY {sym} {f.get('instrument', '')}",
-                        "—", "—", "—", "—", "—", "—", "—", "● FIRED"]
-                self._set_row(self.pm_stock, r, vals, fg=QColor(AMBER)); continue
+                vals = [f["time"], sym, kind, "—", "—", "—", "—", "—", "—", "—", "—", "● FIRED"]
+                self._set_row(self.pm_stock, r, vals, fg=fg); continue
+            # live current premium of the exact option
+            curp = "—"
+            try:
+                lt = fetch_upstox_ltp(order["option_key"])
+                if lt.get("success") and lt.get("price"):
+                    curp = f"Rs {lt['price']:.2f}"
+            except Exception:
+                pass
             cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
-            vals = [f["time"], f"BUY {order['symbol']} {order['instrument']}",
-                    f"{int(order['strike'])}", order["expiry"],
-                    f"Rs {order['premium']:.2f}", f"Rs {order['target_premium']:.2f}",
-                    f"Rs {order['stop_premium']:.2f}", order.get("lot_size", "—"),
-                    cap, "● FIRED"]
-            self._set_row(self.pm_stock, r, vals, fg=QColor(AMBER))
+            vals = [f["time"], sym, kind, f"{order['strike']:.2f}", order["expiry"],
+                    f"Rs {order['premium']:.2f}", curp,
+                    f"Rs {order['target_premium']:.2f}", f"Rs {order['stop_premium']:.2f}",
+                    order.get("lot_size", "—"), cap, "● FIRED"]
+            self._set_row(self.pm_stock, r, vals, fg=fg)
 
+        self._fit_table(self.pm_stock)
         self._refresh_orbvwap()
 
     @staticmethod
@@ -792,8 +823,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                     pass
                 cur = f"Rs {s['current']:.2f}" if s.get("current") else "—"
                 kind = s.get("kind", "—")
+                strike = f"{s['strike']:.2f}" if isinstance(s.get("strike"), (int, float)) else s.get("strike", "—")
                 vals = [s.get("time", "—"), s.get("index", "—"), kind,
-                        s.get("strike", "—"), s.get("expiry", "—"),
+                        strike, s.get("expiry", "—"),
                         f"Rs {s['entry']:.2f}", f"Rs {s['target']:.2f}",
                         f"Rs {s['stop']:.2f}", cur, s.get("lot", "—"), status]
                 # CALL = green, PUT = red — so the option type is obvious at a glance
@@ -803,6 +835,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                         "—", "—", "—", "—", "—", "—", "—", "—", status]
                 fg = QColor(TEXT_DIM)
             self._set_row(self.pm_orbvwap, r, vals, fg=fg)
+        self._fit_table(self.pm_orbvwap)
 
     def _refresh_watchlist(self):
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
@@ -855,8 +888,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         chosen = live if view == "live" else sim
         # keep the toggle labels showing each set's count
         if hasattr(self, "log_live_btn"):
-            self.log_live_btn.setText(f"● LIVE PAPER TRADES ({len(live)})")
-            self.log_sim_btn.setText(f"◇ SIMULATION 30-day ({len(sim)})")
+            try:
+                self.log_live_btn.setText(f"● LIVE PAPER TRADES ({len(live)})")
+                self.log_sim_btn.setText(f"◇ SIMULATION 30-day ({len(sim)})")
+            except RuntimeError:
+                pass
 
         if not chosen:
             empty_msg = ("No live paper trades yet — they appear here once the system fires real "
@@ -864,7 +900,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                          else "No simulation data cached yet.")
             self.log_stats.setText(f"  [{'LIVE PAPER' if view=='live' else 'SIMULATION (30-day historical)'}]   {empty_msg}")
             for table in (self.log_nifty, self.log_bnf, self.log_stock):
-                table.setRowCount(0)
+                table.setRowCount(0); self._fit_table(table)
             return
 
         allt = [self._norm_trade(t) for t in chosen]
@@ -901,6 +937,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                 vals = [t["time"], t["under"].replace(".NS",""), t["opt"], t["dir"],
                         f"{t['entry']:.2f}", f"{t['target']:.2f}", f"{t['stop']:.2f}", oc, pnl]
                 self._set_row(table, r, vals, fg=fg)
+            self._fit_table(table)
 
     # ── market data + clock ───────────────────────────────────────────────────
     def _refresh_market_data(self):
