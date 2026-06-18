@@ -158,6 +158,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.stack.addWidget(self._scrollable(self._screen_readme()))     # 4
         v.addWidget(self.stack, 1)
 
+        self.status = QStatusBar(); self.setStatusBar(self.status)
+        self.setCentralWidget(root)
+        self._highlight_tab(0)
+
     def _scrollable(self, w: QWidget) -> QScrollArea:
         """Wrap a screen so it scrolls when content exceeds the window height."""
         sa = QScrollArea()
@@ -168,10 +172,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         sa.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         sa.setStyleSheet(f"QScrollArea {{ background:{BG}; border:none; }}")
         return sa
-
-        self.status = QStatusBar(); self.setStatusBar(self.status)
-        self.setCentralWidget(root)
-        self._highlight_tab(0)
 
     def _header(self) -> QWidget:
         w = QWidget(); w.setStyleSheet(f"background-color:{PANEL}; border-bottom:1px solid {BORDER};")
