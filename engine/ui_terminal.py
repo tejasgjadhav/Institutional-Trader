@@ -87,6 +87,7 @@ class TerminalApp(QMainWindow):
         super().__init__()
         self.setWindowTitle("INSTITUTIONAL TRADER · TERMINAL")
         self.setGeometry(40, 40, 1700, 1000)
+        self.setMinimumSize(960, 620)   # keep nav + sections usable when resized down
         self.setStyleSheet(self._qss())
 
         self.agent = Agent()
@@ -182,27 +183,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._tab_bar())
 
         self.stack = QStackedWidget()
-        self.stack.addWidget(self._scrollable(self._screen_pm()))        # 0
-        self.stack.addWidget(self._scrollable(self._screen_watchlist()))  # 1
-        self.stack.addWidget(self._scrollable(self._screen_alpha()))      # 2
-        self.stack.addWidget(self._scrollable(self._screen_log()))        # 3
-        self.stack.addWidget(self._scrollable(self._screen_readme()))     # 4
+        self.stack.addWidget(self._screen_pm())        # 0
+        self.stack.addWidget(self._screen_watchlist())  # 1
+        self.stack.addWidget(self._screen_alpha())      # 2
+        self.stack.addWidget(self._screen_log())        # 3
+        self.stack.addWidget(self._screen_readme())     # 4
         v.addWidget(self.stack, 1)
 
         self.status = QStatusBar(); self.setStatusBar(self.status)
         self.setCentralWidget(root)
         self._highlight_tab(0)
-
-    def _scrollable(self, w: QWidget) -> QScrollArea:
-        """Wrap a screen so it scrolls when content exceeds the window height."""
-        sa = QScrollArea()
-        sa.setWidget(w)
-        sa.setWidgetResizable(True)
-        sa.setFrameShape(QFrame.Shape.NoFrame)
-        sa.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        sa.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        sa.setStyleSheet(f"QScrollArea {{ background:{BG}; border:none; }}")
-        return sa
 
     def _header(self) -> QWidget:
         w = QWidget(); w.setStyleSheet(f"background-color:{PANEL}; border-bottom:1px solid {BORDER};")
@@ -313,7 +303,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK options — the 3-Family system (stocks only; indices handled below)
         v.addWidget(self._section_label("● STOCK OPTIONS  (3-Family system)", GREEN))
-        self.pm_stock = self._make_pm_table(); v.addWidget(self.pm_stock)
+        self.pm_stock = self._make_pm_table()
+        self.pm_stock.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_stock, 2)   # shares space, scrolls internally
 
         # NIFTY & BANKNIFTY index options — handled by the ORB+VWAP strategy below
         v.addWidget(self._section_label("● ORB+VWAP INDEX STRATEGY  (parallel · paper forward-test · ATM · +20%/−20%)", PURPLE))
@@ -322,12 +314,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_orbvwap.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.pm_orbvwap.setAlternatingRowColors(True); self.pm_orbvwap.verticalHeader().setVisible(False)
         self.pm_orbvwap.verticalHeader().setDefaultSectionSize(34)
-        v.addWidget(self.pm_orbvwap)
+        self.pm_orbvwap.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_orbvwap, 1)
 
         self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min · 09:15–15:30 IST.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
-        v.addStretch()
         v.addWidget(self.pm_empty)
         return w
 
@@ -390,12 +382,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK first — most trades come from stocks
         v.addWidget(self._section_label("● STOCK OPTIONS  (most trades)", GREEN))
-        self.log_stock = self._make_log_table(); v.addWidget(self.log_stock)
+        self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 2)
         v.addWidget(self._section_label("● NIFTY OPTIONS  (ORB+VWAP)", CYAN))
-        self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty)
+        self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
         v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (ORB+VWAP)", AMBER))
-        self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf)
-        v.addStretch()
+        self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
+        for t in (self.log_stock, self.log_nifty, self.log_bnf):
+            t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self._style_log_toggle()
         return w
 
@@ -769,12 +762,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
 
     @staticmethod
     def _fit_table(table):
-        """Size a table to show ALL its rows (no internal clipping) — the surrounding
-        QScrollArea then scrolls the whole tab so nothing is hidden at the bottom."""
-        hdr = table.horizontalHeader().height()
-        rows = sum(table.rowHeight(r) for r in range(table.rowCount()))
-        table.setMinimumHeight(hdr + rows + 6)
-        table.setMaximumHeight(16777215)   # clear any earlier cap
+        """No-op. Tables scroll internally (ScrollBarAsNeeded) and share space via stretch
+        factors, which is resize-safe. (Previously set minimum heights that overflowed the
+        window on resize and pushed the nav off-screen.)"""
+        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
     def _refresh_pm(self):
         self._ensure_fired_today()
