@@ -217,7 +217,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     def _market_bar(self) -> QWidget:
         w = QWidget(); w.setStyleSheet(f"background-color:{BG}; border-bottom:1px solid {BORDER};")
-        h = QHBoxLayout(w); h.setContentsMargins(16, 8, 16, 8); h.setSpacing(26)
+        h = QHBoxLayout(w); h.setContentsMargins(16, 8, 16, 8); h.setSpacing(16)
 
         self.nifty_lbl = self._ticker_label("NIFTY 50", "—")
         self.bnf_lbl   = self._ticker_label("BANKNIFTY", "—")
@@ -998,10 +998,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
     @staticmethod
     def _src_tag(source: str) -> str:
         sl = (source or "").lower()
-        if "5m" in sl:    return "  · 5m"
-        if "yahoo" in sl: return "  · ~15m"
+        if "5m" in sl:    return " ·5m"
+        if "yahoo" in sl: return " ·15m"
         if "live" in sl:  return ""
-        return "  · prev close"   # live unavailable → showing previous session
+        return " ·prev"   # live unavailable → showing previous session
 
     def _set_ticker(self, lbl, name, d: dict):
         """Render an index ticker with colored up/down vs the previous session close."""
@@ -1010,8 +1010,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         arrow = "▲" if direction == "UP" else ("▼" if direction == "DOWN" else "•")
         chg = d.get("change", 0.0)
         pct = d.get("pct", 0.0)
-        lbl.setText(f"{name}  {d['price']:,.2f}   {arrow} {chg:+,.2f} ({pct:+.2f}%){self._src_tag(d.get('source'))}")
+        # % FIRST (right after price) so it's never the part that clips on a narrow window
+        lbl.setText(f"{name}  {d['price']:,.2f}  {arrow} {pct:+.2f}%  ({chg:+,.2f}){self._src_tag(d.get('source'))}")
         lbl.setStyleSheet(f"color:{color};")
+        lbl.setToolTip(f"{name}: {d['price']:,.2f}  {chg:+,.2f} ({pct:+.2f}%) · {d.get('source','')}")
 
     def _maybe_eod_book(self, now):
         """Force-close every OPEN paper trade at end of day, Mon–Fri, exactly once a day.
