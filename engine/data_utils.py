@@ -161,20 +161,24 @@ def _index_live_or_close(index_name: str, live_price: float = None,
     price = None
     source = "Upstox (last close)"
 
-    if _market_is_open():
-        lp = live_price
-        if lp is None and fetch_if_missing:  # only the standalone getters fetch singly
-            ltp = fetch_upstox_ltp(index_name)
-            lp = ltp["price"] if ltp.get("success") else None
-        if lp:
-            price = lp
-            ref = prev_session if prev_session else prev_close
-            source = live_source
+    # Prefer a FRESH traded price whenever we can get one — the LTP endpoint works
+    # after hours too and returns the day's last traded price. The daily historical
+    # feed lags T+1, so falling back to last_close would show YESTERDAY's close as if
+    # it were today's. Use LTP both during and after the session.
+    lp = live_price
+    if lp is None and fetch_if_missing:  # only the standalone getters fetch singly
+        ltp = fetch_upstox_ltp(index_name)
+        lp = ltp["price"] if ltp.get("success") else None
+    if lp:
+        price = lp
+        source = live_source if _market_is_open() else "Upstox (last traded)"
 
     if price is None:
-        # After hours, or live fetch failed: last session close vs prior session close
+        # No traded price at all (rare): fall back to last available daily close
         price = last_close if last_close else 0.0
-        ref = prev_close if last_date == today else (prev_close or last_close)
+
+    # Reference is ALWAYS the previous-session close (compare today vs yesterday).
+    ref = prev_session if prev_session else (prev_close or last_close)
 
     change = pct = 0.0
     if ref and price:
@@ -222,24 +226,27 @@ def get_market_snapshot() -> dict:
     """
     names = ["NIFTY", "BANKNIFTY", "VIX"]
     open_ = _market_is_open()
-    prices = _batch_index_ltp(names) if open_ else {}
-    src = {n: "Upstox (live)" for n in names if prices.get(n)}
+    # LTP works during AND after the session (returns the day's last traded price), so
+    # fetch it unconditionally. Otherwise after-hours we'd fall back to the daily
+    # historical close, which lags T+1 and shows YESTERDAY's value.
+    prices = _batch_index_ltp(names)
+    src = {n: ("Upstox (live)" if open_ else "Upstox (last traded)")
+           for n in names if prices.get(n)}
 
-    # If the LTP quote is rate-limited (429), fill missing LIVE prices so the dashboard
-    # keeps moving and the % stays correct vs the previous close:
+    # If the LTP quote is rate-limited (429) or empty, fill missing prices so the
+    # dashboard keeps moving and the % stays correct vs the previous close:
     #   1) Upstox 5-min intraday candle (near-live, separate endpoint, survives 429)
     #   2) Yahoo (~15-min delayed) as a last resort
-    if open_:
-        missing = [n for n in names if not prices.get(n)]
-        if missing:
-            for n, p in _intraday_index_prices(missing).items():
-                prices[n] = p
-                src[n] = "Upstox 5m"
-        missing = [n for n in names if not prices.get(n)]
-        if missing:
-            for n, p in _yahoo_index_prices(missing).items():
-                prices[n] = p
-                src[n] = "Yahoo (~15m delay)"
+    missing = [n for n in names if not prices.get(n)]
+    if missing:
+        for n, p in _intraday_index_prices(missing).items():
+            prices[n] = p
+            src[n] = "Upstox 5m"
+    missing = [n for n in names if not prices.get(n)]
+    if missing:
+        for n, p in _yahoo_index_prices(missing).items():
+            prices[n] = p
+            src[n] = "Yahoo (~15m delay)"
 
     def build(name, ticker):
         d = _index_live_or_close(name, prices.get(name), fetch_if_missing=False,

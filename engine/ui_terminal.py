@@ -998,9 +998,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
     @staticmethod
     def _src_tag(source: str) -> str:
         sl = (source or "").lower()
-        if "5m" in sl:    return " ·5m"
-        if "yahoo" in sl: return " ·15m"
-        if "live" in sl:  return ""
+        if "5m" in sl:     return " ·5m"
+        if "yahoo" in sl:  return " ·15m"
+        if "live" in sl:   return ""
+        if "traded" in sl: return " ·close"   # after hours: today's last traded price
         return " ·prev"   # live unavailable → showing previous session
 
     def _set_ticker(self, lbl, name, d: dict):
