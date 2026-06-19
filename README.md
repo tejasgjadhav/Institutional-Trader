@@ -48,7 +48,8 @@ both manual-execution:
   and broad enough (**Gate 1**), (4) checks the price is breaking out *now* (**Gate 2**).
   Both gates pass → a **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
 - **ORB+VWAP system (NIFTY & BANKNIFTY):** a separate index strategy — 15-min ORB +
-  VWAP + 30-min trend, buy **ATM**, **+20%/−20%** (see the section below).
+  VWAP + 30-min trend + clean-trend filter, buy **ATM**, **trend-ride exit** (VWAP-reclaim
+  after +12%, hard −20% stop) — see the section below.
 
 The 3-Family system scans **stocks only**; the indices are handled exclusively by the
 ORB+VWAP strategy.
@@ -153,17 +154,35 @@ A second, independent strategy runs **alongside** the 3-Family system on **NIFTY
 BANKNIFTY index options only**, shown in its own section on **PM DECISIONS**:
 
 - **Signal:** 15-min Opening-Range Breakout + hold VWAP + aligned with the 30-min trend
+- **Clean-trend filter:** only enter when VWAP is sloped the trade's way **and** price is
+  already >0.25% extended from the day's open (cuts the marginal, chop-prone breaks)
 - **Filters:** entries before 11:00 AM · skip 0-DTE expiry-day spikes · one signal/index/day
 - **Instrument:** buy **ATM** CALL/PUT (LONG→CALL, SHORT→PUT)
-- **Exit:** **+20% / −20%** on the option premium
-- **Live status:** WATCHING → ACTIVE → TARGET +20% / STOPPED −20%
+- **Exit — trend-ride (NEW):** let the winner **run**; exit only when the futures **reclaim
+  VWAP** *after* the trade is already +12% in profit; **hard −20% premium stop** throughout;
+  otherwise square off at the close. (Replaced the old fixed +20% target.)
+- **Live status:** WATCHING → ● RIDING → EXITED VWAP / STOPPED −20%
+
+**Why the change.** ORB+VWAP is a *trend-following* setup, but the old fixed **+20%
+target** capped winners while still taking full **−20%** stops — backwards for a trend
+strategy. The 60-day backtest is unambiguous:
+
+| Exit | Trades | Win % | Net/trade |
+|------|--------|-------|-----------|
+| Old: fixed +20% target | 49 | 27% | **−2.60%** |
+| **New: trend-ride + clean filter** | 38 | **63%** | **+0.80%** |
+
+The fix turns a clearly-losing config into a roughly-breakeven-gross one by keeping the
+big winners that pay for the −20% stops.
 
 **Options-only execution.** VWAP needs volume and the spot index reports none on Upstox,
 so the VWAP line is computed from the index **futures** feed — but nothing except options
 is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb_vwap_live.py`.
 
-> **Honest note:** Apr–Jun 2026 backtests show this is roughly breakeven (NIFTY −0.5%,
-> BANKNIFTY +0.3%). It runs live to **forward-test** it, not because it is proven. Full
+> **Honest note:** even the new config is only **~+0.8%/trade gross** and fragile
+> out-of-sample — after costs it is roughly **breakeven**, not a money-maker. It runs live
+> to **forward-test** it, not because it is proven. The trend-ride fix stops the *bleeding*
+> (the −2.6%/trade the fixed target was costing); it does not make the index a profit engine. Full
 > study: [`studies/WIN_RATE_RESEARCH_LOG.md`](studies/WIN_RATE_RESEARCH_LOG.md).
 
 ---
@@ -242,7 +261,7 @@ engine/
   data_utils.py        index closes (live/last, day change)
   events.py            NSE announcement scraper + keyword scoring (EVENT family)
   signals.py           3-family scoring + alpha-z + ORB gate
-  orb_vwap_live.py     PARALLEL ORB+VWAP index strategy (ATM, +20/-20, PM DECISIONS)
+  orb_vwap_live.py     PARALLEL ORB+VWAP index strategy (ATM, trend-ride exit, PM DECISIONS)
   options.py           ATM/offset strike resolver + live option order builder
   portfolio.py         instrument decision + sizing
   trade_log.py         paper log: win rate, PF, expectancy, go-live check

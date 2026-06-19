@@ -281,7 +281,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     PM_COLS = ["TIME", "STOCK", "TYPE", "STRIKE", "EXPIRY", "ENTRY PREM", "CURRENT",
                "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"]
     ORBVWAP_COLS = ["TIME", "INDEX", "TYPE", "STRIKE", "EXPIRY", "ENTRY",
-                    "TARGET +20%", "STOP -20%", "CURRENT", "LOT", "STATUS"]
+                    "EXIT RULE", "STOP -20%", "CURRENT", "LOT", "STATUS"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -563,9 +563,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    f"e.g. <b>BUY RELIANCE 1300 CE @ Rs…</b>.")}
 {sub("INDEX OPTIONS — ORB+VWAP strategy (NIFTY &amp; BANKNIFTY)")}
 {p(f"Strike = <b>ATM</b>. A 15-min Opening-Range Breakout that holds VWAP and aligns with the 30-min "
-   f"trend (before 11 AM, skipping expiry-day) buys the ATM CALL/PUT. Exit "
-   f"<b>+{int(C.ORB_VWAP_TARGET_PCT)}% / −{int(C.ORB_VWAP_STOP_PCT)}%</b> on premium. Shown in the purple "
-   f"ORB+VWAP section, colour-coded CALL green / PUT red, e.g. <b>BUY BANKNIFTY 57100 PUT @ Rs…</b>.")}
+   f"trend (before 11 AM, skipping expiry-day) buys the ATM CALL/PUT. Added a <b>clean-trend "
+   f"filter</b>: only enter when VWAP is sloped the trade's way and price is already &gt;0.25% "
+   f"extended from the open.")}
+{p(f"<b>Exit — TREND-RIDE</b> (not a fixed target): let the winner run; exit only when the futures "
+   f"<b>reclaim VWAP</b> after the trade is +{int(C.ORB_VWAP_ARM_PCT)}% in profit; "
+   f"<b>hard −{int(C.ORB_VWAP_STOP_PCT)}% stop</b> throughout; else square off at the close. This "
+   f"replaced the old fixed +20% target, which 60-day testing showed was the cause of the daily "
+   f"losses (27% win, −2.6%/trade → 63% win, +0.8%/trade). Shown in the purple ORB+VWAP section, "
+   f"colour-coded CALL green / PUT red.")}
 {dim(f"Nearest expiry (Nifty weekly, BankNifty/stocks monthly) · skip if IV > {C.OPTION_IV_THRESHOLD}. "
      f"Indices keep capital low: Nifty ~Rs12k/lot, BankNifty ~Rs28k/lot.")}
 
@@ -849,9 +855,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                 cur = f"Rs {s['current']:.2f}" if s.get("current") else "—"
                 kind = s.get("kind", "—")
                 strike = f"{s['strike']:.2f}" if isinstance(s.get("strike"), (int, float)) else s.get("strike", "—")
+                exit_cell = s.get("exit_rule") or (f"Rs {s['target']:.2f}"
+                                                   if s.get("target") else "VWAP-break")
                 vals = [s.get("time", "—"), s.get("index", "—"), kind,
                         strike, s.get("expiry", "—"),
-                        f"Rs {s['entry']:.2f}", f"Rs {s['target']:.2f}",
+                        f"Rs {s['entry']:.2f}", exit_cell,
                         f"Rs {s['stop']:.2f}", cur, s.get("lot", "—"), status]
                 # CALL = green, PUT = red — so the option type is obvious at a glance
                 fg = QColor(GREEN) if kind == "CALL" else QColor(RED)

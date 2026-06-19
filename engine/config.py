@@ -116,8 +116,16 @@ TARGET_PCT_DERIVATIVE = 5.0
 # NOTE: Apr-Jun 2026 backtests show this is ~breakeven (NIFTY -0.5%, BANKNIFTY +0.3%);
 # it runs LIVE here to forward-test it, NOT because it is proven profitable.
 ORB_VWAP_ENABLED      = True
-ORB_VWAP_TARGET_PCT   = 20.0   # +20% premium target
-ORB_VWAP_STOP_PCT     = 20.0   # -20% premium stop
+# EXIT: trend-ride (not a fixed target). ORB+VWAP is a trend setup — a fixed +20%
+# cap chopped winners short while still eating full -20% stops (60d backtest: 27%
+# win, -2.6%/trade). Trend-ride lets winners run and exits only when the futures
+# reclaim VWAP (after the trade is in profit), keeping the -20% hard stop. 60d: 63%
+# win, +0.8%/trade gross with the clean-trend entry filter.
+ORB_VWAP_EXIT_MODE    = "trend_ride"  # "trend_ride" (live) | "fixed_target" (legacy)
+ORB_VWAP_TARGET_PCT   = 20.0   # legacy fixed-target cap (only used if EXIT_MODE="fixed_target")
+ORB_VWAP_STOP_PCT     = 20.0   # -20% premium hard stop (both modes)
+ORB_VWAP_ARM_PCT      = 12.0   # trend-ride: arm the VWAP-reclaim exit only after +12% premium
+ORB_VWAP_CLEAN_TREND  = True   # entry filter: require VWAP sloped the trade way + >0.25% extended
 ORB_VWAP_ENTRY_CUTOFF = "11:00"  # no new ORB+VWAP entries after this (first-90-min filter)
 ORB_VWAP_STRIKE_OFFSET = 0     # 0=ATM, -1=ITM, +1=OTM
 ORB_VWAP_TREND_BARS    = 6     # 30-min trend filter (6 x 5-min bars)

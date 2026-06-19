@@ -10,9 +10,11 @@ import logging
 from datetime import datetime
 
 from engine.config import (IST, OPTION_STRIKE_OFFSET, PREMIUM_TARGET_PCT,
-                           PREMIUM_STOP_PCT, MARKET_CLOSE)
+                           PREMIUM_STOP_PCT, MARKET_CLOSE,
+                           ORB_VWAP_EXIT_MODE, ORB_VWAP_STOP_PCT)
 from engine.data_fetcher import fetch_upstox_intraday, fetch_upstox_historical
 from engine.options import get_option_by_offset, fetch_option_premium_5min
+from engine.orb_vwap_live import _near_future_key, _vwap, trend_ride_walk
 
 logger = logging.getLogger(__name__)
 
@@ -51,8 +53,60 @@ def resolve_pending(trade_log) -> int:
         # a past session is fully settled; today's only after the kill switch / weekend
         session_over = (sig_date < today) or (now.time() >= close_t) or (now.weekday() >= 5)
         try:
-            # ── signals carrying their own option key + premium levels (ORB+VWAP) ──
             opt_key = t.get("option_key")
+
+            # ── ORB+VWAP index trend-ride exit: ride the futures vs VWAP, hard -stop% ──
+            if (opt_key and t.get("strategy") == "ORB+VWAP"
+                    and ORB_VWAP_EXIT_MODE == "trend_ride"):
+                prem = _opt_prem(opt_key, sig_date, today)
+                if prem.empty:
+                    continue
+                esub = prem["Close"][prem.index <= st]
+                entry = t.get("entry_premium") or (float(esub.iloc[-1]) if len(esub)
+                                                   else float(prem["Close"].iloc[0]))
+                if not entry or entry <= 0:
+                    continue
+                lot = int(t.get("qty", 0) or 0)
+                t["lot"] = lot
+                # futures + VWAP for the signal date (intraday if today, else historical)
+                fkey = _near_future_key(ticker)
+                fut = None
+                if fkey:
+                    if sig_date == today:
+                        fut = fetch_upstox_intraday(fkey, 5)
+                    else:
+                        fut = fetch_upstox_historical(fkey, unit="minutes", interval=5,
+                                                      from_date=sig_date.isoformat(),
+                                                      to_date=sig_date.isoformat())
+                if fut is not None and not fut.empty:
+                    fut = fut[fut.index.date == sig_date]
+                if fut is not None and not fut.empty:
+                    vw = _vwap(fut)
+                    reason, exitp, _pnl, _armed = trend_ride_walk(direction, st, entry, fut, vw, prem)
+                else:
+                    # no futures data → degrade to premium-only: -stop% or EOD
+                    reason, exitp = "END", float(prem["Close"].iloc[-1])
+                    stop_prem = entry * (1 - ORB_VWAP_STOP_PCT / 100)
+                    for px in prem["Close"][prem.index > st]:
+                        if float(px) <= stop_prem:
+                            reason, exitp = "STOP", stop_prem
+                            break
+                if reason == "STOP":
+                    outcome = "LOSS"
+                elif reason == "VWAP":
+                    outcome = "WIN" if exitp > entry else "LOSS"
+                else:  # END — still riding intraday, or EOD force-close
+                    if not session_over:
+                        continue
+                    exitp = float(prem["Close"].iloc[-1])
+                    outcome = "WIN" if exitp > entry else "LOSS"
+                t["entry_premium"] = round(entry, 2)
+                t["exit_premium"] = round(float(exitp), 2)
+                trade_log.update_trade_outcome(t["signal_time"], outcome, (float(exitp) - entry) * lot)
+                resolved += 1
+                continue
+
+            # ── signals carrying their own option key + premium levels (fixed target) ──
             tgt_prem, stp_prem = t.get("target_premium"), t.get("stop_premium")
             if opt_key and tgt_prem and stp_prem:
                 prem = _opt_prem(opt_key, sig_date, today)
