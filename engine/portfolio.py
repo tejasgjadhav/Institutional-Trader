@@ -69,7 +69,7 @@ class Portfolio:
 
     def can_trade(self) -> tuple:
         """Returns (allowed: bool, reason: str)"""
-        if len(self.trades_today) >= MAX_TRADES_PER_DAY:
+        if MAX_TRADES_PER_DAY and len(self.trades_today) >= MAX_TRADES_PER_DAY:
             return False, f"Max {MAX_TRADES_PER_DAY} trades/day reached"
         if self.consecutive_losses >= CONSECUTIVE_LOSS_HALT:
             return False, f"{CONSECUTIVE_LOSS_HALT} consecutive stops — halted for day"
@@ -169,7 +169,7 @@ class RiskManager:
     def __init__(self):
         self.daily_loss_limit_pct = 0.05  # 5% daily loss limit
         self.daily_pnl = 0.0
-        self.max_concurrent_trades = MAX_TRADES_PER_DAY
+        self.max_concurrent_trades = MAX_TRADES_PER_DAY or None  # None = unlimited
 
     def is_loss_limit_breached(self, capital: float) -> bool:
         """Check if daily loss exceeds limit"""

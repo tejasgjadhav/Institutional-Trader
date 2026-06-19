@@ -170,7 +170,7 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 
 ## Risk, Breakeven & Go-Live Bar
 
-- Max 3 trades/day · halt after 3 stop-outs · never overnight.
+- No per-day trade cap — every qualifying signal is taken · halt after 3 stop-outs · never overnight.
 - **Daily EOD booking:** every open paper trade is force-closed WIN/LOSS at the **15:30 close** (Mon–Fri), unless its +target/−stop hit earlier. Runs off the 1-sec clock, so it always fires (`paper_resolver` + `ui._maybe_eod_book`).
 - **Breakeven:** with +10% target / −20% stop you risk 20% to make 10%, so the
   breakeven win rate is `20 / (10+20) = ~67%`. **Below that you lose money.**

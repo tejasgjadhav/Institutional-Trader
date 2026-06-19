@@ -583,7 +583,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      f"positive expectancy. The catch: it's only proven on 13 trades — forward sessions decide it.")}
 
 {h("9 · RISK CONTROLS")}
-{p(f"• Max <b>{C.MAX_TRADES_PER_DAY}</b> trades/day")}
+{p("• <b>No per-day trade cap</b> — every qualifying signal is taken")}
 {p(f"• <b>{C.CONSECUTIVE_LOSS_HALT}</b> stop-outs in a row → halt trading for the day")}
 {p(f"• Every position force-closed at {C.KILL_SWITCH_TIME} — never hold overnight")}
 {p(f"• Position size derived from the stop distance, not guesswork")}

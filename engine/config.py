@@ -87,7 +87,8 @@ EXPECTANCY_LIVE_MAX_INFLUENCE = 0.50
 CAPITAL = 100_000  # INR
 RISK_PER_TRADE_INR = 2_000  # Fixed risk amount (stop-loss sized)
 REWARD_RISK_RATIO = 2.0  # (legacy) generic target = Entry + 2x stop distance
-MAX_TRADES_PER_DAY = 3
+# No daily-trade cap — take EVERY qualifying signal (was 3). 0 = unlimited.
+MAX_TRADES_PER_DAY = 0
 CONSECUTIVE_LOSS_HALT = 3  # Halt trading after 3 stops in a row
 STOP_LOSS_CAP_PCT = 1.0  # Stop can't be more than 1% away from entry
 
