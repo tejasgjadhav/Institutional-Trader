@@ -127,8 +127,9 @@ direction, size = conviction).
 volume surge, same direction. Two independent methods must agree.
 **Gate 3 — Market alignment:** the trade must NOT fight the Nifty's intraday direction —
 only LONG when Nifty is up, only SHORT when Nifty is down (`MARKET_ALIGN_FILTER`).
-*30-day backtest: lifts win rate 58%→60% and P&L +1.0%→+1.6% by cutting trend-fighting
-trades (the PFC/MARUTI "short into a rising market" pattern).*
+*Backtest: 60-day P&L +₹17,299 → +₹30,911 (≈2×), win ~59%, fewer trades — by cutting
+the trend-fighting losers. Full report:*
+[`studies/FINAL_STRATEGY_TESTING_60DAY.md`](studies/FINAL_STRATEGY_TESTING_60DAY.md).
 
 ---
 
