@@ -1061,7 +1061,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         x = d["vix"]
         xdir = x.get("direction", "FLAT")
         arrow = "▲" if xdir == "UP" else ("▼" if xdir == "DOWN" else "•")
-        self.vix_lbl.setText(f"INDIA VIX  {x['price']:.2f}  {arrow} {x.get('pct',0):+.2f}%{self._src_tag(x.get('source'))}")
+        self.vix_lbl.setText(f"INDIA VIX  {x['price']:.2f}  {arrow} {x.get('pct',0):+.2f}%")
         # For VIX, falling is risk-on(green); keep amber as neutral base for readability
         self.vix_lbl.setStyleSheet(f"color:{AMBER};")
 
@@ -1081,10 +1081,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         arrow = "▲" if direction == "UP" else ("▼" if direction == "DOWN" else "•")
         chg = d.get("change", 0.0)
         pct = d.get("pct", 0.0)
-        # % FIRST (right after price) so it's never the part that clips on a narrow window
-        lbl.setText(f"{name}  {d['price']:,.2f}  {arrow} {pct:+.2f}%  ({chg:+,.2f}){self._src_tag(d.get('source'))}")
+        # % FIRST (right after price) so it's never the part that clips on a narrow window.
+        # Source (live / close / delayed) is in the hover tooltip, not inline — keeps the bar clean.
+        lbl.setText(f"{name}  {d['price']:,.2f}  {arrow} {pct:+.2f}%  ({chg:+,.2f})")
         lbl.setStyleSheet(f"color:{color};")
-        lbl.setToolTip(f"{name}: {d['price']:,.2f}  {chg:+,.2f} ({pct:+.2f}%) · {d.get('source','')}")
+        lbl.setToolTip(f"{name}: {d['price']:,.2f}  {chg:+,.2f} ({pct:+.2f}%)  source: {d.get('source','')}")
 
     def _maybe_eod_book(self, now):
         """Force-close every OPEN paper trade at end of day, Mon–Fri, exactly once a day.
