@@ -74,6 +74,12 @@ MIN_FAMILIES_AGREE = 2  # At least 2 of 3 families must align
 # (only LONG when Nifty is up, only SHORT when Nifty is down). 30-day backtest: lifts
 # win rate 58%->60% and P&L +1.0%->+1.6% by cutting trend-fighting trades.
 MARKET_ALIGN_FILTER = True
+# Gate 4 — DON'T CHASE: skip a signal if the stock has already moved more than this %
+# in the trade's direction from the day's open (you'd be buying a stock that already
+# ran). 365-day validation: entries already >2.6% extended won only ~45% vs ~55% for
+# the 1.5-2.6% sweet spot. Filter lifts the held-out per-trade edge +0.13%->+0.16%.
+ENTRY_EXTENSION_FILTER = True
+MAX_ENTRY_EXTENSION_PCT = 2.6
 OPTION_CONVICTION_THRESHOLD = 0.70  # |alpha-z| > 0.70 trades as CALL/PUT instead of EQ/FUT
 
 # === TRADING UNIVERSE FILTER (PF>1 / EXPECTANCY) ===

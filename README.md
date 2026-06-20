@@ -45,8 +45,9 @@ both manual-execution:
 
 - **3-Family system (94 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
   (2) scores each stock into one number, **alpha-z**, (3) checks the score is strong
-  and broad enough (**Gate 1**), (4) checks the price is breaking out *now* (**Gate 2**).
-  Both gates pass → a **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
+  and broad enough (**Gate 1**), breaking out *now* (**Gate 2**), aligned with the Nifty
+  (**Gate 3**), and not already over-extended (**Gate 4**). All gates pass → a
+  **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
 - **ORB+VWAP system (NIFTY & BANKNIFTY):** a separate index strategy — 15-min ORB +
   VWAP + 30-min trend + clean-trend filter, buy **ATM**, **trend-ride exit** (VWAP-reclaim
   after +12%, hard −20% stop) — see the section below.
@@ -131,6 +132,12 @@ only LONG when Nifty is up, only SHORT when Nifty is down (`MARKET_ALIGN_FILTER`
 *Backtest: 60-day P&L +₹17,299 → +₹30,911 (≈2×), win ~59%, fewer trades — by cutting
 the trend-fighting losers. Full report:*
 [`studies/FINAL_STRATEGY_TESTING_60DAY.md`](studies/FINAL_STRATEGY_TESTING_60DAY.md).
+**Gate 4 — Don't chase:** skip a signal if the stock has already moved more than
+`MAX_ENTRY_EXTENSION_PCT` (2.6%) in the trade's direction from the day's open — buying an
+already-extended stock loses edge. *365-day underlying validation: over-extended entries
+won ~45% vs ~55% for the 1.5–2.6% sweet spot; held-out per-trade edge +0.13% → +0.16%.
+Option-level 60-day: same profit on 26% fewer trades → return-on-capital +1.7% → +2.5%,
+win 59% → 60%. (30-day too small to show the effect.)* (`ENTRY_EXTENSION_FILTER`)
 
 ---
 

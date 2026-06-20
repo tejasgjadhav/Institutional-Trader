@@ -146,14 +146,27 @@ class Agent:
             gate_2 = orb_confirmed and (orb_dir == signal["direction"])
 
             # Gate 3: MARKET ALIGNMENT — don't fight the Nifty's intraday direction
-            from engine.config import MARKET_ALIGN_FILTER
+            from engine.config import (MARKET_ALIGN_FILTER, ENTRY_EXTENSION_FILTER,
+                                       MAX_ENTRY_EXTENSION_PCT)
             direction = signal["direction"]
             nifty_dir = 1 if (nifty_pct or 0) > 0 else (-1 if (nifty_pct or 0) < 0 else 0)
             aligned = ((direction == "LONG" and nifty_dir == 1) or
                        (direction == "SHORT" and nifty_dir == -1))
 
-            # All gates? (alignment only enforced when the filter is on)
-            trade_ready = gate_1 and gate_2 and (aligned or not MARKET_ALIGN_FILTER)
+            # Gate 4: DON'T CHASE — skip if the stock already ran too far from the open
+            # in the trade's direction (buying a stock that's already extended loses edge).
+            day_open = float(df_5min["Open"].iloc[0]) if len(df_5min) else 0.0
+            cur_px = float(df_5min["Close"].iloc[-1]) if len(df_5min) else 0.0
+            ext_dir = 0.0
+            if day_open:
+                raw_ext = (cur_px - day_open) / day_open * 100
+                ext_dir = raw_ext if direction == "LONG" else -raw_ext  # move in trade dir
+            not_extended = (ext_dir <= MAX_ENTRY_EXTENSION_PCT)
+
+            # All gates (each filter only enforced when its flag is on)
+            trade_ready = (gate_1 and gate_2
+                           and (aligned or not MARKET_ALIGN_FILTER)
+                           and (not_extended or not ENTRY_EXTENSION_FILTER))
 
             return {
                 "ticker": ticker,
@@ -165,6 +178,8 @@ class Agent:
                 "vol_ratio": vol_ratio,
                 "aligned": aligned,
                 "nifty_dir": nifty_dir,
+                "entry_extension_pct": round(ext_dir, 2),
+                "not_extended": not_extended,
                 "trade_ready": trade_ready,
                 "families_detail": signal.get("families_detail", {}),  # for ALPHA tab columns
                 "current_price": signal.get("current_price"),

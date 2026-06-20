@@ -433,7 +433,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — 3-Family Alpha · NSE Intraday Options</p>
 {dim("A disciplined paper-trading framework. The 3-Family system scans 95 NSE stocks all day and "
-     "only flags a trade when it clears two strict gates; NIFTY &amp; BANKNIFTY are handled by a "
+     "only flags a trade when it clears four strict gates; NIFTY &amp; BANKNIFTY are handled by a "
      "separate parallel ORB+VWAP strategy. You place every order yourself in Upstox — the system "
      "never sends orders. It is a process for collecting honest evidence, not a proven money-maker.")}
 
@@ -448,9 +448,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
 {h("1 · WHAT IT DOES (in one breath)")}
 {p("Every 5 minutes during market hours it: (1) pulls fresh prices from Upstox, "
-   "(2) gives each stock a single score called <b>alpha-z</b>, (3) checks if the score is strong "
-   "and broad enough (Gate 1), (4) checks if the price is actually breaking out right now (Gate 2). "
-   "If both gates pass, the stock appears on <b>PM DECISIONS</b> with exact entry, stop, target and quantity.")}
+   "(2) gives each stock a single score called <b>alpha-z</b>, then runs four gates — strong &amp; "
+   "broad enough (Gate 1), breaking out now (Gate 2), aligned with the Nifty (Gate 3), not already "
+   "over-extended (Gate 4). If all four pass, the stock appears on <b>PM DECISIONS</b> with exact "
+   "entry, stop, target and quantity.")}
 
 {h("1b · PARALLEL STRATEGY — ORB+VWAP INDEX (forward-test)")}
 {p("Running ALONGSIDE the 3-Family system is a second, independent strategy on NIFTY &amp; BANKNIFTY "
@@ -551,7 +552,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("The trade must agree with the Nifty's intraday direction — <b>only LONG when Nifty is up, "
    "only SHORT when Nifty is down</b>. Blocks 'short into a rising market' losers. "
    "<i>30-day backtest: win 58%→60%, P&L +1.0%→+1.6%.</i>")}
-{p("When all gates pass, the stock moves to <b>PM DECISIONS</b>.")}
+{sub("GATE 4 — Don't Chase (is the stock already over-extended?)")}
+{p(f"Skip the signal if the stock has already moved more than <b>{C.MAX_ENTRY_EXTENSION_PCT}%</b> "
+   f"in the trade's direction from the day's open — buying an already-run stock is buying the top. "
+   f"<i>365-day validation: over-extended entries won ~45% vs ~55% in the sweet spot. Option 60-day: "
+   f"same profit on 26% fewer trades → return-on-capital +1.7%→+2.5%.</i>")}
+{p("When all four gates pass, the stock moves to <b>PM DECISIONS</b>.")}
 
 {h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY (two strategies)")}
 {p("Every signal — in either strategy — becomes a <b>bought option</b> (never sold): "
