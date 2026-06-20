@@ -119,6 +119,24 @@ class TerminalApp(QMainWindow):
         self.idx_timer = QTimer(); self.idx_timer.timeout.connect(self._refresh_index_signals)
         self.idx_timer.start(60_000)
 
+    def closeEvent(self, event):
+        """On quit: stop timers and wait for worker threads so we never destroy a
+        still-running QThread (the 'Destroyed while thread is still running' warning)."""
+        for tname in ("scan_timer", "clock_timer", "mkt_timer", "idx_timer"):
+            t = getattr(self, tname, None)
+            try:
+                if t is not None: t.stop()
+            except RuntimeError:
+                pass
+        for wname in ("worker", "idx_worker", "mkt_worker"):
+            w = getattr(self, wname, None)
+            try:
+                if w is not None and w.isRunning():
+                    w.quit(); w.wait(2000)
+            except RuntimeError:
+                pass
+        super().closeEvent(event)
+
     def _refresh_index_signals(self):
         if getattr(self, "_idx_running", False):
             return
@@ -932,18 +950,18 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
     def _norm_trade(self, t: dict) -> dict:
         """Normalise a live paper-trade OR a simulation trade to a display row."""
         if "under" in t:  # simulation trade (from option backtest)
+            ep = t.get("entry_prem") or 0
             return {"time": f"{t.get('day','')} {t.get('entry_time','')}",
                     "under": t["under"], "opt": t.get("opt_type", ""),
-                    "dir": t.get("direction", ""), "entry": t.get("entry_prem", 0),
-                    "target": round(t.get("entry_prem",0)*1.10, 2),
-                    "stop": round(t.get("entry_prem",0)*0.80, 2),
-                    "outcome": t.get("outcome", ""), "pnl": t.get("pnl_pct", 0), "unit": "%"}
+                    "dir": t.get("direction", ""), "entry": ep,
+                    "target": round(ep*1.10, 2), "stop": round(ep*0.80, 2),
+                    "outcome": t.get("outcome", ""), "pnl": t.get("pnl_pct") or 0, "unit": "%"}
         # Show the OPTION premium (what you actually pay), not the underlying price.
-        ep = t.get("entry_premium")
-        entry = ep if ep is not None else t.get("entry", 0)
-        tgt = t.get("target_premium") if t.get("target_premium") is not None else t.get("target", 0)
-        stp = t.get("stop_premium") if t.get("stop_premium") is not None else t.get("stop", 0)
-        return {"time": t.get("signal_time", "")[:19], "under": t.get("ticker", ""),
+        # `or 0` guards against None (e.g. ORB+VWAP trend-ride logs target=None).
+        entry = t.get("entry_premium") or t.get("entry") or 0
+        tgt = t.get("target_premium") or t.get("target") or 0
+        stp = t.get("stop_premium") or t.get("stop") or 0
+        return {"time": (t.get("signal_time") or "")[:19], "under": t.get("ticker", ""),
                 "opt": t.get("instrument", ""), "dir": t.get("direction", ""),
                 "entry": entry, "target": tgt, "stop": stp,
                 "outcome": t.get("outcome") or "OPEN", "pnl": t.get("realized_pnl_inr") or 0, "unit": ""}
@@ -1002,9 +1020,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                 if oc == "OPEN":
                     pnl = "—"
                 else:
-                    pnl = f"{t['pnl']:+.1f}%" if t["unit"] == "%" else f"Rs {t['pnl']:+.0f}"
+                    pv = t.get("pnl") or 0
+                    pnl = f"{pv:+.1f}%" if t["unit"] == "%" else f"Rs {pv:+.0f}"
+                num = lambda v: f"{v:.2f}" if v else "—"   # "—" for missing (e.g. trend-ride target)
                 vals = [t["time"], t["under"].replace(".NS",""), t["opt"], t["dir"],
-                        f"{t['entry']:.2f}", f"{t['target']:.2f}", f"{t['stop']:.2f}", oc, pnl]
+                        num(t['entry']), num(t['target']), num(t['stop']), oc, pnl]
                 self._set_row(table, r, vals, fg=fg)
             self._fit_table(table)
 
