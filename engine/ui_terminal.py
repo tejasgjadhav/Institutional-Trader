@@ -338,6 +338,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.wl_table.verticalHeader().setVisible(False)
         v.addWidget(self.wl_table)
         # legend
+        from engine import config as C
         leg = QLabel("✓ = gate passed · · = waiting   |   G1 alpha · G2 ORB breakout+volume · "
                      "G3 aligned with Nifty · G4 not over-extended (≤"
                      f"{C.MAX_ENTRY_EXTENSION_PCT}%)   |   all 4 ✓ → fires on PM DECISIONS")
