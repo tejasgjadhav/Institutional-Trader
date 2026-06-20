@@ -140,6 +140,13 @@ won ~45% vs ~55% for the sweet spot; held-out per-trade edge +0.13% → +0.16%. 
 trades; 30-day +₹13,114 at +1.5% (vs +1.1%). The 2.9 cap beat the tighter 2.6 on every
 metric — it cuts only the extreme chasers.* (`ENTRY_EXTENSION_FILTER`)
 
+### Watching the gates fill — the WATCHLIST tab
+
+Every stock that clears Gate 1 lands on **WATCHLIST** with a live per-gate readout:
+**G1 / G2 / G3 / G4** each show `PASS` or `wait`, plus a progress column
+(`3/4  next: align`) and `4/4  READY -> PM` when it fires. The list is sorted
+closest-to-firing on top, so you can see exactly which gate each candidate is waiting on.
+
 ---
 
 ## Instrument & Exit — Buy Options Only

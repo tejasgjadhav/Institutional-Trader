@@ -221,13 +221,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         title.setStyleSheet(f"color:{GREEN}; letter-spacing:2px;")
         h.addWidget(title)
 
-        sub = QLabel("3-FAMILY ALPHA · NSE INTRADAY")
+        sub = QLabel("NSE INTRADAY OPTIONS  -  PAPER")
         sub.setFont(QFont("Menlo", 9)); sub.setStyleSheet(f"color:{TEXT_DIM};")
         h.addWidget(sub); h.addSpacing(20); h.addStretch()
 
-        mode = "● RECORDING" if self.recording_mode else "○ OBSERVATION"
+        mode = "RECORDING" if self.recording_mode else "OBSERVATION"
         mode_color = GREEN if self.recording_mode else AMBER
-        self.mode_label = QLabel(f"{mode}  ·  SIMULATION")
+        self.mode_label = QLabel(f"{mode}  -  SIMULATION")
         self.mode_label.setFont(QFont("Menlo", 10, QFont.Weight.Bold))
         self.mode_label.setStyleSheet(f"color:{mode_color};")
         h.addWidget(self.mode_label)
@@ -273,7 +273,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         h.addStretch()
 
         # Autonomous — no scan button. A live indicator shows the auto-scan state.
-        self.auto_lbl = QLabel("◇ AUTO")
+        self.auto_lbl = QLabel("AUTO")
         self.auto_lbl.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         self.auto_lbl.setStyleSheet(f"color:{TEXT_DIM}; padding:0 14px;")
         h.addWidget(self.auto_lbl)
@@ -317,16 +317,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_pm(self) -> QWidget:
         """PM DECISIONS — STOCK options on top (most signals), then NIFTY / BANKNIFTY."""
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
-        v.addWidget(self._panel_title("▸ LATEST PM DECISIONS — BUY options · place manually in Upstox", AMBER))
+        v.addWidget(self._panel_title("LATEST PM DECISIONS  -  BUY options, place manually in Upstox", AMBER))
 
-        # STOCK options — the 3-Family system (stocks only; indices handled below)
-        v.addWidget(self._section_label("● STOCK OPTIONS  (3-Family system)", GREEN))
+        # STOCK options (single stocks; indices handled in the section below)
+        v.addWidget(self._section_label("STOCK OPTIONS", GREEN))
         self.pm_stock = self._make_pm_table()
         self.pm_stock.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_stock, 2)   # shares space, scrolls internally
 
         # NIFTY & BANKNIFTY index options — handled by the ORB+VWAP strategy below
-        v.addWidget(self._section_label("● ORB+VWAP INDEX STRATEGY  (parallel · paper forward-test · ATM · +20%/−20%)", PURPLE))
+        v.addWidget(self._section_label("INDEX OPTIONS  (NIFTY / BANKNIFTY, paper forward-test)", PURPLE))
         self.pm_orbvwap = QTableWidget(); self.pm_orbvwap.setColumnCount(len(self.ORBVWAP_COLS))
         self.pm_orbvwap.setHorizontalHeaderLabels(self.ORBVWAP_COLS)
         self.pm_orbvwap.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -335,7 +335,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_orbvwap.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_orbvwap, 1)
 
-        self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min · 09:15–15:30 IST.")
+        self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min, 09:15-15:30 IST.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
         v.addWidget(self.pm_empty)
@@ -347,7 +347,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_watchlist(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
         v.addWidget(self._panel_title(
-            "▸ WATCHLIST   —   passed Gate 1 (alpha), progress through Gates 2–4 → PM DECISIONS"))
+            "WATCHLIST  -  passed Gate 1 (alpha), progressing through Gates 2-4 to PM DECISIONS"))
         self.wl_table = QTableWidget()
         self.wl_table.setColumnCount(len(self.WL_COLS))
         self.wl_table.setHorizontalHeaderLabels(self.WL_COLS)
@@ -357,16 +357,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.wl_table)
         # legend
         from engine import config as C
-        leg = QLabel("✓ = gate passed · · = waiting   |   G1 alpha · G2 ORB breakout+volume · "
-                     "G3 aligned with Nifty · G4 not over-extended (≤"
-                     f"{C.MAX_ENTRY_EXTENSION_PCT}%)   |   all 4 ✓ → fires on PM DECISIONS")
+        leg = QLabel("PASS = gate cleared, wait = pending    |    G1 alpha, G2 ORB breakout+volume, "
+                     "G3 aligned with Nifty, G4 not over-extended (<="
+                     f"{C.MAX_ENTRY_EXTENSION_PCT}%)    |    all 4 PASS = fires on PM DECISIONS")
         leg.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 2px;"); leg.setWordWrap(True)
         v.addWidget(leg)
         return w
 
     def _screen_alpha(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("▸ ALPHA   —   all 95 stocks scored by 3-family system"))
+        v.addWidget(self._panel_title("ALPHA  -  all 95 stocks scored, ranked by alpha-z"))
         self.alpha_table = QTableWidget()
         self.alpha_table.setColumnCount(7)
         self.alpha_table.setHorizontalHeaderLabels(["TICKER", "ALPHA-Z", "DIR", "BREADTH", "TREND", "FLOW", "EVENT"])
@@ -389,13 +389,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_log(self) -> QWidget:
         """TRADE LOG — LIVE paper trades and SIMULATION kept separate, split by underlying."""
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
-        v.addWidget(self._panel_title("▸ TRADE LOG — LIVE paper vs SIMULATION (kept separate)"))
+        v.addWidget(self._panel_title("TRADE LOG  -  LIVE paper vs SIMULATION (kept separate)"))
 
         # LIVE / SIMULATION toggle
         self.log_view = "live"
         toggle = QWidget(); th = QHBoxLayout(toggle); th.setContentsMargins(0, 0, 0, 0); th.setSpacing(6)
-        self.log_live_btn = QPushButton("● LIVE PAPER TRADES")
-        self.log_sim_btn = QPushButton("◇ SIMULATION (30-day historical)")
+        self.log_live_btn = QPushButton("LIVE PAPER TRADES")
+        self.log_sim_btn = QPushButton("SIMULATION (30-day historical)")
         for b in (self.log_live_btn, self.log_sim_btn):
             b.setFont(QFont("Menlo", 11, QFont.Weight.Bold)); b.setMinimumHeight(34)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -410,11 +410,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.log_stats)
 
         # STOCK first — most trades come from stocks
-        v.addWidget(self._section_label("● STOCK OPTIONS  (most trades)", GREEN))
+        v.addWidget(self._section_label("STOCK OPTIONS  (most trades)", GREEN))
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 2)
-        v.addWidget(self._section_label("● NIFTY OPTIONS  (ORB+VWAP)", CYAN))
+        v.addWidget(self._section_label("NIFTY OPTIONS  (index)", CYAN))
         self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
-        v.addWidget(self._section_label("● BANKNIFTY OPTIONS  (ORB+VWAP)", AMBER))
+        v.addWidget(self._section_label("BANKNIFTY OPTIONS  (index)", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
         for t in (self.log_stock, self.log_nifty, self.log_bnf):
             t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -436,7 +436,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     def _screen_readme(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("▸ README   —   how this system trades, in plain language"))
+        v.addWidget(self._panel_title("README  -  how this system trades, in plain language"))
         doc = QTextEdit(); doc.setReadOnly(True); doc.setFont(QFont("Menlo", 11))
         doc.setHtml(self._readme_html())
         v.addWidget(doc)
@@ -483,11 +483,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "entry, stop, target and quantity.")}
 
 {h("1b · PARALLEL STRATEGY — ORB+VWAP INDEX (forward-test)")}
-{p("Running ALONGSIDE the 3-Family system is a second, independent strategy on NIFTY &amp; BANKNIFTY "
+{p("Running ALONGSIDE the stock system is a second, independent strategy on NIFTY &amp; BANKNIFTY "
    "<b>index options only</b>. Each scan it checks a 15-min Opening-Range Breakout confirmed by VWAP and "
-   "the 30-min trend (entries before 11 AM, skipping 0-DTE expiry-day spikes), buys the <b>ATM</b> CALL/PUT, "
-   "and exits <b>+20% / −20%</b> on premium. It shows in its own purple section on <b>PM DECISIONS</b> "
-   "with a live status: WATCHING → ACTIVE → TARGET +20% / STOPPED −20%.")}
+   "the 30-min trend plus a clean-trend filter (entries before 11 AM, skipping 0-DTE expiry-day spikes), "
+   "buys the <b>ATM</b> CALL/PUT, and rides it with a <b>trend-ride exit</b> (exit on VWAP reclaim after "
+   "+12%, hard -20% stop, else square off at close). It shows in its own INDEX OPTIONS section on "
+   "<b>PM DECISIONS</b> with a live status: WATCHING -&gt; RIDING -&gt; EXITED VWAP / STOPPED -20%.")}
 {dim("VWAP needs volume and the spot index reports none on Upstox, so the VWAP line is drawn from the index "
      "FUTURES feed — but nothing except OPTIONS is ever traded. Honest note: Apr–Jun 2026 backtests show this "
      "is roughly breakeven (NIFTY −0.5%, BANKNIFTY +0.3%); it runs live to FORWARD-TEST it, not because it is "
@@ -585,8 +586,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p(f"Skip the signal if the stock has already moved more than <b>{C.MAX_ENTRY_EXTENSION_PCT}%</b> "
    f"in the trade's direction from the day's open — buying an already-run stock is buying the top. "
    f"<i>365-day validation: over-extended entries won ~45% vs ~55% in the sweet spot. Option 60-day: "
-   f"same profit on 26% fewer trades → return-on-capital +1.7%→+2.5%.</i>")}
+   f"same profit on 26% fewer trades, return-on-capital +1.7% to +2.8%.</i>")}
 {p("When all four gates pass, the stock moves to <b>PM DECISIONS</b>.")}
+{sub("Watching the gates fill — the WATCHLIST tab")}
+{p("Every stock that clears Gate 1 appears on <b>WATCHLIST</b> with a live per-gate readout: "
+   "<b>G1 / G2 / G3 / G4</b> each show <b>PASS</b> or <b>wait</b>, plus a progress column "
+   "(e.g. <b>3/4  next: align</b>) and <b>4/4 READY -&gt; PM</b> when it fires. The list is sorted "
+   "closest-to-firing on top, so you can see exactly which gate each candidate is waiting on.")}
 
 {h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY (two strategies)")}
 {p("Every signal — in either strategy — becomes a <b>bought option</b> (never sold): "
@@ -684,7 +690,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             return
         self._scanning = True
         if hasattr(self, "auto_lbl"):
-            self.auto_lbl.setText("◉ LIVE · scanning…"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
+            self.auto_lbl.setText("LIVE - scanning..."); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
         self.worker = ScanWorker(self.agent)
         self.worker.scan_complete.connect(self._on_scan)
         self.worker.error_occurred.connect(lambda e: self.status.showMessage(f"Scan error: {e}"))
@@ -711,7 +717,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         self._resolve_outcomes()   # close PENDING paper trades (WIN/LOSS) on the premium
         self._refresh_pm(); self._refresh_watchlist(); self._refresh_alpha(); self._refresh_log()
         if hasattr(self, "auto_lbl"):
-            self.auto_lbl.setText("◉ LIVE"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
+            self.auto_lbl.setText("LIVE"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
 
     def _resolve_outcomes(self):
         """Mark PENDING paper trades WIN/LOSS by replaying the option premium."""
@@ -833,7 +839,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             kind = (order["instrument"] if order else f.get("instrument", ""))
             fg = QColor(GREEN) if kind == "CALL" else (QColor(RED) if kind == "PUT" else QColor(AMBER))
             if not order:
-                vals = [f["time"], sym, kind, "—", "—", "—", "—", "—", "—", "—", "—", "● FIRED"]
+                vals = [f["time"], sym, kind, "—", "—", "—", "—", "—", "—", "—", "—", "FIRED"]
                 self._set_row(self.pm_stock, r, vals, fg=fg); continue
             # live current premium of the exact option
             curp = "—"
@@ -847,7 +853,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             vals = [f["time"], sym, kind, f"{order['strike']:.2f}", order["expiry"],
                     f"Rs {order['premium']:.2f}", curp,
                     f"Rs {order['target_premium']:.2f}", f"Rs {order['stop_premium']:.2f}",
-                    order.get("lot_size", "—"), cap, "● FIRED"]
+                    order.get("lot_size", "—"), cap, "FIRED"]
             self._set_row(self.pm_stock, r, vals, fg=fg)
 
         self._fit_table(self.pm_stock)
@@ -919,12 +925,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         for r, sig in enumerate(wl):
             g = gates(sig)
             npass = sum(g)
-            mark = lambda ok: "✓" if ok else "·"
+            mark = lambda ok: "PASS" if ok else "wait"
             if npass == 4:
-                prog = "●●●● READY → PM"
+                prog = "4/4  READY -> PM"
             else:
-                waiting = ["alpha", "ORB", "align", "chase"][g.index(False)] if False in g else "—"
-                prog = ("●" * npass) + ("○" * (4 - npass)) + f" {npass}/4 · waiting: {waiting}"
+                nxt = ["alpha", "ORB", "align", "not-extended"][g.index(False)]
+                prog = f"{npass}/4  next: {nxt}"
             vals = [sig.get("ticker"), f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
                     mark(g[0]), mark(g[1]), mark(g[2]), mark(g[3]), prog]
             self._set_row(self.wl_table, r, vals, fg=self._dir_color(sig.get("direction")))
@@ -976,8 +982,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         # keep the toggle labels showing each set's count
         if hasattr(self, "log_live_btn"):
             try:
-                self.log_live_btn.setText(f"● LIVE PAPER TRADES ({len(live)})")
-                self.log_sim_btn.setText(f"◇ SIMULATION 30-day ({len(sim)})")
+                self.log_live_btn.setText(f"LIVE PAPER TRADES ({len(live)})")
+                self.log_sim_btn.setText(f"SIMULATION 30-day ({len(sim)})")
             except RuntimeError:
                 pass
 
@@ -1106,17 +1112,17 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         mkt = "OPEN" if is_open else "CLOSED"
         # live clock in the index bar (top-right), green when market is open
         if hasattr(self, "clock_lbl"):
-            self.clock_lbl.setText(f"{now:%a %d %b · %H:%M:%S} IST   {'● OPEN' if is_open else '○ CLOSED'}")
+            self.clock_lbl.setText(f"{now:%a %d %b  %H:%M:%S} IST   {'OPEN' if is_open else 'CLOSED'}")
             self.clock_lbl.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         mode = "LIVE" if is_open else "SIMULATION"
         # Keep the AUTO badge in sync when idle (scanning sets it to LIVE·scanning)
         if hasattr(self, "auto_lbl") and not getattr(self, "_scanning", False):
             if is_open:
-                self.auto_lbl.setText("◉ LIVE · AUTO 5-min"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
+                self.auto_lbl.setText("LIVE - AUTO 5-min"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
             else:
-                self.auto_lbl.setText("◇ SIMULATION"); self.auto_lbl.setStyleSheet(f"color:{AMBER}; padding:0 14px;")
+                self.auto_lbl.setText("SIMULATION"); self.auto_lbl.setStyleSheet(f"color:{AMBER}; padding:0 14px;")
         if hasattr(self, "mode_label"):
-            self.mode_label.setText(f"{'● LIVE' if is_open else '◇ SIMULATION'}  ·  9:00–15:30 Mon–Fri auto-live")
+            self.mode_label.setText(f"{'LIVE' if is_open else 'SIMULATION'}  -  9:00-15:30 Mon-Fri auto-live")
             self.mode_label.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         self.status.showMessage(
             f"  {now:%a %d %b %Y · %H:%M:%S} IST   ·   MARKET {mkt}   ·   MODE {mode}   ·   "
