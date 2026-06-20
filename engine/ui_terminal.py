@@ -323,16 +323,26 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.pm_empty)
         return w
 
+    WL_COLS = ["TICKER", "ALPHA-Z", "DIR", "G1 ALPHA", "G2 ORB", "G3 ALIGN",
+               "G4 CHASE", "PROGRESS"]
+
     def _screen_watchlist(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("▸ WATCHLIST   —   passed Gate 1 (alpha), awaiting ORB breakout"))
+        v.addWidget(self._panel_title(
+            "▸ WATCHLIST   —   passed Gate 1 (alpha), progress through Gates 2–4 → PM DECISIONS"))
         self.wl_table = QTableWidget()
-        self.wl_table.setColumnCount(6)
-        self.wl_table.setHorizontalHeaderLabels(["TICKER", "ALPHA-Z", "DIR", "BREADTH", "TREND", "FLOW"])
+        self.wl_table.setColumnCount(len(self.WL_COLS))
+        self.wl_table.setHorizontalHeaderLabels(self.WL_COLS)
         self.wl_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.wl_table.setAlternatingRowColors(True)
         self.wl_table.verticalHeader().setVisible(False)
         v.addWidget(self.wl_table)
+        # legend
+        leg = QLabel("✓ = gate passed · · = waiting   |   G1 alpha · G2 ORB breakout+volume · "
+                     "G3 aligned with Nifty · G4 not over-extended (≤"
+                     f"{C.MAX_ENTRY_EXTENSION_PCT}%)   |   all 4 ✓ → fires on PM DECISIONS")
+        leg.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 2px;"); leg.setWordWrap(True)
+        v.addWidget(leg)
         return w
 
     def _screen_alpha(self) -> QWidget:
@@ -615,7 +625,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
 {h("11 · SPEED — how fast is a scan?")}
 {p("The strategy logic is essentially instant; the only real cost is fetching data over the network.")}
-{p("<b>Per stock:</b> score 3 families + alpha-z + both gates + instrument choice = <b>~1.6 ms</b> (CPU). "
+{p("<b>Per stock:</b> score 3 families + alpha-z + all 4 gates + instrument choice = <b>~1.6 ms</b> (CPU). "
    "Fetching that stock's 5-min candles = <b>~440 ms</b> (network) — 99% of the time.")}
 {p(f"<b>Full scan of NIFTY + BANKNIFTY + {len(C.UNIVERSE)} stocks:</b> ~3–4 seconds. We get there with "
    "12 parallel threads, a daily-history cache (fetched once per day), and batched live prices (all in one "
@@ -878,14 +888,33 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
 
     def _refresh_watchlist(self):
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
+
+        def gates(s):
+            # G1 is true for everyone on the watchlist; G2/G3/G4 are the progress.
+            return [True, bool(s.get("gate_2")), bool(s.get("aligned")),
+                    bool(s.get("not_extended"))]
+
+        # closest-to-firing on top: most gates passed first, then alpha-z
+        wl.sort(key=lambda s: (sum(gates(s)), abs(s.get("alpha_z", 0))), reverse=True)
         self.wl_table.setRowCount(len(wl))
         for r, sig in enumerate(wl):
-            fam = sig.get("families_detail", {})
+            g = gates(sig)
+            npass = sum(g)
+            mark = lambda ok: "✓" if ok else "·"
+            if npass == 4:
+                prog = "●●●● READY → PM"
+            else:
+                waiting = ["alpha", "ORB", "align", "chase"][g.index(False)] if False in g else "—"
+                prog = ("●" * npass) + ("○" * (4 - npass)) + f" {npass}/4 · waiting: {waiting}"
             vals = [sig.get("ticker"), f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
-                    f"{sig.get('breadth',0)}/3",
-                    f"{fam.get('TREND',{}).get('z_score',0):.2f}",
-                    f"{fam.get('FLOW',{}).get('z_score',0):.2f}"]
+                    mark(g[0]), mark(g[1]), mark(g[2]), mark(g[3]), prog]
             self._set_row(self.wl_table, r, vals, fg=self._dir_color(sig.get("direction")))
+            # color each gate cell: green when passed, dim when waiting; READY row glows green
+            for col, ok in zip((3, 4, 5, 6), g):
+                it = self.wl_table.item(r, col)
+                if it: it.setForeground(QColor(GREEN) if ok else QColor(TEXT_DIM))
+            pit = self.wl_table.item(r, 7)
+            if pit: pit.setForeground(QColor(GREEN) if npass == 4 else QColor(AMBER))
 
     def _refresh_alpha(self):
         rows = self.last_scan_results

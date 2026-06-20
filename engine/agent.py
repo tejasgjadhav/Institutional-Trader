@@ -175,6 +175,7 @@ class Agent:
                 "breadth": signal["breadth"],
                 "passes_gate_1": gate_1,
                 "orb_confirmed": orb_confirmed,
+                "gate_2": gate_2,
                 "vol_ratio": vol_ratio,
                 "aligned": aligned,
                 "nifty_dir": nifty_dir,

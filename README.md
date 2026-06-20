@@ -2,7 +2,7 @@
 
 A disciplined **paper-trading** system for NSE intraday. It scans NIFTY, BANKNIFTY
 and 94 liquid stocks every 5 minutes, scores each with a 3-family model, and only
-flags a trade when it clears two strict gates. Every trade is a **bought option**
+flags a trade when it clears **four strict gates**. Every trade is a **bought option**
 (CALL/PUT) and you place the order yourself in Upstox — the software never sends
 orders. It is a process for collecting honest evidence, not a proven money-maker.
 
@@ -224,7 +224,7 @@ How often each piece updates and how fresh the data is:
 
 | Step | Time |
 |------|------|
-| Score 3 families + both gates (per stock, CPU) | ~1.6 ms |
+| Score 3 families + all 4 gates (per stock, CPU) | ~1.6 ms |
 | One stock's full scan incl. all fetches | ~1.1 sec (cold) / ~0.17 sec (warm) |
 | **Full 94-stock scan — cold cache** | **~2.7 sec** (16 workers, pooled keep-alive) |
 | **Full 94-stock scan — warm cache** | **~0.6 sec** |
