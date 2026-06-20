@@ -133,11 +133,12 @@ only LONG when Nifty is up, only SHORT when Nifty is down (`MARKET_ALIGN_FILTER`
 the trend-fighting losers. Full report:*
 [`studies/FINAL_STRATEGY_TESTING_60DAY.md`](studies/FINAL_STRATEGY_TESTING_60DAY.md).
 **Gate 4 — Don't chase:** skip a signal if the stock has already moved more than
-`MAX_ENTRY_EXTENSION_PCT` (2.6%) in the trade's direction from the day's open — buying an
+`MAX_ENTRY_EXTENSION_PCT` (2.9%) in the trade's direction from the day's open — buying an
 already-extended stock loses edge. *365-day underlying validation: over-extended entries
-won ~45% vs ~55% for the 1.5–2.6% sweet spot; held-out per-trade edge +0.13% → +0.16%.
-Option-level 60-day: same profit on 26% fewer trades → return-on-capital +1.7% → +2.5%,
-win 59% → 60%. (30-day too small to show the effect.)* (`ENTRY_EXTENSION_FILTER`)
+won ~45% vs ~55% for the sweet spot; held-out per-trade edge +0.13% → +0.16%. Option-level:
+60-day win 59% → 61%, P&L +₹32,519 → +₹36,792, return-on-capital +1.7% → +2.8% on fewer
+trades; 30-day +₹13,114 at +1.5% (vs +1.1%). The 2.9 cap beat the tighter 2.6 on every
+metric — it cuts only the extreme chasers.* (`ENTRY_EXTENSION_FILTER`)
 
 ---
 

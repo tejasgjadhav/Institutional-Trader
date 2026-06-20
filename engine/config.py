@@ -75,11 +75,13 @@ MIN_FAMILIES_AGREE = 2  # At least 2 of 3 families must align
 # win rate 58%->60% and P&L +1.0%->+1.6% by cutting trend-fighting trades.
 MARKET_ALIGN_FILTER = True
 # Gate 4 — DON'T CHASE: skip a signal if the stock has already moved more than this %
-# in the trade's direction from the day's open (you'd be buying a stock that already
-# ran). 365-day validation: entries already >2.6% extended won only ~45% vs ~55% for
-# the 1.5-2.6% sweet spot. Filter lifts the held-out per-trade edge +0.13%->+0.16%.
+# in the trade's direction from the day's open (you'd be buying a stock that already ran).
+# Tuned to 2.9: cutting only the extreme chasers (>2.9%) beat the tighter 2.6 cap on every
+# metric in both windows — 30d win 56%->58% P&L Rs9.3k->Rs13.1k, 60d win 60%->61% P&L
+# Rs32.9k->Rs36.8k, return-on-capital 2.5%->2.8% — because the 2.6-2.9% band still holds
+# decent trades. The 2.6 cap was over-aggressive.
 ENTRY_EXTENSION_FILTER = True
-MAX_ENTRY_EXTENSION_PCT = 2.6
+MAX_ENTRY_EXTENSION_PCT = 2.9
 OPTION_CONVICTION_THRESHOLD = 0.70  # |alpha-z| > 0.70 trades as CALL/PUT instead of EQ/FUT
 
 # === TRADING UNIVERSE FILTER (PF>1 / EXPECTANCY) ===
