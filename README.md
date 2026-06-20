@@ -266,6 +266,30 @@ samples (13–34 trades) — **no proven edge yet**; only forward, costed data s
 
 ---
 
+## Studies / Research Log
+
+Every change was backtested before going live (or deliberately **not** deployed). All P&L
+is **gross of costs**; option backtests use ~1 month of real premium history, so treat
+short-window rupee figures as directional. The in-app **STUDIES** tab shows the same list.
+
+| # | Study | Question | Headline result | Status |
+|---|-------|----------|-----------------|--------|
+| 1 | [Win-Rate Research Log](studies/WIN_RATE_RESEARCH_LOG.md) | How high can win rate go? | A ~52–57% out-of-sample wall; edge must come from filtering | baseline |
+| 2 | [Gate 3 — Market Alignment](studies/FINAL_STRATEGY_TESTING_60DAY.md) | Does not fighting the Nifty help? | 60d: ~59% win, P&L +₹17k → +₹31k (~2×) | **LIVE** |
+| 3 | [Gate 4 — Don't Chase](studies/GATE4_DONT_CHASE.md) | Do over-extended entries lose edge? | 60d: win 59→61%, RoC +1.7→+2.8%, fewer trades | **LIVE** |
+| 4 | [Index Trend-Ride Exit](studies/INDEX_TREND_RIDE_EXIT.md) | Why did the index lose daily? | Fixed +20% cap → trend-ride: win 27→63% | **LIVE** |
+| 5 | [365-Day Directional Validation](studies/UNDERLYING_VALIDATION_365D.md) | Does the edge last a year? | Aligned 52% hit, +0.13%/trade, holds 12 months | validated |
+| 6 | [Stock Option Exit Cap](studies/STOCK_OPTION_EXIT_CAP.md) | Remove the +10% cap? | Inconsistent / high variance — kept +10% | not deployed |
+| 7 | [Prophet Forward-Test](studies/PROPHET_FORWARD_TEST.md) | Can forecasting predict it? | 20d direction worse than a coin flip | not deployed |
+| 8 | [Data Availability Limits](studies/DATA_AVAILABILITY_LIMITS.md) | Can we backtest 180/365d on options? | Option premiums only ~1 month back | reference |
+
+**Bottom line:** a ~52–61% directional, alignment-dependent, thin-but-real edge. Gates 3 & 4
+are the proven wins; the index trend-ride stops a bleed; the cap and forecasting ideas were
+tested and correctly not deployed. Real profitability is unproven until the forward paper
+month logs real fills.
+
+---
+
 ## Files
 
 ```

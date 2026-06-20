@@ -205,7 +205,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.stack.addWidget(self._screen_watchlist())  # 1
         self.stack.addWidget(self._screen_alpha())      # 2
         self.stack.addWidget(self._screen_log())        # 3
-        self.stack.addWidget(self._screen_readme())     # 4
+        self.stack.addWidget(self._screen_studies())    # 4
+        self.stack.addWidget(self._screen_readme())     # 5
         v.addWidget(self.stack, 1)
 
         self.status = QStatusBar(); self.setStatusBar(self.status)
@@ -262,7 +263,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         h = QHBoxLayout(w); h.setContentsMargins(8, 0, 8, 0); h.setSpacing(2)
 
         self.tab_btns = []
-        tabs = [("PM DECISIONS", 0), ("WATCHLIST", 1), ("ALPHA", 2), ("TRADE LOG", 3), ("README", 4)]
+        tabs = [("PM DECISIONS", 0), ("WATCHLIST", 1), ("ALPHA", 2), ("TRADE LOG", 3),
+                ("STUDIES", 4), ("README", 5)]
         for label, idx in tabs:
             b = QPushButton(label)
             b.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -433,6 +435,108 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_view = view
         self._style_log_toggle()
         self._refresh_log()
+
+    def _screen_studies(self) -> QWidget:
+        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
+        v.addWidget(self._panel_title("STUDIES  -  the research behind the strategy, in order"))
+        doc = QTextEdit(); doc.setReadOnly(True); doc.setFont(QFont("Menlo", 11))
+        doc.setHtml(self._studies_html())
+        v.addWidget(doc)
+        return w
+
+    def _studies_html(self) -> str:
+        def h(t):
+            return f'<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:20px;">{t}</p>'
+        def sub(t):
+            return f'<p style="color:{AMBER};font-weight:bold;margin-top:8px;">{t}</p>'
+        def p(t):
+            return f'<p style="color:{TEXT};margin:4px 0;">{t}</p>'
+        def dim(t):
+            return f'<p style="color:{TEXT_DIM};margin:3px 0;">{t}</p>'
+        def res(t):  # result / verdict line
+            return f'<p style="color:{CYAN};margin:4px 0;">{t}</p>'
+
+        return f"""
+<div style="color:{TEXT};">
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
+{dim("Every change below was backtested before going live (or deliberately NOT deployed). "
+     "All P&amp;L is GROSS of costs. Option backtests use ~1 month of real premium history "
+     "(the rest is direction); treat short-window rupee figures as directional. Full write-ups "
+     "are the .md files in /studies on GitHub.")}
+
+{h("1 - Win-Rate Research Log (the baseline)")}
+{sub("Question: how high can the win rate realistically go?")}
+{p("Swept risk-reward, timeframes, ORB benchmarks and factor studies across many configs.")}
+{res("Result: a hard ~52-57% out-of-sample win-rate wall. No single tweak breaks it; the "
+     "edge has to come from FILTERING bad trades, not a magic indicator.")}
+{dim("File: studies/WIN_RATE_RESEARCH_LOG.md")}
+
+{h("2 - Gate 3: Market Alignment (the Final Strategy)")}
+{sub("Question: does NOT fighting the Nifty's intraday direction help?")}
+{p("Only LONG when Nifty is up, only SHORT when Nifty is down. Backtested 30 + 60 days.")}
+{res("Result (60-day): win ~59%, P&amp;L +Rs17,299 -&gt; +Rs30,911 (~2x), fewer trades. The gain "
+     "is risk, not hit-rate: it cuts the trend-fighting trades that lose BIG. NOW LIVE.")}
+{dim("File: studies/FINAL_STRATEGY_TESTING_60DAY.md")}
+
+{h("3 - Gate 4: Don't Chase (entry-extension filter)")}
+{sub("Question: do signals that fire after the stock already ran lose edge?")}
+{p("Found via 365-day analysis: entries already &gt;2.9% extended from the open won ~45% vs "
+   "~55% in the sweet spot. Skip the chasers. Tuned 2.6 vs 2.9 (2.9 won every metric).")}
+{res("Result (60-day): win 59% -&gt; 61%, P&amp;L +Rs32,519 -&gt; +Rs36,792, return-on-capital "
+     "+1.7% -&gt; +2.8% on 26% fewer trades. A risk-efficiency gain. NOW LIVE.")}
+{dim("File: studies/GATE4_DONT_CHASE.md")}
+
+{h("4 - Index ORB+VWAP: Trend-Ride Exit (the index fix)")}
+{sub("Question: why was the index strategy losing every day?")}
+{p("The old fixed +20% target capped winners while still taking full -20% stops - backwards "
+   "for a trend setup. Replaced with: ride the winner, exit on VWAP reclaim after +12%, hard "
+   "-20% stop; plus a clean-trend entry filter.")}
+{res("Result (60-day): win 27% -&gt; 63%, -2.6%/trade -&gt; +0.8%/trade. Stops the bleed (still "
+     "~breakeven net, a forward-test). NOW LIVE.")}
+{dim("File: studies/INDEX_TREND_RIDE_EXIT.md")}
+
+{h("5 - 365-Day Directional Validation (does the edge last a year?)")}
+{sub("Question: does the signal predict direction over a full year, not just a lucky month?")}
+{p("Option premiums only reach ~1 month back, but 5-min PRICE reaches ~365 days. Tested the "
+   "directional edge on 1,117 signals over the year.")}
+{res("Result: raw signal = coin flip (49%). ALIGNED (Gate 3) = 52% hit, +0.13%/trade, and it "
+     "HOLDS across all 12 months (772 trades). The edge is real but THIN - options leverage it.")}
+{dim("File: studies/UNDERLYING_VALIDATION_365D.md")}
+
+{h("6 - Stock Option Exit Cap (+10% vs no cap)")}
+{sub("Question: should we remove the +10% target and let stock winners ride?")}
+{p("Tested +10% / +20% / +30% / no-cap on the same trades, -20% stop. NOT deployed.")}
+{res("Result: removing the cap is INCONSISTENT - worst on 30-day (+0.5%), best on 60-day "
+     "(+3.6%) = high variance, not a reliable edge. The +10% cap gives the best win rate "
+     "(~60%) and lowest variance. KEPT at +10%.")}
+{dim("File: studies/STOCK_OPTION_EXIT_CAP.md")}
+
+{h("7 - Prophet Forward-Test (forecasting models)")}
+{sub("Question: can a time-series forecaster (Prophet) predict the index or the P&amp;L?")}
+{p("Forecast NIFTY/BANKNIFTY + the equity curve, then cross-validated the error.")}
+{res("Result: 20-day directional hit-rate 43% (NIFTY) / 21% (BANKNIFTY) - WORSE than a coin "
+     "flip; the forecast error is bigger than the move it predicts. Daily markets are near-"
+     "random. NOT wired into the app - it would add noise, not signal.")}
+{dim("File: studies/PROPHET_FORWARD_TEST.md")}
+
+{h("8 - Data Availability Limits (what can be backtested)")}
+{sub("Question: can we backtest 180 / 365 days on real option data?")}
+{p("Probed Upstox depth. Daily price = 2+ yrs, 5-min price = ~1 yr, but option-premium "
+   "candles = only ~3-4 weeks (expired contracts drop out of the instrument master).")}
+{res("Result: a clean OPTION-P&amp;L backtest is capped at ~1 month. Longer validation needs the "
+     "underlying-proxy (done), synthetic Black-Scholes premiums, or a paid options vendor.")}
+{dim("File: studies/DATA_AVAILABILITY_LIMITS.md")}
+
+{h("The honest bottom line")}
+{p("After all of it: a <b>~52-61% directional, alignment-dependent, thin-but-real</b> edge. "
+   "Gates 3 and 4 are the proven improvements; the index trend-ride stops a bleed; the cap "
+   "and forecasting ideas were tested and correctly NOT deployed. Real profitability is "
+   "unproven until the forward paper month logs real fills - which is what the live app does.")}
+<p style="color:{TEXT_DIM};margin-top:14px;font-size:10px;">
+All studies reproducible from /studies on GitHub. Gross of costs. For educational use only. Not financial advice.
+</p>
+</div>
+"""
 
     def _screen_readme(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
