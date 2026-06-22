@@ -37,7 +37,7 @@ logger = logging.getLogger("engine_runner")
 LATEST_SCAN = os.path.join(DATA_DIR, "latest_scan.json")
 MARKET_SNAP = os.path.join(DATA_DIR, "market_snapshot.json")
 SCAN_INTERVAL = 300   # 5 min
-TICK = 30             # wake every 30 s to check the clock
+TICK = 5              # wake every 5 s in market hours (tight scan timing + live bar)
 
 
 class EngineRunner:

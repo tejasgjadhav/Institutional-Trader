@@ -761,14 +761,26 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {dim("A 3–4 second scan inside a 5-minute window means a signal is seen almost the instant a candle closes — "
      "prices barely drift before the order appears. (First scan of the day ~6–7s for one-time cache warmup.)")}
 
-{h("12 · HOW IT RUNS (local machine)")}
-{p("Everything runs <b>locally</b> on this Mac — not from the cloud:")}
-{p(f"• <b>08:55 weekdays</b> — Mac wakes itself (pmset schedule)")}
-{p(f"• <b>09:00 weekdays</b> — app auto-launches (launchd: com.sayali.institutionaltrader)")}
-{p(f"• Files live at <b>~/files/institutional-trader</b> · run by the local Python venv")}
-{dim("GitHub (github.com/tejasgjadhav/Institutional-Trader) is the BACKUP / version history only — "
-     "the app does NOT pull from it at runtime. To update what runs, edit the local files (changes "
-     "are pushed to GitHub for safekeeping). Token lives in local .env (never committed).")}
+{h("12 · HOW IT RUNS — ENGINE vs VIEWER (two processes)")}
+{p("The <b>engine</b> and this <b>app</b> are now SEPARATE. The engine runs the whole schedule "
+   "on its own; this window is a <b>read-only viewer</b> of what the engine writes.")}
+{sub("The headless ENGINE (does all the work)")}
+{p("• launchd job <b>com.sayali.institutionaltrader.engine</b> — always running (KeepAlive, "
+   "restarts on crash, starts at login). Runs <b>irrespective of whether this app is open</b>.")}
+{p("• Every 5 min in market hours it scans, fires ready signals, records to the DBs, and "
+   "resolves paper trades; at 15:30 it force-books open trades. It wakes every <b>5 s</b> so "
+   "scans fire within seconds of the 5-min mark; idles cheaply when the market is closed.")}
+{p("• Saves all data locally <b>daily</b>: <b>data/engine.db</b> (every scan + market snapshot), "
+   "<b>data/signals.db</b> (PM signals), and <b>trade_log.json</b> (trade outcomes).")}
+{sub("This APP (read-only viewer)")}
+{p("• launchd job <b>com.sayali.institutionaltrader</b> — auto-launches 09:00 weekdays. It "
+   "NEVER scans, fires, resolves, books, or writes any DB — it only reads "
+   "<b>latest_scan.json</b> / <b>market_snapshot.json</b> / the DBs / the trade log and displays "
+   "them (re-read every 15 s). The header shows <b>READ-ONLY VIEWER — engine scan Nm ago</b>.")}
+{p(f"• <b>08:55 weekdays</b> — Mac wakes itself (pmset). Files live at <b>~/files/institutional-trader</b>.")}
+{dim("So trading continues even if this window is closed or crashes. GitHub "
+     "(github.com/tejasgjadhav/Institutional-Trader) is the BACKUP / version history only — neither "
+     "process pulls from it at runtime. Token lives in local .env (never committed).")}
 
 <p style="color:{TEXT_DIM};margin-top:16px;font-size:10px;">
 Last 5 trading days (recording window): {', '.join(str(d) for d in self.last5)} &nbsp;·&nbsp;

@@ -17,13 +17,12 @@ orders. It is a process for collecting honest evidence, not a proven money-maker
 ```bash
 cd ~/files/institutional-trader
 
-# Desktop dashboard (default)
-.venv/bin/python main.py
+# Headless ENGINE (does all the work; normally run by launchd)
+.venv/bin/python -m engine.engine_runner          # daemon loop
+.venv/bin/python -m engine.engine_runner --once   # one cycle (testing)
 
-# CLI single scan / continuous / stats
-.venv/bin/python main.py --cli
-.venv/bin/python main.py --loop
-.venv/bin/python main.py --status
+# Read-only VIEWER (the desktop dashboard)
+.venv/bin/python main.py
 
 # Health & tools
 .venv/bin/python -c "from engine.api_diagnostics import diagnose; diagnose()"
@@ -31,10 +30,31 @@ cd ~/files/institutional-trader
 .venv/bin/python -m engine.notifications   # show alert channels + send test
 ```
 
-Auto-start weekdays (Mac wakes 8:55, app launches 9:00):
+Auto-start (engine always-on; viewer auto-launches 9:00 weekdays):
 ```bash
-launchctl load ~/Library/LaunchAgents/com.sayali.institutionaltrader.plist
+launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.sayali.institutionaltrader.engine.plist  # engine
+launchctl load ~/Library/LaunchAgents/com.sayali.institutionaltrader.plist                           # viewer
 ```
+
+---
+
+## Architecture — Engine vs Viewer (two processes)
+
+The trading **engine** and the desktop **app** are decoupled, so the engine runs the full
+daily schedule **whether or not the app is open**.
+
+| | Headless **ENGINE** (`engine/engine_runner.py`) | Desktop **VIEWER** (`main.py` → `engine/ui_terminal.py`) |
+|---|---|---|
+| launchd job | `…institutionaltrader.engine` (KeepAlive, always on) | `…institutionaltrader` (auto-launch 9:00 weekdays) |
+| Role | scan · fire signals · resolve · EOD-book · save data | **read-only** display |
+| Schedule | wakes every **5 s** in market hours; scans every 5 min; 15:30 force-book | re-reads disk every 15 s |
+| Writes | `engine.db`, `signals.db`, `trade_log.json`, `latest_scan.json`, `market_snapshot.json` | nothing |
+
+**All data is saved locally daily** in `data/engine.db` — every scan (one row per stock with
+its full gate state) and every market snapshot — apart from trade outcomes, which stay in
+`trade_log.json`. The viewer never scans, fires, resolves, books, or writes a DB; it only
+reads what the engine wrote (header: `READ-ONLY VIEWER — engine scan Nm ago`). So a viewer
+crash can't stop trading, and execution latency is independent of the display.
 
 ---
 
@@ -307,13 +327,18 @@ engine/
   signal_db.py         SQLite DB of every PM signal (Gate-2 stocks + ORB+VWAP index), accrues daily
   notifications.py     Telegram / WhatsApp / phone-call alerts
   agent.py             5-min scan orchestrator (parallel) + hourly event refresh
-  ui_terminal.py       dark dashboard (default)
+  engine_runner.py     HEADLESS ENGINE daemon — runs the schedule, writes all data
+  store.py             data/engine.db — daily scan rows + market snapshots
+  ui_terminal.py       READ-ONLY desktop viewer (default)
   api_diagnostics.py / signal_frequency.py / backtest120.py / option_live_backtest.py
-main.py                launcher
+main.py                viewer launcher
+deploy/                launchd plists (engine + viewer)
 How_We_Built_The_Strategy.pdf   teaching casebook (with the mistakes)
 BACKTEST_RESULTS.md             every backtest run, honestly documented
-studies/                        win-rate research log + reproducible study scripts
-data/signals.db                 SQLite log of all PM signals (gitignored; `python -m engine.signal_db`)
+studies/                        research log (8 studies) + reproducible study scripts
+data/engine.db                  SQLite: every scan (gate state) + market snapshot, daily
+data/signals.db                 SQLite log of all PM signals (gitignored)
+data/trade_log.json             paper-trade outcomes (gitignored)
 .env                            Upstox token + notification keys (DO NOT COMMIT)
 ```
 
