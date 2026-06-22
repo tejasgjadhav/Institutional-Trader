@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.sayali.institutionaltrader</string>
+
+  <!-- Launch the GUI desktop app in LIVE mode (no SIM_MODE, no flags) -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/arch</string>
+    <string>-arm64</string>
+    <string>/Users/sayali/files/institutional-trader/.venv/bin/python</string>
+    <string>/Users/sayali/files/institutional-trader/main.py</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/sayali/files/institutional-trader</string>
+
+  <!-- Auto-launch every weekday (Mon=1 .. Fri=5) at 09:00 local time -->
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>9</integer><key>Minute</key><integer>0</integer></dict>
+  </array>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/sayali/files/institutional-trader/logs/launchd.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sayali/files/institutional-trader/logs/launchd.err.log</string>
+</dict>
+</plist>
