@@ -582,8 +582,23 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {p("<b>Why one number?</b> Many weak signals are easier to gate as a single <b>conviction</b> score — "
    "<b>sign = direction</b> (+ long / − short), <b>size = conviction</b>. It is a weighted blend of 3 "
    "<b>families</b> (grouped so correlated signals can't fake breadth):")}
-{p(f"<b style='color:{GREEN}'>TREND ({C.FAMILY_WEIGHTS['TREND']['weight']})</b> — momentum + EMA trend + "
-   "opening-range break. <b>Why biggest:</b> trend/momentum is the only family that held an edge in testing.")}
+{p(f"<b style='color:{GREEN}'>TREND ({C.FAMILY_WEIGHTS['TREND']['weight']})</b> — three sub-factors, each "
+   "z-scored vs its own history: <b>momentum</b> (60-min intraday return), <b>trend quality</b> (daily "
+   "EMA-9 vs EMA-21 spread), <b>microstructure</b> (15-min opening-range break). <b>Why biggest:</b> "
+   "trend/momentum is the only family that held an edge in testing.")}
+{dim(f"&nbsp;&nbsp;Sub-factor weights (normalised within TREND by their sum "
+     f"{sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.2f}): momentum "
+     f"{C.FAMILY_WEIGHTS['TREND']['factor_weights']['momentum']} "
+     f"(~{C.FAMILY_WEIGHTS['TREND']['factor_weights']['momentum']/sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.0%}), "
+     f"trend-quality {C.FAMILY_WEIGHTS['TREND']['factor_weights']['trend_quality']} "
+     f"(~{C.FAMILY_WEIGHTS['TREND']['factor_weights']['trend_quality']/sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.0%}), "
+     f"microstructure {C.FAMILY_WEIGHTS['TREND']['factor_weights']['microstructure']} "
+     f"(~{C.FAMILY_WEIGHTS['TREND']['factor_weights']['microstructure']/sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.0%}).")}
+{dim("&nbsp;&nbsp;<b>How the weights were set — honest:</b> hit-rate-informed, NOT rigorously optimised. "
+     "TREND got the biggest family weight because it was the only family with a real edge; momentum is the "
+     "strongest sub-factor; <b>microstructure is deliberately tiny</b> because that ORB break is ALSO Gate 2 "
+     "— keeping it small avoids double-counting the same signal in both the score and the gate. Fitting all "
+     "weights to data (vs hand-set) is a known open improvement.")}
 {p(f"<b style='color:{CYAN}'>FLOW ({C.FAMILY_WEIGHTS['FLOW']['weight']})</b> — live per-stock option flow "
    "(OI buildup + PCR trend). <b>Why:</b> an independent read of what option writers are positioning for.")}
 {p(f"<b style='color:{AMBER}'>EVENT ({C.FAMILY_WEIGHTS['EVENT']['weight']})</b> — NSE news, keyword-scored. "
@@ -733,18 +748,19 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
 
     # ── PM DECISIONS persists the DAY'S fired signals (not just the current scan) ──
     def _ensure_fired_today(self):
-        """Reset the day's fired-signal list at rollover; seed from the trade log so a
-        mid-day app restart doesn't lose signals that already fired today."""
+        """READ-ONLY: reset at day rollover, then RE-SEED from the engine's trade log on
+        EVERY refresh so PM DECISIONS picks up signals the headless engine writes mid-day.
+        (_seed_fired_from_log is idempotent — it skips tickers already shown.)"""
         today = datetime.now(IST).date()
         if getattr(self, "_fired_day", None) != today:
             self._fired_day = today
             self._fired_today = []
-            self._seed_fired_from_log(today)
-            try:    # refresh the daily CSV snapshot of signals.db
+            try:    # refresh the daily CSV snapshot of signals.db (once per day)
                 from engine import signal_db
                 signal_db.export_csv()
             except Exception:
                 pass
+        self._seed_fired_from_log(today)   # re-read the trade log each refresh (read-only viewer)
 
     def _seed_fired_from_log(self, today):
         try:

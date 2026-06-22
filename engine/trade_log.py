@@ -39,11 +39,14 @@ class TradeLog:
             self.trades = []
 
     def _save(self):
-        """Persist trades to JSON"""
+        """Persist trades to JSON. Atomic write (tmp + os.replace) so the read-only viewer,
+        which reads this file in a separate process, never sees a half-written file."""
         os.makedirs(os.path.dirname(self.log_path), exist_ok=True)
         try:
-            with open(self.log_path, 'w') as f:
+            tmp = self.log_path + ".tmp"
+            with open(tmp, 'w') as f:
                 json.dump({"trades": self.trades, "last_updated": datetime.now(IST).isoformat()}, f, indent=2)
+            os.replace(tmp, self.log_path)
         except Exception as e:
             logger.error(f"Failed to save trade log: {e}")
 

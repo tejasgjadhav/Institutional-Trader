@@ -123,7 +123,18 @@ by weight: `alpha-z = Σ(family z × weight) ÷ Σ(weights)`.
 ### TREND — `signals.compute_trend_family()`
 Momentum = z-score of the latest 60-min intraday return vs the day's distribution.
 Trend quality = z-score of the daily EMA-9 − EMA-21 spread. Microstructure = +1/−1 on a
-15-min opening-range breakout. Combined by the factor weights above.
+15-min opening-range breakout.
+
+**Sub-factor weights** (in `config.FAMILY_WEIGHTS['TREND']['factor_weights']`, normalised in
+code by their sum 0.65): momentum **0.37 (~57%)**, trend-quality **0.24 (~37%)**,
+microstructure **0.04 (~6%)**.
+
+**How the weights were set — honest:** they are **hit-rate-informed, not rigorously
+optimised**. TREND carries the biggest *family* weight (0.72) because it was the only family
+with a real edge in testing; momentum is the strongest sub-factor; **microstructure is
+deliberately tiny because that ORB breakout is also Gate 2** — keeping it ~6% of the score
+avoids double-counting the same signal in both the alpha-z and the gate. Fitting all weights
+to data (instead of hand-setting) is a known open improvement, not yet done.
 
 ### FLOW — `signals._flow_from_options()` + `options_flow.fetch_options_flow()`
 Pulls the live Upstox option chain per stock and computes, from current vs previous OI:
