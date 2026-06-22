@@ -590,10 +590,12 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    "<b>Why tiny:</b> news is sparse and the scoring is crude — it nudges, it never decides.")}
 {p(f"<b style='color:{CYAN}'>alpha-z = Σ(family z × weight) ÷ Σ(weights)</b> &nbsp;(weights read live from "
    f"config, sum = {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}).")}
-{dim(f"Example (bearish): TREND −0.9, FLOW −0.6, EVENT +0.2 → "
-     f"(−0.9×{C.FAMILY_WEIGHTS['TREND']['weight']} − 0.6×{C.FAMILY_WEIGHTS['FLOW']['weight']} "
-     f"+ 0.2×{C.FAMILY_WEIGHTS['EVENT']['weight']}) ÷ {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f} "
-     f"= <b>{(-0.9*C.FAMILY_WEIGHTS['TREND']['weight'] - 0.6*C.FAMILY_WEIGHTS['FLOW']['weight'] + 0.2*C.FAMILY_WEIGHTS['EVENT']['weight'])/sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}</b> (short).")}
+{dim(f"Example (bearish) — each family's <b>z-score × its weight</b>:")}
+{dim(f"&nbsp;&nbsp;TREND&nbsp; z=−0.9 × weight {C.FAMILY_WEIGHTS['TREND']['weight']} = {-0.9*C.FAMILY_WEIGHTS['TREND']['weight']:+.2f}")}
+{dim(f"&nbsp;&nbsp;FLOW&nbsp;&nbsp; z=−0.6 × weight {C.FAMILY_WEIGHTS['FLOW']['weight']} = {-0.6*C.FAMILY_WEIGHTS['FLOW']['weight']:+.2f}")}
+{dim(f"&nbsp;&nbsp;EVENT z=&nbsp;0.0 × weight {C.FAMILY_WEIGHTS['EVENT']['weight']} = {0.0*C.FAMILY_WEIGHTS['EVENT']['weight']:+.2f}&nbsp;&nbsp;(EVENT is usually neutral, so it adds nothing)")}
+{dim(f"&nbsp;&nbsp;alpha-z = sum ÷ (weights {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}) = "
+     f"<b>{(-0.9*C.FAMILY_WEIGHTS['TREND']['weight'] - 0.6*C.FAMILY_WEIGHTS['FLOW']['weight'] + 0.0*C.FAMILY_WEIGHTS['EVENT']['weight'])/sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}</b> → SHORT")}
 {dim("Honest limitation: because EVENT rarely fires, in practice alpha-z is mostly TREND + FLOW — a "
      "momentum signal with a flow tilt, not three equal voices. (A 4th mean-reversion family was removed: "
      "it won only 47.6%.)")}
@@ -620,17 +622,36 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {p("Every signal is a <b>bought option</b> (never sold): <b style='color:{0}'>LONG → buy CALL</b>, "
    "<b style='color:{1}'>SHORT → buy PUT</b>. <b>Why buy-only:</b> loss is capped at the premium, and a "
    "small underlying move becomes a large % move on the option (leverage).".format(GREEN, RED))}
-{p(f"<b style='color:{GREEN}'>STOCKS</b> — buy <b>OTM+1</b>, exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / "
-   f"−{int(C.PREMIUM_STOP_PCT)}%</b> on the premium. <b>Why small target / wide stop:</b> premiums are "
-   f"volatile, so a quick +{int(C.PREMIUM_TARGET_PCT)}% is hit often (that is what makes win rate ~58–61%), "
-   f"while the wider −{int(C.PREMIUM_STOP_PCT)}% avoids being stopped by noise. (Removing the cap was "
-   f"tested — worse, higher-variance — so it stays.)")}
-{p(f"<b style='color:{PURPLE}'>INDEX (NIFTY/BANKNIFTY)</b> — ORB+VWAP on the index, buy <b>ATM</b>, "
-   f"<b>trend-ride exit</b>: ride the winner, exit only on a VWAP reclaim after +{int(C.ORB_VWAP_ARM_PCT)}%, "
-   f"hard −{int(C.ORB_VWAP_STOP_PCT)}% stop, else close at EOD. <b>Why trend-ride:</b> it is a trend setup; "
-   f"the old fixed +20% cap chopped winners and bled (−2.6%/trade) — riding fixed it (27% → 63% win).")}
-{dim("VWAP needs volume; the spot index reports none, so VWAP is drawn from the index FUTURES feed — but "
-     "only OPTIONS are ever traded. Capital per lot: Nifty ATM ~Rs8k, BankNifty ~Rs17k.")}
+{p(f"<b style='color:{GREEN}'>STOCKS (the 3-Family system, {len(C.UNIVERSE)} names)</b> — buy <b>OTM+1</b>, "
+   f"exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / −{int(C.PREMIUM_STOP_PCT)}%</b> on the premium. <b>Why small "
+   f"target / wide stop:</b> premiums are volatile, so a quick +{int(C.PREMIUM_TARGET_PCT)}% is hit often "
+   f"(that is what makes win rate ~58–61%), while the wider −{int(C.PREMIUM_STOP_PCT)}% avoids being stopped "
+   f"by noise. (Removing the cap was tested — worse, higher-variance — so it stays.)")}
+
+{h("STEP 3b — THE INDEX STRATEGY (NIFTY &amp; BANKNIFTY), explained")}
+{p("This is a <b>completely separate, parallel</b> strategy from the stock system above. It does NOT use "
+   "alpha-z or the 3 families — the 4 gates do not apply to it. It is a classic intraday "
+   "<b>Opening-Range Breakout + VWAP</b> momentum play, run only on the two indices, shown in its own "
+   "INDEX OPTIONS section on PM DECISIONS.")}
+{sub("How a signal forms (the entry)")}
+{p("1. <b>Opening range</b> = the high/low of the first 15 minutes (3× 5-min candles, 9:15–9:30).")}
+{p("2. <b>Breakout + VWAP</b> = price closes <i>above</i> the range high AND holds above VWAP → LONG "
+   "(mirror for SHORT). VWAP needs volume, and the spot index reports none on Upstox, so the VWAP line is "
+   "computed from the index <b>FUTURES</b> feed — but only OPTIONS are ever traded.")}
+{p(f"3. <b>Filters (why):</b> must agree with the 30-min trend; a <b>clean-trend</b> filter (VWAP sloped the "
+   f"trade's way + price &gt;0.25% extended) cuts chop; entries only <b>before 11:00 AM</b> (the move needs "
+   f"the morning); <b>skip 0-DTE</b> expiry days (premium spikes); one signal per index per day.")}
+{sub("What you buy &amp; how it exits")}
+{p(f"Buy the <b>ATM</b> CALL (LONG) or PUT (SHORT). Exit = <b>TREND-RIDE</b>: let the winner run; exit only "
+   f"when the futures <b>reclaim VWAP</b> after the trade is already +{int(C.ORB_VWAP_ARM_PCT)}% in profit; "
+   f"a <b>hard −{int(C.ORB_VWAP_STOP_PCT)}% premium stop</b> throughout; otherwise square off at the close. "
+   f"Live status on PM DECISIONS: WATCHING → ● RIDING → EXITED VWAP / STOPPED −{int(C.ORB_VWAP_STOP_PCT)}%.")}
+{p("<b>Why trend-ride (not a fixed target)?</b> An ORB breakout is a <i>trend</i> setup. The old fixed "
+   "+20% target capped the winners while still taking full −20% stops — backwards — and it <b>bled −2.6%/"
+   "trade</b>. Switching to ride-the-winner fixed it: <b>27% → 63% win</b> over 60 days.")}
+{dim("Capital per lot: Nifty ATM ~Rs8k, BankNifty ~Rs17k. Honest status: even fixed, the index is only "
+     "~breakeven gross and fragile out-of-sample — it runs to FORWARD-TEST, not because it is proven. "
+     "Full study: the STUDIES tab (Index Trend-Ride Exit).")}
 
 {h("STEP 4 — How it runs (engine vs viewer), and why split")}
 {p("The <b>engine</b> (headless, launchd <b>…institutionaltrader.engine</b>, always on) does ALL the work — "
