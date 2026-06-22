@@ -23,6 +23,7 @@ FORWARD-TEST: marginal and fragile out-of-sample, not proven profitable.
 """
 import json
 import gzip
+import time
 import logging
 import requests
 from datetime import datetime
@@ -190,12 +191,40 @@ def _build_row(index: str, direction: str, ets, fut_spot: float,
     }
 
 
+_FUT_DF_CACHE = {"date": None, "df": {}}   # index -> last good futures 5-min frame (today)
+
+
+def _fetch_futures(index: str, fkey: str) -> pd.DataFrame:
+    """Fetch the index FUTURES 5-min intraday with retry, and fall back to the last good
+    fetch from today if a transient rate-limit/timeout returns empty. The index scan competes
+    with ~94 stock + options-flow calls each cycle, so an occasional 429 shouldn't wipe the
+    live detection (which used to flip the row to 'WATCHING — no data yet')."""
+    today = datetime.now(IST).date()
+    if _FUT_DF_CACHE["date"] != today:
+        _FUT_DF_CACHE.update(date=today, df={})
+    for attempt in range(3):
+        try:
+            df = fetch_upstox_intraday(fkey, 5)
+            if not df.empty and len(df) >= 4:
+                _FUT_DF_CACHE["df"][index] = df
+                return df
+        except Exception as e:
+            logger.warning(f"futures fetch {index} attempt {attempt+1} failed: {e}")
+        time.sleep(0.4)
+    # all attempts empty/failed -> reuse today's last good frame if we have one
+    cached = _FUT_DF_CACHE["df"].get(index)
+    if cached is not None and not cached.empty:
+        logger.info(f"futures fetch {index}: using last good frame ({len(cached)} bars)")
+        return cached
+    return pd.DataFrame()
+
+
 def _detect(index: str) -> dict:
     """Detect today's ORB+VWAP signal for one index; return a PM row dict."""
     fkey = _near_future_key(index)
     if not fkey:
         return {"index": index, "status": "NO FUTURES KEY"}
-    df = fetch_upstox_intraday(fkey, 5)
+    df = _fetch_futures(index, fkey)
     if df.empty or len(df) < 4:
         return {"index": index, "status": "WATCHING (no data yet)"}
 
