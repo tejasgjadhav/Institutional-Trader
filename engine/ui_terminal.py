@@ -573,10 +573,11 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {p(f"<b>Tuned config:</b> STOCKS — BUY OTM+1 · +{int(C.PREMIUM_TARGET_PCT)}% / −{int(C.PREMIUM_STOP_PCT)}% on premium · "
    f"cutoff 1 PM · {len(C.UNIVERSE)} stocks. &nbsp; INDEX — ORB+VWAP · BUY ATM · "
    f"+{int(C.ORB_VWAP_TARGET_PCT)}% / −{int(C.ORB_VWAP_STOP_PCT)}% · NIFTY &amp; BANKNIFTY.")}
-{p(f"<b style='color:{AMBER}'>Status:</b> best backtest ~72% win (OTM+1, 1 PM) — but on only 18 trades, "
-   f"so UNPROVEN. Larger 30-day samples read 50–65%; the 120-day underlying test showed no edge at 2:1. "
-   f"Win rate is real-looking on small samples but not yet bankable — a 30+ session forward paper-test "
-   f"with real costs is the only honest judge. (Full study: BACKTEST_RESULTS.md + the teaching PDF.)")}
+{p(f"<b style='color:{AMBER}'>Status (current config — 4 gates):</b> 60-day option backtest "
+   f"<b>61% win</b>, <b>+Rs36,792</b> (+2.8% on deployed capital, 1 lot, GROSS); 30-day 58% / +Rs13,114. "
+   f"The 365-day directional test holds at <b>~52%</b> (aligned). Net of brokerage + STT + spread it is "
+   f"roughly <b>BREAKEVEN</b> — a thin, ~52-61% directional edge, NOT proven profitable. A 30+ session "
+   f"forward paper-test is the only honest judge. (Full evidence: the <b>STUDIES</b> tab.)")}
 
 {h("1 · WHAT IT DOES (in one breath)")}
 {p("Every 5 minutes during market hours it: (1) pulls fresh prices from Upstox, "
@@ -604,9 +605,9 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {p(f"<b>09:15–{C.TRADING_START}</b> &nbsp; First 30 min is the wildest part of the day — we only watch, no trades")}
 {p(f"<b>{C.TRADING_START}</b> &nbsp; Trading window opens — confirmed signals become real PM DECISIONS")}
 {p(f"<b>every 5 min</b> &nbsp; Re-scan NIFTY + BANKNIFTY + 95 stocks (parallel, batched, cached — a few sec)")}
-{dim("Signals are SPARSE — ~18 over a month, ~12 of 22 days have a signal (1 PM cutoff trades "
-     "frequency for quality). Nothing fires before ~11:30 AM (scores need an hour of data); most "
-     "cluster 12:30-1 PM. Blank days are normal for a selective strategy.")}
+{dim("Signals are SELECTIVE — ~1-2 a day on average (365-day study: ~1.7/day, ~416/year), and "
+     "many days have none. The edge concentrates late-morning (10:30-11:00 is the strongest window); "
+     "the afternoon thins out. Blank days are normal — the gates only fire on clean setups.")}
 {p(f"<b>{C.NO_NEW_TRADES_AFTER}</b> &nbsp; No new trades after this (afternoon is thin)")}
 {p(f"<b>{C.KILL_SWITCH_TIME}</b> &nbsp; Kill-switch guideline — don't hold into the volatile last 20 min")}
 {p(f"<b>{C.MARKET_CLOSE}</b> &nbsp; Market closes — <b>every OPEN paper trade is force-booked WIN/LOSS at the close</b> "
@@ -717,20 +718,21 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    f"losses (27% win, −2.6%/trade → 63% win, +0.8%/trade). Shown in the purple ORB+VWAP section, "
    f"colour-coded CALL green / PUT red.")}
 {dim(f"Nearest expiry (Nifty weekly, BankNifty/stocks monthly) · skip if IV > {C.OPTION_IV_THRESHOLD}. "
-     f"Indices keep capital low: Nifty ~Rs12k/lot, BankNifty ~Rs28k/lot.")}
+     f"Capital per lot is modest: Nifty ATM ~Rs8k, BankNifty ATM ~Rs17k (premium x lot).")}
 
 {h("8 · EXIT — ON THE OPTION PREMIUM (2:1 is NOT how options win)")}
 {p(f"You exit on the option's own price, not the underlying:")}
 {p(f"• <b style='color:{GREEN}'>STOCKS</b> &nbsp; BOOK <b>+{int(C.PREMIUM_TARGET_PCT)}%</b> / CUT "
    f"<b>−{int(C.PREMIUM_STOP_PCT)}%</b> on premium (e.g. Rs100 → Rs{100*(1+C.PREMIUM_TARGET_PCT/100):.0f} / "
    f"Rs{100*(1-C.PREMIUM_STOP_PCT/100):.0f})")}
-{p(f"• <b style='color:{PURPLE}'>INDEX (ORB+VWAP)</b> &nbsp; BOOK <b>+{int(C.ORB_VWAP_TARGET_PCT)}%</b> / CUT "
-   f"<b>−{int(C.ORB_VWAP_STOP_PCT)}%</b> on premium (symmetric)")}
+{p(f"• <b style='color:{PURPLE}'>INDEX (ORB+VWAP)</b> &nbsp; <b>TREND-RIDE</b>: ride the winner, exit "
+   f"on VWAP reclaim after +{int(C.ORB_VWAP_ARM_PCT)}%, hard <b>−{int(C.ORB_VWAP_STOP_PCT)}%</b> stop, "
+   f"else square off at the close (no fixed upper target)")}
 {p(f"• <b>FORCE-CLOSE</b> at {C.KILL_SWITCH_TIME} regardless")}
-{dim(f"Why small target + wide stop? Option premiums are volatile, so a quick +{C.PREMIUM_TARGET_PCT:.0f}% "
-     f"is hit often (high win rate) while the wider −{C.PREMIUM_STOP_PCT:.0f}% stop avoids getting "
-     f"shaken out by normal premium noise. In the recent backtest this gave ~77% win rate with "
-     f"positive expectancy. The catch: it's only proven on 13 trades — forward sessions decide it.")}
+{dim(f"Why a small +{C.PREMIUM_TARGET_PCT:.0f}% target on stocks? Option premiums are volatile, so a quick "
+     f"+{C.PREMIUM_TARGET_PCT:.0f}% is hit often — that is what produces the ~58-61% win rate (60-day "
+     f"backtest). Removing the cap was tested and was inconsistent/higher-variance, so it stays. "
+     f"Net of costs the edge is thin — see the STUDIES tab.")}
 
 {h("9 · RISK CONTROLS")}
 {p("• <b>No per-day trade cap</b> — every qualifying signal is taken")}
@@ -748,8 +750,9 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {p(f"<b style='color:{GREEN}'>Go-live bar:</b> win rate ≥ <b>{C.PAPER_TRADING_MIN_WIN_RATE:.0%}</b> "
    f"(a margin above breakeven) AND profit factor > {C.PAPER_TRADING_MIN_PF} across "
    f"{C.PAPER_TRADING_MIN_SIGNALS}+ signals. Below that, the edge isn't proven — don't automate.")}
-{dim("Honest note: backtests show ~72% on tiny samples but no proven edge. After brokerage + taxes the "
-     "edge is thin. Treat every signal as a hypothesis and judge it by the live log over many sessions.")}
+{dim("Honest note: the current 4-gate config backtests at ~58-61% win over 30-60 days (GROSS), and the "
+     "365-day directional edge is ~52% — a thin, real-but-small edge. After brokerage + STT + spread it is "
+     "roughly breakeven. Treat every signal as a hypothesis and judge it by the live log over many sessions.")}
 
 {h("11 · SPEED — how fast is a scan?")}
 {p("The strategy logic is essentially instant; the only real cost is fetching data over the network.")}

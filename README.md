@@ -281,8 +281,10 @@ Run `python -m engine.notifications` for the one-time setup steps.
 
 The dashboard keeps **LIVE paper trades** and the **30-day historical simulation**
 strictly separate (a toggle in the TRADE LOG tab). Run it forward for 30+ sessions and
-judge the live log against the go-live bar. Honest status: backtests show ~72% on tiny
-samples (13–34 trades) — **no proven edge yet**; only forward, costed data settles it.
+judge the live log against the go-live bar. **Honest status (current 4-gate config):**
+60-day backtest **61% win, +₹36,792 (+2.8% on capital, GROSS)**; 365-day directional edge
+**~52%**. Net of brokerage + STT + spread it is roughly **breakeven** — a thin, real-but-small
+edge, **not proven profitable**. Only forward, costed data settles it. See the **Studies** table.
 
 ---
 
