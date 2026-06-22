@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.sayali.institutionaltrader.engine</string>
+
+  <!-- Headless trading engine: scans / fires / resolves / books on schedule and saves
+       all data to the local DB. Runs independently of the GUI (read-only viewer). -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/bin/arch</string>
+    <string>-arm64</string>
+    <string>/Users/sayali/files/institutional-trader/.venv/bin/python</string>
+    <string>-m</string>
+    <string>engine.engine_runner</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/sayali/files/institutional-trader</string>
+
+  <!-- Always running: starts at load/login and is kept alive (restarts on crash). The
+       daemon self-gates on market hours and idles cheaply when the market is closed. -->
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/sayali/files/institutional-trader/logs/engine.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sayali/files/institutional-trader/logs/engine.err.log</string>
+</dict>
+</plist>

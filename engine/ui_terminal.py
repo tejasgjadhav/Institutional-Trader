@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
 from PySide6.QtCore import Qt, QTimer, Signal, QThread
 from PySide6.QtGui import QFont, QColor, QBrush
 
-from engine.config import IST
+from engine.config import IST, DATA_DIR
 from engine.agent import Agent
 from engine.trade_log import TradeLog
 from engine.data_utils import (
@@ -24,6 +24,13 @@ from engine.data_utils import (
 )
 
 logger = logging.getLogger(__name__)
+
+# READ-ONLY VIEWER: the GUI never scans/executes/books. The headless engine
+# (engine.engine_runner, run by launchd) does all that and writes these files;
+# the GUI only reads + displays them.
+import os as _os
+LATEST_SCAN = _os.path.join(DATA_DIR, "latest_scan.json")
+MARKET_SNAP = _os.path.join(DATA_DIR, "market_snapshot.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -101,7 +108,7 @@ class TerminalApp(QMainWindow):
         self._check_recording_window()
         self._build_ui()
         self._refresh_market_data()
-        self._resolve_outcomes()  # close any resolvable PENDING trades on startup
+        self._load_latest_scan()    # read-only: show whatever the engine last wrote
         self._refresh_log()      # show simulation immediately (or live paper trades)
         self._refresh_pm()        # show today's already-fired signals (seeded from log)
         self.trigger_scan()       # only scans if market is open
@@ -109,7 +116,7 @@ class TerminalApp(QMainWindow):
 
         # timers
         self.scan_timer = QTimer(); self.scan_timer.timeout.connect(self.trigger_scan)
-        self.scan_timer.start(300_000)  # 5 min
+        self.scan_timer.start(15_000)  # 15s — re-read the engine's latest scan from disk
         self.clock_timer = QTimer(); self.clock_timer.timeout.connect(self._tick)
         self.clock_timer.start(1000)
         # Market data: poll fast (2s) when open, slow (20s) when closed.
@@ -138,17 +145,9 @@ class TerminalApp(QMainWindow):
         super().closeEvent(event)
 
     def _refresh_index_signals(self):
-        if getattr(self, "_idx_running", False):
-            return
-        self._idx_running = True
-        self.idx_worker = IndexScanWorker()
-        self.idx_worker.done.connect(self._on_index_signals)
-        self.idx_worker.finished.connect(lambda: setattr(self, "_idx_running", False))
-        self.idx_worker.start()
-
-    def _on_index_signals(self, rows):
-        if rows:
-            self.agent.orbvwap_signals = rows
+        """READ-ONLY: index (ORB+VWAP) rows come from the engine's latest_scan.json,
+        loaded by _load_latest_scan — just re-render them here (no live index scan)."""
+        self._load_latest_scan()
         self._refresh_orbvwap()
 
     # ── recording window ──────────────────────────────────────────────────────
@@ -786,52 +785,22 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         self._highlight_tab(idx)
 
     def trigger_scan(self):
-        # Autonomous: only scans live during market hours; otherwise stays in
-        # SIMULATION (last-30-day historical option data already loaded).
-        if not self.agent.is_market_open():
-            return
-        if getattr(self, "_scanning", False):
-            return
-        self._scanning = True
-        if hasattr(self, "auto_lbl"):
-            self.auto_lbl.setText("LIVE - scanning..."); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
-        self.worker = ScanWorker(self.agent)
-        self.worker.scan_complete.connect(self._on_scan)
-        self.worker.error_occurred.connect(lambda e: self.status.showMessage(f"Scan error: {e}"))
-        self.worker.start()
-
-    def _on_scan(self, signals: list):
-        self._scanning = False
-        self.last_scan_results = signals  # ALL scored stocks (ALPHA shows everything)
-
-        # Log + notify any NEW trade-ready signal (not already logged today).
-        ready = [s for s in signals if s.get("trade_ready") and self.agent.is_trading_window()]
-        new_ready = [s for s in ready if s.get("ticker") not in getattr(self, "_notified_today", set())]
-        if new_ready:
-            if not hasattr(self, "_notified_today"):
-                self._notified_today = set()
-            for s in new_ready:
-                self._notified_today.add(s["ticker"])
-                self._record_fired(s)   # persist on PM DECISIONS for the whole day
-            try:
-                self.agent.execute_signals(new_ready)  # writes trade log + fires notifications
-            except Exception as e:
-                logger.warning(f"execute_signals failed: {e}")
-
-        self._resolve_outcomes()   # close PENDING paper trades (WIN/LOSS) on the premium
+        """READ-ONLY: load the latest scan the headless engine wrote to disk and refresh
+        the display. The GUI never scans, executes, or books — engine_runner does all that."""
+        self._load_latest_scan()
         self._refresh_pm(); self._refresh_watchlist(); self._refresh_alpha(); self._refresh_log()
-        if hasattr(self, "auto_lbl"):
-            self.auto_lbl.setText("LIVE"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
 
-    def _resolve_outcomes(self):
-        """Mark PENDING paper trades WIN/LOSS by replaying the option premium."""
+    def _load_latest_scan(self):
+        """Read the engine's latest scan snapshot (results + ORB+VWAP rows) from disk."""
+        import json
         try:
-            from engine.paper_resolver import resolve_pending
-            n = resolve_pending(self.agent.trade_log)
-            if n:
-                logger.info(f"Resolved {n} paper-trade outcome(s)")
+            if _os.path.exists(LATEST_SCAN):
+                d = json.load(open(LATEST_SCAN))
+                self.last_scan_results = d.get("results", []) or []
+                self.agent.orbvwap_signals = d.get("orbvwap", []) or []
+                self._latest_scan_ts = d.get("ts")
         except Exception as e:
-            logger.warning(f"resolve outcomes failed: {e}")
+            logger.warning(f"load latest_scan failed: {e}")
 
     # ── refreshers ────────────────────────────────────────────────────────────
     @staticmethod
@@ -939,7 +908,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
                 except Exception:
                     order = None
             sym = f["ticker"].replace(".NS", "")
-            self._db_record_stock(f, order, sym)   # persist to signals.db
+            # (read-only viewer — the engine writes signals.db, the GUI only displays)
             kind = (order["instrument"] if order else f.get("instrument", ""))
             fg = QColor(GREEN) if kind == "CALL" else (QColor(RED) if kind == "PUT" else QColor(AMBER))
             if not order:
@@ -985,18 +954,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         self.pm_orbvwap.setRowCount(len(rows))
         for r, s in enumerate(rows):
             status = s.get("status", "—")
-            if s.get("entry"):  # an active/closed signal
-                try:
-                    from engine import signal_db
-                    signal_db.record_signal(
-                        time=s.get("time"), strategy="ORB+VWAP", symbol=s.get("index"),
-                        direction=s.get("direction"), opt_type=s.get("kind"),
-                        strike=s.get("strike"), expiry=s.get("expiry"),
-                        entry_premium=s.get("entry"), target_premium=s.get("target"),
-                        stop_premium=s.get("stop"), lot=s.get("lot"),
-                        capital=s.get("capital"), status=s.get("status"))
-                except Exception:
-                    pass
+            if s.get("entry"):  # an active/closed signal (engine writes signals.db; GUI displays)
                 cur = f"Rs {s['current']:.2f}" if s.get("current") else "—"
                 kind = s.get("kind", "—")
                 strike = f"{s['strike']:.2f}" if isinstance(s.get("strike"), (int, float)) else s.get("strike", "—")
@@ -1140,20 +1098,16 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
 
     # ── market data + clock ───────────────────────────────────────────────────
     def _refresh_market_data(self):
-        # Skip if a previous fetch is still in flight (avoids overlap/crash).
-        if self._mkt_running:
-            return
-        self._mkt_running = True
-        self.mkt_worker = MarketDataWorker()
-        self.mkt_worker.data_ready.connect(self._on_market_data)
-        self.mkt_worker.finished.connect(self._mkt_done)
-        self.mkt_worker.start()
-        # Adapt cadence to market state (timer may not exist on the very first call)
-        timer = getattr(self, "mkt_timer", None)
-        if timer is not None:
-            interval = 3000 if self.agent.is_market_open() else 20000
-            if timer.interval() != interval:
-                timer.setInterval(interval)
+        """READ-ONLY: render the market bar from the snapshot the engine wrote to disk
+        (no live fetch here — the headless engine owns all data fetching)."""
+        import json
+        try:
+            if _os.path.exists(MARKET_SNAP):
+                d = json.load(open(MARKET_SNAP))
+                if d.get("nifty") and d.get("banknifty") and d.get("vix"):
+                    self._on_market_data(d)
+        except Exception as e:
+            logger.warning(f"load market_snapshot failed: {e}")
 
     def _mkt_done(self):
         self._mkt_running = False
@@ -1191,28 +1145,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
         lbl.setStyleSheet(f"color:{color};")
         lbl.setToolTip(f"{name}: {d['price']:,.2f}  {chg:+,.2f} ({pct:+.2f}%)  source: {d.get('source','')}")
 
-    def _maybe_eod_book(self, now):
-        """Force-close every OPEN paper trade at end of day, Mon–Fri, exactly once a day.
-        Runs from the 1-sec clock (not the scan loop) so it ALWAYS fires. Books just after
-        the 15:30 close using the full session's premium — unless target/stop already hit."""
-        if now.weekday() >= 5:                       # Sat / Sun
-            return
-        m = now.hour * 60 + now.minute
-        if not (15 * 60 + 31 <= m <= 15 * 60 + 55):  # 15:31–15:55 window
-            return
-        if getattr(self, "_eod_booked", None) == now.date():
-            return
-        self._eod_booked = now.date()
-        logger.info("EOD daily booking — force-closing open paper trades at the 15:30 close")
-        try:
-            self._resolve_outcomes()                 # resolver force-closes (past kill switch)
-            self._refresh_log(); self._refresh_pm()
-        except Exception as e:
-            logger.warning(f"EOD booking failed: {e}")
-
     def _tick(self):
         now = datetime.now(IST)
-        self._maybe_eod_book(now)                     # daily 15:30 force-close (Mon–Fri)
+        # EOD booking is done by the headless engine, not the GUI (read-only viewer).
         is_open = self.agent.is_market_open()
         mkt = "OPEN" if is_open else "CLOSED"
         # live clock in the index bar (top-right), green when market is open
@@ -1221,13 +1156,20 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not 
             self.clock_lbl.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         mode = "LIVE" if is_open else "SIMULATION"
         # Keep the AUTO badge in sync when idle (scanning sets it to LIVE·scanning)
-        if hasattr(self, "auto_lbl") and not getattr(self, "_scanning", False):
-            if is_open:
-                self.auto_lbl.setText("LIVE - AUTO 5-min"); self.auto_lbl.setStyleSheet(f"color:{GREEN}; padding:0 14px;")
-            else:
-                self.auto_lbl.setText("SIMULATION"); self.auto_lbl.setStyleSheet(f"color:{AMBER}; padding:0 14px;")
+        # freshness of the engine's last scan (read-only viewer)
+        fresh = "no engine data yet"
+        ts = getattr(self, "_latest_scan_ts", None)
+        if ts:
+            try:
+                age = (now - datetime.fromisoformat(ts)).total_seconds()
+                fresh = f"engine scan {int(age//60)}m ago" if age >= 60 else "engine scan just now"
+            except Exception:
+                pass
+        if hasattr(self, "auto_lbl"):
+            self.auto_lbl.setText(f"READ-ONLY VIEWER  -  {fresh}")
+            self.auto_lbl.setStyleSheet(f"color:{CYAN if is_open else AMBER}; padding:0 14px;")
         if hasattr(self, "mode_label"):
-            self.mode_label.setText(f"{'LIVE' if is_open else 'SIMULATION'}  -  9:00-15:30 Mon-Fri auto-live")
+            self.mode_label.setText(f"{'MARKET OPEN' if is_open else 'MARKET CLOSED'}  -  engine runs 9:00-15:30 Mon-Fri")
             self.mode_label.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         self.status.showMessage(
             f"  {now:%a %d %b %Y · %H:%M:%S} IST   ·   MARKET {mkt}   ·   MODE {mode}   ·   "
