@@ -6,9 +6,10 @@ flags a trade when it clears **four strict gates**. Every trade is a **bought op
 (CALL/PUT) and you place the order yourself in Upstox — the software never sends
 orders. It is a process for collecting honest evidence, not a proven money-maker.
 
-> Full plain-language walkthrough is also on the **README tab** inside the dashboard.
-> The complete research story (with the mistakes) is in **`How_We_Built_The_Strategy.pdf`**
-> and the numbers are in **`BACKTEST_RESULTS.md`**.
+> Full plain-language walkthrough is on the **README tab** inside the dashboard. The
+> **current** research + backtests live in **`studies/`** (and the in-app **STUDIES tab**).
+> `How_We_Built_The_Strategy.pdf` / `BACKTEST_RESULTS.md` are the earlier build journey
+> (historical — superseded by `studies/`).
 
 ---
 
@@ -82,18 +83,18 @@ ORB+VWAP strategy.
 | Time | What happens |
 |------|--------------|
 | 08:55 | Mac wakes itself (pmset) |
-| 09:00 | App auto-launches (launchd) |
-| 09:00 | First NSE **event scrape** (then refreshed ~every 20 min to 1 PM) |
-| **09:15** | Market opens — scanning begins, ALPHA fills |
+| always-on | **Engine** daemon runs (launchd KeepAlive) — independent of the app |
+| 09:00 | **Viewer** (read-only dashboard) auto-launches; first NSE **event scrape** (then ~every 20 min to 1 PM) |
+| **09:15** | Market opens — engine starts scanning, ALPHA fills |
 | 09:15–09:45 | Wildest part of the day — watch only |
 | **09:45** | Trading window opens |
-| every 5 min | Re-scan NIFTY + BANKNIFTY + 94 stocks (~0.6–2.7 sec) |
+| every 5 min | Engine re-scans NIFTY + BANKNIFTY + 94 stocks (~0.6–2.7 sec) |
 | **13:00** | No new trades after 1 PM |
 | **15:10** | Kill switch — exit guideline (don't hold into the last 20 min) |
 | **15:30** | Market closes — **every OPEN paper trade is force-booked WIN/LOSS at the close** (Mon–Fri) |
 
-In practice nothing fires before ~11:30 AM (scores need an hour of data); signals
-cluster **12:30–1 PM**.
+Signals are selective — **~1–2 a day** (365-day study: ~1.7/day), many days none. The
+directional edge is strongest **10:30–11:00** and thins through the afternoon.
 
 ---
 
@@ -218,7 +219,7 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 > out-of-sample — after costs it is roughly **breakeven**, not a money-maker. It runs live
 > to **forward-test** it, not because it is proven. The trend-ride fix stops the *bleeding*
 > (the −2.6%/trade the fixed target was costing); it does not make the index a profit engine. Full
-> study: [`studies/WIN_RATE_RESEARCH_LOG.md`](studies/WIN_RATE_RESEARCH_LOG.md).
+> study: [`studies/INDEX_TREND_RIDE_EXIT.md`](studies/INDEX_TREND_RIDE_EXIT.md).
 
 ---
 
@@ -235,19 +236,20 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 
 ## Refresh Cadence & Latency
 
-How often each piece updates and how fresh the data is:
+The **engine** does the work and writes to disk; the read-only **viewer** re-reads disk
+every 15 s. Engine cadence and data freshness:
 
-| Component | Recompute cadence | Data freshness |
+| Component | Recompute cadence (engine) | Data freshness |
 |-----------|-------------------|----------------|
-| **Full scan** (3 families, 94 stocks + 2 indices) | **every 5 min** (`scan_timer`) | — |
+| **Full scan** (3 families, 94 stocks + 2 indices) | **every 5 min** (engine wakes every 5 s) | — |
 | **TREND** | every 5 min | live 5-min candles · daily EMA cached per day |
 | **FLOW** | every 5 min | option chain cached **~10 min** (`options_flow._TTL`) → OI/PCR ≤10 min old |
 | **EVENT** | score read every 5 min | NSE scrape at **startup + ~every 20 min, 9 AM–1 PM** → sentiment ≤1 hour old |
 | **ORB+VWAP index** | every 5 min | futures intraday (live, 5-min bars) |
-| **Market header** (NIFTY/BANKNIFTY/VIX) | **every 3 sec** (`mkt_timer`) | live LTP → 5-min candle → prev close |
-| Clock / status | every 1 sec | — |
+| **Market snapshot** (NIFTY/BANKNIFTY/VIX) | **every ~5 sec** (engine writes `market_snapshot.json`) | live LTP → 5-min candle → prev close |
+| Viewer display | re-reads disk every **15 s** | shows whatever the engine last wrote |
 
-**System update latency** (measured, full universe, 12 parallel workers):
+**Scan latency** (measured, full universe, 16 parallel workers):
 
 | Step | Time |
 |------|------|
@@ -257,9 +259,9 @@ How often each piece updates and how fresh the data is:
 | **Full 94-stock scan — warm cache** | **~0.6 sec** |
 | Sequential (no parallelism) | ~43 sec |
 
-**Bottom line:** signal granularity = the **5-min candle**; a new signal surfaces within **≤5 min**
-of forming, and the scan compute itself is **0.6–2.7 sec**. Header is near-real-time (3 sec). Options
-flow is ≤10 min old; events ≤1 hour old.
+**Bottom line:** signal granularity = the **5-min candle**; the engine surfaces a new signal
+within seconds of the 5-min mark; the viewer shows it within ≤15 s. Options flow is ≤10 min
+old; events ≤1 hour old.
 
 ---
 
@@ -335,9 +337,10 @@ engine/
   api_diagnostics.py / signal_frequency.py / backtest120.py / option_live_backtest.py
 main.py                viewer launcher
 deploy/                launchd plists (engine + viewer)
-How_We_Built_The_Strategy.pdf   teaching casebook (with the mistakes)
-BACKTEST_RESULTS.md             every backtest run, honestly documented
-studies/                        research log (8 studies) + reproducible study scripts
+setup.sh / .env.example         one-shot install from a fresh clone
+CLAUDE.md                       project context + setup for Claude Code
+studies/                        CURRENT research log (8 studies) + reproducible scripts
+How_We_Built_The_Strategy.pdf / BACKTEST_RESULTS.md   historical build journey (superseded by studies/)
 data/engine.db                  SQLite: every scan (gate state) + market snapshot, daily
 data/signals.db                 SQLite log of all PM signals (gitignored)
 data/trade_log.json             paper-trade outcomes (gitignored)
