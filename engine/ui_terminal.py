@@ -643,30 +643,38 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    f"(that is what makes win rate ~58–61%), while the wider −{int(C.PREMIUM_STOP_PCT)}% avoids being stopped "
    f"by noise. (Removing the cap was tested — worse, higher-variance — so it stays.)")}
 
-{h("STEP 3b — THE INDEX STRATEGY (NIFTY &amp; BANKNIFTY), explained")}
-{p("This is a <b>completely separate, parallel</b> strategy from the stock system above. It does NOT use "
-   "alpha-z or the 3 families — the 4 gates do not apply to it. It is a classic intraday "
-   "<b>Opening-Range Breakout + VWAP</b> momentum play, run only on the two indices, shown in its own "
-   "INDEX OPTIONS section on PM DECISIONS.")}
-{sub("How a signal forms (the entry)")}
-{p("1. <b>Opening range</b> = the high/low of the first 15 minutes (3× 5-min candles, 9:15–9:30).")}
-{p("2. <b>Breakout + VWAP</b> = price closes <i>above</i> the range high AND holds above VWAP → LONG "
-   "(mirror for SHORT). VWAP needs volume, and the spot index reports none on Upstox, so the VWAP line is "
-   "computed from the index <b>FUTURES</b> feed — but only OPTIONS are ever traded.")}
-{p(f"3. <b>Filters (why):</b> must agree with the 30-min trend; a <b>clean-trend</b> filter (VWAP sloped the "
-   f"trade's way + price &gt;0.25% extended) cuts chop; entries only <b>before 11:00 AM</b> (the move needs "
-   f"the morning); <b>skip 0-DTE</b> expiry days (premium spikes); one signal per index per day.")}
-{sub("What you buy &amp; how it exits")}
-{p(f"Buy the <b>ATM</b> CALL (LONG) or PUT (SHORT). Exit = <b>TREND-RIDE</b>: let the winner run; exit only "
+{h("STEP 3b — THE INDEX STRATEGY (NIFTY &amp; BANKNIFTY) — full logic")}
+{p("A <b>completely separate, parallel</b> strategy from the stock system. It does NOT use alpha-z, the 3 "
+   "families, or the 4 gates. It is an intraday <b>Opening-Range Breakout + VWAP</b> momentum play on the "
+   "two indices, in its own INDEX OPTIONS section on PM DECISIONS. (`engine/orb_vwap_live.py`)")}
+{sub("Entry — a signal fires only when ALL of these line up")}
+{p("<b>1. Opening range</b> = high/low of the first 15 min (first 3 × 5-min candles, 9:15–9:30).")}
+{p("<b>2. Breakout</b> = the latest 5-min close is <b>&gt;0.07% beyond</b> the range — above the high → "
+   "LONG, below the low → SHORT.")}
+{p("<b>3. VWAP</b> = the close must also be on the breakout side of VWAP. VWAP needs volume and the spot "
+   "index reports none on Upstox, so it is computed from the index <b>FUTURES</b> feed — but only OPTIONS "
+   "are ever traded.")}
+{p(f"<b>4. 30-min trend</b> = the close must be beyond where it was {C.ORB_VWAP_TREND_BARS} × 5-min = "
+   f"<b>30 min ago</b>. <i>This is the index's OWN trend agreeing — NOT the stocks' cross-market "
+   f"alignment gate (that does not apply here, since BankNifty almost always already moves with Nifty).</i>")}
+{p("<b>5. Clean-trend filter</b> = VWAP must be sloping the trade's way (rising over the last 3 bars for a "
+   "LONG) <b>and</b> price already <b>&gt;0.25% extended</b> from the open — cuts chop and false breaks.")}
+{p(f"<b>Plus:</b> entries only <b>before {C.ORB_VWAP_ENTRY_CUTOFF}</b> (the move needs the morning), "
+   f"<b>skip 0-DTE</b> expiry days (premium spikes), <b>one signal per index per day</b>.")}
+{sub("What you buy &amp; the exit")}
+{p(f"Buy the <b>ATM</b> CALL (LONG) / PUT (SHORT). <b>Exit = TREND-RIDE:</b> ride the winner; exit only "
    f"when the futures <b>reclaim VWAP</b> after the trade is already +{int(C.ORB_VWAP_ARM_PCT)}% in profit; "
    f"a <b>hard −{int(C.ORB_VWAP_STOP_PCT)}% premium stop</b> throughout; otherwise square off at the close. "
-   f"Live status on PM DECISIONS: WATCHING → ● RIDING → EXITED VWAP / STOPPED −{int(C.ORB_VWAP_STOP_PCT)}%.")}
-{p("<b>Why trend-ride (not a fixed target)?</b> An ORB breakout is a <i>trend</i> setup. The old fixed "
-   "+20% target capped the winners while still taking full −20% stops — backwards — and it <b>bled −2.6%/"
-   "trade</b>. Switching to ride-the-winner fixed it: <b>27% → 63% win</b> over 60 days.")}
-{dim("Capital per lot: Nifty ATM ~Rs8k, BankNifty ~Rs17k. Honest status: even fixed, the index is only "
-     "~breakeven gross and fragile out-of-sample — it runs to FORWARD-TEST, not because it is proven. "
-     "Full study: the STUDIES tab (Index Trend-Ride Exit).")}
+   f"Live status: WATCHING → ● RIDING → EXITED VWAP / STOPPED −{int(C.ORB_VWAP_STOP_PCT)}%.")}
+{sub("Why these choices + what the backtest said")}
+{p("<b>Why trend-ride (not a fixed target)?</b> An ORB break is a <i>trend</i> setup — the old fixed +20% "
+   "target capped winners while still taking full −20% stops (backwards), and it <b>bled −2.6%/trade</b>. "
+   "Riding the winner fixed it. We backtested it 30 &amp; 60 days (`studies/INDEX_TREND_RIDE_EXIT.md`):")}
+{p("&nbsp;&nbsp;<b>30-day:</b> 65% win, +1.2%/trade &nbsp;·&nbsp; <b>60-day:</b> 63% win, +0.8%/trade "
+   "&nbsp;(both GROSS) &nbsp;·&nbsp; the fix took win rate <b>27% → 63%</b>.")}
+{dim("Capital per lot: Nifty ATM ~Rs8k, BankNifty ~Rs17k. <b>Honest:</b> those are GROSS — net of costs it "
+     "is roughly <b>breakeven</b>, fragile out-of-sample, and runs as a <b>FORWARD-TEST</b>, not because it "
+     "is proven. The big win was fixing the EXIT, not the trend filter (which was always there).")}
 
 {h("STEP 4 — How it runs (engine vs viewer), and why split")}
 {p("The <b>engine</b> (headless, launchd <b>…institutionaltrader.engine</b>, always on) does ALL the work — "
