@@ -569,10 +569,13 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
      "separate parallel ORB+VWAP strategy. You place every order yourself in Upstox — the system "
      "never sends orders. It is a process for collecting honest evidence, not a proven money-maker.")}
 
-{p(f"<b>Current mode:</b> SIMULATION (paper) · <b>OPTIONS-ONLY, BUY-ONLY</b>. <b>Recording:</b> {rec}.")}
-{p(f"<b>Tuned config:</b> STOCKS — BUY OTM+1 · +{int(C.PREMIUM_TARGET_PCT)}% / −{int(C.PREMIUM_STOP_PCT)}% on premium · "
-   f"cutoff 1 PM · {len(C.UNIVERSE)} stocks. &nbsp; INDEX — ORB+VWAP · BUY ATM · "
-   f"+{int(C.ORB_VWAP_TARGET_PCT)}% / −{int(C.ORB_VWAP_STOP_PCT)}% · NIFTY &amp; BANKNIFTY.")}
+{p("<b>Mode:</b> PAPER — <b>BUY OPTIONS ONLY</b>. The system never sells options and never "
+   "places orders; the headless engine fires signals and records every one to the local DB + "
+   "trade log <b>daily</b>, and <b>you</b> place the order manually in Upstox.")}
+{p(f"<b>Live config:</b> &nbsp; STOCKS — buy OTM+1, exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / "
+   f"−{int(C.PREMIUM_STOP_PCT)}%</b> on premium, {len(C.UNIVERSE)} stocks, 4 gates. &nbsp; "
+   f"INDEX (NIFTY/BANKNIFTY) — ORB+VWAP, buy ATM, <b>trend-ride exit</b> (VWAP reclaim after "
+   f"+{int(C.ORB_VWAP_ARM_PCT)}%, hard −{int(C.ORB_VWAP_STOP_PCT)}% stop).")}
 {p(f"<b style='color:{AMBER}'>Status (current config — 4 gates):</b> 60-day option backtest "
    f"<b>61% win</b>, <b>+Rs36,792</b> (+2.8% on deployed capital, 1 lot, GROSS); 30-day 58% / +Rs13,114. "
    f"The 365-day directional test holds at <b>~52%</b> (aligned). Net of brokerage + STT + spread it is "
@@ -666,12 +669,19 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    "0 = average · +1 = clearly bullish · −1 = clearly bearish · ±2 = extreme.")}
 {p("We blend them into one number, the <b>alpha-z</b>, as a weighted average:")}
 {p(f"<b style='color:{CYAN}'>alpha-z = Σ(family z × family weight) ÷ Σ(weights)</b>")}
+{dim(f"Live weights (from config, always sum to 1.0): "
+     f"<b>TREND {C.FAMILY_WEIGHTS['TREND']['weight']}</b> · "
+     f"<b>FLOW {C.FAMILY_WEIGHTS['FLOW']['weight']}</b> · "
+     f"<b>EVENT {C.FAMILY_WEIGHTS['EVENT']['weight']}</b>. TREND dominates by design; EVENT is "
+     f"down-weighted (news is sparse and crudely scored).")}
 {sub("Worked example — a stock reading bearish")}
-{dim("TREND z = −0.9 (weight 0.65) · FLOW z = −0.6 (weight 0.17) · EVENT z = +0.2 (weight 0.18)")}
-{dim("top = (−0.9×0.65) + (−0.6×0.17) + (0.2×0.18) = −0.585 − 0.102 + 0.036 = −0.651")}
-{dim("bottom = 0.65 + 0.17 + 0.18 = 1.00  →  alpha-z = −0.65")}
-{p("Reading it: negative = bearish; size 0.65 is above the 0.55 bar; 2 of 3 families agree SHORT → "
-   "it PASSES Gate 1. Sign = direction, size = conviction.")}
+{dim(f"TREND z = −0.9 (×{C.FAMILY_WEIGHTS['TREND']['weight']}) · FLOW z = −0.6 "
+     f"(×{C.FAMILY_WEIGHTS['FLOW']['weight']}) · EVENT z = +0.2 (×{C.FAMILY_WEIGHTS['EVENT']['weight']})")}
+{dim(f"alpha-z = (−0.9×{C.FAMILY_WEIGHTS['TREND']['weight']} − 0.6×{C.FAMILY_WEIGHTS['FLOW']['weight']} "
+     f"+ 0.2×{C.FAMILY_WEIGHTS['EVENT']['weight']}) ÷ {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f} = "
+     f"<b>{(-0.9*C.FAMILY_WEIGHTS['TREND']['weight'] - 0.6*C.FAMILY_WEIGHTS['FLOW']['weight'] + 0.2*C.FAMILY_WEIGHTS['EVENT']['weight'])/sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}</b>")}
+{p(f"Reading it: negative = bearish; its size is above the {C.ALPHA_Z_THRESHOLD} bar; 2 of 3 "
+   "families agree SHORT → it PASSES Gate 1. Sign = direction, size = conviction.")}
 
 {h("6 · THE GATES")}
 {sub("GATE 1 — Alpha Gate (strong enough + broad enough?)")}

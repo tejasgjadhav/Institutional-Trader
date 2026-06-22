@@ -40,7 +40,7 @@ token (read-only data feed — no trading token needed).
 
 ## Strategy (what the gates do)
 
-**3-Family stocks** → alpha-z (TREND 0.65 + FLOW 0.17 + EVENT 0.18), then 4 gates:
+**3-Family stocks** → alpha-z (TREND 0.72 + FLOW 0.18 + EVENT 0.10), then 4 gates:
 1. **Alpha** — |alpha-z| > 0.55 AND ≥2/3 families agree.
 2. **ORB** — latest 5-min candle breaks the opening range with a volume surge.
 3. **Market alignment** — only LONG when Nifty up / SHORT when Nifty down (`MARKET_ALIGN_FILTER`).
