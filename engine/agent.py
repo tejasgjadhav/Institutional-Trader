@@ -215,7 +215,10 @@ class Agent:
         ix_pool = ThreadPoolExecutor(max_workers=1)
         ix_future = None
         try:
-            from engine.orb_vwap_live import scan_index_orbvwap
+            from engine.orb_vwap_live import scan_index_orbvwap, prefetch_index_futures
+            # Warm the index futures cache FIRST (clean API access, ~0.4s parallel) so the
+            # index scan doesn't compete with the 94-stock + options-flow storm below.
+            prefetch_index_futures()
             ix_future = ix_pool.submit(scan_index_orbvwap)
         except Exception as e:
             logger.warning(f"ORB+VWAP submit failed: {e}")

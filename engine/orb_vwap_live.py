@@ -191,32 +191,53 @@ def _build_row(index: str, direction: str, ets, fut_spot: float,
     }
 
 
-_FUT_DF_CACHE = {"date": None, "df": {}}   # index -> last good futures 5-min frame (today)
+_FUT_DF_CACHE = {"date": None, "df": {}}   # index -> (df, fetched_at_monotonic)
+_FUT_FRESH_SECS = 90                         # reuse a frame fetched within the last 90 s
 
 
-def _fetch_futures(index: str, fkey: str) -> pd.DataFrame:
-    """Fetch the index FUTURES 5-min intraday with retry, and fall back to the last good
-    fetch from today if a transient rate-limit/timeout returns empty. The index scan competes
-    with ~94 stock + options-flow calls each cycle, so an occasional 429 shouldn't wipe the
-    live detection (which used to flip the row to 'WATCHING — no data yet')."""
+def _fetch_futures(index: str, fkey: str, allow_cache: bool = True) -> pd.DataFrame:
+    """Fetch the index FUTURES 5-min frame with retry + last-good fallback.
+
+    The index scan competes with ~94 stock + options-flow calls each cycle, so an occasional
+    429/timeout shouldn't wipe live detection. To AVOID that competition entirely,
+    prefetch_index_futures() warms this cache up front (clean API access); _detect then reuses
+    the just-fetched frame instead of fetching again mid-storm. Minimal latency: one prefetch
+    per scan, in parallel, before the stock pool starts."""
     today = datetime.now(IST).date()
     if _FUT_DF_CACHE["date"] != today:
         _FUT_DF_CACHE.update(date=today, df={})
+    # fast path: a frame fetched seconds ago (the pre-scan prefetch) — reuse it, no new call
+    if allow_cache and index in _FUT_DF_CACHE["df"]:
+        df, ts = _FUT_DF_CACHE["df"][index]
+        if (time.monotonic() - ts) < _FUT_FRESH_SECS and not df.empty:
+            return df
     for attempt in range(3):
         try:
             df = fetch_upstox_intraday(fkey, 5)
             if not df.empty and len(df) >= 4:
-                _FUT_DF_CACHE["df"][index] = df
+                _FUT_DF_CACHE["df"][index] = (df, time.monotonic())
                 return df
         except Exception as e:
             logger.warning(f"futures fetch {index} attempt {attempt+1} failed: {e}")
         time.sleep(0.4)
     # all attempts empty/failed -> reuse today's last good frame if we have one
     cached = _FUT_DF_CACHE["df"].get(index)
-    if cached is not None and not cached.empty:
-        logger.info(f"futures fetch {index}: using last good frame ({len(cached)} bars)")
-        return cached
+    if cached is not None and not cached[0].empty:
+        logger.info(f"futures fetch {index}: using last good frame ({len(cached[0])} bars)")
+        return cached[0]
     return pd.DataFrame()
+
+
+def prefetch_index_futures() -> None:
+    """Warm the futures cache for both indices UP FRONT — called at the very start of a scan,
+    before the 94-stock storm — so the index scan gets clean API access (no rate competition).
+    Runs the 2 fetches in parallel (~0.4 s) and forces a fresh fetch (allow_cache=False)."""
+    from concurrent.futures import ThreadPoolExecutor
+    keys = [(idx, _near_future_key(idx)) for idx in _INDEXES]
+    with ThreadPoolExecutor(max_workers=max(1, len(keys))) as ex:
+        for idx, fk in keys:
+            if fk:
+                ex.submit(_fetch_futures, idx, fk, False)
 
 
 def _detect(index: str) -> dict:
