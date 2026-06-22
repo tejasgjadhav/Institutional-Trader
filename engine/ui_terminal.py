@@ -876,27 +876,53 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         except Exception:
             pass
 
+    def _today_index_signals(self):
+        """Today's ORB+VWAP signals from signals.db — PERSISTENT (survives engine restart
+        and the 11:00 entry cutoff), so a fired NIFTY/BANKNIFTY signal stays on PM all day."""
+        out = {}
+        try:
+            import sqlite3
+            db = _os.path.join(DATA_DIR, "signals.db")
+            if not _os.path.exists(db):
+                return out
+            con = sqlite3.connect(db)
+            today = datetime.now(IST).date().isoformat()
+            cols = ["time", "symbol", "direction", "opt_type", "strike", "expiry",
+                    "entry_premium", "stop_premium", "lot", "status"]
+            for row in con.execute(
+                    f"SELECT {','.join(cols)} FROM pm_signals WHERE date=? AND strategy='ORB+VWAP'",
+                    (today,)):
+                d = dict(zip(cols, row))
+                out[d["symbol"]] = d            # latest row per index (UNIQUE constraint)
+            con.close()
+        except Exception as e:
+            logger.warning(f"index signals read failed: {e}")
+        return out
+
     def _refresh_orbvwap(self):
-        """Render the parallel ORB+VWAP index strategy rows on PM DECISIONS."""
-        rows = getattr(self.agent, "orbvwap_signals", []) or []
-        self.pm_orbvwap.setRowCount(len(rows))
-        for r, s in enumerate(rows):
-            status = s.get("status", "—")
-            if s.get("entry"):  # an active/closed signal (engine writes signals.db; GUI displays)
-                cur = f"Rs {s['current']:.2f}" if s.get("current") else "—"
-                kind = s.get("kind", "—")
-                strike = f"{s['strike']:.2f}" if isinstance(s.get("strike"), (int, float)) else s.get("strike", "—")
-                exit_cell = s.get("exit_rule") or (f"Rs {s['target']:.2f}"
-                                                   if s.get("target") else "VWAP-break")
-                vals = [s.get("time", "—"), s.get("index", "—"), kind,
-                        strike, s.get("expiry", "—"),
-                        f"Rs {s['entry']:.2f}", exit_cell,
-                        f"Rs {s['stop']:.2f}", cur, s.get("lot", "—"), status]
-                # CALL = green, PUT = red — so the option type is obvious at a glance
+        """Index ORB+VWAP rows on PM DECISIONS. A FIRED signal persists for the whole day
+        (from signals.db); an index with no signal yet shows the live WATCHING placeholder."""
+        live = {s.get("index"): s for s in (getattr(self.agent, "orbvwap_signals", []) or [])}
+        fired = self._today_index_signals()
+        indices = ["NIFTY", "BANKNIFTY"]
+        self.pm_orbvwap.setRowCount(len(indices))
+        for r, idx in enumerate(indices):
+            rec = fired.get(idx)
+            if rec and rec.get("entry_premium"):     # a real fired signal today — persist it
+                kind = rec.get("opt_type") or "—"
+                strike = f"{rec['strike']:.2f}" if isinstance(rec.get("strike"), (int, float)) else "—"
+                entry = f"Rs {rec['entry_premium']:.2f}"
+                stop = f"Rs {rec['stop_premium']:.2f}" if rec.get("stop_premium") else "—"
+                lr = live.get(idx) or {}
+                cur = f"Rs {lr['current']:.2f}" if lr.get("current") else "—"
+                vals = [rec.get("time", "—"), idx, kind, strike, rec.get("expiry", "—"),
+                        entry, "VWAP-break · -20%", stop, cur, rec.get("lot", "—"),
+                        rec.get("status", "—")]
                 fg = QColor(GREEN) if kind == "CALL" else QColor(RED)
-            else:  # watching / skip / no-data placeholder
-                vals = [datetime.now(IST).strftime("%H:%M"), s.get("index", "—"),
-                        "—", "—", "—", "—", "—", "—", "—", "—", status]
+            else:                                     # no signal yet — live placeholder
+                lr = live.get(idx, {})
+                vals = [datetime.now(IST).strftime("%H:%M"), idx, "—", "—", "—", "—", "—",
+                        "—", "—", "—", lr.get("status", "WATCHING")]
                 fg = QColor(TEXT_DIM)
             self._set_row(self.pm_orbvwap, r, vals, fg=fg)
         self._fit_table(self.pm_orbvwap)
