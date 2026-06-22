@@ -547,9 +547,6 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 
     def _readme_html(self) -> str:
         from engine import config as C
-        rec = ("ON — today is one of the last 5 trading days, so signals are being recorded"
-               if self.recording_mode else
-               "OFF — today is outside the last-5-day window, so the system observes only")
 
         def h(t):   # section header
             return f'<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:18px;">{t}</p>'
@@ -563,241 +560,110 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
         return f"""
 <div style="color:{TEXT};">
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — 3-Family Alpha · NSE Intraday Options</p>
-{dim("A disciplined paper-trading framework. The 3-Family system scans 95 NSE stocks all day and "
-     "only flags a trade when it clears four strict gates; NIFTY &amp; BANKNIFTY are handled by a "
-     "separate parallel ORB+VWAP strategy. You place every order yourself in Upstox — the system "
-     "never sends orders. It is a process for collecting honest evidence, not a proven money-maker.")}
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — NSE Intraday Options (paper)</p>
+{dim("Read top-to-bottom — it follows the real decision flow: how a stock becomes a SCORE, how the "
+     "score must clear four GATES, what you then TRADE, and how it all RUNS. Every step says WHY.")}
 
-{p("<b>Mode:</b> PAPER — <b>BUY OPTIONS ONLY</b>. The system never sells options and never "
-   "places orders; the headless engine fires signals and records every one to the local DB + "
-   "trade log <b>daily</b>, and <b>you</b> place the order manually in Upstox.")}
-{p(f"<b>Live config:</b> &nbsp; STOCKS — buy OTM+1, exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / "
-   f"−{int(C.PREMIUM_STOP_PCT)}%</b> on premium, {len(C.UNIVERSE)} stocks, 4 gates. &nbsp; "
-   f"INDEX (NIFTY/BANKNIFTY) — ORB+VWAP, buy ATM, <b>trend-ride exit</b> (VWAP reclaim after "
-   f"+{int(C.ORB_VWAP_ARM_PCT)}%, hard −{int(C.ORB_VWAP_STOP_PCT)}% stop).")}
-{p(f"<b style='color:{AMBER}'>Status (current config — 4 gates):</b> 60-day option backtest "
-   f"<b>61% win</b>, <b>+Rs36,792</b> (+2.8% on deployed capital, 1 lot, GROSS); 30-day 58% / +Rs13,114. "
-   f"The 365-day directional test holds at <b>~52%</b> (aligned). Net of brokerage + STT + spread it is "
-   f"roughly <b>BREAKEVEN</b> — a thin, ~52-61% directional edge, NOT proven profitable. A 30+ session "
-   f"forward paper-test is the only honest judge. (Full evidence: the <b>STUDIES</b> tab.)")}
+{p("<b>Mode:</b> PAPER — <b>BUY OPTIONS ONLY</b>. Never sells, never auto-places orders. The headless "
+   "engine fires signals and records each one to the local DB + trade log <b>daily</b>; <b>you</b> place "
+   "the order manually in Upstox.")}
+{p(f"<b style='color:{AMBER}'>Honest status:</b> 60-day backtest <b>61% win, +Rs36,792</b> (+2.8% on "
+   f"capital, 1 lot, GROSS); 30-day 58%; 365-day directional <b>~52%</b>. Net of brokerage + STT + spread "
+   f"it is roughly <b>BREAKEVEN</b> — a thin, real-but-small edge, <b>not proven profitable</b>. The "
+   f"forward paper month is the only honest judge. Full evidence: the <b>STUDIES</b> tab.")}
 
-{h("1 · WHAT IT DOES (in one breath)")}
-{p("Every 5 minutes during market hours it: (1) pulls fresh prices from Upstox, "
-   "(2) gives each stock a single score called <b>alpha-z</b>, then runs four gates — strong &amp; "
-   "broad enough (Gate 1), breaking out now (Gate 2), aligned with the Nifty (Gate 3), not already "
-   "over-extended (Gate 4). If all four pass, the stock appears on <b>PM DECISIONS</b> with exact "
-   "entry, stop, target and quantity.")}
+{h("THE BIG IDEA — why it is built this way")}
+{p("Intraday direction is close to a coin flip — you cannot reliably <i>predict</i> the next move, so "
+   "this system doesn't try. It does the two things you CAN do: <b>filter hard</b> (act only on the "
+   "cleanest setups) and <b>cap risk</b> (buy options, so the worst case is the premium paid). The edge — "
+   "if any — comes from <b>selectivity</b>, not forecasting. Everything below is a filter.")}
 
-{h("1b · PARALLEL STRATEGY — ORB+VWAP INDEX (forward-test)")}
-{p("Running ALONGSIDE the stock system is a second, independent strategy on NIFTY &amp; BANKNIFTY "
-   "<b>index options only</b>. Each scan it checks a 15-min Opening-Range Breakout confirmed by VWAP and "
-   "the 30-min trend plus a clean-trend filter (entries before 11 AM, skipping 0-DTE expiry-day spikes), "
-   "buys the <b>ATM</b> CALL/PUT, and rides it with a <b>trend-ride exit</b> (exit on VWAP reclaim after "
-   "+12%, hard -20% stop, else square off at close). It shows in its own INDEX OPTIONS section on "
-   "<b>PM DECISIONS</b> with a live status: WATCHING -&gt; RIDING -&gt; EXITED VWAP / STOPPED -20%.")}
-{dim("VWAP needs volume and the spot index reports none on Upstox, so the VWAP line is drawn from the index "
-     "FUTURES feed — but nothing except OPTIONS is ever traded. Honest note: Apr–Jun 2026 backtests show this "
-     "is roughly breakeven (NIFTY −0.5%, BANKNIFTY +0.3%); it runs live to FORWARD-TEST it, not because it is "
-     "proven. Full study: studies/WIN_RATE_RESEARCH_LOG.md.")}
+{h("STEP 1 — Turn each stock into ONE number: alpha-z")}
+{p("<b>Why one number?</b> Many weak signals are easier to gate as a single <b>conviction</b> score — "
+   "<b>sign = direction</b> (+ long / − short), <b>size = conviction</b>. It is a weighted blend of 3 "
+   "<b>families</b> (grouped so correlated signals can't fake breadth):")}
+{p(f"<b style='color:{GREEN}'>TREND ({C.FAMILY_WEIGHTS['TREND']['weight']})</b> — momentum + EMA trend + "
+   "opening-range break. <b>Why biggest:</b> trend/momentum is the only family that held an edge in testing.")}
+{p(f"<b style='color:{CYAN}'>FLOW ({C.FAMILY_WEIGHTS['FLOW']['weight']})</b> — live per-stock option flow "
+   "(OI buildup + PCR trend). <b>Why:</b> an independent read of what option writers are positioning for.")}
+{p(f"<b style='color:{AMBER}'>EVENT ({C.FAMILY_WEIGHTS['EVENT']['weight']})</b> — NSE news, keyword-scored. "
+   "<b>Why tiny:</b> news is sparse and the scoring is crude — it nudges, it never decides.")}
+{p(f"<b style='color:{CYAN}'>alpha-z = Σ(family z × weight) ÷ Σ(weights)</b> &nbsp;(weights read live from "
+   f"config, sum = {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}).")}
+{dim(f"Example (bearish): TREND −0.9, FLOW −0.6, EVENT +0.2 → "
+     f"(−0.9×{C.FAMILY_WEIGHTS['TREND']['weight']} − 0.6×{C.FAMILY_WEIGHTS['FLOW']['weight']} "
+     f"+ 0.2×{C.FAMILY_WEIGHTS['EVENT']['weight']}) ÷ {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f} "
+     f"= <b>{(-0.9*C.FAMILY_WEIGHTS['TREND']['weight'] - 0.6*C.FAMILY_WEIGHTS['FLOW']['weight'] + 0.2*C.FAMILY_WEIGHTS['EVENT']['weight'])/sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}</b> (short).")}
+{dim("Honest limitation: because EVENT rarely fires, in practice alpha-z is mostly TREND + FLOW — a "
+     "momentum signal with a flow tilt, not three equal voices. (A 4th mean-reversion family was removed: "
+     "it won only 47.6%.)")}
 
-{h("2 · THE DAILY CLOCK (all times IST)")}
-{p(f"<b>08:55</b> &nbsp; Mac wakes up automatically")}
-{p(f"<b>09:00</b> &nbsp; App auto-launches")}
-{p(f"<b>{C.MARKET_OPEN}</b> &nbsp; Market opens — scanning begins, ALPHA + WATCHLIST fill up")}
-{p(f"<b>09:15–{C.TRADING_START}</b> &nbsp; First 30 min is the wildest part of the day — we only watch, no trades")}
-{p(f"<b>{C.TRADING_START}</b> &nbsp; Trading window opens — confirmed signals become real PM DECISIONS")}
-{p(f"<b>every 5 min</b> &nbsp; Re-scan NIFTY + BANKNIFTY + 95 stocks (parallel, batched, cached — a few sec)")}
-{dim("Signals are SELECTIVE — ~1-2 a day on average (365-day study: ~1.7/day, ~416/year), and "
-     "many days have none. The edge concentrates late-morning (10:30-11:00 is the strongest window); "
-     "the afternoon thins out. Blank days are normal — the gates only fire on clean setups.")}
-{p(f"<b>{C.NO_NEW_TRADES_AFTER}</b> &nbsp; No new trades after this (afternoon is thin)")}
-{p(f"<b>{C.KILL_SWITCH_TIME}</b> &nbsp; Kill-switch guideline — don't hold into the volatile last 20 min")}
-{p(f"<b>{C.MARKET_CLOSE}</b> &nbsp; Market closes — <b>every OPEN paper trade is force-booked WIN/LOSS at the close</b> "
-   "(Mon–Fri, daily), unless its +target/−stop already hit. Then the trade log shows the day's result.")}
-{p(f"<b>{C.BACKTEST_REFRESH_TIME}</b> &nbsp; Re-rank the tradeable universe on the latest {C.BACKTEST_LOOKBACK_DAYS}-day history")}
+{h("STEP 2 — Four gates (each removes a known way to lose)")}
+{sub("Gate 1 · Alpha — strong AND broad?")}
+{p(f"Require |alpha-z| &gt; <b>{C.ALPHA_Z_THRESHOLD}</b> AND <b>≥{C.MIN_FAMILIES_AGREE} of 3</b> families "
+   f"agree. <b>Why:</b> one noisy family shouldn't trigger a trade — demand both conviction and agreement. "
+   f"Passing lands the stock on the <b>WATCHLIST</b>.")}
+{sub("Gate 2 · ORB breakout + volume — is it happening NOW?")}
+{p("The latest 5-min candle must break the opening range (with a volume surge), same direction as the "
+   "score. <b>Why:</b> a score can be right but early — require the move to actually start before paying.")}
+{sub("Gate 3 · Market alignment — don't fight the tape")}
+{p("Only <b>LONG when Nifty is up</b>, <b>SHORT when Nifty is down</b>. <b>Why:</b> the biggest losers came "
+   "from trades fighting the index. <i>Evidence: 60-day P&amp;L +Rs17k → +Rs31k (~2×) by cutting the trend-fighters.</i>")}
+{sub("Gate 4 · Don't chase — already over-extended?")}
+{p(f"Skip if the stock already moved &gt; <b>{C.MAX_ENTRY_EXTENSION_PCT}%</b> in the trade's direction from "
+   f"the open. <b>Why:</b> buying an already-run stock is buying the top. <i>Evidence (365 days): "
+   f"over-extended entries won ~45% vs ~55%; same profit on fewer trades.</i>")}
+{p("All four pass → <b>PM DECISIONS</b>. The <b>WATCHLIST</b> tab shows each candidate's live gate "
+   "progress (PASS / wait, e.g. <b>3/4 next: align</b>), sorted closest-to-firing on top.")}
 
-{h("2b · REFRESH CADENCE & LATENCY (how fresh each number is)")}
-{p("<b>Full scan — every 5 minutes.</b> All three families recompute for 94 stocks + NIFTY/BANKNIFTY "
-   "each cycle. One scan finishes in <b>~0.6–2.7 seconds</b> (16 workers + pooled keep-alive connections · "
-   "~2.7s cold, ~0.6s warm cache), so a new signal surfaces within <b>≤5 min</b> of forming. "
-   "Signal granularity = the 5-min candle.")}
-{p(f"<b style='color:{GREEN}'>TREND</b> &nbsp;recomputed every 5 min · live 5-min candles (daily EMA cached per day)")}
-{p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;recomputed every 5 min · option chain cached ~10 min, so OI/PCR is ≤10 min old")}
-{p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;score read every 5 min · NSE scrape at startup then ~every 20 min, 9 AM–1 PM, so sentiment is ≤1 hour old")}
-{p("<b>Market header</b> (NIFTY / BANKNIFTY / VIX) refreshes every <b>3 seconds</b> (live LTP, 5-min-candle fallback); the clock ticks every 1 second.")}
-{dim("Summary — header: ~3s · signals/families: 5-min · options flow: ≤10 min · events: ≤1 hour. Scan compute itself: 2–6s.")}
+{h("STEP 3 — What you trade, and why")}
+{p("Every signal is a <b>bought option</b> (never sold): <b style='color:{0}'>LONG → buy CALL</b>, "
+   "<b style='color:{1}'>SHORT → buy PUT</b>. <b>Why buy-only:</b> loss is capped at the premium, and a "
+   "small underlying move becomes a large % move on the option (leverage).".format(GREEN, RED))}
+{p(f"<b style='color:{GREEN}'>STOCKS</b> — buy <b>OTM+1</b>, exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / "
+   f"−{int(C.PREMIUM_STOP_PCT)}%</b> on the premium. <b>Why small target / wide stop:</b> premiums are "
+   f"volatile, so a quick +{int(C.PREMIUM_TARGET_PCT)}% is hit often (that is what makes win rate ~58–61%), "
+   f"while the wider −{int(C.PREMIUM_STOP_PCT)}% avoids being stopped by noise. (Removing the cap was "
+   f"tested — worse, higher-variance — so it stays.)")}
+{p(f"<b style='color:{PURPLE}'>INDEX (NIFTY/BANKNIFTY)</b> — ORB+VWAP on the index, buy <b>ATM</b>, "
+   f"<b>trend-ride exit</b>: ride the winner, exit only on a VWAP reclaim after +{int(C.ORB_VWAP_ARM_PCT)}%, "
+   f"hard −{int(C.ORB_VWAP_STOP_PCT)}% stop, else close at EOD. <b>Why trend-ride:</b> it is a trend setup; "
+   f"the old fixed +20% cap chopped winners and bled (−2.6%/trade) — riding fixed it (27% → 63% win).")}
+{dim("VWAP needs volume; the spot index reports none, so VWAP is drawn from the index FUTURES feed — but "
+     "only OPTIONS are ever traded. Capital per lot: Nifty ATM ~Rs8k, BankNifty ~Rs17k.")}
 
-{h("3 · DATA SOURCES & API SCHEDULE")}
-{sub("Upstox V3 — the primary feed (low latency)")}
-{p("• <b>Live LTP</b> (last traded price): checked continuously to watch stops & targets")}
-{p("• <b>5-min candles</b>: the heartbeat of the scan — used for breakout + volume checks every 5 min")}
-{p("• <b>Daily history</b>: ~400 days, used for trend/momentum maths and the 60-day backtest")}
-{p("• <b>Indices</b>: Nifty 50, Bank Nifty, India VIX — fetched every 5 sec for the top bar & market regime")}
-{dim("Instrument keys are ISIN-based (e.g. NSE_EQ|INE467B01029). The system auto-downloads "
-     "Upstox's instrument master and caches it for 7 days, so symbols map to keys automatically.")}
-{sub("Speed / latency")}
-{dim("LTP is fetched BATCHED (all instruments in one call, ~0.2s vs ~6s) · daily history is cached "
-     "per day · the scan runs on a 12-worker thread pool. A full 97-instrument scan finishes in a "
-     "few seconds, so prices don't drift before a signal is read. (True tick streaming needs a paid "
-     "trading token — not available on the read-only Analytics token.)")}
-{sub("Yahoo Finance — emergency fallback only")}
-{dim("Only used if the Upstox token is missing/expired. It is slower, so it is never the primary path.")}
+{h("STEP 4 — How it runs (engine vs viewer), and why split")}
+{p("The <b>engine</b> (headless, launchd <b>…institutionaltrader.engine</b>, always on) does ALL the work — "
+   "scan every 5 min, fire signals, resolve trades, 15:30 force-book — and saves everything to the local DB "
+   "<b>daily</b> (engine.db = every scan + market snapshot; signals.db; trade_log.json). It wakes every 5 s "
+   "in market hours; idles when closed.")}
+{p("This <b>app is a read-only VIEWER</b> — it never scans / fires / resolves / writes; it only reads the "
+   "engine's files and displays them (header: <b>READ-ONLY VIEWER — engine scan Nm ago</b>). <b>Why split:</b> "
+   "a viewer crash can't stop trading, and execution timing is independent of the display.")}
 
-{h("4 · THE 3 FAMILIES (how a stock is judged)")}
-{p("Seven small checks are grouped into 3 independent <b>families</b>. Each family votes LONG, SHORT, or NEUTRAL. "
-   "Grouping avoids fake breadth — momentum, trend and the volume-break all move together, so they count as one idea.")}
-{p(f"<b style='color:{GREEN}'>TREND</b> &nbsp;(weight {C.FAMILY_WEIGHTS['TREND']['weight']}) — is it moving strongly? "
-   "Three factors, each z-scored vs its own history: <b>momentum</b> (60-min intraday return), "
-   "<b>trend quality</b> (daily EMA-9 vs EMA-21 spread), <b>microstructure</b> (15-min opening-range breakout, ±1). "
-   f"Factor weights — momentum {C.FAMILY_WEIGHTS['TREND']['factor_weights']['momentum']}, "
-   f"trend {C.FAMILY_WEIGHTS['TREND']['factor_weights']['trend_quality']}, "
-   f"micro {C.FAMILY_WEIGHTS['TREND']['factor_weights']['microstructure']}.")}
-{p(f"<b style='color:{CYAN}'>FLOW</b> &nbsp;(weight {C.FAMILY_WEIGHTS['FLOW']['weight']}) — what are option writers doing? "
-   "<b>LIVE per-stock options flow</b> from the chain (cached ~10 min): <b>OI-buildup imbalance</b> "
-   "(are writers adding puts or calls?) + <b>PCR trend</b> (put/call OI ratio rising or falling). "
-   "Writers add puts for support = bullish (+); add calls for resistance = bearish (−). "
-   "Symmetric &amp; per-stock — equally positive or negative, no market-wide constant.")}
-{p(f"<b style='color:{AMBER}'>EVENT</b> &nbsp;(weight {C.FAMILY_WEIGHTS['EVENT']['weight']}) — any news driving it? "
-   "<b>LIVE</b>: NSE corporate announcements scraped at startup then ~every 20 min, 9 AM–1 PM, "
-   "keyword-scored (orders/results/bonus = +1, fraud/penalty/downgrade = −1, routine = 0). "
-   "Down-weighted on purpose — keyword scoring is crude, so it informs but never decides.")}
-{dim("A 4th family (mean-reversion) was removed — it won only 47.6% in backtests. A family that doesn't win has no place here.")}
+{h("HONEST RESULTS & GO-LIVE BAR")}
+{p(f"<b>Why the bar is high:</b> risking {int(C.PREMIUM_STOP_PCT)}% to make {int(C.PREMIUM_TARGET_PCT)}% means "
+   f"breakeven needs ~<b>{C.PAPER_TRADING_BREAKEVEN_WIN_RATE:.0%}</b> wins. Capital-weighted winners keep it "
+   f"net-positive gross, but costs + spread pull it back to ~breakeven. <b>Go-live bar:</b> win ≥ "
+   f"<b>{C.PAPER_TRADING_MIN_WIN_RATE:.0%}</b> AND profit factor &gt; {C.PAPER_TRADING_MIN_PF} across "
+   f"{C.PAPER_TRADING_MIN_SIGNALS}+ forward signals. Below that — don't automate.")}
 
-{h("5 · THE ALPHA-Z CALCULATION")}
-{p("Each family produces a <b>z-score</b>: how unusual the reading is. "
-   "0 = average · +1 = clearly bullish · −1 = clearly bearish · ±2 = extreme.")}
-{p("We blend them into one number, the <b>alpha-z</b>, as a weighted average:")}
-{p(f"<b style='color:{CYAN}'>alpha-z = Σ(family z × family weight) ÷ Σ(weights)</b>")}
-{dim(f"Live weights (from config, always sum to 1.0): "
-     f"<b>TREND {C.FAMILY_WEIGHTS['TREND']['weight']}</b> · "
-     f"<b>FLOW {C.FAMILY_WEIGHTS['FLOW']['weight']}</b> · "
-     f"<b>EVENT {C.FAMILY_WEIGHTS['EVENT']['weight']}</b>. TREND dominates by design; EVENT is "
-     f"down-weighted (news is sparse and crudely scored).")}
-{sub("Worked example — a stock reading bearish")}
-{dim(f"TREND z = −0.9 (×{C.FAMILY_WEIGHTS['TREND']['weight']}) · FLOW z = −0.6 "
-     f"(×{C.FAMILY_WEIGHTS['FLOW']['weight']}) · EVENT z = +0.2 (×{C.FAMILY_WEIGHTS['EVENT']['weight']})")}
-{dim(f"alpha-z = (−0.9×{C.FAMILY_WEIGHTS['TREND']['weight']} − 0.6×{C.FAMILY_WEIGHTS['FLOW']['weight']} "
-     f"+ 0.2×{C.FAMILY_WEIGHTS['EVENT']['weight']}) ÷ {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f} = "
-     f"<b>{(-0.9*C.FAMILY_WEIGHTS['TREND']['weight'] - 0.6*C.FAMILY_WEIGHTS['FLOW']['weight'] + 0.2*C.FAMILY_WEIGHTS['EVENT']['weight'])/sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}</b>")}
-{p(f"Reading it: negative = bearish; its size is above the {C.ALPHA_Z_THRESHOLD} bar; 2 of 3 "
-   "families agree SHORT → it PASSES Gate 1. Sign = direction, size = conviction.")}
+{h("RISK CONTROLS")}
+{p(f"No per-day trade cap (take every qualifying signal) · halt after <b>{C.CONSECUTIVE_LOSS_HALT}</b> "
+   f"stop-outs in a row · force-close by {C.KILL_SWITCH_TIME} · never hold overnight · size from the stop distance.")}
 
-{h("6 · THE GATES")}
-{sub("GATE 1 — Alpha Gate (strong enough + broad enough?)")}
-{p(f"• |alpha-z| strictly greater than <b>{C.ALPHA_Z_THRESHOLD}</b>")}
-{p(f"• at least <b>{C.MIN_FAMILIES_AGREE} of 3</b> families agree on direction")}
-{p(f"• the stock is in the proven universe (top {C.TOP_N_TRADEABLE} by expectancy)")}
-{dim("Passing Gate 1 puts the stock on the WATCHLIST, 'awaiting ORB breakout'.")}
-{sub("GATE 2 — ORB Breakout + Volume (is the move happening NOW?)")}
-{p("The latest 5-min candle must close beyond the opening-range (above the high for a LONG, "
-   "below the low for a SHORT) with a volume surge. A second, independent confirmation.")}
-{sub("GATE 3 — Market Alignment (don't fight the tape)")}
-{p("The trade must agree with the Nifty's intraday direction — <b>only LONG when Nifty is up, "
-   "only SHORT when Nifty is down</b>. Blocks 'short into a rising market' losers. "
-   "<i>30-day backtest: win 58%→60%, P&L +1.0%→+1.6%.</i>")}
-{sub("GATE 4 — Don't Chase (is the stock already over-extended?)")}
-{p(f"Skip the signal if the stock has already moved more than <b>{C.MAX_ENTRY_EXTENSION_PCT}%</b> "
-   f"in the trade's direction from the day's open — buying an already-run stock is buying the top. "
-   f"<i>365-day validation: over-extended entries won ~45% vs ~55% in the sweet spot. Option 60-day: "
-   f"same profit on 26% fewer trades, return-on-capital +1.7% to +2.8%.</i>")}
-{p("When all four gates pass, the stock moves to <b>PM DECISIONS</b>.")}
-{sub("Watching the gates fill — the WATCHLIST tab")}
-{p("Every stock that clears Gate 1 appears on <b>WATCHLIST</b> with a live per-gate readout: "
-   "<b>G1 / G2 / G3 / G4</b> each show <b>PASS</b> or <b>wait</b>, plus a progress column "
-   "(e.g. <b>3/4  next: align</b>) and <b>4/4 READY -&gt; PM</b> when it fires. The list is sorted "
-   "closest-to-firing on top, so you can see exactly which gate each candidate is waiting on.")}
-
-{h("7 · WHICH INSTRUMENT — BUY OPTIONS ONLY (two strategies)")}
-{p("Every signal — in either strategy — becomes a <b>bought option</b> (never sold): "
-   "<b style='color:{0}'>LONG → buy CALL</b>, <b style='color:{1}'>SHORT → buy PUT</b>.".format(GREEN, RED))}
-{sub("STOCK OPTIONS — 3-Family system (95 stocks)")}
-{p(f"Strike = <b>OTM+1</b> (offset {C.OPTION_STRIKE_OFFSET}): one strike OUT-of-the-money — CALL one "
-   f"above spot, PUT one below. Exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / −{int(C.PREMIUM_STOP_PCT)}%</b> "
-   f"on premium. Shown in the green STOCK OPTIONS section on PM DECISIONS, "
-   f"e.g. <b>BUY RELIANCE 1300 CE @ Rs…</b>.")}
-{sub("INDEX OPTIONS — ORB+VWAP strategy (NIFTY &amp; BANKNIFTY)")}
-{p(f"Strike = <b>ATM</b>. A 15-min Opening-Range Breakout that holds VWAP and aligns with the 30-min "
-   f"trend (before 11 AM, skipping expiry-day) buys the ATM CALL/PUT. Added a <b>clean-trend "
-   f"filter</b>: only enter when VWAP is sloped the trade's way and price is already &gt;0.25% "
-   f"extended from the open.")}
-{p(f"<b>Exit — TREND-RIDE</b> (not a fixed target): let the winner run; exit only when the futures "
-   f"<b>reclaim VWAP</b> after the trade is +{int(C.ORB_VWAP_ARM_PCT)}% in profit; "
-   f"<b>hard −{int(C.ORB_VWAP_STOP_PCT)}% stop</b> throughout; else square off at the close. This "
-   f"replaced the old fixed +20% target, which 60-day testing showed was the cause of the daily "
-   f"losses (27% win, −2.6%/trade → 63% win, +0.8%/trade). Shown in the purple ORB+VWAP section, "
-   f"colour-coded CALL green / PUT red.")}
-{dim(f"Nearest expiry (Nifty weekly, BankNifty/stocks monthly) · skip if IV > {C.OPTION_IV_THRESHOLD}. "
-     f"Capital per lot is modest: Nifty ATM ~Rs8k, BankNifty ATM ~Rs17k (premium x lot).")}
-
-{h("8 · EXIT — ON THE OPTION PREMIUM (2:1 is NOT how options win)")}
-{p(f"You exit on the option's own price, not the underlying:")}
-{p(f"• <b style='color:{GREEN}'>STOCKS</b> &nbsp; BOOK <b>+{int(C.PREMIUM_TARGET_PCT)}%</b> / CUT "
-   f"<b>−{int(C.PREMIUM_STOP_PCT)}%</b> on premium (e.g. Rs100 → Rs{100*(1+C.PREMIUM_TARGET_PCT/100):.0f} / "
-   f"Rs{100*(1-C.PREMIUM_STOP_PCT/100):.0f})")}
-{p(f"• <b style='color:{PURPLE}'>INDEX (ORB+VWAP)</b> &nbsp; <b>TREND-RIDE</b>: ride the winner, exit "
-   f"on VWAP reclaim after +{int(C.ORB_VWAP_ARM_PCT)}%, hard <b>−{int(C.ORB_VWAP_STOP_PCT)}%</b> stop, "
-   f"else square off at the close (no fixed upper target)")}
-{p(f"• <b>FORCE-CLOSE</b> at {C.KILL_SWITCH_TIME} regardless")}
-{dim(f"Why a small +{C.PREMIUM_TARGET_PCT:.0f}% target on stocks? Option premiums are volatile, so a quick "
-     f"+{C.PREMIUM_TARGET_PCT:.0f}% is hit often — that is what produces the ~58-61% win rate (60-day "
-     f"backtest). Removing the cap was tested and was inconsistent/higher-variance, so it stays. "
-     f"Net of costs the edge is thin — see the STUDIES tab.")}
-
-{h("9 · RISK CONTROLS")}
-{p("• <b>No per-day trade cap</b> — every qualifying signal is taken")}
-{p(f"• <b>{C.CONSECUTIVE_LOSS_HALT}</b> stop-outs in a row → halt trading for the day")}
-{p(f"• Every position force-closed at {C.KILL_SWITCH_TIME} — never hold overnight")}
-{p(f"• Position size derived from the stop distance, not guesswork")}
-
-{h("10 · PAPER TRADING & GO-LIVE RULE")}
-{p("For the first month the system records every signal to its outcome (WIN at target, LOSS at stop, "
-   "or FORCED at 3:10 PM). The TRADE LOG is your honest scorecard.")}
-{p(f"<b>Why the bar is high:</b> with a +{int(C.PREMIUM_TARGET_PCT)}% target and −{int(C.PREMIUM_STOP_PCT)}% "
-   f"stop you risk {int(C.PREMIUM_STOP_PCT)}% to make {int(C.PREMIUM_TARGET_PCT)}%, so the BREAKEVEN win rate is "
-   f"{int(C.PREMIUM_STOP_PCT)}/({int(C.PREMIUM_TARGET_PCT)}+{int(C.PREMIUM_STOP_PCT)}) = "
-   f"<b>~{C.PAPER_TRADING_BREAKEVEN_WIN_RATE:.0%}</b>. Below that you LOSE money.")}
-{p(f"<b style='color:{GREEN}'>Go-live bar:</b> win rate ≥ <b>{C.PAPER_TRADING_MIN_WIN_RATE:.0%}</b> "
-   f"(a margin above breakeven) AND profit factor > {C.PAPER_TRADING_MIN_PF} across "
-   f"{C.PAPER_TRADING_MIN_SIGNALS}+ signals. Below that, the edge isn't proven — don't automate.")}
-{dim("Honest note: the current 4-gate config backtests at ~58-61% win over 30-60 days (GROSS), and the "
-     "365-day directional edge is ~52% — a thin, real-but-small edge. After brokerage + STT + spread it is "
-     "roughly breakeven. Treat every signal as a hypothesis and judge it by the live log over many sessions.")}
-
-{h("11 · SPEED — how fast is a scan?")}
-{p("The strategy logic is essentially instant; the only real cost is fetching data over the network.")}
-{p("<b>Per stock:</b> score 3 families + alpha-z + all 4 gates + instrument choice = <b>~1.6 ms</b> (CPU). "
-   "Fetching that stock's 5-min candles = <b>~440 ms</b> (network) — 99% of the time.")}
-{p(f"<b>Full scan of NIFTY + BANKNIFTY + {len(C.UNIVERSE)} stocks:</b> ~3–4 seconds. We get there with "
-   "12 parallel threads, a daily-history cache (fetched once per day), and batched live prices (all in one "
-   "call). Sequential it would take ~43 seconds.")}
-{dim("A 3–4 second scan inside a 5-minute window means a signal is seen almost the instant a candle closes — "
-     "prices barely drift before the order appears. (First scan of the day ~6–7s for one-time cache warmup.)")}
-
-{h("12 · HOW IT RUNS — ENGINE vs VIEWER (two processes)")}
-{p("The <b>engine</b> and this <b>app</b> are now SEPARATE. The engine runs the whole schedule "
-   "on its own; this window is a <b>read-only viewer</b> of what the engine writes.")}
-{sub("The headless ENGINE (does all the work)")}
-{p("• launchd job <b>com.sayali.institutionaltrader.engine</b> — always running (KeepAlive, "
-   "restarts on crash, starts at login). Runs <b>irrespective of whether this app is open</b>.")}
-{p("• Every 5 min in market hours it scans, fires ready signals, records to the DBs, and "
-   "resolves paper trades; at 15:30 it force-books open trades. It wakes every <b>5 s</b> so "
-   "scans fire within seconds of the 5-min mark; idles cheaply when the market is closed.")}
-{p("• Saves all data locally <b>daily</b>: <b>data/engine.db</b> (every scan + market snapshot), "
-   "<b>data/signals.db</b> (PM signals), and <b>trade_log.json</b> (trade outcomes).")}
-{sub("This APP (read-only viewer)")}
-{p("• launchd job <b>com.sayali.institutionaltrader</b> — auto-launches 09:00 weekdays. It "
-   "NEVER scans, fires, resolves, books, or writes any DB — it only reads "
-   "<b>latest_scan.json</b> / <b>market_snapshot.json</b> / the DBs / the trade log and displays "
-   "them (re-read every 15 s). The header shows <b>READ-ONLY VIEWER — engine scan Nm ago</b>.")}
-{p(f"• <b>08:55 weekdays</b> — Mac wakes itself (pmset). Files live at <b>~/files/institutional-trader</b>.")}
-{dim("So trading continues even if this window is closed or crashes. GitHub "
-     "(github.com/tejasgjadhav/Institutional-Trader) is the BACKUP / version history only — neither "
-     "process pulls from it at runtime. Token lives in local .env (never committed).")}
+{h("REFERENCE — timings & data")}
+{p(f"<b>Daily clock (IST):</b> 08:55 Mac wakes · {C.MARKET_OPEN} open (scan begins) · {C.TRADING_START} "
+   f"trading window · scan every 5 min · {C.NO_NEW_TRADES_AFTER} no new trades · {C.MARKET_CLOSE} force-book "
+   f"open trades. Signals are selective — ~1–2/day (365-day study: ~1.7/day), many days none; the edge is "
+   f"strongest 10:30–11:00.")}
+{p("<b>Freshness:</b> market bar ~3–5 s · TREND/FLOW/EVENT recompute every 5 min (options flow ≤10 min, "
+   "events ≤1 hour old) · a full ~97-instrument scan takes ~3–4 s (16 threads, batched LTP, cached daily history).")}
+{p("<b>Data:</b> Upstox V3 (live LTP, 5-min candles, ~400-day daily history) on a read-only Analytics token; "
+   "Yahoo is an emergency fallback only.")}
 
 <p style="color:{TEXT_DIM};margin-top:16px;font-size:10px;">
-Last 5 trading days (recording window): {', '.join(str(d) for d in self.last5)} &nbsp;·&nbsp;
-Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; For educational use only. Not financial advice.
+Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHTS['TREND']['weight']} / FLOW {C.FAMILY_WEIGHTS['FLOW']['weight']} / EVENT {C.FAMILY_WEIGHTS['EVENT']['weight']} &nbsp;·&nbsp; For educational use only. Not financial advice.
 </p>
 
 </div>
