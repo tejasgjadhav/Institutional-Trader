@@ -6,7 +6,7 @@ instructions on top of it.
 ## What this is
 
 A **paper-trading** algo system for NSE (Indian market) intraday **options**. It scans
-NIFTY, BANKNIFTY and ~94 liquid stocks every 5 minutes, scores each with a 3-family model,
+NIFTY, BANKNIFTY and ~100 liquid stocks every 5 minutes, scores each with a 3-family model,
 and surfaces buy-option signals on a dashboard. **It never places orders** — the user places
 them manually in Upstox. Status: a forward paper-test of a thin, ~52–61% directional,
 roughly-breakeven-after-costs edge. **Not proven profitable.** Be honest about this always.
@@ -52,7 +52,7 @@ All 6 pass → buy OTM+1 CALL/PUT, exit **+10% / −20%** on premium.
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
 filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard −20% stop).
 
-Gates 3 & 4 are the proven wins (validated over 365 days). See `studies/` for all 8 studies.
+Gates 3, 4 & 5 are the proven wins (validated on 365 days). See `studies/` for all 9 studies.
 
 ## Key files
 
@@ -71,7 +71,7 @@ engine/config.py          ALL tunables (gates, exits, universe, paths)
 engine/ui_terminal.py     READ-ONLY viewer (tabs: PM / WATCHLIST / ALPHA / TRADE LOG / STUDIES / README)
 main.py                   viewer launcher
 deploy/                   launchd plists (engine + viewer)
-studies/                  research log (8 .md studies) + reproducible scripts
+studies/                  research log (9 .md studies) + reproducible scripts
 data/                     engine.db / signals.db / trade_log.json (gitignored runtime data)
 ```
 

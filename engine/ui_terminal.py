@@ -369,7 +369,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     def _screen_alpha(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("ALPHA  -  all 95 stocks scored, ranked by alpha-z"))
+        v.addWidget(self._panel_title("ALPHA  -  all 100 stocks scored, ranked by alpha-z"))
         self.alpha_table = QTableWidget()
         self.alpha_table.setColumnCount(7)
         self.alpha_table.setHorizontalHeaderLabels(["TICKER", "ALPHA-Z", "DIR", "BREADTH", "TREND", "FLOW", "EVENT"])
@@ -725,7 +725,7 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    f"open trades. Signals are selective — ~1–2/day (365-day study: ~1.7/day), many days none; the edge is "
    f"strongest 10:30–11:00.")}
 {p("<b>Freshness:</b> market bar ~3–5 s · TREND/FLOW/EVENT recompute every 5 min (options flow ≤10 min, "
-   "events ≤1 hour old) · a full ~97-instrument scan takes ~3–4 s (16 threads, batched LTP, cached daily history).")}
+   "events ≤1 hour old) · a full ~102-instrument scan takes ~3–4 s (16 threads, batched LTP, cached daily history).")}
 {p("<b>Data:</b> Upstox V3 (live LTP, 5-min candles, ~400-day daily history) on a read-only Analytics token; "
    "Yahoo is an emergency fallback only.")}
 

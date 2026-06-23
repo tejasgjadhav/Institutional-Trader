@@ -1,7 +1,7 @@
 # Institutional Trader — 3-Family Alpha · NSE Intraday Options
 
 A disciplined **paper-trading** system for NSE intraday. It scans NIFTY, BANKNIFTY
-and 94 liquid stocks every 5 minutes, scores each with a 3-family model, and only
+and 100 liquid stocks every 5 minutes, scores each with a 3-family model, and only
 flags a trade when it clears **six strict gates**. Every trade is a **bought option**
 (CALL/PUT) and you place the order yourself in Upstox — the software never sends
 orders. It is a process for collecting honest evidence, not a proven money-maker.
@@ -64,7 +64,7 @@ crash can't stop trading, and execution latency is independent of the display.
 Two strategies run in parallel, both reported on **PM DECISIONS**, both options-only,
 both manual-execution:
 
-- **3-Family system (94 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
+- **3-Family system (100 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
   (2) scores each stock into one number, **alpha-z**, (3) checks the score is strong
   and broad enough (**Gate 1**), breaking out *now* (**Gate 2**), aligned with the Nifty
   (**Gate 3**), not already over-extended (**Gate 4**), the opening range is wide enough
@@ -89,7 +89,7 @@ ORB+VWAP strategy.
 | **09:15** | Market opens — engine starts scanning, ALPHA fills |
 | 09:15–09:45 | Wildest part of the day — watch only |
 | **09:45** | Trading window opens |
-| every 5 min | Engine re-scans NIFTY + BANKNIFTY + 94 stocks (~0.6–2.7 sec) |
+| every 5 min | Engine re-scans NIFTY + BANKNIFTY + 100 stocks (~0.6–2.7 sec) |
 | **13:00** | No new trades after 1 PM |
 | **15:10** | Kill switch — exit guideline (don't hold into the last 20 min) |
 | **15:30** | Market closes — **every OPEN paper trade is force-booked WIN/LOSS at the close** (Mon–Fri) |
@@ -265,7 +265,7 @@ every 15 s. Engine cadence and data freshness:
 
 | Component | Recompute cadence (engine) | Data freshness |
 |-----------|-------------------|----------------|
-| **Full scan** (3 families, 94 stocks + 2 indices) | **every 5 min** (engine wakes every 5 s) | — |
+| **Full scan** (3 families, 100 stocks + 2 indices) | **every 5 min** (engine wakes every 5 s) | — |
 | **TREND** | every 5 min | live 5-min candles · daily EMA cached per day |
 | **FLOW** | every 5 min | option chain cached **~10 min** (`options_flow._TTL`) → OI/PCR ≤10 min old |
 | **EVENT** | score read every 5 min | NSE scrape at **startup + ~every 20 min, 9 AM–1 PM** → sentiment ≤1 hour old |
@@ -279,8 +279,8 @@ every 15 s. Engine cadence and data freshness:
 |------|------|
 | Score 3 families + all 6 gates (per stock, CPU) | ~1.6 ms |
 | One stock's full scan incl. all fetches | ~1.1 sec (cold) / ~0.17 sec (warm) |
-| **Full 94-stock scan — cold cache** | **~2.7 sec** (16 workers, pooled keep-alive) |
-| **Full 94-stock scan — warm cache** | **~0.6 sec** |
+| **Full 100-stock scan — cold cache** | **~2.7 sec** (16 workers, pooled keep-alive) |
+| **Full 100-stock scan — warm cache** | **~0.6 sec** |
 | Sequential (no parallelism) | ~43 sec |
 
 **Bottom line:** signal granularity = the **5-min candle**; the engine surfaces a new signal
