@@ -527,11 +527,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "underlying-proxy (done), synthetic Black-Scholes premiums, or a paid options vendor.")}
 {dim("File: studies/DATA_AVAILABILITY_LIMITS.md")}
 
+{h("9 - Gate 5: Wide Open (opening-range width filter)")}
+{sub("Question: can a 5th gate raise the win rate at the same +10/-20 risk-reward?")}
+{p("A disciplined loop: collect 90 days of trades with features + premium paths, search "
+   "candidates by out-of-sample expectancy, then VALIDATE on 365 days. 'Wide opening range "
+   "(&gt;=0.8% of price)' = real morning momentum; narrow opens are chop. (Time-of-day looked "
+   "great on the small sample but flipped on 365 days -> rejected as noise.)")}
+{res("Result (365-day, 506 trades, validated): directional win 51% -&gt; 54%; option win 30-day "
+     "61% -&gt; 66%, 60-day 66% -&gt; 70% at the SAME +10/-20. DEPLOYED as Gate 5.")}
+{dim("File: studies/GATE5_WIDE_OPEN.md")}
+
 {h("The honest bottom line")}
-{p("After all of it: a <b>~52-61% directional, alignment-dependent, thin-but-real</b> edge. "
-   "Gates 3 and 4 are the proven improvements; the index trend-ride stops a bleed; the cap "
-   "and forecasting ideas were tested and correctly NOT deployed. Real profitability is "
-   "unproven until the forward paper month logs real fills - which is what the live app does.")}
+{p("After all of it: a <b>~54-70% win, thin-but-real</b> edge (option windows small; 365-day "
+   "directional ~54%). Gates 3, 4 and 5 are the proven improvements; the index trend-ride "
+   "stops a bleed; the exit-cap and forecasting ideas were tested and correctly NOT deployed. "
+   "Real profitability is unproven until the forward paper month logs real fills.")}
 <p style="color:{TEXT_DIM};margin-top:14px;font-size:10px;">
 All studies reproducible from /studies on GitHub. Gross of costs. For educational use only. Not financial advice.
 </p>

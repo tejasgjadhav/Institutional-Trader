@@ -323,11 +323,12 @@ short-window rupee figures as directional. The in-app **STUDIES** tab shows the 
 | 6 | [Stock Option Exit Cap](studies/STOCK_OPTION_EXIT_CAP.md) | Remove the +10% cap? | Inconsistent / high variance — kept +10% | not deployed |
 | 7 | [Prophet Forward-Test](studies/PROPHET_FORWARD_TEST.md) | Can forecasting predict it? | 20d direction worse than a coin flip | not deployed |
 | 8 | [Data Availability Limits](studies/DATA_AVAILABILITY_LIMITS.md) | Can we backtest 180/365d on options? | Option premiums only ~1 month back | reference |
+| 9 | [Gate 5 — Wide Open](studies/GATE5_WIDE_OPEN.md) | Can a 5th gate raise win rate at the same +10/−20? | 365d win 51→54%; option 30d 61→66%, 60d 66→70% | **LIVE** |
 
-**Bottom line:** a ~52–61% directional, alignment-dependent, thin-but-real edge. Gates 3 & 4
-are the proven wins; the index trend-ride stops a bleed; the cap and forecasting ideas were
-tested and correctly not deployed. Real profitability is unproven until the forward paper
-month logs real fills.
+**Bottom line:** a ~54–70% win, thin-but-real edge (option windows small; 365-day directional
+~54%). Gates 3, 4 & 5 are the proven wins; the index trend-ride stops a bleed; the exit-cap and
+forecasting ideas were tested and correctly not deployed. Real profitability is unproven until
+the forward paper month logs real fills.
 
 ---
 
