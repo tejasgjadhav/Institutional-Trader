@@ -88,6 +88,13 @@ MAX_ENTRY_EXTENSION_PCT = 2.9
 # trades): win 51%->54% directional, and option win 30d 61%->66% / 60d 66%->70% at +10/-20.
 ORB_RANGE_FILTER = True
 ORB_RANGE_WIDTH_MIN = 0.8   # opening-range width as % of price
+# Gate 6 — LIQUIDITY: only fire if the exact option we'd trade has a real, tight market.
+# Checked ONLY for signals that already clear Gates 1-5 (~1-2/day), so ~1-2 extra quote
+# calls/day — negligible. With a +10% target you cannot afford a wide spread: you buy at
+# the ask and sell at the bid, so a 4%+ spread eats the edge and the LTP may be stale.
+LIQUIDITY_FILTER = True
+MAX_OPTION_SPREAD_PCT = 4.0   # skip if (ask-bid)/mid > this %
+MIN_OPTION_OI = 100           # skip if open interest below this (a real position base)
 OPTION_CONVICTION_THRESHOLD = 0.70  # |alpha-z| > 0.70 trades as CALL/PUT instead of EQ/FUT
 
 # === TRADING UNIVERSE FILTER (PF>1 / EXPECTANCY) ===

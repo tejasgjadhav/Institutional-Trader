@@ -174,11 +174,27 @@ class Agent:
                 orb_w = (orb_hi - orb_lo) / cur_px * 100
             wide_open = (orb_w >= ORB_RANGE_WIDTH_MIN)
 
-            # All gates (each filter only enforced when its flag is on)
-            trade_ready = (gate_1 and gate_2
-                           and (aligned or not MARKET_ALIGN_FILTER)
-                           and (not_extended or not ENTRY_EXTENSION_FILTER)
-                           and (wide_open or not ORB_RANGE_FILTER))
+            # Signal clears the cheap, local gates 1-5?
+            pre_ready = (gate_1 and gate_2
+                         and (aligned or not MARKET_ALIGN_FILTER)
+                         and (not_extended or not ENTRY_EXTENSION_FILTER)
+                         and (wide_open or not ORB_RANGE_FILTER))
+
+            # Gate 6: LIQUIDITY — only run the live bid/ask/OI check for signals that ALREADY
+            # cleared gates 1-5 (so ~1-2 quote calls/day, not 94). A +10% target needs a tight
+            # market: buy at ask, sell at bid. Fails OPEN if the quote is unavailable.
+            from engine.config import LIQUIDITY_FILTER
+            liquid_ok, liq = True, {}
+            liquidity_checked = bool(pre_ready and LIQUIDITY_FILTER)
+            if liquidity_checked:
+                try:
+                    from engine.options import check_option_liquidity
+                    verdict, liq = check_option_liquidity(ticker, cur_px, direction)
+                    liquid_ok = (verdict is not False)   # True/None allow, False blocks
+                except Exception as e:
+                    logger.warning(f"liquidity check failed for {ticker}: {e}")
+
+            trade_ready = pre_ready and (liquid_ok or not LIQUIDITY_FILTER)
 
             return {
                 "ticker": ticker,
@@ -195,6 +211,9 @@ class Agent:
                 "not_extended": not_extended,
                 "orb_range_width": round(orb_w, 2),
                 "wide_open": wide_open,
+                "liquid": liquid_ok,
+                "liquidity_checked": liquidity_checked,
+                "liquidity": liq,
                 "trade_ready": trade_ready,
                 "families_detail": signal.get("families_detail", {}),  # for ALPHA tab columns
                 "current_price": signal.get("current_price"),

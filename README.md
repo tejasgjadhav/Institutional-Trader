@@ -2,7 +2,7 @@
 
 A disciplined **paper-trading** system for NSE intraday. It scans NIFTY, BANKNIFTY
 and 94 liquid stocks every 5 minutes, scores each with a 3-family model, and only
-flags a trade when it clears **five strict gates**. Every trade is a **bought option**
+flags a trade when it clears **six strict gates**. Every trade is a **bought option**
 (CALL/PUT) and you place the order yourself in Upstox — the software never sends
 orders. It is a process for collecting honest evidence, not a proven money-maker.
 
@@ -67,8 +67,9 @@ both manual-execution:
 - **3-Family system (94 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
   (2) scores each stock into one number, **alpha-z**, (3) checks the score is strong
   and broad enough (**Gate 1**), breaking out *now* (**Gate 2**), aligned with the Nifty
-  (**Gate 3**), not already over-extended (**Gate 4**), and the opening range is wide enough
-  (**Gate 5**). All gates pass → a **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
+  (**Gate 3**), not already over-extended (**Gate 4**), the opening range is wide enough
+  (**Gate 5**), and the option is liquid enough to actually trade (**Gate 6**). All gates pass →
+  a **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
 - **ORB+VWAP system (NIFTY & BANKNIFTY):** a separate index strategy — 15-min ORB +
   VWAP + 30-min trend + clean-trend filter, buy **ATM**, **trend-ride exit** (VWAP-reclaim
   after +12%, hard −20% stop) — see the section below.
@@ -177,12 +178,18 @@ metric — it cuts only the extreme chasers.* (`ENTRY_EXTENSION_FILTER`)
 **validated on 365 days (506 trades)**: directional win 51% → 54%; option win **30-day
 61% → 66%, 60-day 66% → 70%** at +10/−20 (kept the same risk-reward). Pure arithmetic on
 candles already in hand — zero added latency.* (`ORB_RANGE_FILTER`)
+**Gate 6 — Liquidity:** before firing, fetch the exact OTM+1 option's **live bid/ask + OI**
+and require a two-sided market, spread ≤ `MAX_OPTION_SPREAD_PCT` (4%) of mid, and OI ≥
+`MIN_OPTION_OI` (100). *Why: you buy at the ask, sell at the bid — with a +10% target a wide
+spread eats the edge, and a stale LTP isn't a real price. Checked **only** for signals that
+already cleared Gates 1-5 (~1-2/day) → ~1-2 extra quote calls/day, negligible.*
+(`LIQUIDITY_FILTER`)
 
 ### Watching the gates fill — the WATCHLIST tab
 
 Every stock that clears Gate 1 lands on **WATCHLIST** with a live per-gate readout:
-**G1 / G2 / G3 / G4 / G5** each show `PASS` or `wait`, plus a progress column
-(`4/5  next: wide-open`) and `5/5  READY -> PM` when it fires. The list is sorted
+**G1 / G2 / G3 / G4 / G5 / G6** each show `PASS` or `wait`, plus a progress column
+(`5/6  next: liquidity`) and `6/6  READY -> PM` when it fires. The list is sorted
 closest-to-firing on top, so you can see exactly which gate each candidate is waiting on.
 
 ---
@@ -270,7 +277,7 @@ every 15 s. Engine cadence and data freshness:
 
 | Step | Time |
 |------|------|
-| Score 3 families + all 5 gates (per stock, CPU) | ~1.6 ms |
+| Score 3 families + all 6 gates (per stock, CPU) | ~1.6 ms |
 | One stock's full scan incl. all fetches | ~1.1 sec (cold) / ~0.17 sec (warm) |
 | **Full 94-stock scan — cold cache** | **~2.7 sec** (16 workers, pooled keep-alive) |
 | **Full 94-stock scan — warm cache** | **~0.6 sec** |
@@ -300,7 +307,7 @@ Run `python -m engine.notifications` for the one-time setup steps.
 
 The dashboard keeps **LIVE paper trades** and the **30-day historical simulation**
 strictly separate (a toggle in the TRADE LOG tab). Run it forward for 30+ sessions and
-judge the live log against the go-live bar. **Honest status (current 5-gate config):**
+judge the live log against the go-live bar. **Honest status (current 6-gate config):**
 60-day backtest **61% win, +₹36,792 (+2.8% on capital, GROSS)**; 365-day directional edge
 **~52%**. Net of brokerage + STT + spread it is roughly **breakeven** — a thin, real-but-small
 edge, **not proven profitable**. Only forward, costed data settles it. See the **Studies** table.

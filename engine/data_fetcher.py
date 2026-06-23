@@ -127,6 +127,32 @@ def fetch_upstox_ltp(ticker: str) -> dict:
         return {"price": None, "timestamp": None, "success": False, "error": str(e)}
 
 
+def fetch_upstox_quote(instrument_key: str) -> dict:
+    """Full market quote for ONE instrument key (used for the liquidity gate): best bid/ask
+    from the depth, open interest, day volume, LTP. Returns {} on any failure.
+    Response is keyed by trading symbol (not the instrument_key), so we take the one entry."""
+    if not UPSTOX_ANALYTICS_TOKEN or not instrument_key:
+        return {}
+    try:
+        resp = SESSION.get(f"{UPSTOX_BASE}/v2/market-quote/quotes",
+                           params={"instrument_key": instrument_key}, timeout=6)
+        resp.raise_for_status()
+        data = resp.json().get("data", {})
+        if not data:
+            return {}
+        q = next(iter(data.values()))
+        depth = q.get("depth", {}) or {}
+        buy = depth.get("buy") or []
+        sell = depth.get("sell") or []
+        bid = float(buy[0]["price"]) if buy and buy[0].get("price") else 0.0
+        ask = float(sell[0]["price"]) if sell and sell[0].get("price") else 0.0
+        return {"ltp": q.get("last_price"), "bid": bid, "ask": ask,
+                "oi": q.get("oi") or 0, "volume": q.get("volume") or 0}
+    except Exception as e:
+        logger.warning(f"Upstox quote fetch failed for {instrument_key}: {e}")
+        return {}
+
+
 # ── Intraday 5-min candles (today, live) ──────────────────────────────────────
 
 def fetch_upstox_intraday(ticker: str, interval: int = 5) -> pd.DataFrame:

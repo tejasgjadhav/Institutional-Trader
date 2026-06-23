@@ -128,6 +128,39 @@ def get_option_by_offset(ticker: str, spot: float, on_day: date, opt_type: str, 
     return c
 
 
+def check_option_liquidity(ticker: str, spot: float, direction: str) -> tuple:
+    """Gate 6 — LIQUIDITY. Resolve the exact OTM+1 option we'd trade and check its LIVE
+    market: a two-sided quote (bid AND ask), a tight enough bid-ask spread (else a +10%
+    target is eaten by the spread), and enough open interest.
+
+    Returns (verdict, details):
+      verdict True  = liquid, tradeable
+      verdict False = illiquid -> block the trade
+      verdict None  = quote unavailable -> caller fails OPEN (don't block on an API hiccup)
+    """
+    from engine.config import (OPTION_STRIKE_OFFSET, MAX_OPTION_SPREAD_PCT,
+                               MIN_OPTION_OI)
+    from engine.data_fetcher import fetch_upstox_quote
+    opt_type = "CE" if direction == "LONG" else "PE"
+    opt = get_option_by_offset(ticker, spot, date.today(), opt_type, OPTION_STRIKE_OFFSET)
+    if not opt:
+        return False, {"reason": "no option"}
+    q = fetch_upstox_quote(opt["key"])
+    if not q:
+        return None, {"reason": "quote unavailable"}
+    bid, ask, oi = q.get("bid", 0.0), q.get("ask", 0.0), q.get("oi", 0)
+    if bid <= 0 or ask <= 0:
+        return False, {"reason": "no two-sided market", "bid": bid, "ask": ask, "oi": oi,
+                       "strike": int(opt["strike"])}
+    mid = (bid + ask) / 2.0
+    spread_pct = (ask - bid) / mid * 100 if mid else 999.0
+    liquid = (spread_pct <= MAX_OPTION_SPREAD_PCT) and (oi >= MIN_OPTION_OI)
+    return liquid, {"bid": round(bid, 2), "ask": round(ask, 2), "oi": int(oi),
+                    "spread_pct": round(spread_pct, 1), "strike": int(opt["strike"]),
+                    "reason": "" if liquid else (
+                        "spread too wide" if spread_pct > MAX_OPTION_SPREAD_PCT else "low OI")}
+
+
 def fetch_option_premium_5min(option_key: str, on_day: date):
     """5-min premium candles for an option contract on a single day (oldest-first)."""
     d = on_day.strftime("%Y-%m-%d")
