@@ -9,7 +9,8 @@ from pathlib import Path
 
 from engine.config import (
     IST, MARKET_OPEN, TRADING_START, NO_NEW_TRADES_AFTER, KILL_SWITCH_TIME,
-    UNIVERSE, PAPER_TRADING_PHASE, APP_LOG_PATH, SIGNALS_PATH, SCAN_INDICES
+    UNIVERSE, PAPER_TRADING_PHASE, APP_LOG_PATH, SIGNALS_PATH, SCAN_INDICES,
+    PRIORITY_STOCKS
 )
 from engine.data_fetcher import (
     fetch_intraday_5min, fetch_yahoo_historical, get_cached_vix, get_cached_nifty_pct
@@ -215,6 +216,7 @@ class Agent:
                 "liquidity_checked": liquidity_checked,
                 "liquidity": liq,
                 "trade_ready": trade_ready,
+                "priority": ticker in PRIORITY_STOCKS,   # persistent-winner tilt (UI flag only)
                 "families_detail": signal.get("families_detail", {}),  # for ALPHA tab columns
                 "current_price": signal.get("current_price"),
                 "signal_details": signal,

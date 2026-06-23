@@ -33,20 +33,21 @@ UNIVERSE = [
     "BAJAJFINSV.NS", "LICI.NS", "JIOFIN.NS", "SHRIRAMFIN.NS", "HDFCLIFE.NS", "SBILIFE.NS",
     "BANKBARODA.NS", "PNB.NS", "INDUSINDBK.NS", "CHOLAFIN.NS", "MUTHOOTFIN.NS", "PFC.NS",
     "RECLTD.NS", "IRFC.NS", "HDFCAMC.NS", "ICICIGI.NS", "ICICIPRULI.NS", "BAJAJHLDNG.NS",
+    "INDIANB.NS", "AUBANK.NS",
     # IT
-    "TCS.NS", "INFY.NS", "HCLTECH.NS", "WIPRO.NS", "TECHM.NS", "LTM.NS", "PERSISTENT.NS",
+    "INFY.NS", "HCLTECH.NS", "WIPRO.NS", "TECHM.NS", "LTM.NS", "PERSISTENT.NS", "TATAELXSI.NS",
     # Energy / Oil / Power
     "RELIANCE.NS", "ONGC.NS", "NTPC.NS", "POWERGRID.NS", "COALINDIA.NS", "BPCL.NS", "IOC.NS",
     "GAIL.NS", "TATAPOWER.NS", "ADANIPOWER.NS", "ADANIGREEN.NS", "ADANIENSOL.NS",
     # Auto
     "MARUTI.NS", "M&M.NS", "BAJAJ-AUTO.NS", "EICHERMOT.NS", "TVSMOTOR.NS", "HEROMOTOCO.NS",
-    "MOTHERSON.NS", "BOSCHLTD.NS", "TMPV.NS",
+    "MOTHERSON.NS", "BOSCHLTD.NS", "TMPV.NS", "ASHOKLEY.NS",
     # FMCG / Consumer
-    "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "TATACONSUM.NS", "ASIANPAINT.NS",
-    "DABUR.NS", "GODREJCP.NS", "MARICO.NS", "PIDILITIND.NS", "COLPAL.NS", "VBL.NS",
+    "HINDUNILVR.NS", "NESTLEIND.NS", "TATACONSUM.NS", "ASIANPAINT.NS",
+    "MARICO.NS", "PIDILITIND.NS", "COLPAL.NS", "VBL.NS",
     # Pharma / Healthcare
     "SUNPHARMA.NS", "CIPLA.NS", "DRREDDY.NS", "DIVISLAB.NS", "APOLLOHOSP.NS", "TORNTPHARM.NS",
-    "ZYDUSLIFE.NS", "MAXHEALTH.NS",
+    "ZYDUSLIFE.NS", "MAXHEALTH.NS", "AUROPHARMA.NS",
     # Metals
     "JSWSTEEL.NS", "TATASTEEL.NS", "HINDALCO.NS", "HINDZINC.NS", "VEDL.NS", "JINDALSTEL.NS",
     # Cement
@@ -58,6 +59,19 @@ UNIVERSE = [
     "DMART.NS", "INDIGO.NS", "DLF.NS", "LODHA.NS", "NAUKRI.NS", "INDHOTEL.NS",
 ]
 assert len(UNIVERSE) == 100, "Universe should have 100 stocks"
+
+# PRIORITY stocks — the only names whose high gates-1-5 win rate PERSISTED out-of-sample.
+# Found by a 365-day per-stock backtest split into train (older 60%) / held-out test (newer
+# 40%): selecting the top-60 by *train* win rate overfit badly (64% train -> 49% test), but
+# these 13 won in BOTH independent windows (combined ~75% over 110 trades). The engine still
+# scans and fires on all 100; this list ONLY flags these in the read-only UI so you can choose
+# to focus / size up on them. It does NOT change engine selection. Small sample — treat as a
+# tilt, not a guarantee. See studies/PRIORITY_STOCKS_PERSISTENCE.md.
+PRIORITY_STOCKS = [
+    "BAJFINANCE.NS", "RECLTD.NS", "AUROPHARMA.NS", "JINDALSTEL.NS", "INDIANB.NS",
+    "AUBANK.NS", "BAJAJHLDNG.NS", "POWERGRID.NS", "ASHOKLEY.NS", "TATAELXSI.NS",
+    "SHRIRAMFIN.NS", "INDUSINDBK.NS", "PERSISTENT.NS",
+]
 
 # Index underlyings to scan for options (low capital, liquid weekly/monthly expiries)
 SCAN_INDICES = ["NIFTY", "BANKNIFTY"]

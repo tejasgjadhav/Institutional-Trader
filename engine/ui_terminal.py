@@ -348,7 +348,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_watchlist(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
         v.addWidget(self._panel_title(
-            "WATCHLIST  -  passed Gate 1 (alpha), progressing through Gates 2-6 to PM DECISIONS"))
+            "WATCHLIST  -  passed Gate 1 (alpha), progressing through Gates 2-6 to PM DECISIONS"
+            "      ( ★ = priority stock: persistent-winner tilt, ~75% hist / 110 trades )"))
         self.wl_table = QTableWidget()
         self.wl_table.setColumnCount(len(self.WL_COLS))
         self.wl_table.setHorizontalHeaderLabels(self.WL_COLS)
@@ -980,7 +981,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             else:
                 nxt = ["alpha", "ORB", "align", "not-extended", "wide-open", "liquidity"][g.index(False)]
                 prog = f"{npass}/6  next: {nxt}"
-            vals = [sig.get("ticker"), f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
+            tk = ("★ " if sig.get("priority") else "") + str(sig.get("ticker"))
+            vals = [tk, f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
                     mark(g[0]), mark(g[1]), mark(g[2]), mark(g[3]), mark(g[4]), mark(g[5]), prog]
             self._set_row(self.wl_table, r, vals, fg=self._dir_color(sig.get("direction")))
             # color each gate cell: green when passed, dim when waiting; READY row glows green
@@ -995,7 +997,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self.alpha_table.setRowCount(len(rows))
         for r, sig in enumerate(rows):
             fam = sig.get("families_detail", {})
-            vals = [sig.get("ticker"), f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
+            atk = ("★ " if sig.get("priority") else "") + str(sig.get("ticker"))
+            vals = [atk, f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
                     f"{sig.get('breadth',0)}/3",
                     f"{fam.get('TREND',{}).get('z_score',0):.2f}",
                     f"{fam.get('FLOW',{}).get('z_score',0):.2f}",

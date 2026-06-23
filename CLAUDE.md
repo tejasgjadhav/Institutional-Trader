@@ -52,7 +52,13 @@ All 6 pass → buy OTM+1 CALL/PUT, exit **+10% / −20%** on premium.
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
 filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard −20% stop).
 
-Gates 3, 4 & 5 are the proven wins (validated on 365 days). See `studies/` for all 9 studies.
+Gates 3, 4 & 5 are the proven wins (validated on 365 days). See `studies/` for all 10 studies.
+
+**Priority stocks (`config.PRIORITY_STOCKS`, 13 names):** the only stocks whose gates-1-5 win
+rate persisted out-of-sample (train→test, ~75%/110 trades). Per-stock win-rate selection
+overfits (top-60 by win rate: 64% train → 49% test), so the universe stays broad at 100 and the
+engine fires on all of them; these 13 are just **★-flagged in the read-only UI** as a focus tilt
+— they do NOT change engine selection or the overall win rate. See `studies/PRIORITY_STOCKS_PERSISTENCE.md`.
 
 ## Key files
 
