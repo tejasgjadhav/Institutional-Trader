@@ -486,48 +486,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "+1.7% -&gt; +2.8% on 26% fewer trades. A risk-efficiency gain. NOW LIVE.")}
 {dim("File: studies/GATE4_DONT_CHASE.md")}
 
-{h("4 - Index ORB+VWAP: Trend-Ride Exit (the index fix)")}
-{sub("Question: why was the index strategy losing every day?")}
-{p("The old fixed +20% target capped winners while still taking full -20% stops - backwards "
-   "for a trend setup. Replaced with: ride the winner, exit on VWAP reclaim after +12%, hard "
-   "-20% stop; plus a clean-trend entry filter.")}
-{res("Result (60-day): win 27% -&gt; 63%, -2.6%/trade -&gt; +0.8%/trade. Stops the bleed (still "
-     "~breakeven net, a forward-test). NOW LIVE.")}
-{dim("File: studies/INDEX_TREND_RIDE_EXIT.md")}
-
-{h("5 - 365-Day Directional Validation (does the edge last a year?)")}
-{sub("Question: does the signal predict direction over a full year, not just a lucky month?")}
-{p("Option premiums only reach ~1 month back, but 5-min PRICE reaches ~365 days. Tested the "
-   "directional edge on 1,117 signals over the year.")}
-{res("Result: raw signal = coin flip (49%). ALIGNED (Gate 3) = 52% hit, +0.13%/trade, and it "
-     "HOLDS across all 12 months (772 trades). The edge is real but THIN - options leverage it.")}
-{dim("File: studies/UNDERLYING_VALIDATION_365D.md")}
-
-{h("6 - Stock Option Exit Cap (+10% vs no cap)")}
-{sub("Question: should we remove the +10% target and let stock winners ride?")}
-{p("Tested +10% / +20% / +30% / no-cap on the same trades, -20% stop. NOT deployed.")}
-{res("Result: removing the cap is INCONSISTENT - worst on 30-day (+0.5%), best on 60-day "
-     "(+3.6%) = high variance, not a reliable edge. The +10% cap gives the best win rate "
-     "(~60%) and lowest variance. KEPT at +10%.")}
-{dim("File: studies/STOCK_OPTION_EXIT_CAP.md")}
-
-{h("7 - Prophet Forward-Test (forecasting models)")}
-{sub("Question: can a time-series forecaster (Prophet) predict the index or the P&amp;L?")}
-{p("Forecast NIFTY/BANKNIFTY + the equity curve, then cross-validated the error.")}
-{res("Result: 20-day directional hit-rate 43% (NIFTY) / 21% (BANKNIFTY) - WORSE than a coin "
-     "flip; the forecast error is bigger than the move it predicts. Daily markets are near-"
-     "random. NOT wired into the app - it would add noise, not signal.")}
-{dim("File: studies/PROPHET_FORWARD_TEST.md")}
-
-{h("8 - Data Availability Limits (what can be backtested)")}
-{sub("Question: can we backtest 180 / 365 days on real option data?")}
-{p("Probed Upstox depth. Daily price = 2+ yrs, 5-min price = ~1 yr, but option-premium "
-   "candles = only ~3-4 weeks (expired contracts drop out of the instrument master).")}
-{res("Result: a clean OPTION-P&amp;L backtest is capped at ~1 month. Longer validation needs the "
-     "underlying-proxy (done), synthetic Black-Scholes premiums, or a paid options vendor.")}
-{dim("File: studies/DATA_AVAILABILITY_LIMITS.md")}
-
-{h("9 - Gate 5: Wide Open (opening-range width filter)")}
+{h("4 - Gate 5: Wide Open (opening-range width filter)")}
 {sub("Question: can a 5th gate raise the win rate at the same +10/-20 risk-reward?")}
 {p("A disciplined loop: collect 90 days of trades with features + premium paths, search "
    "candidates by out-of-sample expectancy, then VALIDATE on 365 days. 'Wide opening range "
@@ -536,6 +495,47 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {res("Result (365-day, 506 trades, validated): directional win 51% -&gt; 54%; option win 30-day "
      "61% -&gt; 66%, 60-day 66% -&gt; 70% at the SAME +10/-20. DEPLOYED as Gate 5.")}
 {dim("File: studies/GATE5_WIDE_OPEN.md")}
+
+{h("5 - Index ORB+VWAP: Trend-Ride Exit (the index fix)")}
+{sub("Question: why was the index strategy losing every day?")}
+{p("The old fixed +20% target capped winners while still taking full -20% stops - backwards "
+   "for a trend setup. Replaced with: ride the winner, exit on VWAP reclaim after +12%, hard "
+   "-20% stop; plus a clean-trend entry filter.")}
+{res("Result (60-day): win 27% -&gt; 63%, -2.6%/trade -&gt; +0.8%/trade. Stops the bleed (still "
+     "~breakeven net, a forward-test). NOW LIVE.")}
+{dim("File: studies/INDEX_TREND_RIDE_EXIT.md")}
+
+{h("6 - 365-Day Directional Validation (does the edge last a year?)")}
+{sub("Question: does the signal predict direction over a full year, not just a lucky month?")}
+{p("Option premiums only reach ~1 month back, but 5-min PRICE reaches ~365 days. Tested the "
+   "directional edge on 1,117 signals over the year.")}
+{res("Result: raw signal = coin flip (49%). ALIGNED (Gate 3) = 52% hit, +0.13%/trade, and it "
+     "HOLDS across all 12 months (772 trades). The edge is real but THIN - options leverage it.")}
+{dim("File: studies/UNDERLYING_VALIDATION_365D.md")}
+
+{h("7 - Stock Option Exit Cap (+10% vs no cap)")}
+{sub("Question: should we remove the +10% target and let stock winners ride?")}
+{p("Tested +10% / +20% / +30% / no-cap on the same trades, -20% stop. NOT deployed.")}
+{res("Result: removing the cap is INCONSISTENT - worst on 30-day (+0.5%), best on 60-day "
+     "(+3.6%) = high variance, not a reliable edge. The +10% cap gives the best win rate "
+     "(~60%) and lowest variance. KEPT at +10%.")}
+{dim("File: studies/STOCK_OPTION_EXIT_CAP.md")}
+
+{h("8 - Prophet Forward-Test (forecasting models)")}
+{sub("Question: can a time-series forecaster (Prophet) predict the index or the P&amp;L?")}
+{p("Forecast NIFTY/BANKNIFTY + the equity curve, then cross-validated the error.")}
+{res("Result: 20-day directional hit-rate 43% (NIFTY) / 21% (BANKNIFTY) - WORSE than a coin "
+     "flip; the forecast error is bigger than the move it predicts. Daily markets are near-"
+     "random. NOT wired into the app - it would add noise, not signal.")}
+{dim("File: studies/PROPHET_FORWARD_TEST.md")}
+
+{h("9 - Data Availability Limits (what can be backtested)")}
+{sub("Question: can we backtest 180 / 365 days on real option data?")}
+{p("Probed Upstox depth. Daily price = 2+ yrs, 5-min price = ~1 yr, but option-premium "
+   "candles = only ~3-4 weeks (expired contracts drop out of the instrument master).")}
+{res("Result: a clean OPTION-P&amp;L backtest is capped at ~1 month. Longer validation needs the "
+     "underlying-proxy (done), synthetic Black-Scholes premiums, or a paid options vendor.")}
+{dim("File: studies/DATA_AVAILABILITY_LIMITS.md")}
 
 {h("The honest bottom line")}
 {p("After all of it: a <b>~54-70% win, thin-but-real</b> edge (option windows small; 365-day "

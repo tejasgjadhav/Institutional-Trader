@@ -318,12 +318,12 @@ short-window rupee figures as directional. The in-app **STUDIES** tab shows the 
 | 1 | [Win-Rate Research Log](studies/WIN_RATE_RESEARCH_LOG.md) | How high can win rate go? | A ~52–57% out-of-sample wall; edge must come from filtering | baseline |
 | 2 | [Gate 3 — Market Alignment](studies/FINAL_STRATEGY_TESTING_60DAY.md) | Does not fighting the Nifty help? | 60d: ~59% win, P&L +₹17k → +₹31k (~2×) | **LIVE** |
 | 3 | [Gate 4 — Don't Chase](studies/GATE4_DONT_CHASE.md) | Do over-extended entries lose edge? | 60d: win 59→61%, RoC +1.7→+2.8%, fewer trades | **LIVE** |
-| 4 | [Index Trend-Ride Exit](studies/INDEX_TREND_RIDE_EXIT.md) | Why did the index lose daily? | Fixed +20% cap → trend-ride: win 27→63% | **LIVE** |
-| 5 | [365-Day Directional Validation](studies/UNDERLYING_VALIDATION_365D.md) | Does the edge last a year? | Aligned 52% hit, +0.13%/trade, holds 12 months | validated |
-| 6 | [Stock Option Exit Cap](studies/STOCK_OPTION_EXIT_CAP.md) | Remove the +10% cap? | Inconsistent / high variance — kept +10% | not deployed |
-| 7 | [Prophet Forward-Test](studies/PROPHET_FORWARD_TEST.md) | Can forecasting predict it? | 20d direction worse than a coin flip | not deployed |
-| 8 | [Data Availability Limits](studies/DATA_AVAILABILITY_LIMITS.md) | Can we backtest 180/365d on options? | Option premiums only ~1 month back | reference |
-| 9 | [Gate 5 — Wide Open](studies/GATE5_WIDE_OPEN.md) | Can a 5th gate raise win rate at the same +10/−20? | 365d win 51→54%; option 30d 61→66%, 60d 66→70% | **LIVE** |
+| 4 | [Gate 5 — Wide Open](studies/GATE5_WIDE_OPEN.md) | Can a 5th gate raise win rate at the same +10/−20? | 365d win 51→54%; option 30d 61→66%, 60d 66→70% | **LIVE** |
+| 5 | [Index Trend-Ride Exit](studies/INDEX_TREND_RIDE_EXIT.md) | Why did the index lose daily? | Fixed +20% cap → trend-ride: win 27→63% | **LIVE** |
+| 6 | [365-Day Directional Validation](studies/UNDERLYING_VALIDATION_365D.md) | Does the edge last a year? | Aligned 52% hit, +0.13%/trade, holds 12 months | validated |
+| 7 | [Stock Option Exit Cap](studies/STOCK_OPTION_EXIT_CAP.md) | Remove the +10% cap? | Inconsistent / high variance — kept +10% | not deployed |
+| 8 | [Prophet Forward-Test](studies/PROPHET_FORWARD_TEST.md) | Can forecasting predict it? | 20d direction worse than a coin flip | not deployed |
+| 9 | [Data Availability Limits](studies/DATA_AVAILABILITY_LIMITS.md) | Can we backtest 180/365d on options? | Option premiums only ~1 month back | reference |
 
 **Bottom line:** a ~54–70% win, thin-but-real edge (option windows small; 365-day directional
 ~54%). Gates 3, 4 & 5 are the proven wins; the index trend-ride stops a bleed; the exit-cap and
