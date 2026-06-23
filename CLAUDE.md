@@ -52,7 +52,11 @@ All 6 pass → buy OTM+1 CALL/PUT, exit **+10% / −20%** on premium.
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
 filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard −20% stop).
 
-Gates 3, 4 & 5 are the proven wins (validated on 365 days). See `studies/` for all 10 studies.
+Gates 3, 4 & 5 are the proven wins (validated on 365 days). See `studies/` for all 11 studies.
+The universe is the hand-picked ~100 (mostly mid/large-cap movers) — NOT ranked by market cap:
+a head-to-head showed a free-float-mcap top-100 *lost* to it (61% vs 67% on the same window),
+because mega-caps don't break out. Select by intraday movement, not size — see
+`studies/UNIVERSE_94_VS_100_HEADTOHEAD.md`.
 
 **Priority stocks (`config.PRIORITY_STOCKS`, 13 names):** the only stocks whose gates-1-5 win
 rate persisted out-of-sample (train→test, ~75%/110 trades). Per-stock win-rate selection

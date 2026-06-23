@@ -23,40 +23,31 @@ PAPER_TRADING_BREAKEVEN_WIN_RATE = 0.67
 PAPER_TRADING_MIN_WIN_RATE = 0.70
 PAPER_TRADING_MIN_PF = 1.0
 
-# === UNIVERSE — top ~100 NSE stocks by FREE-FLOAT MARKET CAP (NIFTY-100-equivalent),
-# every name F&O-eligible so its options are actually tradeable. Verified against the live
-# Upstox F&O master (asset_symbol) — all return live candles + resolvable option chains.
-# ZOMATO is now ETERNAL (renamed). ===
+# === UNIVERSE — reverted to the proven hand-picked 94 (beat the free-float-mcap 100
+# head-to-head: 67% vs 61% win on the SAME 60-day window, gates 1-5 +10/-20; the mega-cap
+# additions were net losers at 53%/-2.8%, the removed mid-caps were the best at 75%/+4.3%).
+# + the 5 persistent-winner PRIORITY names not already in the 94 + ETERNAL (ex-ZOMATO).
+# All F&O-eligible (live candles + resolvable option chains). ===
 UNIVERSE = [
-    # Banks & Financials
-    "HDFCBANK.NS", "ICICIBANK.NS", "SBIN.NS", "KOTAKBANK.NS", "AXISBANK.NS", "BAJFINANCE.NS",
-    "BAJAJFINSV.NS", "LICI.NS", "JIOFIN.NS", "SHRIRAMFIN.NS", "HDFCLIFE.NS", "SBILIFE.NS",
-    "BANKBARODA.NS", "PNB.NS", "INDUSINDBK.NS", "CHOLAFIN.NS", "MUTHOOTFIN.NS", "PFC.NS",
-    "RECLTD.NS", "IRFC.NS", "HDFCAMC.NS", "ICICIGI.NS", "ICICIPRULI.NS", "BAJAJHLDNG.NS",
-    "INDIANB.NS", "AUBANK.NS",
-    # IT
-    "INFY.NS", "HCLTECH.NS", "WIPRO.NS", "TECHM.NS", "LTM.NS", "PERSISTENT.NS", "TATAELXSI.NS",
-    # Energy / Oil / Power
-    "RELIANCE.NS", "ONGC.NS", "NTPC.NS", "POWERGRID.NS", "COALINDIA.NS", "BPCL.NS", "IOC.NS",
-    "GAIL.NS", "TATAPOWER.NS", "ADANIPOWER.NS", "ADANIGREEN.NS", "ADANIENSOL.NS",
-    # Auto
-    "MARUTI.NS", "M&M.NS", "BAJAJ-AUTO.NS", "EICHERMOT.NS", "TVSMOTOR.NS", "HEROMOTOCO.NS",
-    "MOTHERSON.NS", "BOSCHLTD.NS", "TMPV.NS", "ASHOKLEY.NS",
-    # FMCG / Consumer
-    "HINDUNILVR.NS", "NESTLEIND.NS", "TATACONSUM.NS", "ASIANPAINT.NS",
-    "MARICO.NS", "PIDILITIND.NS", "COLPAL.NS", "VBL.NS",
-    # Pharma / Healthcare
-    "SUNPHARMA.NS", "CIPLA.NS", "DRREDDY.NS", "DIVISLAB.NS", "APOLLOHOSP.NS", "TORNTPHARM.NS",
-    "ZYDUSLIFE.NS", "MAXHEALTH.NS", "AUROPHARMA.NS",
-    # Metals
-    "JSWSTEEL.NS", "TATASTEEL.NS", "HINDALCO.NS", "HINDZINC.NS", "VEDL.NS", "JINDALSTEL.NS",
-    # Cement
-    "ULTRACEMCO.NS", "GRASIM.NS", "AMBUJACEM.NS",
-    # Capital goods / Infra / Defence
-    "LT.NS", "SIEMENS.NS", "ABB.NS", "BEL.NS", "HAL.NS", "CGPOWER.NS", "HAVELLS.NS",
-    # Diversified / Other
-    "BHARTIARTL.NS", "TITAN.NS", "TRENT.NS", "ETERNAL.NS", "ADANIENT.NS", "ADANIPORTS.NS",
-    "DMART.NS", "INDIGO.NS", "DLF.NS", "LODHA.NS", "NAUKRI.NS", "INDHOTEL.NS",
+    # Reverted to the proven 94 (beat mcap-100 head-to-head 67% vs 61% on same window),
+    # + 5 persistent-winner priority names not already in it + ETERNAL (ex-ZOMATO).
+    "TCS.NS", "INFY.NS", "WIPRO.NS", "HCLTECH.NS", "TECHM.NS", "MPHASIS.NS",
+    "COFORGE.NS", "PERSISTENT.NS", "OFSS.NS", "HDFCBANK.NS", "ICICIBANK.NS", "KOTAKBANK.NS",
+    "SBIN.NS", "AXISBANK.NS", "INDUSINDBK.NS", "FEDERALBNK.NS", "IDFCFIRSTB.NS", "BANDHANBNK.NS",
+    "BANKBARODA.NS", "PNB.NS", "UNIONBANK.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS", "HDFCLIFE.NS",
+    "SBILIFE.NS", "CHOLAFIN.NS", "MUTHOOTFIN.NS", "SHRIRAMFIN.NS", "RECLTD.NS", "PFC.NS",
+    "IRFC.NS", "RELIANCE.NS", "ONGC.NS", "BPCL.NS", "IOC.NS", "COALINDIA.NS",
+    "POWERGRID.NS", "NTPC.NS", "TATAPOWER.NS", "ADANIGREEN.NS", "LT.NS", "ADANIENT.NS",
+    "ADANIPORTS.NS", "SIEMENS.NS", "ABB.NS", "BHEL.NS", "HAVELLS.NS", "POLYCAB.NS",
+    "VOLTAS.NS", "ULTRACEMCO.NS", "GRASIM.NS", "AMBUJACEM.NS", "ACC.NS", "JSWSTEEL.NS",
+    "TATASTEEL.NS", "HINDALCO.NS", "VEDL.NS", "SAIL.NS", "NMDC.NS", "MARUTI.NS",
+    "BAJAJ-AUTO.NS", "HEROMOTOCO.NS", "EICHERMOT.NS", "M&M.NS", "ASHOKLEY.NS", "BALKRISIND.NS",
+    "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "TATACONSUM.NS", "ASIANPAINT.NS",
+    "GODREJCP.NS", "MARICO.NS", "DABUR.NS", "PIDILITIND.NS", "SUNPHARMA.NS", "DRREDDY.NS",
+    "CIPLA.NS", "DIVISLAB.NS", "APOLLOHOSP.NS", "LUPIN.NS", "TORNTPHARM.NS", "AUROPHARMA.NS",
+    "ZYDUSLIFE.NS", "TITAN.NS", "DMART.NS", "TRENT.NS", "JUBLFOOD.NS", "BHARTIARTL.NS",
+    "NAUKRI.NS", "INDIGO.NS", "DLF.NS", "GODREJPROP.NS", "JINDALSTEL.NS", "INDIANB.NS",
+    "AUBANK.NS", "BAJAJHLDNG.NS", "TATAELXSI.NS", "ETERNAL.NS",
 ]
 assert len(UNIVERSE) == 100, "Universe should have 100 stocks"
 
