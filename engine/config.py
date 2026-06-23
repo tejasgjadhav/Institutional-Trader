@@ -82,6 +82,12 @@ MARKET_ALIGN_FILTER = True
 # decent trades. The 2.6 cap was over-aggressive.
 ENTRY_EXTENSION_FILTER = True
 MAX_ENTRY_EXTENSION_PCT = 2.9
+# Gate 5 — WIDE OPEN: only trade when the first-30-min opening range is at least this % of
+# price wide. A wider opening range = real morning momentum (cleaner breakouts); a narrow,
+# low-energy open is chop. Found via a 90-day option search, VALIDATED on 365 days (506
+# trades): win 51%->54% directional, and option win 30d 61%->66% / 60d 66%->70% at +10/-20.
+ORB_RANGE_FILTER = True
+ORB_RANGE_WIDTH_MIN = 0.8   # opening-range width as % of price
 OPTION_CONVICTION_THRESHOLD = 0.70  # |alpha-z| > 0.70 trades as CALL/PUT instead of EQ/FUT
 
 # === TRADING UNIVERSE FILTER (PF>1 / EXPECTANCY) ===

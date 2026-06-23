@@ -147,7 +147,8 @@ class Agent:
 
             # Gate 3: MARKET ALIGNMENT — don't fight the Nifty's intraday direction
             from engine.config import (MARKET_ALIGN_FILTER, ENTRY_EXTENSION_FILTER,
-                                       MAX_ENTRY_EXTENSION_PCT)
+                                       MAX_ENTRY_EXTENSION_PCT, ORB_RANGE_FILTER,
+                                       ORB_RANGE_WIDTH_MIN, ORB_BARS)
             direction = signal["direction"]
             nifty_dir = 1 if (nifty_pct or 0) > 0 else (-1 if (nifty_pct or 0) < 0 else 0)
             aligned = ((direction == "LONG" and nifty_dir == 1) or
@@ -163,10 +164,21 @@ class Agent:
                 ext_dir = raw_ext if direction == "LONG" else -raw_ext  # move in trade dir
             not_extended = (ext_dir <= MAX_ENTRY_EXTENSION_PCT)
 
+            # Gate 5: WIDE OPEN — the first-30-min opening range must be wide enough vs price
+            # (narrow opens are chop; wide opens carry real morning momentum). Pure arithmetic
+            # on candles already in hand — no extra network call.
+            orb_w = 0.0
+            if len(df_5min) >= ORB_BARS and cur_px:
+                orb_hi = float(df_5min["High"].iloc[:ORB_BARS].max())
+                orb_lo = float(df_5min["Low"].iloc[:ORB_BARS].min())
+                orb_w = (orb_hi - orb_lo) / cur_px * 100
+            wide_open = (orb_w >= ORB_RANGE_WIDTH_MIN)
+
             # All gates (each filter only enforced when its flag is on)
             trade_ready = (gate_1 and gate_2
                            and (aligned or not MARKET_ALIGN_FILTER)
-                           and (not_extended or not ENTRY_EXTENSION_FILTER))
+                           and (not_extended or not ENTRY_EXTENSION_FILTER)
+                           and (wide_open or not ORB_RANGE_FILTER))
 
             return {
                 "ticker": ticker,
@@ -181,6 +193,8 @@ class Agent:
                 "nifty_dir": nifty_dir,
                 "entry_extension_pct": round(ext_dir, 2),
                 "not_extended": not_extended,
+                "orb_range_width": round(orb_w, 2),
+                "wide_open": wide_open,
                 "trade_ready": trade_ready,
                 "families_detail": signal.get("families_detail", {}),  # for ALPHA tab columns
                 "current_price": signal.get("current_price"),

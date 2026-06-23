@@ -29,9 +29,11 @@ CREATE TABLE IF NOT EXISTS scan_rows (
     gate2       INTEGER,
     gate3       INTEGER,
     gate4       INTEGER,
+    gate5       INTEGER,
     trade_ready INTEGER,
     vol_ratio   REAL,
     ext_pct     REAL,
+    orb_w       REAL,
     nifty_dir   INTEGER
 );
 CREATE TABLE IF NOT EXISTS market_snapshots (
@@ -54,6 +56,12 @@ def _conn():
     os.makedirs(DATA_DIR, exist_ok=True)
     c = sqlite3.connect(DB_PATH, timeout=5)
     c.executescript(_SCHEMA)
+    # migrate older DBs (CREATE TABLE IF NOT EXISTS won't add new columns)
+    for col, typ in (("gate5", "INTEGER"), ("orb_w", "REAL")):
+        try:
+            c.execute(f"ALTER TABLE scan_rows ADD COLUMN {col} {typ}")
+        except sqlite3.OperationalError:
+            pass   # column already exists
     return c
 
 
@@ -70,8 +78,10 @@ def save_scan(results: list, ts: datetime = None) -> int:
             r.get("breadth"),
             int(bool(r.get("passes_gate_1"))), int(bool(r.get("gate_2"))),
             int(bool(r.get("aligned"))), int(bool(r.get("not_extended"))),
+            int(bool(r.get("wide_open"))),
             int(bool(r.get("trade_ready"))),
-            r.get("vol_ratio"), r.get("entry_extension_pct"), r.get("nifty_dir"),
+            r.get("vol_ratio"), r.get("entry_extension_pct"),
+            r.get("orb_range_width"), r.get("nifty_dir"),
         ))
     if not rows:
         return 0
@@ -79,8 +89,8 @@ def save_scan(results: list, ts: datetime = None) -> int:
         with _conn() as c:
             c.executemany(
                 "INSERT INTO scan_rows (date,ts,ticker,alpha_z,direction,breadth,"
-                "gate1,gate2,gate3,gate4,trade_ready,vol_ratio,ext_pct,nifty_dir) "
-                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
+                "gate1,gate2,gate3,gate4,gate5,trade_ready,vol_ratio,ext_pct,orb_w,nifty_dir) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)", rows)
         return len(rows)
     except Exception as e:
         logger.warning(f"store.save_scan failed: {e}")

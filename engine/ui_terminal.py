@@ -343,12 +343,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return w
 
     WL_COLS = ["TICKER", "ALPHA-Z", "DIR", "G1 ALPHA", "G2 ORB", "G3 ALIGN",
-               "G4 CHASE", "PROGRESS"]
+               "G4 CHASE", "G5 WIDE", "PROGRESS"]
 
     def _screen_watchlist(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
         v.addWidget(self._panel_title(
-            "WATCHLIST  -  passed Gate 1 (alpha), progressing through Gates 2-4 to PM DECISIONS"))
+            "WATCHLIST  -  passed Gate 1 (alpha), progressing through Gates 2-5 to PM DECISIONS"))
         self.wl_table = QTableWidget()
         self.wl_table.setColumnCount(len(self.WL_COLS))
         self.wl_table.setHorizontalHeaderLabels(self.WL_COLS)
@@ -360,7 +360,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         from engine import config as C
         leg = QLabel("PASS = gate cleared, wait = pending    |    G1 alpha, G2 ORB breakout+volume, "
                      "G3 aligned with Nifty, G4 not over-extended (<="
-                     f"{C.MAX_ENTRY_EXTENSION_PCT}%)    |    all 4 PASS = fires on PM DECISIONS")
+                     f"{C.MAX_ENTRY_EXTENSION_PCT}%), G5 wide opening range (>={C.ORB_RANGE_WIDTH_MIN}%)"
+                     f"    |    all 5 PASS = fires on PM DECISIONS")
         leg.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 2px;"); leg.setWordWrap(True)
         v.addWidget(leg)
         return w
@@ -615,7 +616,7 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
      "momentum signal with a flow tilt, not three equal voices. (A 4th mean-reversion family was removed: "
      "it won only 47.6%.)")}
 
-{h("STEP 2 — Four gates (each removes a known way to lose)")}
+{h("STEP 2 — Five gates (each removes a known way to lose)")}
 {sub("Gate 1 · Alpha — strong AND broad?")}
 {p(f"Require |alpha-z| &gt; <b>{C.ALPHA_Z_THRESHOLD}</b> AND <b>≥{C.MIN_FAMILIES_AGREE} of 3</b> families "
    f"agree. <b>Why:</b> one noisy family shouldn't trigger a trade — demand both conviction and agreement. "
@@ -630,8 +631,13 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {p(f"Skip if the stock already moved &gt; <b>{C.MAX_ENTRY_EXTENSION_PCT}%</b> in the trade's direction from "
    f"the open. <b>Why:</b> buying an already-run stock is buying the top. <i>Evidence (365 days): "
    f"over-extended entries won ~45% vs ~55%; same profit on fewer trades.</i>")}
-{p("All four pass → <b>PM DECISIONS</b>. The <b>WATCHLIST</b> tab shows each candidate's live gate "
-   "progress (PASS / wait, e.g. <b>3/4 next: align</b>), sorted closest-to-firing on top.")}
+{sub("Gate 5 · Wide open — is there real morning momentum?")}
+{p(f"Require the first-30-min opening range to be at least <b>{C.ORB_RANGE_WIDTH_MIN}%</b> of price wide. "
+   f"<b>Why:</b> a wide opening range means the day has real energy → cleaner breakouts; a narrow, quiet "
+   f"open is chop. <i>Evidence: validated on 365 days (506 trades) — directional win 51% → 54%; option win "
+   f"30-day 61% → 66%, 60-day 66% → 70% at +10/−20.</i>")}
+{p("All five pass → <b>PM DECISIONS</b>. The <b>WATCHLIST</b> tab shows each candidate's live gate "
+   "progress (PASS / wait, e.g. <b>4/5 next: wide-open</b>), sorted closest-to-firing on top.")}
 
 {h("STEP 3 — What you trade, and why")}
 {p("Every signal is a <b>bought option</b> (never sold): <b style='color:{0}'>LONG → buy CALL</b>, "
@@ -645,7 +651,7 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 
 {h("STEP 3b — THE INDEX STRATEGY (NIFTY &amp; BANKNIFTY) — full logic")}
 {p("A <b>completely separate, parallel</b> strategy from the stock system. It does NOT use alpha-z, the 3 "
-   "families, or the 4 gates. It is an intraday <b>Opening-Range Breakout + VWAP</b> momentum play on the "
+   "families, or the 5 gates. It is an intraday <b>Opening-Range Breakout + VWAP</b> momentum play on the "
    "two indices, in its own INDEX OPTIONS section on PM DECISIONS. (`engine/orb_vwap_live.py`)")}
 {sub("Entry — a signal fires only when ALL of these line up")}
 {p("<b>1. Opening range</b> = high/low of the first 15 min (first 3 × 5-min candles, 9:15–9:30).")}
@@ -939,9 +945,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
 
         def gates(s):
-            # G1 is true for everyone on the watchlist; G2/G3/G4 are the progress.
+            # G1 is true for everyone on the watchlist; G2-G5 are the progress.
             return [True, bool(s.get("gate_2")), bool(s.get("aligned")),
-                    bool(s.get("not_extended"))]
+                    bool(s.get("not_extended")), bool(s.get("wide_open"))]
 
         # closest-to-firing on top: most gates passed first, then alpha-z
         wl.sort(key=lambda s: (sum(gates(s)), abs(s.get("alpha_z", 0))), reverse=True)
@@ -950,20 +956,20 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             g = gates(sig)
             npass = sum(g)
             mark = lambda ok: "PASS" if ok else "wait"
-            if npass == 4:
-                prog = "4/4  READY -> PM"
+            if npass == 5:
+                prog = "5/5  READY -> PM"
             else:
-                nxt = ["alpha", "ORB", "align", "not-extended"][g.index(False)]
-                prog = f"{npass}/4  next: {nxt}"
+                nxt = ["alpha", "ORB", "align", "not-extended", "wide-open"][g.index(False)]
+                prog = f"{npass}/5  next: {nxt}"
             vals = [sig.get("ticker"), f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
-                    mark(g[0]), mark(g[1]), mark(g[2]), mark(g[3]), prog]
+                    mark(g[0]), mark(g[1]), mark(g[2]), mark(g[3]), mark(g[4]), prog]
             self._set_row(self.wl_table, r, vals, fg=self._dir_color(sig.get("direction")))
             # color each gate cell: green when passed, dim when waiting; READY row glows green
-            for col, ok in zip((3, 4, 5, 6), g):
+            for col, ok in zip((3, 4, 5, 6, 7), g):
                 it = self.wl_table.item(r, col)
                 if it: it.setForeground(QColor(GREEN) if ok else QColor(TEXT_DIM))
-            pit = self.wl_table.item(r, 7)
-            if pit: pit.setForeground(QColor(GREEN) if npass == 4 else QColor(AMBER))
+            pit = self.wl_table.item(r, 8)
+            if pit: pit.setForeground(QColor(GREEN) if npass == 5 else QColor(AMBER))
 
     def _refresh_alpha(self):
         rows = self.last_scan_results

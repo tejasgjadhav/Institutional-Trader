@@ -40,12 +40,13 @@ token (read-only data feed — no trading token needed).
 
 ## Strategy (what the gates do)
 
-**3-Family stocks** → alpha-z (TREND 0.72 + FLOW 0.18 + EVENT 0.10), then 4 gates:
+**3-Family stocks** → alpha-z (TREND 0.72 + FLOW 0.18 + EVENT 0.10), then 5 gates:
 1. **Alpha** — |alpha-z| > 0.55 AND ≥2/3 families agree.
 2. **ORB** — latest 5-min candle breaks the opening range with a volume surge.
 3. **Market alignment** — only LONG when Nifty up / SHORT when Nifty down (`MARKET_ALIGN_FILTER`).
 4. **Don't chase** — skip if the stock already moved > `MAX_ENTRY_EXTENSION_PCT` (2.9%) from the open.
-All 4 pass → buy OTM+1 CALL/PUT, exit **+10% / −20%** on premium.
+5. **Wide open** — first-30-min opening range must be ≥ `ORB_RANGE_WIDTH_MIN` (0.8%) of price (`ORB_RANGE_FILTER`). Validated 365d: dir win 51→54%, option 60d 66→70% at +10/−20.
+All 5 pass → buy OTM+1 CALL/PUT, exit **+10% / −20%** on premium.
 
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
 filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard −20% stop).
