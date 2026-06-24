@@ -16,6 +16,7 @@ import sys
 import json
 import time
 import logging
+import subprocess
 from datetime import datetime
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -49,6 +50,7 @@ class EngineRunner:
         self._last_resolve = 0.0
         self._notified = set()
         self._notified_day = None
+        self._caffeinate = None   # power assertion held while the market is open
 
     # ── persistence helpers ──────────────────────────────────────────────────
     @staticmethod
@@ -184,9 +186,32 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"fast resolve: {e}")
 
+    def _manage_wakelock(self):
+        """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended
+        laptop can't idle-sleep mid-session and suspend the engine (the system sleep timer is
+        only ~1 min). Released after the close so normal sleep resumes — we don't keep the Mac
+        awake 24/7. `-w <pid>` ties it to this process so a crash can't orphan it awake.
+
+        NOTE: prevents IDLE sleep only. Closing the lid (clamshell) still sleeps; for fully
+        unattended trading keep the lid open and on AC power.
+        """
+        open_now = self.agent.is_market_open()
+        alive = self._caffeinate is not None and self._caffeinate.poll() is None
+        try:
+            if open_now and not alive:
+                self._caffeinate = subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
+                logger.info("wakelock: caffeinate -i held (market open)")
+            elif not open_now and alive:
+                self._caffeinate.terminate()
+                self._caffeinate = None
+                logger.info("wakelock: released (market closed)")
+        except Exception as e:
+            logger.warning(f"wakelock manage failed: {e}")
+
     def cycle(self):
         now = datetime.now(IST)
         self._market(now)
+        self._manage_wakelock()
         self._maybe_eod(now)
         self._fast_resolve()
         if self.agent.is_market_open() and (time.time() - self._last_scan) >= SCAN_INTERVAL:
