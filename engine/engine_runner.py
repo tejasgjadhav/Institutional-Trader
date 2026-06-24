@@ -36,15 +36,17 @@ logger = logging.getLogger("engine_runner")
 
 LATEST_SCAN = os.path.join(DATA_DIR, "latest_scan.json")
 MARKET_SNAP = os.path.join(DATA_DIR, "market_snapshot.json")
-SCAN_INTERVAL = 300   # 5 min
+SCAN_INTERVAL = 300   # 5 min — full 100-stock scan + fire new signals
 TICK = 5              # wake every 5 s in market hours (tight scan timing + live bar)
+RESOLVE_INTERVAL = 20 # resolve OPEN trades every 20 s (low-latency win/loss booking,
+                      # decoupled from the 5-min scan; only runs while trades are open)
 
 
 class EngineRunner:
     def __init__(self):
         self.agent = Agent()
         self._last_scan = 0.0
-        self._eod_day = None
+        self._last_resolve = 0.0
         self._notified = set()
         self._notified_day = None
 
@@ -163,10 +165,30 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"EOD booking: {e}")
 
+    def _fast_resolve(self):
+        """Low-latency win/loss booking: while any trade is OPEN, resolve every RESOLVE_INTERVAL
+        seconds instead of waiting for the 5-min scan — so the trade log + PM DECISIONS update
+        within ~20 s of a target/stop/EOD candle, not minutes. Cheap (only the open trades hit
+        the API) and fully guarded so it can never crash the loop."""
+        if not self.agent.is_market_open():
+            return
+        if (time.time() - self._last_resolve) < RESOLVE_INTERVAL:
+            return
+        if not any(t.get("outcome") is None for t in self.agent.trade_log.trades):
+            return
+        self._last_resolve = time.time()
+        try:
+            n = resolve_pending(self.agent.trade_log)
+            if n:
+                logger.info(f"fast-resolved {n} trade(s)")
+        except Exception as e:
+            logger.warning(f"fast resolve: {e}")
+
     def cycle(self):
         now = datetime.now(IST)
         self._market(now)
         self._maybe_eod(now)
+        self._fast_resolve()
         if self.agent.is_market_open() and (time.time() - self._last_scan) >= SCAN_INTERVAL:
             self._last_scan = time.time()
             try:

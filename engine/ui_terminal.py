@@ -117,6 +117,10 @@ class TerminalApp(QMainWindow):
         # timers
         self.scan_timer = QTimer(); self.scan_timer.timeout.connect(self.trigger_scan)
         self.scan_timer.start(15_000)  # 15s — re-read the engine's latest scan from disk
+        # Outcome timer: refresh PM DECISIONS + TRADE LOG fast (5s) so a WIN/LOSS the engine
+        # just booked shows up near-immediately, decoupled from the heavier 15s full scan refresh.
+        self.outcome_timer = QTimer(); self.outcome_timer.timeout.connect(self._refresh_outcomes)
+        self.outcome_timer.start(5_000)
         self.clock_timer = QTimer(); self.clock_timer.timeout.connect(self._tick)
         self.clock_timer.start(1000)
         # Market data: poll fast (2s) when open, slow (20s) when closed.
@@ -129,7 +133,7 @@ class TerminalApp(QMainWindow):
     def closeEvent(self, event):
         """On quit: stop timers and wait for worker threads so we never destroy a
         still-running QThread (the 'Destroyed while thread is still running' warning)."""
-        for tname in ("scan_timer", "clock_timer", "mkt_timer", "idx_timer"):
+        for tname in ("scan_timer", "outcome_timer", "clock_timer", "mkt_timer", "idx_timer"):
             t = getattr(self, tname, None)
             try:
                 if t is not None: t.stop()
@@ -859,6 +863,19 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         window on resize and pushed the nav off-screen.)"""
         table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
 
+    def _refresh_outcomes(self):
+        """Fast (5s) refresh of the outcome-sensitive views only — PM DECISIONS + TRADE LOG —
+        so a freshly booked WIN/LOSS appears within seconds. Fully guarded: a read error here
+        must never crash the read-only viewer."""
+        try:
+            self._refresh_pm()
+        except Exception as e:
+            logger.warning(f"outcome refresh (pm): {e}")
+        try:
+            self._refresh_log()
+        except Exception as e:
+            logger.warning(f"outcome refresh (log): {e}")
+
     def _refresh_pm(self):
         self._ensure_fired_today()
         from engine.options import build_live_option_order
@@ -886,14 +903,17 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 vals = [f["time"], sym, kind, "—", "—", "—", "—", "—", "—", "—", "—", status]
                 self._set_row(self.pm_stock, r, vals, fg=fg)
                 self._color_cell(self.pm_stock, r, 11, self._status_color(status)); continue
-            # live current premium of the exact option
+            # live current premium of the exact option — fetch ONLY while OPEN. A booked
+            # (WIN/LOSS) trade needs no live quote, so skipping it keeps the fast 5s outcome
+            # refresh off the network for closed rows (no GUI-thread stall, no wasted API calls).
             curp = "—"
-            try:
-                lt = fetch_upstox_ltp(order["option_key"])
-                if lt.get("success") and lt.get("price"):
-                    curp = f"Rs {lt['price']:.2f}"
-            except Exception:
-                pass
+            if status == "OPEN":
+                try:
+                    lt = fetch_upstox_ltp(order["option_key"])
+                    if lt.get("success") and lt.get("price"):
+                        curp = f"Rs {lt['price']:.2f}"
+                except Exception:
+                    pass
             cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
             vals = [f["time"], sym, kind, f"{order['strike']:.2f}", order["expiry"],
                     f"Rs {order['premium']:.2f}", curp,
