@@ -10,6 +10,7 @@ hour from 9 AM to 1 PM, so the EVENT z-score updates through the morning
 without slowing the 5-min signal scan.
 """
 import os
+import re
 import json
 import logging
 from datetime import datetime, timedelta
@@ -39,11 +40,28 @@ BEARISH = [
 ]
 
 
+# Keywords whose plain substring sits at the START of a common, unrelated word — naive
+# `k in text` would false-match (the big one: "ban" inside "Bank", which appears in almost
+# every banking-stock filing → a systematic bearish bias on ~24 bank names). These require a
+# FULL word boundary. All other keywords use a START boundary so plurals/tenses still match
+# ("order"→"orders/ordered") while mid-word collisions (define/gloss/disorder) don't.
+_WHOLE_WORD = {"ban", "shut", "fine", "scam", "loss", "fraud", "default", "delay", "decline"}
+
+
+def _kw_hits(t: str, keywords: list) -> int:
+    n = 0
+    for k in keywords:
+        pat = r"\b" + re.escape(k) + (r"\b" if k in _WHOLE_WORD else "")
+        if re.search(pat, t):
+            n += 1
+    return n
+
+
 def _score_text(text: str) -> int:
-    """+1 bullish, -1 bearish, 0 neutral for one announcement."""
+    """+1 bullish, -1 bearish, 0 neutral for one announcement (word-boundary matched)."""
     t = (text or "").lower()
-    pos = sum(1 for k in BULLISH if k in t)
-    neg = sum(1 for k in BEARISH if k in t)
+    pos = _kw_hits(t, BULLISH)
+    neg = _kw_hits(t, BEARISH)
     if pos > neg:
         return 1
     if neg > pos:
