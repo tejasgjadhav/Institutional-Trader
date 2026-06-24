@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS pm_signals (
     alpha_z        REAL,      -- 3-Family only
     breadth        INTEGER,   -- 3-Family only
     vol_ratio      REAL,      -- 3-Family only (ORB volume surge x)
-    status         TEXT,      -- FIRED / ACTIVE / TARGET +20% / STOPPED -20%
+    status         TEXT,      -- OPEN / WIN / LOSS (synced to trade log)
     recorded_at    TEXT,
     UNIQUE(date, strategy, symbol, direction)
 );

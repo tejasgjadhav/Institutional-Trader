@@ -782,6 +782,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             if bg: it.setBackground(QBrush(bg))
             table.setItem(row, col, it)
 
+    def _color_cell(self, table, row, col, color):
+        it = table.item(row, col)
+        if it:
+            it.setForeground(QBrush(color))
+
     # ── PM DECISIONS persists the DAY'S fired signals (not just the current scan) ──
     def _ensure_fired_today(self):
         """READ-ONLY: reset at day rollover, then RE-SEED from the engine's trade log on
@@ -860,6 +865,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         from engine.data_fetcher import get_cached_ltp, fetch_upstox_ltp
         fired = sorted([f for f in self._fired_today if f["kind"] == "STOCK"],
                        key=lambda f: f["time"], reverse=True)   # newest on top
+        outcomes = self._today_trade_outcomes()
         self.pm_empty.setVisible(len(fired) == 0)
         self.pm_stock.setRowCount(len(fired))
         for r, f in enumerate(fired):
@@ -873,11 +879,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     order = None
             sym = f["ticker"].replace(".NS", "")
             # (read-only viewer — the engine writes signals.db, the GUI only displays)
+            status = self._pm_status(outcomes.get((sym, "3-Family")))   # OPEN / WIN / LOSS, synced to trade log
             kind = (order["instrument"] if order else f.get("instrument", ""))
             fg = QColor(GREEN) if kind == "CALL" else (QColor(RED) if kind == "PUT" else QColor(AMBER))
             if not order:
-                vals = [f["time"], sym, kind, "—", "—", "—", "—", "—", "—", "—", "—", "FIRED"]
-                self._set_row(self.pm_stock, r, vals, fg=fg); continue
+                vals = [f["time"], sym, kind, "—", "—", "—", "—", "—", "—", "—", "—", status]
+                self._set_row(self.pm_stock, r, vals, fg=fg)
+                self._color_cell(self.pm_stock, r, 11, self._status_color(status)); continue
             # live current premium of the exact option
             curp = "—"
             try:
@@ -890,8 +898,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             vals = [f["time"], sym, kind, f"{order['strike']:.2f}", order["expiry"],
                     f"Rs {order['premium']:.2f}", curp,
                     f"Rs {order['target_premium']:.2f}", f"Rs {order['stop_premium']:.2f}",
-                    order.get("lot_size", "—"), cap, "FIRED"]
+                    order.get("lot_size", "—"), cap, status]
             self._set_row(self.pm_stock, r, vals, fg=fg)
+            self._color_cell(self.pm_stock, r, 11, self._status_color(status))
 
         self._fit_table(self.pm_stock)
         self._refresh_orbvwap()
@@ -908,9 +917,45 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 entry_premium=o.get("premium"), target_premium=o.get("target_premium"),
                 stop_premium=o.get("stop_premium"), lot=o.get("lot_size"),
                 capital=o.get("capital"), alpha_z=f.get("alpha_z"),
-                breadth=f.get("breadth"), vol_ratio=f.get("vol_ratio"), status="FIRED")
+                breadth=f.get("breadth"), vol_ratio=f.get("vol_ratio"), status="OPEN")
         except Exception:
             pass
+
+    def _today_trade_outcomes(self):
+        """Map today's booked trades -> outcome, so PM DECISIONS shows the SAME status as the
+        authoritative trade log: OPEN while live, WIN/LOSS once closed. Read-only (the viewer
+        never writes). Keyed by (symbol-without-.NS, strategy)."""
+        out = {}
+        try:
+            import json as _json
+            p = _os.path.join(DATA_DIR, "trade_log.json")
+            if not _os.path.exists(p):
+                return out
+            d = _json.load(open(p))
+            today = datetime.now(IST).date().isoformat()
+            for t in d.get("trades", []):
+                if (t.get("signal_time") or "").startswith(today):
+                    key = ((t.get("ticker") or "").replace(".NS", ""), t.get("strategy"))
+                    out[key] = t.get("outcome")   # 'WIN' / 'LOSS' / None (still open)
+        except Exception as e:
+            logger.warning(f"trade outcomes read failed: {e}")
+        return out
+
+    @staticmethod
+    def _pm_status(outcome):
+        """PM DECISIONS status label, synced to the trade log: WIN / LOSS when booked, else OPEN."""
+        if outcome == "WIN":
+            return "WIN"
+        if outcome == "LOSS":
+            return "LOSS"
+        return "OPEN"
+
+    def _status_color(self, status):
+        if status == "WIN":
+            return QColor(GREEN)
+        if status == "LOSS":
+            return QColor(RED)
+        return QColor(AMBER)   # OPEN
 
     def _today_index_signals(self):
         """Today's ORB+VWAP signals from signals.db — PERSISTENT (survives engine restart
@@ -940,10 +985,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         (from signals.db); an index with no signal yet shows the live WATCHING placeholder."""
         live = {s.get("index"): s for s in (getattr(self.agent, "orbvwap_signals", []) or [])}
         fired = self._today_index_signals()
+        outcomes = self._today_trade_outcomes()
         indices = ["NIFTY", "BANKNIFTY"]
         self.pm_orbvwap.setRowCount(len(indices))
         for r, idx in enumerate(indices):
             rec = fired.get(idx)
+            status = None
             if rec and rec.get("entry_premium"):     # a real fired signal today — persist it
                 kind = rec.get("opt_type") or "—"
                 strike = f"{rec['strike']:.2f}" if isinstance(rec.get("strike"), (int, float)) else "—"
@@ -951,9 +998,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 stop = f"Rs {rec['stop_premium']:.2f}" if rec.get("stop_premium") else "—"
                 lr = live.get(idx) or {}
                 cur = f"Rs {lr['current']:.2f}" if lr.get("current") else "—"
+                status = self._pm_status(outcomes.get((idx, "ORB+VWAP")))   # OPEN / WIN / LOSS, synced to trade log
                 vals = [rec.get("time", "—"), idx, kind, strike, rec.get("expiry", "—"),
                         entry, "VWAP-break · -20%", stop, cur, rec.get("lot", "—"),
-                        rec.get("status", "—")]
+                        status]
                 fg = QColor(GREEN) if kind == "CALL" else QColor(RED)
             else:                                     # no signal yet — live placeholder
                 lr = live.get(idx, {})
@@ -961,6 +1009,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                         "—", "—", "—", lr.get("status", "WATCHING")]
                 fg = QColor(TEXT_DIM)
             self._set_row(self.pm_orbvwap, r, vals, fg=fg)
+            if status:
+                self._color_cell(self.pm_orbvwap, r, 10, self._status_color(status))
         self._fit_table(self.pm_orbvwap)
 
     def _refresh_watchlist(self):

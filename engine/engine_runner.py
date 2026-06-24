@@ -82,7 +82,7 @@ class EngineRunner:
                     entry_premium=o.get("premium"), target_premium=o.get("target_premium"),
                     stop_premium=o.get("stop_premium"), lot=o.get("lot_size"),
                     capital=o.get("capital"), alpha_z=s.get("alpha_z"),
-                    breadth=s.get("breadth"), vol_ratio=s.get("vol_ratio"), status="FIRED")
+                    breadth=s.get("breadth"), vol_ratio=s.get("vol_ratio"), status="OPEN")
             except Exception as e:
                 logger.warning(f"signal_db stock {s.get('ticker')}: {e}")
 
