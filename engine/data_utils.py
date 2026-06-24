@@ -135,9 +135,14 @@ def _reference_closes(index_name: str):
         last_close = float(df["Close"].iloc[-1])
         last_date = df.index[-1].date()
 
-    _ref_close_cache[index_name] = {
-        "date": today, "prev_close": prev_close, "last_close": last_close, "last_date": last_date,
-    }
+    # Only cache a SUCCESSFUL fetch. If the daily feed failed (e.g. no network at the 8 AM
+    # wake), caching the empty result would freeze the % at 0.0/FLAT for the whole session
+    # because daily closes are fetched at most once per day. Leaving it uncached lets the
+    # next poll retry once the network is up, so the change/pct self-heals within ~5 s.
+    if last_close is not None:
+        _ref_close_cache[index_name] = {
+            "date": today, "prev_close": prev_close, "last_close": last_close, "last_date": last_date,
+        }
     return prev_close, last_close, last_date
 
 
