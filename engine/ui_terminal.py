@@ -19,9 +19,7 @@ from PySide6.QtGui import QFont, QColor, QBrush
 from engine.config import IST, DATA_DIR
 from engine.agent import Agent
 from engine.trade_log import TradeLog
-from engine.data_utils import (
-    get_market_snapshot, get_last_5_trading_days
-)
+from engine.data_utils import get_last_5_trading_days
 
 logger = logging.getLogger(__name__)
 
@@ -46,47 +44,11 @@ TEXT_DIM    = "#6b7785"   # secondary text
 PURPLE      = "#b388ff"   # ORB+VWAP parallel strategy
 
 
-class ScanWorker(QThread):
-    scan_complete = Signal(list)
-    error_occurred = Signal(str)
-
-    def __init__(self, agent: Agent):
-        super().__init__()
-        self.agent = agent
-
-    def run(self):
-        try:
-            if not self.agent.is_market_open():
-                self.scan_complete.emit([])
-                return
-            self.scan_complete.emit(self.agent.run_scan())
-        except Exception as e:
-            self.error_occurred.emit(str(e))
-
-
-class IndexScanWorker(QThread):
-    """Runs the ORB+VWAP index scan off the UI thread — REGARDLESS of market hours, so
-    the PM index section still shows the day's signals after the 15:30 close / a restart."""
-    done = Signal(list)
-
-    def run(self):
-        try:
-            from engine.orb_vwap_live import scan_index_orbvwap
-            self.done.emit(scan_index_orbvwap())
-        except Exception:
-            self.done.emit([])
-
-
-class MarketDataWorker(QThread):
-    """Fetch index data off the UI thread."""
-    data_ready = Signal(dict)
-
-    def run(self):
-        try:
-            # ONE batched LTP call for all three indices (was 3 separate calls → 429s)
-            self.data_ready.emit(get_market_snapshot())
-        except Exception as e:
-            logger.warning(f"Market data worker failed: {e}")
+# NOTE: this file is the READ-ONLY VIEWER. It deliberately has NO scan/fetch worker — the
+# headless engine (engine_runner) does ALL scanning, signal-firing, resolving and data
+# fetching, and writes to disk (latest_scan.json / market_snapshot.json / the DBs /
+# trade_log.json). The viewer only READS those files and renders them. Do not add a worker
+# that calls run_scan()/get_market_snapshot() here — that would break the decoupling.
 
 
 class TerminalApp(QMainWindow):
