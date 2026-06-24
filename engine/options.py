@@ -23,6 +23,7 @@ OPT_CACHE = os.path.join(DATA_DIR, "upstox_options.json")
 CACHE_MAX_AGE_DAYS = 1  # option chains change daily (new strikes/expiries)
 
 _OPT_INDEX = None  # {underlying_key: [contract, ...]}
+_OPT_INDEX_DAY = None  # calendar day the in-memory index was loaded
 
 
 def _download_options() -> dict:
@@ -57,17 +58,23 @@ def _cache_fresh() -> bool:
 
 
 def _load_index() -> dict:
-    global _OPT_INDEX
-    if _OPT_INDEX is not None:
+    """Option master indexed by underlying. Reloads at most ONCE PER DAY: the engine is a
+    long-running daemon, so a process-lifetime memory cache would serve stale strikes/expiries
+    for days (new weekly expiries missing, expired contracts lingering) — and options_flow uses
+    this for the nearest-expiry chain query too. Within a day it stays in memory (fast)."""
+    global _OPT_INDEX, _OPT_INDEX_DAY
+    today = datetime.now(IST).date()
+    if _OPT_INDEX is not None and _OPT_INDEX_DAY == today:
         return _OPT_INDEX
     if _cache_fresh():
         with open(OPT_CACHE) as f:
             _OPT_INDEX = json.load(f)
-        return _OPT_INDEX
-    _OPT_INDEX = _download_options()
-    os.makedirs(DATA_DIR, exist_ok=True)
-    with open(OPT_CACHE, "w") as f:
-        json.dump(_OPT_INDEX, f)
+    else:
+        _OPT_INDEX = _download_options()
+        os.makedirs(DATA_DIR, exist_ok=True)
+        with open(OPT_CACHE, "w") as f:
+            json.dump(_OPT_INDEX, f)
+    _OPT_INDEX_DAY = today
     return _OPT_INDEX
 
 

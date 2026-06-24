@@ -328,8 +328,8 @@ class Agent:
                 logger.warning(f"No valid entry price for {ticker} — skipping signal (won't log a bogus trade)")
                 continue
 
-            # Position sizing
-            position = TradeCalculator.calculate_position(entry, alpha_z, None)
+            # Position sizing (pass direction — else SHORT trades get LONG-side stop/target)
+            position = TradeCalculator.calculate_position(entry, alpha_z, None, direction)
             if "error" in position:
                 logger.warning(f"Position calc failed for {ticker}: {position['error']}")
                 continue

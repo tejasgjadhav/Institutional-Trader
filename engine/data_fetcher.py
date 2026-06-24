@@ -243,9 +243,14 @@ def fetch_historical(ticker: str, days: int = 400) -> pd.DataFrame:
     Daily bars for backtesting / indicator history. Upstox V3 primary.
     Cached per calendar day. Falls back to Yahoo only if Upstox returns nothing.
     """
-    cache_key = (ticker, datetime.now(IST).date(), days)
+    today = datetime.now(IST).date()
+    cache_key = (ticker, today, days)
     if cache_key in _daily_hist_cache:
         return _daily_hist_cache[cache_key]
+    # prune prior-day entries so this dict can't grow unbounded in the long-running daemon
+    stale = [k for k in _daily_hist_cache if k[1] != today]
+    for k in stale:
+        del _daily_hist_cache[k]
 
     from_date = (datetime.now(IST) - timedelta(days=days)).strftime("%Y-%m-%d")
     to_date = datetime.now(IST).strftime("%Y-%m-%d")
