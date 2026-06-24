@@ -318,12 +318,15 @@ class Agent:
             direction = sig["direction"]
             alpha_z = sig["alpha_z"]
 
-            # Calculate position
-            entry = sig["signal_details"]["trend"]["components"].get("microstructure", 0)
-            if entry == 0 or entry == 1 or entry == -1:
-                # Not a real price; would fetch live LTP here
-                from engine.data_fetcher import get_cached_ltp
-                entry = get_cached_ltp(ticker) or 100.0
+            # Entry = the actual spot at signal time (from the scan), with a cached-LTP
+            # fallback. Guard hard: if neither is a valid price, SKIP — never log a trade on a
+            # bogus ~100 price (the old code read the microstructure indicator as a price and
+            # fell back to 100.0, which picks a wildly wrong strike for a Rs1500 stock).
+            from engine.data_fetcher import get_cached_ltp
+            entry = sig.get("current_price") or get_cached_ltp(ticker)
+            if not entry or entry <= 0:
+                logger.warning(f"No valid entry price for {ticker} — skipping signal (won't log a bogus trade)")
+                continue
 
             # Position sizing
             position = TradeCalculator.calculate_position(entry, alpha_z, None)
@@ -367,7 +370,11 @@ class Agent:
                     "qty": order["lot_size"] or position["qty"],  # OPTION lot for P&L
                 })
 
-            self.trade_log.add_signal(trade_dict)
+            # log_signal_once (NOT add_signal) — idempotent on (ticker, date, direction), so an
+            # engine restart mid-day while the stock is still trade-ready can't append a
+            # DUPLICATE into the critical trade log (_notified lives in memory and resets on
+            # restart, so the dedup must live in the log itself).
+            self.trade_log.log_signal_once(trade_dict)
 
             logger.info(
                 f"SIGNAL: {ticker} {direction} {trade_dict['instrument']} | "
