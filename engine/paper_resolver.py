@@ -6,6 +6,7 @@ by replaying the OPTION premium from signal time: buy OTM+1 (config), book at
 +PREMIUM_TARGET_PCT%, cut at -PREMIUM_STOP_PCT%, else force-close after the kill switch.
 Run each scan so the TRADE LOG and win/loss rate stay live.
 """
+import time
 import logging
 from datetime import datetime
 
@@ -26,12 +27,20 @@ def _to_dt(iso: str):
         return None
 
 
-def _opt_prem(opt_key, sig_date, today):
+def _opt_prem(opt_key, sig_date, today, attempts=3):
     """Option premium 5-min series for the signal date. TODAY must use the intraday
-    endpoint (the historical endpoint lags T+1, so it's empty for today)."""
-    if sig_date == today:
-        return fetch_upstox_intraday(opt_key, 5)
-    return fetch_option_premium_5min(opt_key, sig_date)
+    endpoint (the historical endpoint lags T+1, so it's empty for today).
+
+    Retries a few times: a single transient empty response at the 15:30 EOD book would
+    otherwise strand the trade PENDING forever (the data is almost always there moments
+    later — that exact glitch orphaned a BankNifty trade once)."""
+    for i in range(attempts):
+        df = fetch_upstox_intraday(opt_key, 5) if sig_date == today else fetch_option_premium_5min(opt_key, sig_date)
+        if df is not None and not df.empty:
+            return df
+        if i < attempts - 1:
+            time.sleep(0.4)
+    return df  # last attempt (possibly empty — caller handles)
 
 
 def resolve_pending(trade_log) -> int:
@@ -102,7 +111,7 @@ def resolve_pending(trade_log) -> int:
                     outcome = "WIN" if exitp > entry else "LOSS"
                 t["entry_premium"] = round(entry, 2)
                 t["exit_premium"] = round(float(exitp), 2)
-                trade_log.update_trade_outcome(t["signal_time"], outcome, (float(exitp) - entry) * lot)
+                trade_log.book_trade(t, outcome, (float(exitp) - entry) * lot)
                 resolved += 1
                 continue
 
@@ -133,7 +142,7 @@ def resolve_pending(trade_log) -> int:
                     outcome = "WIN" if exitp > entry else "LOSS"
                 t["entry_premium"] = round(entry, 2)
                 t["exit_premium"] = round(exitp, 2)
-                trade_log.update_trade_outcome(t["signal_time"], outcome, (exitp - entry) * lot)
+                trade_log.book_trade(t, outcome, (exitp - entry) * lot)
                 resolved += 1
                 continue
 
@@ -187,7 +196,7 @@ def resolve_pending(trade_log) -> int:
             # stash the option entry/exit premium for display/audit
             t["entry_premium"] = round(entry, 2)
             t["exit_premium"] = round(exitp, 2)
-            trade_log.update_trade_outcome(t["signal_time"], outcome, pnl)
+            trade_log.book_trade(t, outcome, pnl)
             resolved += 1
         except Exception as e:
             logger.warning(f"resolve {ticker} failed: {e}")

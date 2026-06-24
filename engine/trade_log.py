@@ -84,20 +84,32 @@ class TradeLog:
         logger.info(f"Signal logged ({trade_dict.get('strategy','?')}): {tk} {dr}")
         return True
 
-    def update_trade_outcome(self, signal_time: str, outcome: str, realized_pnl: float):
+    def book_trade(self, trade: dict, outcome: str, realized_pnl: float):
+        """Close a SPECIFIC trade object (no signal_time lookup).
+
+        Use this from the resolver, which already holds the exact trade. Looking up by
+        signal_time is unsafe: two index trades (NIFTY + BANKNIFTY) fire at the same 10:05
+        ORB timestamp, so a signal_time match books the wrong one and strands the other
+        PENDING forever. Updating the object directly is unambiguous.
         """
-        Update a trade outcome (WIN / LOSS / FORCED_CLOSE)
-        outcome: "WIN" if hit target, "LOSS" if hit stop, "FORCED_CLOSE" if 3:10 PM
+        trade["outcome"] = outcome
+        trade["outcome_time"] = datetime.now(IST).isoformat()
+        trade["realized_pnl_inr"] = round(realized_pnl, 2)
+        trade["status"] = "CLOSED"
+        self._save()
+        logger.info(f"{trade.get('ticker')} {outcome}: ₹{realized_pnl:+.0f}")
+        return True
+
+    def update_trade_outcome(self, signal_time: str, outcome: str, realized_pnl: float,
+                             ticker: str = None):
+        """
+        Update a trade outcome (WIN / LOSS / FORCED_CLOSE) by signal_time (+ optional ticker
+        to disambiguate trades that share a timestamp). Prefer book_trade() when you hold the
+        trade object. outcome: "WIN" if hit target, "LOSS" if hit stop.
         """
         for trade in self.trades:
-            if trade.get("signal_time") == signal_time:
-                trade["outcome"] = outcome
-                trade["outcome_time"] = datetime.now(IST).isoformat()
-                trade["realized_pnl_inr"] = round(realized_pnl, 2)
-                trade["status"] = "CLOSED"
-                self._save()
-                logger.info(f"{trade['ticker']} {outcome}: ₹{realized_pnl:+.0f}")
-                return True
+            if trade.get("signal_time") == signal_time and (ticker is None or trade.get("ticker") == ticker):
+                return self.book_trade(trade, outcome, realized_pnl)
         return False
 
     def get_today_stats(self) -> dict:

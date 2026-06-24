@@ -138,17 +138,28 @@ class EngineRunner:
         logger.info(f"scan done: {len(scored)} scored, {rdy} trade-ready")
 
     def _maybe_eod(self, now):
-        if now.weekday() >= 5:
-            return
+        """Force-book every open paper trade once its session is over.
+
+        Runs EVERY cycle after the 15:30 close (and on weekends) and KEEPS RETRYING until
+        nothing is left PENDING — so a transient data glitch at 15:30 can no longer orphan a
+        trade in the log forever (that's exactly what stranded a BankNifty trade). The
+        trade log is the critical record; no trade may be left unbooked once the day is done.
+        """
         m = now.hour * 60 + now.minute
-        if not (15 * 60 + 31 <= m <= 15 * 60 + 55):
+        after_close = now.weekday() >= 5 or m >= 15 * 60 + 30
+        if not after_close:
             return
-        if self._eod_day == now.date():
+        pending = [t for t in self.agent.trade_log.trades if t.get("outcome") is None]
+        if not pending:
             return
-        self._eod_day = now.date()
-        logger.info("EOD booking — force-closing open paper trades at the 15:30 close")
+        logger.info(f"EOD booking — {len(pending)} open paper trade(s) pending; force-closing")
         try:
             resolve_pending(self.agent.trade_log)
+            still = sum(1 for t in self.agent.trade_log.trades if t.get("outcome") is None)
+            if still:
+                logger.warning(f"EOD booking: {still} still pending — will retry next cycle")
+            else:
+                logger.info("EOD booking — all trades booked")
         except Exception as e:
             logger.warning(f"EOD booking: {e}")
 
