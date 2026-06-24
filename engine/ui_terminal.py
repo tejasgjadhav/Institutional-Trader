@@ -353,7 +353,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.wl_table = QTableWidget()
         self.wl_table.setColumnCount(len(self.WL_COLS))
         self.wl_table.setHorizontalHeaderLabels(self.WL_COLS)
-        self.wl_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        _wlhdr = self.wl_table.horizontalHeader()
+        _wlhdr.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        # TICKER column sizes to its content so the "★ NAME.NS" of priority stocks isn't
+        # clipped to "★ …"; the gate columns still stretch to fill the rest.
+        _wlhdr.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)
         self.wl_table.setAlternatingRowColors(True)
         self.wl_table.verticalHeader().setVisible(False)
         v.addWidget(self.wl_table)
