@@ -434,18 +434,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs. Full write-ups are the .md files in /studies on GitHub.")}
 
-{h("★ REAL-OPTION OPTIMIZATION (2026-06 — the current config)")}
+{h("★ REAL-OPTION OPTIMIZATION + 1-YEAR REALITY CHECK (2026-06)")}
 {sub("Question: what is the edge on REAL option P&amp;L, not the underlying proxy?")}
-{p("Upstox Plus unlocked historical premiums for EXPIRED contracts (~18 months), so the strategy "
-   "was re-backtested on actual option P&amp;L over 180 days. The old +10/-20 config LOST -1.5% "
-   "(59% win isn't enough for a 1:2 reward-risk that needs 67%). Multiple optimization rounds, "
-   "all train/test split: the gates we relied on (extension, ORB-width) did NOT hold out-of-sample; "
-   "a tempting '1-bar confirmation' pattern was look-ahead and failed. The one ROBUST edge: "
-   "<b>option premium &gt;= Rs30</b> (skip cheap lottery options that decay to nothing) + alignment.")}
-{res("Result (held-out test): 54% -&gt; 64% win, -1.5% -&gt; +1.5% profit. DEPLOYED: min-premium "
-     "gate Rs30, dropped Gates 4/5, stop -20 -&gt; -15 (breakeven win 67% -&gt; 60%). Rich options "
-     "also have ~3x smaller spread, so it helps NET too. Thin but real; forward log is the judge.")}
-{dim("File: studies/REAL_OPTION_OPTIMIZATION.md")}
+{p("Upstox Plus unlocked historical premiums for EXPIRED contracts, so the strategy was "
+   "re-backtested on actual option P&amp;L. A min-premium config (option &gt;= Rs30 + alignment, "
+   "-15 stop) LOOKED great on a 180-day window: 64% win, +1.5%. But re-run on a FULL YEAR "
+   "(232 trades) it came in <b>55% win, -1.0% profit</b> — overfit to a recent ~6-month regime. "
+   "A train/test split INSIDE a short window is not true out-of-sample.")}
+{res("Honest verdict: STOCKS have NO proven durable edge — the min-premium gate is kept only "
+     "because richer options have ~3x tighter spreads (a cost filter), not for profit. The "
+     "INDEX trend-ride (-15 stop) DID hold: +0.9% over 18 months (453 trades), positive on both "
+     "train and test — the one real, thin edge. Stocks stay a paper forward-test.")}
+{dim("File: studies/REAL_OPTION_OPTIMIZATION.md (CORRECTION at top)")}
 
 {h("1 - Win-Rate Research Log (the baseline)")}
 {sub("Question: how high can the win rate realistically go?")}

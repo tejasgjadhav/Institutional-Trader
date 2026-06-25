@@ -53,10 +53,16 @@ All pass → buy OTM+1 CALL/PUT, exit **+10% / −15%** on premium (−15 stop d
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
 filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard **−15%** stop).
 
-**Current config validated on REAL option data (180d, expired-instruments / Upstox Plus):**
-min-premium + alignment + −15 stop = **~64% win, +1.5% gross** out-of-sample (vs the old +10/−20
-which lost −1.5%). Thin but real; still gross of all costs. See `studies/REAL_OPTION_OPTIMIZATION.md`
-(12 studies total). The old gates 4/5 are kept as OFF tunables.
+**REAL option data (expired-instruments / Upstox Plus) — honest standing after the 1-year test:**
+- **STOCKS: no proven durable edge.** The min-premium config looked like +1.5% (64% win) on a
+  180-day window but came in at **−1.0% (55% win) over a full year** — overfit to a recent
+  regime. Min-premium is kept only for the *spread/cost* benefit (richer options, ~3× tighter
+  spread), NOT as a profit edge. Treat stocks as a paper forward-test, not a money-maker.
+- **INDEX: thin but durable edge.** Trend-ride (−15 stop) ran **+0.9% over 18 months (453 trades),
+  positive on both train and test.** The one real (small) edge.
+- Lesson: a train/test split *inside a short window* is not true out-of-sample; use the longest
+  window the data allows. See `studies/REAL_OPTION_OPTIMIZATION.md` (CORRECTION at the top).
+Old gates 4/5 are OFF tunables; everything is GROSS of costs.
 The universe is the hand-picked ~100 (mostly mid/large-cap movers) — NOT ranked by market cap:
 a head-to-head showed a free-float-mcap top-100 *lost* to it (61% vs 67% on the same window),
 because mega-caps don't break out. Select by intraday movement, not size — see

@@ -70,16 +70,19 @@ both manual-execution:
   (**Gate 3**), the OTM+1 option is **rich enough (≥ ₹30, Gate 5b)** and liquid enough
   (**Gate 6**). All pass → a **buy-option order** (OTM+1, **+10%/−15%**) appears for you to
   place. *(Gates 4 "don't-chase" and 5 "wide-open" were retired in 2026-06 — they didn't
-  hold up on the real-option 180-day backtest; the min-premium gate replaced them.)*
+  hold up on the real-option 180-day backtest; the min-premium gate is kept as a cost/quality filter, not a proven profit edge.)*
 - **ORB+VWAP system (NIFTY & BANKNIFTY):** a separate index strategy — 15-min ORB +
   VWAP + 30-min trend + clean-trend filter, buy **ATM**, **trend-ride exit** (VWAP-reclaim
   after +12%, hard **−15%** stop) — see the section below.
 
-> **2026-06 — validated on REAL option data.** An Upstox Plus upgrade unlocked historical
-> premiums for *expired* contracts (~18 months), so the strategy is now backtested on the
-> **actual option P&L**, not the underlying proxy. The win was the **min-premium gate** (skip
-> cheap lottery options) + alignment + a **−15% stop**: **~64% win, +1.5% gross out-of-sample**,
-> vs the old +10/−20 which *lost* −1.5%. Thin but real. See `studies/REAL_OPTION_OPTIMIZATION.md`.
+> **2026-06 — real option data, and an honest 1-year reality check.** An Upstox Plus upgrade
+> unlocked historical premiums for *expired* contracts, so the strategy is now backtested on
+> **actual option P&L**, not the underlying proxy. A min-premium config *looked* like +1.5% on
+> 180 days — but over a **full year it was −1.0% (55% win): overfit to a recent window.**
+> **Stocks have no proven durable edge** — the min-premium gate is kept only for its tighter
+> spread (a cost filter), not for profit. The **INDEX** trend-ride (−15 stop) *did* hold:
+> **+0.9% over 18 months, both train and test** — the one real, thin edge. See
+> `studies/REAL_OPTION_OPTIMIZATION.md` (CORRECTION at top). All figures GROSS.
 
 The 3-Family system scans **stocks only**; the indices are handled exclusively by the
 ORB+VWAP strategy.
@@ -332,7 +335,7 @@ short-window rupee figures as directional. The in-app **STUDIES** tab shows the 
 
 | # | Study | Question | Headline result | Status |
 |---|-------|----------|-----------------|--------|
-| ★ | [**Real-Option Optimization**](studies/REAL_OPTION_OPTIMIZATION.md) | What's the edge on REAL option P&L (Upstox Plus, 180d)? | min-premium+align+−15 stop: 54→64% win, −1.5→+1.5% OOS | **LIVE** |
+| ★ | [**Real-Option Optimization**](studies/REAL_OPTION_OPTIMIZATION.md) | What's the edge on REAL option P&L (Upstox Plus)? | **STOCK 180d +1.5% did NOT hold 1yr (−1.0%, overfit). INDEX trend-ride +0.9% over 18mo holds.** | honest |
 | 1 | [Win-Rate Research Log](studies/WIN_RATE_RESEARCH_LOG.md) | How high can win rate go? | A ~52–57% out-of-sample wall; edge must come from filtering | baseline |
 | 2 | [Gate 3 — Market Alignment](studies/FINAL_STRATEGY_TESTING_60DAY.md) | Does not fighting the Nifty help? | 60d: ~59% win, P&L +₹17k → +₹31k (~2×) | **LIVE** |
 | 3 | [Gate 4 — Don't Chase](studies/GATE4_DONT_CHASE.md) | Do over-extended entries lose edge? | 60d: win 59→61%, RoC +1.7→+2.8%, fewer trades | **LIVE** |

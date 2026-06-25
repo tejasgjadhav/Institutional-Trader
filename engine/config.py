@@ -16,9 +16,10 @@ IST = pytz.timezone("Asia/Kolkata")
 EXECUTION_MODE = "PAPER"  # "PAPER" = signals only (manual orders in Upstox), "LIVE" = auto orders (not yet implemented)
 PAPER_TRADING_PHASE = True  # If True, paper-log all signals before going live
 PAPER_TRADING_MIN_SIGNALS = 30
-# Go-live bar. With +10% target / -15% stop the reward:risk is 0.667:1, so the BREAKEVEN
-# win rate is stop/(target+stop) = 15/25 = 60% (was 67% at -20). The real-180d backtest with
-# min-premium + alignment hit ~64% — above breakeven — which is the whole point of the change.
+# Go-live bar. With +10% target / -15% stop the BREAKEVEN win rate is 15/25 = 60%. The 1-year
+# real-option backtest realised only ~55% on stocks (-1.0% profit) — BELOW breakeven — so the
+# 0.62 go-live bar correctly keeps the stock side in PAPER. It is NOT a proven profitable
+# strategy; -15 (vs -20) is kept only because it loses LESS at a sub-breakeven win rate.
 PAPER_TRADING_BREAKEVEN_WIN_RATE = 0.60
 PAPER_TRADING_MIN_WIN_RATE = 0.62
 PAPER_TRADING_MIN_PF = 1.0
@@ -106,11 +107,12 @@ MAX_ENTRY_EXTENSION_PCT = 2.9
 # out-of-sample (test -2) on the real 180-day option backtest. OFF. See REAL_OPTION_OPTIMIZATION.md.
 ORB_RANGE_FILTER = False
 ORB_RANGE_WIDTH_MIN = 0.8   # opening-range width as % of price
-# Gate 5b — MIN OPTION PREMIUM (the real edge from the 180-day backtest): only trade when the
-# OTM+1 option premium >= this. Cheap OTM "lottery" options (avg Rs38) are where losses
-# concentrate — they decay to nothing intraday. Richer options (>=Rs30, avg Rs101) follow
-# through far more reliably AND have a ~3x smaller % bid-ask spread. With min-prem + alignment
-# the real-option backtest went 54%->64% win and -1.5%->+1.5% profit, holding out-of-sample.
+# Gate 5b — MIN OPTION PREMIUM: only trade when the OTM+1 option premium >= this. It LOOKED
+# like a profit edge on a 180-day window (54%->64% win) but that did NOT survive the 1-year
+# backtest (55% win, -1.0% profit — overfit to a recent regime). KEPT anyway for a *cost*
+# reason: cheap OTM lottery options (avg Rs38) have a ~3x WIDER % bid-ask spread than richer
+# ones (avg Rs101), so this filter reduces the biggest hidden cost — NOT a proven profit edge.
+# See studies/REAL_OPTION_OPTIMIZATION.md (the CORRECTION at the top).
 MIN_OPTION_PREMIUM_FILTER = True
 MIN_OPTION_PREMIUM = 30.0
 # Gate 6 — LIQUIDITY: only fire if the exact option we'd trade has a real, tight market.

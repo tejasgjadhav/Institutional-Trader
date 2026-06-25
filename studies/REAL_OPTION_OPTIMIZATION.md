@@ -1,4 +1,24 @@
-# Study: Real-option 180-day optimization — the min-premium edge
+# Study: Real-option optimization — and the 1-year reality check
+
+## ⚠️ CORRECTION (read this first) — the stock "edge" did NOT hold over a full year
+The optimization below was tuned and "validated" on a **180-day** window with a train/test
+split. Re-run on the **full ~1 year** of real option data (232 trades, Jan 2025→May 2026), the
+optimized stock config came in at **55% win, −1.0% profit** (train −0.7%, test −1.5%) — it
+**loses money.** The +1.5% on 180 days was **overfit to a recent favorable ~6-month regime**;
+the train/test split looked clean only because both halves sat inside that same regime, so it
+was never truly out-of-sample. **Honest standing: the STOCK side has no proven durable edge on
+real option P&L.** The min-premium gate is kept only because richer options have ~3× tighter
+spreads (a *cost/quality* filter), NOT because it is profitable.
+
+The **INDEX** trend-ride (−15 stop), by contrast, was re-run over **18 months** (453 trades,
+Oct 2024→May 2026) and came in **+0.9% on both train and test** — thin but **durable**. That is
+the one real (small) edge. Lesson: a train/test split *within* a short window is not enough; the
+honest test is the longest window the data allows. Everything below is the journey; the line
+above is the verdict.
+
+---
+
+# (original) Real-option 180-day optimization — the min-premium edge
 
 ## Breakthrough: real expired-option data
 Upgrading to **Upstox Plus** unlocked the *expired-instruments* API (`engine/expired_options.py`),
