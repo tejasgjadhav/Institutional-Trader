@@ -2,11 +2,12 @@
 Data Utilities — Index closes (Nifty/BankNifty/VIX), API health check.
 All via Upstox V3 (primary), no Yahoo latency.
 """
+import os
 import logging
 import requests
 from datetime import datetime, timedelta
 
-from engine.config import IST, MARKET_OPEN, MARKET_CLOSE
+from engine.config import IST, MARKET_OPEN, MARKET_CLOSE, DATA_DIR
 from engine.data_fetcher import (
     fetch_upstox_ltp, fetch_upstox_intraday, fetch_upstox_historical, fetch_historical,
     UPSTOX_BASE, _HEADERS, SESSION,
@@ -101,6 +102,31 @@ def _market_is_open() -> bool:
     return o <= now.time() <= c
 
 
+def _prev_session_close_from_db(index_name: str) -> float:
+    """Previous trading session's close from the engine's OWN stored snapshots (engine.db).
+
+    This is immune to Upstox's daily-feed backfill lag: yesterday's daily candle often isn't in
+    the feed early the next morning, so the feed's "last close" is actually TWO sessions ago,
+    which inflates today's %% (e.g. NIFTY shown +1.5%% vs the real +0.65%%). The engine records
+    a snapshot at the real close every day, so the latest snapshot dated BEFORE today is the
+    correct previous-session close. Returns None if unavailable (caller falls back to the feed).
+    """
+    col = {"NIFTY": "nifty", "BANKNIFTY": "banknifty", "VIX": "vix"}.get(index_name)
+    if not col:
+        return None
+    try:
+        import sqlite3
+        today = datetime.now(IST).date().isoformat()
+        con = sqlite3.connect(os.path.join(DATA_DIR, "engine.db"), timeout=3)
+        row = con.execute(
+            f"SELECT {col} FROM market_snapshots WHERE date < ? AND {col} IS NOT NULL "
+            f"ORDER BY date DESC, ts DESC LIMIT 1", (today,)).fetchone()
+        con.close()
+        return float(row[0]) if row and row[0] else None
+    except Exception:
+        return None
+
+
 def _index_last_close(index_name: str) -> float:
     """Most recent daily close for an index via Upstox."""
     df = fetch_upstox_historical(index_name, unit="days", interval=1)
@@ -183,7 +209,9 @@ def _index_live_or_close(index_name: str, live_price: float = None,
         price = last_close if last_close else 0.0
 
     # Reference is ALWAYS the previous-session close (compare today vs yesterday).
-    ref = prev_session if prev_session else (prev_close or last_close)
+    # PREFER the engine's stored close (engine.db) — it's immune to the daily-feed backfill lag
+    # that otherwise uses a 2-sessions-ago close and inflates the %. Fall back to the daily feed.
+    ref = _prev_session_close_from_db(index_name) or (prev_session if prev_session else (prev_close or last_close))
 
     change = pct = 0.0
     if ref and price:
