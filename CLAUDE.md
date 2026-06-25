@@ -40,19 +40,23 @@ token (read-only data feed — no trading token needed).
 
 ## Strategy (what the gates do)
 
-**3-Family stocks** → alpha-z (TREND 0.72 + FLOW 0.18 + EVENT 0.10), then 6 gates:
+**3-Family stocks** → alpha-z (TREND 0.72 + FLOW 0.18 + EVENT 0.10), then the gates:
 1. **Alpha** — |alpha-z| > 0.55 AND ≥2/3 families agree.
 2. **ORB** — latest 5-min candle breaks the opening range with a volume surge.
-3. **Market alignment** — only LONG when Nifty up / SHORT when Nifty down (`MARKET_ALIGN_FILTER`).
-4. **Don't chase** — skip if the stock already moved > `MAX_ENTRY_EXTENSION_PCT` (2.9%) from the open.
-5. **Wide open** — first-30-min opening range must be ≥ `ORB_RANGE_WIDTH_MIN` (0.8%) of price (`ORB_RANGE_FILTER`). Validated 365d: dir win 51→54%, option 60d 66→70% at +10/−20.
-6. **Liquidity** — the OTM+1 option must have a live two-sided market: spread ≤ `MAX_OPTION_SPREAD_PCT` (4%), OI ≥ `MIN_OPTION_OI` (100) (`LIQUIDITY_FILTER`). Checked ONLY after gates 1-5 pass (~1-2 quote calls/day). Fails open on a quote error.
-All 6 pass → buy OTM+1 CALL/PUT, exit **+10% / −20%** on premium.
+3. **Market alignment** — only LONG when Nifty up / SHORT when Nifty down (`MARKET_ALIGN_FILTER`). Robust out-of-sample.
+4. **Don't chase** (extension) — **DISABLED 2026-06**: didn't hold on the real-option 180d test.
+5. **Wide open** (ORB-width) — **DISABLED 2026-06**: same.
+5b. **Min option premium** — only trade when the OTM+1 option ≥ `MIN_OPTION_PREMIUM` (₹30) (`MIN_OPTION_PREMIUM_FILTER`). **The real edge** from the 180d backtest: cheap lottery options (avg ₹38) bleed out; richer ones (avg ₹101) follow through AND have ~3× smaller spread.
+6. **Liquidity** — OTM+1 option needs a live two-sided market: spread ≤ `MAX_OPTION_SPREAD_PCT` (4%), OI ≥ `MIN_OPTION_OI` (100). Checked with 5b after gates 1-3 pass. Fails open on a quote error.
+All pass → buy OTM+1 CALL/PUT, exit **+10% / −15%** on premium (−15 stop drops breakeven win 67%→60%).
 
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
-filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard −20% stop).
+filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard **−15%** stop).
 
-Gates 3, 4 & 5 are the proven wins (validated on 365 days). See `studies/` for all 11 studies.
+**Current config validated on REAL option data (180d, expired-instruments / Upstox Plus):**
+min-premium + alignment + −15 stop = **~64% win, +1.5% gross** out-of-sample (vs the old +10/−20
+which lost −1.5%). Thin but real; still gross of all costs. See `studies/REAL_OPTION_OPTIMIZATION.md`
+(12 studies total). The old gates 4/5 are kept as OFF tunables.
 The universe is the hand-picked ~100 (mostly mid/large-cap movers) — NOT ranked by market cap:
 a head-to-head showed a free-float-mcap top-100 *lost* to it (61% vs 67% on the same window),
 because mega-caps don't break out. Select by intraday movement, not size — see

@@ -16,11 +16,11 @@ IST = pytz.timezone("Asia/Kolkata")
 EXECUTION_MODE = "PAPER"  # "PAPER" = signals only (manual orders in Upstox), "LIVE" = auto orders (not yet implemented)
 PAPER_TRADING_PHASE = True  # If True, paper-log all signals before going live
 PAPER_TRADING_MIN_SIGNALS = 30
-# Go-live bar. With +10% target / -20% stop the reward:risk is 0.5:1, so the
-# BREAKEVEN win rate is stop/(target+stop) = 20/30 = ~67%. We require 70% (a
-# margin above breakeven) — NOT the old generic 52%, which would lose money here.
-PAPER_TRADING_BREAKEVEN_WIN_RATE = 0.67
-PAPER_TRADING_MIN_WIN_RATE = 0.70
+# Go-live bar. With +10% target / -15% stop the reward:risk is 0.667:1, so the BREAKEVEN
+# win rate is stop/(target+stop) = 15/25 = 60% (was 67% at -20). The real-180d backtest with
+# min-premium + alignment hit ~64% — above breakeven — which is the whole point of the change.
+PAPER_TRADING_BREAKEVEN_WIN_RATE = 0.60
+PAPER_TRADING_MIN_WIN_RATE = 0.62
 PAPER_TRADING_MIN_PF = 1.0
 
 # === UNIVERSE — reverted to the proven hand-picked 94 (beat the free-float-mcap 100
@@ -93,14 +93,26 @@ MARKET_ALIGN_FILTER = True
 # metric in both windows — 30d win 56%->58% P&L Rs9.3k->Rs13.1k, 60d win 60%->61% P&L
 # Rs32.9k->Rs36.8k, return-on-capital 2.5%->2.8% — because the 2.6-2.9% band still holds
 # decent trades. The 2.6 cap was over-aggressive.
-ENTRY_EXTENSION_FILTER = True
+# DISABLED 2026-06 after the REAL-option 180-day backtest (expired-instruments data): the
+# extension filter looked good in-sample but did NOT hold out-of-sample (train win +14 pts ->
+# test +0). Kept as a tunable but OFF. See studies/REAL_OPTION_OPTIMIZATION.md.
+ENTRY_EXTENSION_FILTER = False
 MAX_ENTRY_EXTENSION_PCT = 2.9
 # Gate 5 — WIDE OPEN: only trade when the first-30-min opening range is at least this % of
 # price wide. A wider opening range = real morning momentum (cleaner breakouts); a narrow,
 # low-energy open is chop. Found via a 90-day option search, VALIDATED on 365 days (506
 # trades): win 51%->54% directional, and option win 30d 61%->66% / 60d 66%->70% at +10/-20.
-ORB_RANGE_FILTER = True
+# DISABLED 2026-06: same reason — the ORB-width filter held in-sample (train win +7) but faded
+# out-of-sample (test -2) on the real 180-day option backtest. OFF. See REAL_OPTION_OPTIMIZATION.md.
+ORB_RANGE_FILTER = False
 ORB_RANGE_WIDTH_MIN = 0.8   # opening-range width as % of price
+# Gate 5b — MIN OPTION PREMIUM (the real edge from the 180-day backtest): only trade when the
+# OTM+1 option premium >= this. Cheap OTM "lottery" options (avg Rs38) are where losses
+# concentrate — they decay to nothing intraday. Richer options (>=Rs30, avg Rs101) follow
+# through far more reliably AND have a ~3x smaller % bid-ask spread. With min-prem + alignment
+# the real-option backtest went 54%->64% win and -1.5%->+1.5% profit, holding out-of-sample.
+MIN_OPTION_PREMIUM_FILTER = True
+MIN_OPTION_PREMIUM = 30.0
 # Gate 6 — LIQUIDITY: only fire if the exact option we'd trade has a real, tight market.
 # Checked ONLY for signals that already clear Gates 1-5 (~1-2/day), so ~1-2 extra quote
 # calls/day — negligible. With a +10% target you cannot afford a wide spread: you buy at
@@ -133,7 +145,7 @@ STOP_LOSS_CAP_PCT = 1.0  # Stop can't be more than 1% away from entry
 # +3.74%/trade expectancy (13 trades — promising, must be confirmed forward).
 OPTIONS_ONLY_MODE   = True    # all signals become buy-CALL / buy-PUT
 PREMIUM_TARGET_PCT  = 10.0    # book profit at +10% on the option premium
-PREMIUM_STOP_PCT    = 20.0    # cut loss at -20% on the option premium
+PREMIUM_STOP_PCT    = 15.0    # cut loss at -15% (was -20; real-180d backtest: tighter stop + min-prem = +profit)
 OPTION_IV_THRESHOLD = 60      # skip if ATM IV too high (very expensive premium)
 # Strike offset from ATM: 0=ATM, +1=one strike OTM, -1=one strike ITM.
 # Backtest (Run H) favoured OTM+1 (best expectancy + good win rate, cheap, liquid).
@@ -157,7 +169,7 @@ ORB_VWAP_ENABLED      = True
 # win, +0.8%/trade gross with the clean-trend entry filter.
 ORB_VWAP_EXIT_MODE    = "trend_ride"  # "trend_ride" (live) | "fixed_target" (legacy)
 ORB_VWAP_TARGET_PCT   = 20.0   # legacy fixed-target cap (only used if EXIT_MODE="fixed_target")
-ORB_VWAP_STOP_PCT     = 20.0   # -20% premium hard stop (both modes)
+ORB_VWAP_STOP_PCT     = 15.0   # -15% premium hard stop (was -20; index real backtest best at -15)
 ORB_VWAP_ARM_PCT      = 12.0   # trend-ride: arm the VWAP-reclaim exit only after +12% premium
 ORB_VWAP_CLEAN_TREND  = True   # entry filter: require VWAP sloped the trade way + >0.25% extended
 ORB_VWAP_ENTRY_CUTOFF = "11:00"  # no new ORB+VWAP entries after this (first-90-min filter)

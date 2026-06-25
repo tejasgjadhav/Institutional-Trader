@@ -2,7 +2,7 @@
 
 A disciplined **paper-trading** system for NSE intraday. It scans NIFTY, BANKNIFTY
 and 100 liquid stocks every 5 minutes, scores each with a 3-family model, and only
-flags a trade when it clears **six strict gates**. Every trade is a **bought option**
+flags a trade when it clears its **strict gates** (alpha, ORB, alignment, min-premium, liquidity). Every trade is a **bought option**
 (CALL/PUT) and you place the order yourself in Upstox — the software never sends
 orders. It is a process for collecting honest evidence, not a proven money-maker.
 
@@ -67,12 +67,19 @@ both manual-execution:
 - **3-Family system (100 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
   (2) scores each stock into one number, **alpha-z**, (3) checks the score is strong
   and broad enough (**Gate 1**), breaking out *now* (**Gate 2**), aligned with the Nifty
-  (**Gate 3**), not already over-extended (**Gate 4**), the opening range is wide enough
-  (**Gate 5**), and the option is liquid enough to actually trade (**Gate 6**). All gates pass →
-  a **buy-option order** (OTM+1, +10%/−20%) appears for you to place.
+  (**Gate 3**), the OTM+1 option is **rich enough (≥ ₹30, Gate 5b)** and liquid enough
+  (**Gate 6**). All pass → a **buy-option order** (OTM+1, **+10%/−15%**) appears for you to
+  place. *(Gates 4 "don't-chase" and 5 "wide-open" were retired in 2026-06 — they didn't
+  hold up on the real-option 180-day backtest; the min-premium gate replaced them.)*
 - **ORB+VWAP system (NIFTY & BANKNIFTY):** a separate index strategy — 15-min ORB +
   VWAP + 30-min trend + clean-trend filter, buy **ATM**, **trend-ride exit** (VWAP-reclaim
-  after +12%, hard −20% stop) — see the section below.
+  after +12%, hard **−15%** stop) — see the section below.
+
+> **2026-06 — validated on REAL option data.** An Upstox Plus upgrade unlocked historical
+> premiums for *expired* contracts (~18 months), so the strategy is now backtested on the
+> **actual option P&L**, not the underlying proxy. The win was the **min-premium gate** (skip
+> cheap lottery options) + alignment + a **−15% stop**: **~64% win, +1.5% gross out-of-sample**,
+> vs the old +10/−20 which *lost* −1.5%. Thin but real. See `studies/REAL_OPTION_OPTIMIZATION.md`.
 
 The 3-Family system scans **stocks only**; the indices are handled exclusively by the
 ORB+VWAP strategy.
@@ -199,9 +206,11 @@ closest-to-firing on top, so you can see exactly which gate each candidate is wa
 Every signal becomes a **bought option** (never sold):
 
 - **LONG → buy CALL · SHORT → buy PUT**
-- **Strike: OTM+1** (one strike out-of-the-money — best risk-adjusted in testing)
+- **Strike: OTM+1**, but **only if its premium ≥ ₹30** (Gate 5b — skip cheap lottery options,
+  the biggest source of losses on the real-option backtest)
 - **Nearest expiry** (Nifty weekly, BankNifty/stocks monthly)
-- **Exit on the option premium:** **+10% target / −20% stop**
+- **Exit on the option premium:** **+10% target / −15% stop** (−15, tightened from −20 in
+  2026-06: drops the breakeven win rate from 67% → 60%, below the realised ~64%)
 
 You exit on the option's own price, not the stock — leverage means a small underlying
 move swings the premium 10%+.
@@ -219,9 +228,9 @@ BANKNIFTY index options only**, shown in its own section on **PM DECISIONS**:
 - **Filters:** entries before 11:00 AM · skip 0-DTE expiry-day spikes · one signal/index/day
 - **Instrument:** buy **ATM** CALL/PUT (LONG→CALL, SHORT→PUT)
 - **Exit — trend-ride (NEW):** let the winner **run**; exit only when the futures **reclaim
-  VWAP** *after* the trade is already +12% in profit; **hard −20% premium stop** throughout;
+  VWAP** *after* the trade is already +12% in profit; **hard −15% premium stop** throughout;
   otherwise square off at the close. (Replaced the old fixed +20% target.)
-- **Live status:** WATCHING → ● RIDING → EXITED VWAP / STOPPED −20%
+- **Live status:** WATCHING → ● RIDING → EXITED VWAP / STOPPED −15%
 
 **Why the change.** ORB+VWAP is a *trend-following* setup, but the old fixed **+20%
 target** capped winners while still taking full **−20%** stops — backwards for a trend
@@ -251,8 +260,9 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 
 - No per-day trade cap — every qualifying signal is taken · halt after 3 stop-outs · never overnight.
 - **Daily EOD booking:** every open paper trade is force-closed WIN/LOSS at the **15:30 close** (Mon–Fri), unless its +target/−stop hit earlier. Runs off the 1-sec clock, so it always fires (`paper_resolver` + `ui._maybe_eod_book`).
-- **Breakeven:** with +10% target / −20% stop you risk 20% to make 10%, so the
-  breakeven win rate is `20 / (10+20) = ~67%`. **Below that you lose money.**
+- **Breakeven:** with +10% target / −15% stop you risk 15% to make 10%, so the
+  breakeven win rate is `15 / (10+15) = 60%`. The current min-premium config realises ~64% on
+  the real-option backtest — **above breakeven**, which is the point of the 2026-06 change.
 - **Go-live bar:** win rate **≥ 70%** AND profit factor > 1 across 30+ signals —
   a margin above breakeven, NOT the generic 52% you see elsewhere.
 
@@ -322,6 +332,7 @@ short-window rupee figures as directional. The in-app **STUDIES** tab shows the 
 
 | # | Study | Question | Headline result | Status |
 |---|-------|----------|-----------------|--------|
+| ★ | [**Real-Option Optimization**](studies/REAL_OPTION_OPTIMIZATION.md) | What's the edge on REAL option P&L (Upstox Plus, 180d)? | min-premium+align+−15 stop: 54→64% win, −1.5→+1.5% OOS | **LIVE** |
 | 1 | [Win-Rate Research Log](studies/WIN_RATE_RESEARCH_LOG.md) | How high can win rate go? | A ~52–57% out-of-sample wall; edge must come from filtering | baseline |
 | 2 | [Gate 3 — Market Alignment](studies/FINAL_STRATEGY_TESTING_60DAY.md) | Does not fighting the Nifty help? | 60d: ~59% win, P&L +₹17k → +₹31k (~2×) | **LIVE** |
 | 3 | [Gate 4 — Don't Chase](studies/GATE4_DONT_CHASE.md) | Do over-extended entries lose edge? | 60d: win 59→61%, RoC +1.7→+2.8%, fewer trades | **LIVE** |

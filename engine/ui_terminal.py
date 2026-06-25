@@ -432,9 +432,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <div style="color:{TEXT};">
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
-     "All P&amp;L is GROSS of costs. Option backtests use ~1 month of real premium history "
-     "(the rest is direction); treat short-window rupee figures as directional. Full write-ups "
-     "are the .md files in /studies on GitHub.")}
+     "All P&amp;L is GROSS of costs. Full write-ups are the .md files in /studies on GitHub.")}
+
+{h("★ REAL-OPTION OPTIMIZATION (2026-06 — the current config)")}
+{sub("Question: what is the edge on REAL option P&amp;L, not the underlying proxy?")}
+{p("Upstox Plus unlocked historical premiums for EXPIRED contracts (~18 months), so the strategy "
+   "was re-backtested on actual option P&amp;L over 180 days. The old +10/-20 config LOST -1.5% "
+   "(59% win isn't enough for a 1:2 reward-risk that needs 67%). Multiple optimization rounds, "
+   "all train/test split: the gates we relied on (extension, ORB-width) did NOT hold out-of-sample; "
+   "a tempting '1-bar confirmation' pattern was look-ahead and failed. The one ROBUST edge: "
+   "<b>option premium &gt;= Rs30</b> (skip cheap lottery options that decay to nothing) + alignment.")}
+{res("Result (held-out test): 54% -&gt; 64% win, -1.5% -&gt; +1.5% profit. DEPLOYED: min-premium "
+     "gate Rs30, dropped Gates 4/5, stop -20 -&gt; -15 (breakeven win 67% -&gt; 60%). Rich options "
+     "also have ~3x smaller spread, so it helps NET too. Thin but real; forward log is the judge.")}
+{dim("File: studies/REAL_OPTION_OPTIMIZATION.md")}
 
 {h("1 - Win-Rate Research Log (the baseline)")}
 {sub("Question: how high can the win rate realistically go?")}

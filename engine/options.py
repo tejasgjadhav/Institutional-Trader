@@ -146,7 +146,7 @@ def check_option_liquidity(ticker: str, spot: float, direction: str) -> tuple:
       verdict None  = quote unavailable -> caller fails OPEN (don't block on an API hiccup)
     """
     from engine.config import (OPTION_STRIKE_OFFSET, MAX_OPTION_SPREAD_PCT,
-                               MIN_OPTION_OI)
+                               MIN_OPTION_OI, MIN_OPTION_PREMIUM_FILTER, MIN_OPTION_PREMIUM)
     from engine.data_fetcher import fetch_upstox_quote
     opt_type = "CE" if direction == "LONG" else "PE"
     opt = get_option_by_offset(ticker, spot, date.today(), opt_type, OPTION_STRIKE_OFFSET)
@@ -160,6 +160,11 @@ def check_option_liquidity(ticker: str, spot: float, direction: str) -> tuple:
         return False, {"reason": "no two-sided market", "bid": bid, "ask": ask, "oi": oi,
                        "strike": int(opt["strike"])}
     mid = (bid + ask) / 2.0
+    # MIN OPTION PREMIUM (the real-180d-backtest edge): cheap OTM lottery options are where
+    # losses concentrate and where the % spread is widest. Block anything under MIN_OPTION_PREMIUM.
+    if MIN_OPTION_PREMIUM_FILTER and mid < MIN_OPTION_PREMIUM:
+        return False, {"reason": f"option too cheap (Rs{mid:.0f} < Rs{MIN_OPTION_PREMIUM:.0f})",
+                       "bid": round(bid, 2), "ask": round(ask, 2), "oi": int(oi), "strike": int(opt["strike"])}
     spread_pct = (ask - bid) / mid * 100 if mid else 999.0
     liquid = (spread_pct <= MAX_OPTION_SPREAD_PCT) and (oi >= MIN_OPTION_OI)
     return liquid, {"bid": round(bid, 2), "ask": round(ask, 2), "oi": int(oi),
