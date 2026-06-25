@@ -858,7 +858,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     order = None
             sym = f["ticker"].replace(".NS", "")
             # (read-only viewer — the engine writes signals.db, the GUI only displays)
-            status = self._pm_status(outcomes.get((sym, "3-Family")))   # OPEN / WIN / LOSS, synced to trade log
+            oc_rec = outcomes.get((sym, "3-Family"))
+            status = self._pm_status(self._oc_status(oc_rec))   # OPEN / WIN / LOSS, synced to trade log
             kind = (order["instrument"] if order else f.get("instrument", ""))
             fg = QColor(GREEN) if kind == "CALL" else (QColor(RED) if kind == "PUT" else QColor(AMBER))
             if not order:
@@ -876,6 +877,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                         curp = f"Rs {lt['price']:.2f}"
                 except Exception:
                     pass
+            elif oc_rec and oc_rec.get("exit"):
+                curp = f"Rs {oc_rec['exit']:.2f}"   # booked exit price (closed) — not a stale live quote
             cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
             vals = [f["time"], sym, kind, f"{order['strike']:.2f}", order["expiry"],
                     f"Rs {order['premium']:.2f}", curp,
@@ -918,10 +921,15 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             for t in d.get("trades", []):
                 if (t.get("signal_time") or "").startswith(today):
                     key = ((t.get("ticker") or "").replace(".NS", ""), t.get("strategy"))
-                    out[key] = t.get("outcome")   # 'WIN' / 'LOSS' / None (still open)
+                    out[key] = {"outcome": t.get("outcome"),         # 'WIN'/'LOSS'/None(open)
+                                "exit": t.get("exit_premium")}       # the price it was BOOKED at
         except Exception as e:
             logger.warning(f"trade outcomes read failed: {e}")
         return out
+
+    @staticmethod
+    def _oc_status(rec):
+        return rec.get("outcome") if isinstance(rec, dict) else rec
 
     @staticmethod
     def _pm_status(outcome):
@@ -978,9 +986,16 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 strike = f"{rec['strike']:.2f}" if isinstance(rec.get("strike"), (int, float)) else "—"
                 entry = f"Rs {rec['entry_premium']:.2f}"
                 stop = f"Rs {rec['stop_premium']:.2f}" if rec.get("stop_premium") else "—"
+                oc_rec = outcomes.get((idx, "ORB+VWAP"))
+                status = self._pm_status(self._oc_status(oc_rec))   # OPEN / WIN / LOSS, synced to trade log
+                # CURRENT: once booked, show the EXIT it was booked at (the live 'current' from
+                # the engine's last pre-cutoff scan goes stale and can read BELOW intrinsic —
+                # that's the impossible 370 the user saw). While OPEN, show the live current.
                 lr = live.get(idx) or {}
-                cur = f"Rs {lr['current']:.2f}" if lr.get("current") else "—"
-                status = self._pm_status(outcomes.get((idx, "ORB+VWAP")))   # OPEN / WIN / LOSS, synced to trade log
+                if status in ("WIN", "LOSS") and oc_rec and oc_rec.get("exit"):
+                    cur = f"Rs {oc_rec['exit']:.2f}"
+                else:
+                    cur = f"Rs {lr['current']:.2f}" if lr.get("current") else "—"
                 vals = [rec.get("time", "—"), idx, kind, strike, rec.get("expiry", "—"),
                         entry, "VWAP-break · -20%", stop, cur, rec.get("lot", "—"),
                         status]
