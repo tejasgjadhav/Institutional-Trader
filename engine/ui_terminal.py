@@ -922,7 +922,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 if (t.get("signal_time") or "").startswith(today):
                     key = ((t.get("ticker") or "").replace(".NS", ""), t.get("strategy"))
                     out[key] = {"outcome": t.get("outcome"),         # 'WIN'/'LOSS'/None(open)
-                                "exit": t.get("exit_premium")}       # the price it was BOOKED at
+                                "exit": t.get("exit_premium"),       # the price it was BOOKED at
+                                "option_key": t.get("option_key")}   # for a LIVE quote while open
         except Exception as e:
             logger.warning(f"trade outcomes read failed: {e}")
         return out
@@ -988,14 +989,27 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 stop = f"Rs {rec['stop_premium']:.2f}" if rec.get("stop_premium") else "—"
                 oc_rec = outcomes.get((idx, "ORB+VWAP"))
                 status = self._pm_status(self._oc_status(oc_rec))   # OPEN / WIN / LOSS, synced to trade log
-                # CURRENT: once booked, show the EXIT it was booked at (the live 'current' from
-                # the engine's last pre-cutoff scan goes stale and can read BELOW intrinsic —
-                # that's the impossible 370 the user saw). While OPEN, show the live current.
+                # CURRENT premium:
+                #  - booked (WIN/LOSS): the EXIT it was booked at (the engine 'current' goes
+                #    stale post-11:00 cutoff and can read below intrinsic — the impossible 370).
+                #  - OPEN: a LIVE option quote fetched here every refresh (~5s), so it's dynamic
+                #    like the stock rows — not the engine's frozen 5-min/post-cutoff value.
                 lr = live.get(idx) or {}
+                cur = "—"
                 if status in ("WIN", "LOSS") and oc_rec and oc_rec.get("exit"):
                     cur = f"Rs {oc_rec['exit']:.2f}"
-                else:
-                    cur = f"Rs {lr['current']:.2f}" if lr.get("current") else "—"
+                elif status == "OPEN" and oc_rec and oc_rec.get("option_key"):
+                    try:
+                        from engine.data_fetcher import fetch_upstox_ltp
+                        lt = fetch_upstox_ltp(oc_rec["option_key"])
+                        if lt.get("success") and lt.get("price"):
+                            cur = f"Rs {lt['price']:.2f}"
+                    except Exception:
+                        pass
+                    if cur == "—" and lr.get("current"):   # fallback to engine's value
+                        cur = f"Rs {lr['current']:.2f}"
+                elif lr.get("current"):
+                    cur = f"Rs {lr['current']:.2f}"
                 vals = [rec.get("time", "—"), idx, kind, strike, rec.get("expiry", "—"),
                         entry, "VWAP-break · -20%", stop, cur, rec.get("lot", "—"),
                         status]
