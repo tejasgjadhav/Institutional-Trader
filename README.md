@@ -259,6 +259,55 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 
 ---
 
+## Parallel Strategy — Swing Credit Spread (the 3rd, the validated one)
+
+A **third** strategy runs alongside the other two — **multi-day, and the only structure that
+cleared real costs out-of-sample.** It does the opposite of buying: it **SELLS** a defined-risk
+credit spread and harvests theta. Shown in its own **SWING CREDIT SPREADS** section on **PM
+DECISIONS**, between the stock and index sections.
+
+- **Signal:** a daily **Donchian-10 breakout** on NIFTY / BANKNIFTY.
+- **The twist — FADE it:** index breakouts *mean-revert*, so we sell *against* the breakout
+  (up-break → **bear-call** spread, down-break → **bull-put** spread). Selling *with* the breakout
+  won only 40%; fading wins ~65%.
+- **Construct:** mid-tenor (~2-week expiry), short **1 strike OTM**, long **3 strikes** further
+  (defined risk), held **to expiry**; hard stop if cost-to-close hits **2× the credit**.
+- **Multi-day:** overnight carry — **not** squared at 15:30. Marked-to-market through the day.
+- **Live status:** WATCHING → OPEN (live P&L) → WIN / LOSS.
+
+**Why it works where everything else failed.** Buying pays the bid-ask *and* fights theta; stock
+credit spreads pay 4 legs of wide stock-option slippage; index *follow*-spreads are directionally
+wrong. The fade spread removes all three drags at once — it **sells** (theta works for it), on
+**index** options (tightest bid-ask in India), and trades **with the reversion**.
+
+**Backtest — ~20 months of REAL expired-option data (the largest set available):**
+
+| | Trades | Win % | Net/trade (real costs) | Holdout boot p5 |
+|---|--------|-------|------------------------|-----------------|
+| Deployed fade config | 63 (57 clean) | 65–67% | **+4–9% on margin** | **+2.3%** (>0) |
+
+Validated four ways — out-of-sample, replicated on **two** entry signals (Donchian-10 & -20),
+**both** indices positive, survives **2× slippage**, positive bootstrap 5th-percentile.
+
+**Economics at 1 lot (NIFTY 75 / BANKNIFTY 35), all signals over 20.5 months:**
+
+| | Trades | Total net | Per month | Margin/trade |
+|---|--------|-----------|-----------|--------------|
+| Both (clean) | 57 | ~₹49,800 | **~₹2,400** | ~₹16.5k |
+| NIFTY (transfers to live) | 43 | ~₹21,800 | ~₹1,065 | ~₹7.1k |
+
+~**3 signals/month**, each held ~3 weeks, ≤2 open at once. Config: `SWING_*` in
+`engine/config.py`; logic in `engine/swing_credit.py`; book in `data/swing_positions.json`.
+
+> **Honest note:** still a **FORWARD-TEST** — thin sample (~63 trades / ~21 holdout) and backtest
+> fills ≠ live fills. **Sizing:** at ~3 signals/month this earns ~₹1–2k/month at 1 lot; a ₹5.5L
+> margin can technically stack ~38 lots but a normal 3-loss streak would then lose ₹8L+ — **never
+> fill the margin; ~5 lots is the prudent ceiling.** BANKNIFTY's backtest used coarser 500-pt
+> strikes than the live engine's 100-pt — NIFTY is the trustworthy core. Full record:
+> [`studies/STOCK_OPTIONS_NO_EDGE.md`](studies/STOCK_OPTIONS_NO_EDGE.md) (Parts 5–6).
+
+---
+
 ## Risk, Breakeven & Go-Live Bar
 
 - No per-day trade cap — every qualifying signal is taken · halt after 3 stop-outs · never overnight.
@@ -364,6 +413,7 @@ engine/
   events.py            NSE announcement scraper + keyword scoring (EVENT family)
   signals.py           3-family scoring + alpha-z + ORB gate
   orb_vwap_live.py     PARALLEL ORB+VWAP index strategy (ATM, trend-ride exit, PM DECISIONS)
+  swing_credit.py      PARALLEL swing credit-spread (multi-day · fade breakout · the validated edge)
   options.py           ATM/offset strike resolver + live option order builder
   portfolio.py         instrument decision + sizing
   trade_log.py         paper log: win rate, PF, expectancy, go-live check

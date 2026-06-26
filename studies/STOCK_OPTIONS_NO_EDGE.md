@@ -108,6 +108,25 @@ the key refinement (the near-weekly was worse; far-dated too slow). **Caveats:**
 by the coherent 14-config validated family, the pre-predicted mechanism, and the independent-signal
 replication. **Deployed as a parallel paper FORWARD-TEST**, not as proven-profitable capital.
 
+**Sample & economics (1 lot/signal, all signals, NIFTY 75 / BANKNIFTY 35, real costs).** The
+deployed config produced **63 signals over 20.5 months** — 6 had corrupted strike-spacing in the
+expired-option chain (sparse 1000/1500-pt gaps that pick the wrong strikes) and were dropped, so
+the clean economic sample is **57 trades (NIFTY 43, BANKNIFTY 14)**, ~3 signals/month, each held
+~3 weeks, ≤2 open at once:
+
+| at 1 lot | trades | win | total net (20.5 mo) | per month | margin/trade |
+|---|---|---|---|---|---|
+| both (clean) | 57 | 65% | ₹49,825 | ~₹2,400 | ~₹16,570 |
+| **NIFTY (transfers to live)** | 43 | 65% | ₹21,823 | ~₹1,065 | ~₹7,125 |
+| BANKNIFTY (coarse-strike caveat) | 14 | 64% | ₹28,003 | ~₹1,370 | ~₹16k+ |
+
+Two honest caveats on the rupees: (1) the backtest priced BANKNIFTY on coarse **500-pt** strikes
+(width 1,500) but `engine/swing_credit.py` trades the live **100-pt** strikes (width 300) — so live
+BANKNIFTY margin *and* profit will be smaller; **NIFTY (~₹508/trade) is the figure that transfers.**
+(2) Sizing: at ~3 signals/month and ≤2 concurrent positions the strategy cannot absorb a large
+margin — a ₹5.5L book could stack ~38 lots/position, but a normal 3-loss streak (seen in backtest)
+would then lose ₹8L+. Prudent ceiling ≈ 5 lots; **never fill the margin.**
+
 ## The unifying conclusion — one structural cause, one exception
 The **buying** strategies (Parts 1–3) and the **follow / 4-illiquid-leg** selling strategies
 (Parts 4–5) all lose for the same reason: as a **retail taker you cross the bid-ask on every leg**
