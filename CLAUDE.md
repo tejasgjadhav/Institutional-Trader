@@ -60,6 +60,10 @@ filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard *
   spread), NOT as a profit edge. Treat stocks as a paper forward-test, not a money-maker.
 - **INDEX: thin but durable edge.** Trend-ride (−15 stop) ran **+0.9% over 18 months (453 trades),
   positive on both train and test.** The one real (small) edge.
+- **MULTI-DAY CREDIT SPREADS: rejected on real cost.** The most promising idea (sell premium /
+  harvest theta) looked like +6.9% holdout on an *estimated* 6% cost, but **real measured per-leg
+  cost (₹1,137/trade, 4 legs) flipped it to −4.7% net best-case, PF 0.87, worst trade −198%.** Do
+  not revive without a structurally lower execution cost. See `studies/STOCK_OPTIONS_NO_EDGE.md` Part 4.
 - Lesson: a train/test split *inside a short window* is not true out-of-sample; use the longest
   window the data allows. See `studies/REAL_OPTION_OPTIMIZATION.md` (CORRECTION at the top).
 Old gates 4/5 are OFF tunables; everything is GROSS of costs.
