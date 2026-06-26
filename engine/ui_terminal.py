@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 import os as _os
 LATEST_SCAN = _os.path.join(DATA_DIR, "latest_scan.json")
 MARKET_SNAP = _os.path.join(DATA_DIR, "market_snapshot.json")
+SWING_SNAP = _os.path.join(DATA_DIR, "swing.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -62,6 +63,7 @@ class TerminalApp(QMainWindow):
         self.agent = Agent()
         self.trade_log = TradeLog()
         self.last_scan_results = []
+        self._swing_rows = []
         self.active_screen = 0
         self._mkt_running = False
         self._scanning = False
@@ -267,6 +269,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"]
     ORBVWAP_COLS = ["TIME", "INDEX", "TYPE", "STRIKE", "EXPIRY", "ENTRY",
                     "EXIT RULE", "STOP -20%", "CURRENT", "LOT", "STATUS"]
+    SWING_COLS = ["INDEX", "SPREAD  (sell / buy)", "EXPIRY", "CREDIT", "NOW",
+                  "MAX LOSS", "LOT", "P&L", "STATUS"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -291,6 +295,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stock = self._make_pm_table()
         self.pm_stock.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_stock, 2)   # shares space, scrolls internally
+
+        # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
+        # Sits BETWEEN the stock and index sections. Forward-test; place the spread manually.
+        v.addWidget(self._section_label(
+            "SWING CREDIT SPREADS  (multi-day · theta · SELL spread, place manually · forward-test)", CYAN))
+        self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.SWING_COLS))
+        self.pm_swing.setHorizontalHeaderLabels(self.SWING_COLS)
+        self.pm_swing.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pm_swing.setAlternatingRowColors(True); self.pm_swing.verticalHeader().setVisible(False)
+        self.pm_swing.verticalHeader().setDefaultSectionSize(34)
+        self.pm_swing.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_swing, 1)
 
         # NIFTY & BANKNIFTY index options — handled by the ORB+VWAP strategy below
         v.addWidget(self._section_label("INDEX OPTIONS  (NIFTY / BANKNIFTY, paper forward-test)", PURPLE))
@@ -743,6 +759,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 self._latest_scan_ts = d.get("ts")
         except Exception as e:
             logger.warning(f"load latest_scan failed: {e}")
+        # swing credit spreads — its own snapshot (engine writes data/swing.json on resolve/scan)
+        try:
+            if _os.path.exists(SWING_SNAP):
+                s = json.load(open(SWING_SNAP))
+                self._swing_rows = s.get("rows", []) or []
+        except Exception as e:
+            logger.warning(f"load swing.json failed: {e}")
 
     # ── refreshers ────────────────────────────────────────────────────────────
     @staticmethod
@@ -901,6 +924,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self._color_cell(self.pm_stock, r, 11, self._status_color(status))
 
         self._fit_table(self.pm_stock)
+        self._refresh_swing()
         self._refresh_orbvwap()
 
     @staticmethod
@@ -1036,6 +1060,40 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             if status:
                 self._color_cell(self.pm_orbvwap, r, 10, self._status_color(status))
         self._fit_table(self.pm_orbvwap)
+
+    def _refresh_swing(self):
+        """SWING CREDIT SPREADS — read-only render of the engine's swing.json snapshot. OPEN
+        positions on top (live mark-to-market), then recently closed. The engine owns the book."""
+        if not hasattr(self, "pm_swing"):
+            return
+        rows = list(self._swing_rows or [])
+        if not rows:
+            self.pm_swing.setRowCount(1)
+            self._set_row(self.pm_swing, 0,
+                          ["—", "no swing signal yet — fires on a daily index breakout (fade)",
+                           "—", "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
+            self._fit_table(self.pm_swing); return
+        self.pm_swing.setRowCount(len(rows))
+        for r, p in enumerate(rows):
+            status = p.get("status", "OPEN")
+            credit = p.get("credit"); now = p.get("current_cost")
+            pnl_pts = p.get("pnl_pts", 0.0) or 0.0
+            pnl_pct = p.get("pnl_pct")
+            pnl_txt = (f"{pnl_pts:+.1f} pt" + (f" / {pnl_pct:+.0f}%" if pnl_pct is not None else "")) \
+                if status != "OPEN" or now is not None else "—"
+            vals = [p.get("index", "—"), p.get("order_label", "—"), p.get("expiry", "—"),
+                    f"Rs {credit:.1f}" if credit is not None else "—",
+                    f"Rs {now:.1f}" if now is not None else "—",
+                    f"{p.get('max_loss_pts','—')} pt", p.get("lot", "—"),
+                    pnl_txt, status]
+            # bull-put (fade a down-break) is bullish=green; bear-call (fade an up-break) is red
+            fg = QColor(GREEN) if p.get("side") == "BULL_PUT" else QColor(RED)
+            self._set_row(self.pm_swing, r, vals, fg=fg)
+            self._color_cell(self.pm_swing, r, 8, self._status_color(status))
+            if pnl_txt != "—":
+                self._color_cell(self.pm_swing, r, 7,
+                                 QColor(GREEN) if pnl_pts > 0 else QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))
+        self._fit_table(self.pm_swing)
 
     def _refresh_watchlist(self):
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]

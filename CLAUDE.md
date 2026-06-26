@@ -53,6 +53,13 @@ All pass → buy OTM+1 CALL/PUT, exit **+10% / −15%** on premium (−15 stop d
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
 filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard **−15%** stop).
 
+**Swing credit spread** (NIFTY/BANKNIFTY, the 3rd strategy, multi-day) → daily **Donchian-10**
+breakout → **SELL a credit spread AGAINST it** (fade: up-break → bear-call, down-break → bull-put),
+mid-tenor (≥10 DTE), short 1-OTM, width 3, **hold to expiry**, hard stop at 2× credit. Overnight
+carry — NOT squared at 15:30. Signals-only paper forward-test (`engine/swing_credit.py`,
+`config.SWING_*`); its own **SWING CREDIT SPREADS** section on PM DECISIONS between stocks and index.
+The one validated edge (+4.0% net/trade real costs, holdout bootstrap p5 +2.3%) — still forward-test.
+
 **REAL option data (expired-instruments / Upstox Plus) — honest standing after the 1-year test:**
 - **STOCKS: no proven durable edge.** The min-premium config looked like +1.5% (64% win) on a
   180-day window but came in at **−1.0% (55% win) over a full year** — overfit to a recent
@@ -60,10 +67,15 @@ filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard *
   spread), NOT as a profit edge. Treat stocks as a paper forward-test, not a money-maker.
 - **INDEX: thin but durable edge.** Trend-ride (−15 stop) ran **+0.9% over 18 months (453 trades),
   positive on both train and test.** The one real (small) edge.
-- **MULTI-DAY CREDIT SPREADS: rejected on real cost.** The most promising idea (sell premium /
-  harvest theta) looked like +6.9% holdout on an *estimated* 6% cost, but **real measured per-leg
-  cost (₹1,137/trade, 4 legs) flipped it to −4.7% net best-case, PF 0.87, worst trade −198%.** Do
-  not revive without a structurally lower execution cost. See `studies/STOCK_OPTIONS_NO_EDGE.md` Part 4.
+- **STOCK multi-day credit spreads: rejected on real cost.** Sell-premium/theta-harvest looked
+  like +6.9% holdout on an *estimated* cost, but **real per-leg cost (₹1,137/trade, 4 legs) flipped
+  it to −4.7% net, PF 0.87.** Dead. See `studies/STOCK_OPTIONS_NO_EDGE.md` Part 4.
+- **INDEX fade credit spread: VALIDATED & deployed (the 3rd strategy).** Selling a credit spread
+  *against* a daily index breakout (theta + tightest bid-ask + trades with the reversion) clears
+  measured costs: **+4.0% net/trade, PF 1.83, both indices positive, survives 2× cost, holdout
+  bootstrap p5 +2.3%**, replicated on two entry signals. Runs as a parallel paper FORWARD-TEST in
+  `engine/swing_credit.py`. See Parts 5–6. NOTE: the *follow* version (with the breakout) loses
+  (40% win — breakouts revert); the edge is specifically the **fade**.
 - Lesson: a train/test split *inside a short window* is not true out-of-sample; use the longest
   window the data allows. See `studies/REAL_OPTION_OPTIMIZATION.md` (CORRECTION at the top).
 Old gates 4/5 are OFF tunables; everything is GROSS of costs.
@@ -86,6 +98,7 @@ engine/store.py           data/engine.db — daily scan rows + market snapshots
 engine/agent.py           run_scan orchestrator (3-Family + ORB+VWAP), execute_signals
 engine/signals.py         3-family scoring + alpha-z + ORB gate
 engine/orb_vwap_live.py   index ORB+VWAP strategy (trend-ride exit)
+engine/swing_credit.py    SWING credit-spread strategy (multi-day · fade · book in data/swing_positions.json)
 engine/paper_resolver.py  closes PENDING paper trades on the option premium
 engine/options.py         strike resolver + live option order builder
 engine/signal_db.py       SQLite log of every PM signal

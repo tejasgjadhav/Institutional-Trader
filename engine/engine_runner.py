@@ -51,6 +51,8 @@ class EngineRunner:
         self._notified = set()
         self._notified_day = None
         self._caffeinate = None   # power assertion held while the market is open
+        self._last_swing_resolve = 0.0
+        self._swing_scan_day = None
 
     # ── persistence helpers ──────────────────────────────────────────────────
     @staticmethod
@@ -190,6 +192,40 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"fast resolve: {e}")
 
+    def _swing(self, now):
+        """SWING CREDIT SPREADS (the 3rd strategy) — multi-day, overnight carry, decoupled from
+        the intraday loop. Scans ONCE/day after the cutoff (a daily Donchian breakout needs ~the
+        close) and marks-to-market / settles open positions every SWING_RESOLVE_INTERVAL. Runs
+        even when the market is closed so overnight & weekend expiries get settled in the book."""
+        try:
+            from engine import config
+            if not getattr(config, "SWING_CREDIT_ENABLED", False):
+                return
+            from engine import swing_credit
+        except Exception as e:
+            logger.warning(f"swing import: {e}")
+            return
+        # periodic resolve (open positions only; cheap no-op when none are open)
+        if (time.time() - self._last_swing_resolve) >= config.SWING_RESOLVE_INTERVAL:
+            self._last_swing_resolve = time.time()
+            try:
+                n = swing_credit.resolve_swing_positions()
+                if n:
+                    logger.info(f"swing: resolved/closed {n} position(s)")
+            except Exception as e:
+                logger.warning(f"swing resolve: {e}")
+        # once-daily scan after the cutoff, only on a trading day
+        h, m = map(int, config.SWING_SCAN_AFTER.split(":"))
+        after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
+        if (self.agent.is_market_open() and after_cutoff and self._swing_scan_day != now.date()):
+            self._swing_scan_day = now.date()
+            try:
+                new = swing_credit.scan_swing_signals()
+                if new:
+                    logger.info(f"swing: opened {len(new)} new spread(s)")
+            except Exception as e:
+                logger.warning(f"swing scan: {e}")
+
     def _manage_wakelock(self):
         """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended
         laptop can't idle-sleep mid-session and suspend the engine (the system sleep timer is
@@ -218,6 +254,7 @@ class EngineRunner:
         self._manage_wakelock()
         self._maybe_eod(now)
         self._fast_resolve()
+        self._swing(now)
         if self.agent.is_market_open() and (time.time() - self._last_scan) >= SCAN_INTERVAL:
             self._last_scan = time.time()
             try:

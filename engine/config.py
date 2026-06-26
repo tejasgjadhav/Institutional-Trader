@@ -157,6 +157,33 @@ OPTION_STRIKE_OFFSET = 1      # OTM+1 (CALL: one strike above spot · PUT: one b
 TARGET_PCT_EQUITY     = 1.0
 TARGET_PCT_DERIVATIVE = 5.0
 
+# === SWING CREDIT SPREAD STRATEGY (multi-day · theta · FADE the breakout) ===
+# A THIRD, separate parallel forward-test — distinct from the intraday stock & index
+# option BUYING strategies. It SELLS a defined-risk credit spread AGAINST a daily
+# Donchian breakout on the index (index breakouts mean-revert), mid-tenor, held to
+# expiry — harvesting theta on the reversion. Shown in its own SWING CREDIT SPREADS
+# section on PM DECISIONS, BETWEEN the stock and index sections.
+#
+# Validated on ~20 months of REAL expired-option data (engine/expired_options.py):
+#   ALL +4.0% net/trade on capital-at-risk (real costs), PF 1.83, 67% win.
+#   Replicated across two independent entry signals (Donchian-10 & -20), BOTH indices
+#   positive (NIFTY +4.0% / BANKNIFTY +3.9%), survives 2x slippage (+3.0%), and the
+#   held-out bootstrap 5th-percentile is +2.3% (robust, not outlier-driven).
+# STILL A FORWARD-TEST: thin sample (~63 trades / ~21 holdout) and backtest fills are
+# not live fills. It runs here to forward-test, NOT because it is proven profitable.
+# Signals only — the user places the spread manually in Upstox; the system never trades.
+# See studies/STOCK_OPTIONS_NO_EDGE.md (Part 6) for the full validation record.
+SWING_CREDIT_ENABLED   = True
+SWING_INDICES          = ["NIFTY", "BANKNIFTY"]
+SWING_DONCHIAN         = 10       # daily breakout lookback (validated on 10 and 20)
+SWING_MIN_DTE          = 10       # MID tenor: nearest expiry >= 10 days out (the sweet spot)
+SWING_SHORT_OFFSET     = 1        # short strike 1 step OTM from ATM
+SWING_WIDTH            = 3        # long strike 3 steps further OTM (defined risk)
+SWING_STOP_MULT        = 2.0     # stop if cost-to-close >= 2x the credit collected
+SWING_REENTRY_GAP_DAYS = 3        # min days between entries on the same index
+SWING_SCAN_AFTER       = "15:10"  # scan once/day after this (a daily breakout needs ~the close)
+SWING_RESOLVE_INTERVAL = 900      # mark-to-market open positions every 15 min (overnight carry)
+
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own
 # section on PM DECISIONS. Signal: 15-min ORB break on the index FUTURES + hold VWAP

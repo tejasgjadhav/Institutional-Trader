@@ -1,11 +1,13 @@
-# Study: No NSE option strategy tested survives real costs (definitive)
+# Study: NSE option strategies vs real costs — what fails, and the one that works
 
-> **Scope grew over the project.** This started as "find the best intraday stock-option *buying*
-> strategy" (Parts 1–3 below). When that failed structurally, the search was widened — to
-> intraday spreads, to multi-day holds, and finally to multi-day **credit spreads** (selling
-> premium / harvesting theta), which was the single most promising idea. **Part 4 records the
-> decisive real-cost verdict on the credit spread: it loses too.** One structural cause explains
-> every negative — see "The unifying conclusion".
+> **Scope grew over the project.** It began as "find the best intraday stock-option *buying*
+> strategy" (Parts 1–3). When that failed structurally, the search widened — intraday spreads,
+> multi-day holds, multi-day **credit spreads on stocks** (Part 4) and **on the index following
+> the breakout** (Part 5). All of those lose net of real costs. **Part 6 is the exception that
+> finally cleared the bar: the multi-day INDEX credit spread that FADES the breakout** — sell
+> premium *against* a daily Donchian breakout and harvest theta on the mean-reversion. It is the
+> one validated edge and is now deployed as a parallel forward-test (`engine/swing_credit.py`).
+> The structural reason buying fails — and why this one survives — is in "The unifying conclusion".
 
 ## Mandate
 Find the highest-performing NSE stock-/index-options strategy on real option data, net of
@@ -78,35 +80,67 @@ brutal — worst trade −198%, losing streaks to 14. **Rejected. Not deployed.*
 > requested), a confirmed money-loser would now be wired into the system. The "measure real costs
 > before deploying" gate stopped exactly that.
 
-## The unifying conclusion — one structural cause
-**No NSE option strategy tested — intraday buying, spreads, multi-day buying, or multi-day credit
-spreads — produces a net-positive, out-of-sample, ≥100-trade edge after *measured* costs.** The
-single cause: as a **retail taker you cross the bid-ask on every leg** (~2–4% of premium each),
-and:
-- *buying* adds **theta** working against you (Parts 1–3);
-- *selling* (credit spreads) flips theta in your favour but pays **4 legs of slippage** that
-  outweigh the small premium collected (Part 4).
-A ~50–58% hit rate on either side cannot consistently cover that toll. More parameter iteration
-only manufactures overfit — proven repeatedly (3,312 configs; +1.5%→−1.0%; +6.9%→−4.7%).
+## Part 5 — INDEX credit spread, FOLLOWING the breakout (NIFTY + BANKNIFTY)
+Repeated Part 4 on the indices (much tighter bid-ask: real cost ~₹574/trade vs ₹1,137 on stocks).
+The lower cost was real and irrelevant — it **failed on direction, not cost**: selling an ATM
+credit spread *with* a Donchian breakout (bull-put on an up-break) won only **40%**, because index
+breakouts mean-revert. Net **−26% to −39%**, PF 0.30–0.56, on 73 (DC-20) and 111 (DC-10) trades. ❌
+**But the 40% win rate is a signal, not just a failure: it says fade the breakout.** → Part 6.
+
+## Part 6 — INDEX credit spread, FADING the breakout ✅ THE ONE THAT WORKS
+Sell the OTM credit spread **against** the breakout (up-break → bear-call; down-break → bull-put),
+mid-tenor (~2 weeks), short 1-OTM, width 3 strikes, hold to expiry with a 2× stop. The fade
+mechanism was *predicted in advance* by Part 5's 40% win rate, then confirmed:
+
+| Check | Result |
+|---|---|
+| ALL (63 tr, real costs) | 67% win, **+4.0% net/cap**, PF 1.83, worst −111% |
+| Train / Holdout | +1.2% / +5.9%, PF 1.28 / 2.25 |
+| NIFTY / BANKNIFTY (separately) | +4.0% / +3.9% — **both positive** |
+| Cost ×1.5 / ×2.0 | +3.5% / **+3.0%** (survives 2× slippage) |
+| Holdout bootstrap p5 | **+2.3%** (>0 — robust, not outlier-driven) |
+| Independent replication | held on **both** Donchian-10 and Donchian-20 entry signals |
+
+Validated four independent ways (out-of-sample, two entry signals, both indices, 2× cost) with a
+positive bootstrap 5th-percentile — the first and only structure to do so. The mid-tenor sweep was
+the key refinement (the near-weekly was worse; far-dated too slow). **Caveats:** thin sample
+(~63 trades, ~21 holdout, BANKNIFTY only ~15), and it's the best of a 243-config grid — mitigated
+by the coherent 14-config validated family, the pre-predicted mechanism, and the independent-signal
+replication. **Deployed as a parallel paper FORWARD-TEST**, not as proven-profitable capital.
+
+## The unifying conclusion — one structural cause, one exception
+The **buying** strategies (Parts 1–3) and the **follow / 4-illiquid-leg** selling strategies
+(Parts 4–5) all lose for the same reason: as a **retail taker you cross the bid-ask on every leg**
+(~2–4% of premium each). Buying adds **theta** against you; stock credit spreads pay **4 legs of
+wide stock-option slippage**; index follow-spreads are **directionally wrong** (breakouts revert).
+- **The exception (Part 6) survives because it removes all three drags at once:** it *sells* (theta
+  works for it), on **index** options (tightest bid-ask in India), and it **fades** (trades with the
+  reversion, not against it). Net of measured costs that's enough to clear the toll — +4% on capital.
+More parameter iteration on the losers only manufactures overfit (3,312 configs; +1.5%→−1.0%;
++6.9%→−4.7%); the winner came from a *mechanism* (reversion) the data pointed to, not from mining.
 
 ## Recommendation
-- **Do not allocate capital to any of the option structures tested here.** Each is structurally
-  negative-EV net of measured costs — documented, rigorously-tested, not a tuning gap.
-- The only durable signal in the whole system is the **thin index trend-ride** (+0.9% *gross*
-  over 18 months — and real costs thin even that). It stays a paper forward-test, not a money-maker.
-- Treat the system as what it is: a disciplined research engine whose real value is **honestly
-  disproving losing ideas before they cost money** — which it did, most importantly on the credit
-  spread that looked like a winner until real costs were measured.
+- **Do not allocate capital to the buying or follow/stock-credit structures (Parts 1–5).** Each is
+  structurally negative-EV net of measured costs — documented, not a tuning gap.
+- **The index fade credit spread (Part 6) is the one validated edge** — run it as the
+  `engine/swing_credit.py` forward-test and confirm it on LIVE fills before sizing real capital
+  (backtest fills ≠ live fills; the sample is thin).
+- The intraday index trend-ride remains a thin separate gross edge (+0.9%/18mo); stock buying stays
+  a paper forward-test, not a money-maker.
 
 ## Method note for the record
-These negative results are strong *because* of the discipline: real/measured option premiums,
-full costs, held-out validation, a ≥100-trade floor, a 3,312-config systematic search, and — the
-decisive one — refusing to deploy the credit spread on an estimate and instead measuring the real
-per-leg cost. A less rigorous study would have shipped an in-sample "winner" (+1.5% on 180 days,
-or +6.9% on estimated cost) and been wrong with real money.
+The discipline cut both ways: it *rejected* the stock credit spread that looked like +6.9% on an
+estimate (real cost flipped it to −4.7%), and it *earned confidence* in the fade spread by demanding
+independent-signal replication, per-index positivity, 2× cost survival, and a positive bootstrap
+tail before deploying — and even then only as a forward-test. A less rigorous study would have
+shipped an in-sample "winner" and been wrong, or dismissed Part 5's failure instead of reading the
+40%-win-rate signal that led to the winner.
 
 ## Reproduce
-- Credit-spread real-cost verdict: `/tmp/swing_credit_real.py` over `/tmp/swing_credit2.json`
-  (2,387 trades w/ per-leg premiums) → prints the Part-4 table (`DONE-CREDITREAL`).
-- Collector: `/tmp/swing_credit_collect.py` (Donchian-20 scan → bull-put/bear-call legs, real
-  expired-instrument premiums for both legs).
+- Stock credit-spread real-cost verdict (Part 4): `/tmp/swing_credit_real.py` over
+  `/tmp/swing_credit2.json` (2,387 trades) → `DONE-CREDITREAL`.
+- Index follow vs fade + full mix-and-match (Parts 5–6): `/tmp/idx_grid_collect.py` (band collector,
+  `DC`/`OUT` env) → `/tmp/idx_grid_search.py <json>` (216-config grid) and `/tmp/idx_validate.py
+  <json>` (per-index, cost-stress, bootstrap battery).
+- Refinement (tenor + time-stop sweep): `/tmp/idx_ref_collect.py` → `/tmp/idx_ref_grid.py
+  /tmp/idx_ref.json` (`DONE-IDXREFGRID`). Deployed config = `fade · mid · k1 · w3 · hold`.
