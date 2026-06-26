@@ -30,6 +30,7 @@ import os as _os
 LATEST_SCAN = _os.path.join(DATA_DIR, "latest_scan.json")
 MARKET_SNAP = _os.path.join(DATA_DIR, "market_snapshot.json")
 SWING_SNAP = _os.path.join(DATA_DIR, "swing.json")
+SWING_BOOK = _os.path.join(DATA_DIR, "swing_positions.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -369,10 +370,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return w
 
     LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
+    SWING_LOG_COLS = ["ENTERED", "INDEX", "SPREAD (sell/buy)", "CREDIT", "NOW/EXIT", "OUTCOME", "P&L"]
 
-    def _make_log_table(self) -> QTableWidget:
-        t = QTableWidget(); t.setColumnCount(len(self.LOG_COLS))
-        t.setHorizontalHeaderLabels(self.LOG_COLS)
+    def _make_log_table(self, cols=None) -> QTableWidget:
+        cols = cols or self.LOG_COLS
+        t = QTableWidget(); t.setColumnCount(len(cols))
+        t.setHorizontalHeaderLabels(cols)
         t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         t.setAlternatingRowColors(True); t.verticalHeader().setVisible(False)
         t.verticalHeader().setDefaultSectionSize(36)
@@ -401,14 +404,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(self.log_stats)
 
-        # STOCK first — most trades come from stocks
-        v.addWidget(self._section_label("STOCK OPTIONS  (most trades)", GREEN))
+        # Three separate logs, one per strategy.
+        # 1) STOCK OPTIONS — the 3-Family intraday buying system (most trades).
+        v.addWidget(self._section_label("STOCK OPTIONS  —  3-Family (intraday buy)", GREEN))
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 2)
-        v.addWidget(self._section_label("NIFTY OPTIONS  (index)", CYAN))
+        # 2) SWING CREDIT SPREADS — the fade-the-breakout multi-day SELL strategy (own schema).
+        v.addWidget(self._section_label(
+            "SWING CREDIT SPREADS  —  fade (NIFTY/FINNIFTY · multi-day · sell · forward-test)", CYAN))
+        self.log_swing = self._make_log_table(self.SWING_LOG_COLS); v.addWidget(self.log_swing, 1)
+        # 3) ORB+VWAP INDEX — the intraday index trend-ride buying strategy, split by index.
+        v.addWidget(self._section_label("ORB+VWAP INDEX  —  NIFTY", PURPLE))
         self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
-        v.addWidget(self._section_label("BANKNIFTY OPTIONS  (index)", AMBER))
+        v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
-        for t in (self.log_stock, self.log_nifty, self.log_bnf):
+        for t in (self.log_stock, self.log_swing, self.log_nifty, self.log_bnf):
             t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self._style_log_toggle()
         return w
@@ -450,7 +459,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <div style="color:{TEXT};">
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
-     "All P&amp;L is GROSS of costs. Full write-ups are the .md files in /studies on GitHub.")}
+     "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+
+{h("★★ THE ONE EDGE THAT WORKED — SWING CREDIT SPREAD (fade the breakout)")}
+{sub("Question: after every option-BUYING idea failed real costs, does anything clear them?")}
+{p("Exhaustively, no buying strategy (intraday, spreads, multi-day) survives real costs + a "
+   "holdout — you cross the bid-ask every leg and theta works against you. The fix is to SELL "
+   "premium. A defined-risk credit spread sold AGAINST a daily index breakout (index breakouts "
+   "mean-REVERT, so we FADE them), mid-tenor, held to expiry, is the first structure to clear "
+   "<b>measured</b> costs out-of-sample.")}
+{res("Result (real costs, ~20mo): +12-20% net/trade on margin, PF 1.4-1.95. ROBUST across 5 "
+     "breakout definitions (Donchian-10/15/20/30 + prior-week) AND validated per-index: NIFTY "
+     "(PF 1.95) + FINNIFTY (PF 1.44) deployed; BANKNIFTY DROPPED (tested -6.7% on 40 trades — "
+     "its earlier +13% was small-sample luck). HIGH variance (a loss ~= full margin); ~2-3 "
+     "signals/month. Runs LIVE as a forward-test in its own PM section — NOT yet proven on live fills.")}
+{dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-7) · engine/swing_credit.py")}
 
 {h("★ REAL-OPTION OPTIMIZATION + 1-YEAR REALITY CHECK (2026-06)")}
 {sub("Question: what is the edge on REAL option P&amp;L, not the underlying proxy?")}
@@ -698,6 +721,26 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {dim("Capital per lot: Nifty ATM ~Rs8k, BankNifty ~Rs17k. <b>Honest:</b> those are GROSS — net of costs it "
      "is roughly <b>breakeven</b>, fragile out-of-sample, and runs as a <b>FORWARD-TEST</b>, not because it "
      "is proven. The big win was fixing the EXIT, not the trend filter (which was always there).")}
+
+{h("THIRD STRATEGY — Swing Credit Spread (the one that beat real costs)")}
+{p("A <b>third, separate</b> strategy — and the only structure that clears <b>real measured costs</b> out-of-"
+   "sample. The other two BUY options (you pay the bid-ask and fight theta). This one <b>SELLS</b> a "
+   "defined-risk credit spread, so theta works <i>for</i> you. It is multi-day (overnight carry), shown in "
+   "its own <b>SWING CREDIT SPREADS</b> section on PM DECISIONS between the stock and index sections.")}
+{p("<b>The signal:</b> a daily <b>Donchian-10 breakout</b> (a fresh 10-day high or low) on <b>NIFTY / "
+   "FINNIFTY</b>. <b>The twist — FADE it:</b> index breakouts mean-REVERT, so we sell AGAINST the breakout "
+   "(up-break → bear-call spread, down-break → bull-put spread). Selling <i>with</i> the breakout won only "
+   "40%; fading wins ~65%.")}
+{p("<b>Construct:</b> ~2-week expiry, short <b>1 strike OTM</b>, long <b>3 strikes</b> further (caps the "
+   "loss), <b>held to expiry</b>; hard stop if the spread's cost-to-close hits <b>2× the credit</b>. You "
+   "<b>receive</b> a credit up-front; best case both options expire worthless and you keep it.")}
+{p(f"<b style='color:{CYAN}'>Why it's deployed:</b> +12–20% net/trade on margin (real costs), PF 1.4–1.95, "
+   f"and <b>robust across 5 breakout definitions</b> (Donchian-10/15/20/30 + prior-week) — genuine "
+   f"reversion, not a curve-fit. A 5-index test DROPPED BankNifty (tested −6.7%) and kept "
+   f"<b>NIFTY + FINNIFTY</b>.")}
+{dim("HONEST: HIGH variance (a loss ≈ the full margin), thin sample, ~2–3 signals/month. Runs as a "
+     "FORWARD-TEST at 1 lot (`SWING_LOTS`) — NOT proven on live fills. Full record: STUDIES tab / "
+     "studies/STOCK_OPTIONS_NO_EDGE.md Parts 5–7.")}
 
 {h("STEP 4 — How it runs (engine vs viewer), and why split")}
 {p("The <b>engine</b> (headless, launchd <b>…institutionaltrader.engine</b>, always on) does ALL the work — "
@@ -1159,7 +1202,50 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 "entry": entry, "target": tgt, "stop": stp,
                 "outcome": t.get("outcome") or "OPEN", "pnl": t.get("realized_pnl_inr") or 0, "unit": ""}
 
+    def _refresh_swing_log(self):
+        """SWING CREDIT SPREAD log — read-only from the engine's book (data/swing_positions.json).
+        Independent of the LIVE/SIM toggle: it's always a live forward-test. Newest first."""
+        if not hasattr(self, "log_swing"):
+            return
+        import json
+        book = []
+        try:
+            if _os.path.exists(SWING_BOOK):
+                book = json.load(open(SWING_BOOK)) or []
+        except Exception as e:
+            logger.warning(f"load swing book failed: {e}")
+        # newest first: open positions, then by entry date desc
+        book = sorted(book, key=lambda p: (p.get("status") != "OPEN", p.get("entry_date") or ""),
+                      reverse=False)
+        book = sorted(book, key=lambda p: p.get("entry_date") or "", reverse=True)
+        rows = book[:40]
+        self.log_swing.setRowCount(len(rows))
+        for r, p in enumerate(rows):
+            status = p.get("status", "OPEN")
+            verb = "CE" if p.get("side") == "BEAR_CALL" else "PE"
+            spread = f"{p.get('short_strike','—')}/{p.get('long_strike','—')} {verb}"
+            credit = p.get("credit")
+            nowx = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
+            qty = p.get("qty") or ((p.get("lot", 0) or 0) * int(p.get("num_lots", 1) or 1))
+            pnl_pts = p.get("pnl_pts", 0.0) or 0.0
+            cap = p.get("capital") or 0
+            if status == "OPEN" and nowx is None:
+                pnl = "—"
+            else:
+                rs = pnl_pts * qty
+                pct = (rs / cap * 100) if cap else None
+                pnl = f"Rs {rs:+,.0f}" + (f"  ({pct:+.0f}%)" if pct is not None else "")
+            fg = (QColor(GREEN) if status == "WIN" else QColor(RED) if status == "LOSS"
+                  else QColor(AMBER))
+            vals = [p.get("entry_date", "—"), p.get("index", "—"), spread,
+                    f"Rs {credit:.1f}" if credit is not None else "—",
+                    f"Rs {nowx:.1f}" if nowx is not None else "—", status, pnl]
+            self._set_row(self.log_swing, r, vals, fg=fg)
+            self._color_cell(self.log_swing, r, 5, self._status_color(status))
+        self._fit_table(self.log_swing)
+
     def _refresh_log(self):
+        self._refresh_swing_log()   # always refresh the swing log (independent of LIVE/SIM toggle)
         self.trade_log._load()   # reload from disk — agent + resolver write to it
         live = [t for t in self.trade_log.trades if t.get("signal_time")]  # OPEN + closed
         sim = getattr(self, "sim_trades", [])
