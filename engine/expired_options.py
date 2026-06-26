@@ -12,6 +12,7 @@ Flow (all GET, Bearer auth via the shared SESSION):
 `expired_instrument_key` is "NSE_FO|<token>|DD-MM-YYYY" (returned by step 2). Underlying key is
 the normal instrument key: NSE_INDEX|Nifty 50 for indices, NSE_EQ|<ISIN> for stocks.
 """
+import time
 import logging
 import pandas as pd
 from datetime import datetime, date
@@ -25,6 +26,24 @@ _EXPIRIES = {}    # underlying_key -> sorted [YYYY-MM-DD]
 _CONTRACTS = {}   # (underlying_key, expiry) -> [contract dicts]
 
 
+def _get_json(url, params=None, attempts=6):
+    """GET with exponential backoff on HTTP 429 (the expired-instruments API rate-limits
+    hard under heavy backtest load). Returns {} on persistent failure."""
+    for i in range(attempts):
+        try:
+            r = SESSION.get(url, params=params, timeout=25)
+            if r.status_code == 429:
+                time.sleep(1.5 * (i + 1))   # 1.5, 3, 4.5, ... seconds
+                continue
+            r.raise_for_status()
+            return r.json()
+        except Exception as e:
+            if i == attempts - 1:
+                logger.warning(f"_get_json failed {url}: {e}")
+            time.sleep(1.0 * (i + 1))
+    return {}
+
+
 def get_expiries(ticker: str) -> list:
     """Sorted list of available expiry dates (YYYY-MM-DD) for an underlying."""
     uk = to_instrument_key(ticker)
@@ -32,15 +51,9 @@ def get_expiries(ticker: str) -> list:
         return []
     if uk in _EXPIRIES:
         return _EXPIRIES[uk]
-    try:
-        r = SESSION.get(f"{UPSTOX_BASE}/v2/expired-instruments/expiries",
-                        params={"instrument_key": uk}, timeout=20)
-        r.raise_for_status()
-        exps = sorted(r.json().get("data", []) or [])
-    except Exception as e:
-        logger.warning(f"expiries fetch failed for {ticker}: {e}")
-        exps = []
-    _EXPIRIES[uk] = exps
+    j = _get_json(f"{UPSTOX_BASE}/v2/expired-instruments/expiries", {"instrument_key": uk})
+    exps = sorted(j.get("data", []) or [])
+    if exps: _EXPIRIES[uk] = exps   # never cache an empty (rate-limited) result
     return exps
 
 
@@ -60,15 +73,10 @@ def get_contracts(ticker: str, expiry: str) -> list:
     ck = (uk, expiry)
     if ck in _CONTRACTS:
         return _CONTRACTS[ck]
-    try:
-        r = SESSION.get(f"{UPSTOX_BASE}/v2/expired-instruments/option/contract",
-                        params={"instrument_key": uk, "expiry_date": expiry}, timeout=20)
-        r.raise_for_status()
-        out = r.json().get("data", []) or []
-    except Exception as e:
-        logger.warning(f"contracts fetch failed for {ticker} {expiry}: {e}")
-        out = []
-    _CONTRACTS[ck] = out
+    j = _get_json(f"{UPSTOX_BASE}/v2/expired-instruments/option/contract",
+                  {"instrument_key": uk, "expiry_date": expiry})
+    out = j.get("data", []) or []
+    if out: _CONTRACTS[ck] = out   # never cache an empty (rate-limited) result
     return out
 
 
@@ -107,13 +115,8 @@ def fetch_expired_premium_5min(expired_key: str, on_day: date, interval: str = "
     if not expired_key:
         return pd.DataFrame()
     d = on_day.isoformat()
-    try:
-        url = f"{UPSTOX_BASE}/v2/expired-instruments/historical-candle/{encode_key(expired_key)}/{interval}/{d}/{d}"
-        r = SESSION.get(url, timeout=20)
-        r.raise_for_status()
-        j = r.json()
-        if j.get("status") == "success":
-            return _candles_to_df(j.get("data", {}).get("candles", []))
-    except Exception as e:
-        logger.warning(f"expired premium fetch failed for {expired_key} {d}: {e}")
+    url = f"{UPSTOX_BASE}/v2/expired-instruments/historical-candle/{encode_key(expired_key)}/{interval}/{d}/{d}"
+    j = _get_json(url)
+    if j.get("status") == "success":
+        return _candles_to_df(j.get("data", {}).get("candles", []))
     return pd.DataFrame()
