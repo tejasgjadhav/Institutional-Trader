@@ -53,12 +53,12 @@ All pass → buy OTM+1 CALL/PUT, exit **+10% / −15%** on premium (−15 stop d
 **ORB+VWAP index** (NIFTY/BANKNIFTY, parallel) → 15-min ORB + VWAP + 30-min trend + clean-trend
 filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard **−15%** stop).
 
-**Swing credit spread** (NIFTY/BANKNIFTY, the 3rd strategy, multi-day) → daily **Donchian-10**
+**Swing credit spread** (NIFTY/FINNIFTY, the 3rd strategy, multi-day) → daily **Donchian-10**
 breakout → **SELL a credit spread AGAINST it** (fade: up-break → bear-call, down-break → bull-put),
 mid-tenor (≥10 DTE), short 1-OTM, width 3, **hold to expiry**, hard stop at 2× credit. Overnight
 carry — NOT squared at 15:30. Signals-only paper forward-test (`engine/swing_credit.py`,
 `config.SWING_*`); its own **SWING CREDIT SPREADS** section on PM DECISIONS between stocks and index.
-The one validated edge (+12.3% net/trade real costs, both indices; HIGH variance — holdout p5 −9.7%, thin sample) — still forward-test.
+The one validated edge — robust across 5 breakout defs (D10/15/20/30/prior-week) AND across NIFTY+FINNIFTY (BANKNIFTY dropped: tested −6.7%). HIGH variance; still forward-test.
 
 **REAL option data (expired-instruments / Upstox Plus) — honest standing after the 1-year test:**
 - **STOCKS: no proven durable edge.** The min-premium config looked like +1.5% (64% win) on a
@@ -72,14 +72,15 @@ The one validated edge (+12.3% net/trade real costs, both indices; HIGH variance
   it to −4.7% net, PF 0.87.** Dead. See `studies/STOCK_OPTIONS_NO_EDGE.md` Part 4.
 - **INDEX fade credit spread: VALIDATED & deployed (the 3rd strategy).** Selling a credit spread
   *against* a daily index breakout (theta + tightest bid-ask + trades with the reversion) clears
-  measured costs: **+12.3% net/trade (live geometry), PF 1.44, both indices ~+12–13%, survives 2×
-  cost (+6.8%)**, replicated on two entry signals (61 trades). But **HIGH variance** — wins ~+40–60%
-  of margin, losses ~−100% — so on the thin ~20-trade holdout the bootstrap 5th-percentile is
-  **−9.7%** (positive EV, but a bad draw can lose). At 1 lot: **~₹1,838/month** (margin ~₹6–7k/trade).
-  Runs as a parallel paper FORWARD-TEST in `engine/swing_credit.py` (`SWING_LOTS` sizes it; keep at
-  1). See Parts 5–6. NOTE: the *follow* version (with the breakout) loses (40% win — breakouts
-  revert); the edge is specifically the **fade**. (Earlier +4%/p5+2.3% figures were a width-
-  bookkeeping bug — backtest mislabeled BANKNIFTY width 1500 vs live 300; the live engine is correct.)
+  measured costs: **+12–20% net/trade (live geometry), PF 1.4–1.95, survives 2× cost**. **Robust
+  across 5 breakout definitions** (D10/15/20/30 + prior-week — genuine reversion, not a D10 fit).
+  **HIGH variance** (wins ~+40–60% of margin, losses ~−100%; thin-holdout bootstrap p5 negative —
+  positive EV but a bad draw can lose). At 1 lot: **~₹1–2k/month** (margin ~₹6–7k/trade).
+  **Lineup = NIFTY + FINNIFTY** (a 5-index robustness test DROPPED BANKNIFTY: −6.7% on 40 trades,
+  its earlier +13% was 14-trade luck; MIDCPNIFTY marginal+thin → skipped). Runs as a parallel paper
+  FORWARD-TEST in `engine/swing_credit.py` (`SWING_LOTS` sizes it; keep at 1). See Parts 5–7. NOTE:
+  the *follow* version (with the breakout) loses (40% win); the edge is specifically the **fade**.
+  (An earlier +4%/p5+2.3% figure was a width-bookkeeping bug — now fixed; the live engine was always correct.)
 - Lesson: a train/test split *inside a short window* is not true out-of-sample; use the longest
   window the data allows. See `studies/REAL_OPTION_OPTIMIZATION.md` (CORRECTION at the top).
 Old gates 4/5 are OFF tunables; everything is GROSS of costs.

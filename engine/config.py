@@ -174,8 +174,13 @@ TARGET_PCT_DERIVATIVE = 5.0
 # Signals only — the user places the spread manually in Upstox; the system never trades.
 # See studies/STOCK_OPTIONS_NO_EDGE.md (Part 6) for the full validation record.
 SWING_CREDIT_ENABLED   = True
-SWING_INDICES          = ["NIFTY", "BANKNIFTY"]
-SWING_DONCHIAN         = 10       # daily breakout lookback (validated on 10 and 20)
+# Lineup set by a robustness test (5 breakout defs × 5 indices, real costs): the FADE edge holds
+# across ALL breakout definitions (D10/15/20/30/prior-week — genuine reversion, not a D10 fit),
+# but NOT across all indices. NIFTY (PF 1.95) + FINNIFTY (PF 1.44) are the clean edges; BANKNIFTY
+# tested NEGATIVE (−6.7%, 40 trades — its earlier +13% was 14-trade luck) and is DROPPED;
+# MIDCPNIFTY (+2.4%, PF 1.05) is marginal with thin liquidity and is NOT deployed.
+SWING_INDICES          = ["NIFTY", "FINNIFTY"]
+SWING_DONCHIAN         = 10       # daily breakout lookback (edge robust across 10/15/20/30 + prior-week)
 SWING_MIN_DTE          = 10       # MID tenor: nearest expiry >= 10 days out (the sweet spot)
 SWING_SHORT_OFFSET     = 1        # short strike 1 step OTM from ATM
 SWING_WIDTH            = 3        # long strike 3 steps further OTM (defined risk)
@@ -186,7 +191,7 @@ SWING_RESOLVE_INTERVAL = 900      # mark-to-market open positions every 15 min (
 # Lots per spread (paper sizing for the forward-test P&L). KEEP AT 1 to forward-test — the edge is
 # +12%/trade but HIGH variance (a loss = ~full margin) on a thin sample; a 3-loss streak at many
 # lots can exceed the account. Prudent ceiling ≈ 5 even after live confirmation. Per-index override.
-SWING_LOTS             = {"NIFTY": 1, "BANKNIFTY": 1}
+SWING_LOTS             = {"NIFTY": 1, "FINNIFTY": 1}
 
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own

@@ -24,6 +24,8 @@ CACHE_MAX_AGE_DAYS = 7
 INDEX_KEYS = {
     "NIFTY": "NSE_INDEX|Nifty 50",
     "BANKNIFTY": "NSE_INDEX|Nifty Bank",
+    "FINNIFTY": "NSE_INDEX|Nifty Fin Service",   # swing credit-spread (robustness-validated)
+    "MIDCPNIFTY": "NSE_INDEX|NIFTY MID SELECT",  # tested; not deployed (marginal + thin liquidity)
     "VIX": "NSE_INDEX|India VIX",
 }
 
@@ -115,6 +117,8 @@ def to_instrument_key(ticker: str) -> str:
     index_aliases = {
         "^NSEI": "NIFTY", "NIFTY": "NIFTY", "NIFTY 50": "NIFTY",
         "^NSEBANK": "BANKNIFTY", "BANKNIFTY": "BANKNIFTY", "NIFTY BANK": "BANKNIFTY",
+        "FINNIFTY": "FINNIFTY", "NIFTY FIN SERVICE": "FINNIFTY",
+        "MIDCPNIFTY": "MIDCPNIFTY", "NIFTY MID SELECT": "MIDCPNIFTY",
         "^INDIAVIX": "VIX", "VIX": "VIX", "INDIA VIX": "VIX",
     }
     if ticker in index_aliases:

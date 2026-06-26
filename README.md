@@ -266,7 +266,7 @@ cleared real costs out-of-sample.** It does the opposite of buying: it **SELLS**
 credit spread and harvests theta. Shown in its own **SWING CREDIT SPREADS** section on **PM
 DECISIONS**, between the stock and index sections.
 
-- **Signal:** a daily **Donchian-10 breakout** on NIFTY / BANKNIFTY.
+- **Signal:** a daily **Donchian-10 breakout** on NIFTY / FINNIFTY.
 - **The twist — FADE it:** index breakouts *mean-revert*, so we sell *against* the breakout
   (up-break → **bear-call** spread, down-break → **bull-put** spread). Selling *with* the breakout
   won only 40%; fading wins ~65%.
@@ -286,28 +286,32 @@ wrong. The fade spread removes all three drags at once — it **sells** (theta w
 |---|--------|-------|------------------------|---------|-----------------|
 | Deployed fade config | 61 | 66% | **+12.3% on margin** | +6.8% | **−9.7%** (high variance) |
 
-Validated four ways — out-of-sample, replicated on **two** entry signals (Donchian-10 & -20),
-**both** indices positive (NIFTY +12.1% / BANKNIFTY +13.3%), survives **2× slippage**. The edge is
-clearly positive-EV, but **high-variance** (a loss ≈ full margin), so on the thin ~20-trade holdout
-the bootstrap 5th-percentile is negative — hence: forward-test, size small.
+**Robustness — the strong evidence.** A 5-definition × 5-index test (396 signals, real costs) shows
+the fade edge holds across **every** breakout definition (Donchian-10/15/20/30 + prior-week, all
+net-positive on holdout) — a genuine *"breakouts revert"* behavior, not a D-10 fit. It is **not**
+uniform across indices, though: NIFTY (PF 1.95) and **FINNIFTY** (PF 1.44) are clean edges;
+**BANKNIFTY tested −6.7%** (40 trades — its earlier +13% was small-sample luck) and was **dropped**;
+MIDCPNIFTY is marginal and skipped. **Live lineup = NIFTY + FINNIFTY.** It is positive-EV but
+**high-variance** (a loss ≈ full margin), so on a thin holdout the bootstrap 5th-percentile is
+negative — hence: forward-test, size small.
 
-**Economics at 1 lot (NIFTY 75 / BANKNIFTY 35), all signals over 20.5 months (live strike geometry):**
+**Economics at 1 lot, NIFTY + FINNIFTY, Donchian-10, real costs (live strike geometry):**
 
-| | Trades | Total net | Per month | Margin/trade |
-|---|--------|-----------|-----------|--------------|
-| Both | 61 | ~₹37,600 | **~₹1,838** | ~₹6.4k |
-| NIFTY | 47 | ~₹27,000 | ~₹1,321 | ~₹6.8k |
-| BANKNIFTY | 14 | ~₹10,600 | ~₹516 | ~₹5.7k |
+| | Trades | Win % | Net/trade | ~Per month (1 lot) |
+|---|--------|-------|-----------|--------------------|
+| NIFTY | 54 | 72% | +21.7% / PF 1.95 | ~₹1,300 |
+| FINNIFTY | 38 | 63% | +17.2% / PF 1.44 | ~₹700 |
 
-~**3 signals/month**, each held ~3 weeks, ≤2 open at once. Config: `SWING_*` (incl. `SWING_LOTS`)
+~**2–3 signals/month**, each held ~3 weeks, ≤2 open at once. Config: `SWING_*` (incl. `SWING_LOTS`)
 in `engine/config.py`; logic in `engine/swing_credit.py`; book in `data/swing_positions.json`.
 
-> **Honest note:** still a **FORWARD-TEST** — thin sample (61 trades / ~20 holdout) and backtest
-> fills ≠ live fills. **Sizing:** ~₹1.8k/month at 1 lot; a ₹5.5L margin can technically stack ~38
-> lots but a normal 3-loss streak would then exceed the account — **never fill the margin; ~5 lots
-> is the prudent ceiling** (`SWING_LOTS`, keep at 1 to forward-test). An earlier +4%/p5+2.3% figure
-> was a width-bookkeeping bug (now fixed — the live engine was always correct). Full record:
-> [`studies/STOCK_OPTIONS_NO_EDGE.md`](studies/STOCK_OPTIONS_NO_EDGE.md) (Parts 5–6).
+> **Honest note:** still a **FORWARD-TEST** — backtest fills ≠ live fills, and FINNIFTY trades
+> **monthly-only** options (NSE killed index weeklies in Nov 2024), so its live slippage may run
+> above the model. **Sizing:** ~₹1–2k/month at 1 lot; a ₹5.5L margin can technically stack ~38 lots
+> but a normal 3-loss streak would then exceed the account — **never fill the margin; ~5 lots is the
+> prudent ceiling** (`SWING_LOTS`, keep at 1). The lineup (NIFTY + FINNIFTY, BANKNIFTY dropped) and
+> the mechanism's robustness across breakout definitions come from a 5×5 test — full record:
+> [`studies/STOCK_OPTIONS_NO_EDGE.md`](studies/STOCK_OPTIONS_NO_EDGE.md) (Parts 5–7).
 
 ---
 

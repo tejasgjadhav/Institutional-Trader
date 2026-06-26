@@ -133,6 +133,32 @@ margin), the strategy cannot absorb a large margin — a ₹5.5L book could stac
 a normal 3-loss streak (seen in backtest) would then lose more than the account. Prudent ceiling
 ≈ 5 lots; **never fill the margin.** `config.SWING_LOTS` sizes the paper book per index (keep at 1).
 
+**Robustness test — across breakout definitions AND indices (396 signals, real costs).** Rather
+than just accumulate more D-10 trades, the better test is whether the *same* fade spread works on
+*different* breakout definitions and *different* indices — consistency is much stronger evidence of
+a genuine "breakouts revert" behavior than a bigger sample on one setup.
+
+*Across breakout definitions (pooled 5 indices) — the edge is DEFINITION-ROBUST:* every one is
+net-positive on full sample AND holdout — Donchian-10 +10.4% (HO +12.4%), D-15 +7.4% (+15.1%),
+D-20 +9.6% (+29.2%), D-30 +4.3% (+15.4%), prior-week H/L +8.8% (+16.6%). Not a D-10 artifact.
+
+*Across indices — the edge is NOT uniform (this CORRECTED the lineup):*
+
+| index (D-10) | n | win | net | PF | verdict |
+|---|---|---|---|---|---|
+| NIFTY | 54 | 72% | +21.7% | 1.95 | ✅ core |
+| FINNIFTY | 38 | 63% | +17.2% | 1.44 | ✅ added |
+| MIDCPNIFTY | 35 | 54% | +2.4% | 1.05 | ⚠️ marginal + thin liquidity → not deployed |
+| **BANKNIFTY** | 40 | 52% | **−6.7%** | 0.83 | ❌ **dropped** (its earlier +13% was 14-trade luck) |
+| NIFTYNXT50 | 6 | — | −7.9% | — | too thin |
+
+**Deployed lineup updated to NIFTY + FINNIFTY** (pooled D-10: 92 tr, ~67% win, +20% net, PF ~1.7 —
+both larger-sampled and cleaner than the original NIFTY+BANKNIFTY). BANKNIFTY dropped (more volatile
+/ trendier → its breakouts revert less, 51% win). MIDCPNIFTY skipped (marginal edge would not
+survive its thinner monthly-option slippage). The robustness test thus *raised* confidence in the
+mechanism while *fixing* the index selection — more valuable than 50 more BANKNIFTY trades would
+have been. Repro: `/tmp/idx_robust_collect.py` → `/tmp/idx_robust_analyze.py /tmp/idx_robust.json`.
+
 ## The unifying conclusion — one structural cause, one exception
 The **buying** strategies (Parts 1–3) and the **follow / 4-illiquid-leg** selling strategies
 (Parts 4–5) all lose for the same reason: as a **retail taker you cross the bid-ask on every leg**
