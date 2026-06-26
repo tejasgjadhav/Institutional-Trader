@@ -282,28 +282,31 @@ wrong. The fade spread removes all three drags at once — it **sells** (theta w
 
 **Backtest — ~20 months of REAL expired-option data (the largest set available):**
 
-| | Trades | Win % | Net/trade (real costs) | Holdout boot p5 |
-|---|--------|-------|------------------------|-----------------|
-| Deployed fade config | 63 (57 clean) | 65–67% | **+4–9% on margin** | **+2.3%** (>0) |
+| | Trades | Win % | Net/trade (real costs) | Cost ×2 | Holdout boot p5 |
+|---|--------|-------|------------------------|---------|-----------------|
+| Deployed fade config | 61 | 66% | **+12.3% on margin** | +6.8% | **−9.7%** (high variance) |
 
 Validated four ways — out-of-sample, replicated on **two** entry signals (Donchian-10 & -20),
-**both** indices positive, survives **2× slippage**, positive bootstrap 5th-percentile.
+**both** indices positive (NIFTY +12.1% / BANKNIFTY +13.3%), survives **2× slippage**. The edge is
+clearly positive-EV, but **high-variance** (a loss ≈ full margin), so on the thin ~20-trade holdout
+the bootstrap 5th-percentile is negative — hence: forward-test, size small.
 
-**Economics at 1 lot (NIFTY 75 / BANKNIFTY 35), all signals over 20.5 months:**
+**Economics at 1 lot (NIFTY 75 / BANKNIFTY 35), all signals over 20.5 months (live strike geometry):**
 
 | | Trades | Total net | Per month | Margin/trade |
 |---|--------|-----------|-----------|--------------|
-| Both (clean) | 57 | ~₹49,800 | **~₹2,400** | ~₹16.5k |
-| NIFTY (transfers to live) | 43 | ~₹21,800 | ~₹1,065 | ~₹7.1k |
+| Both | 61 | ~₹37,600 | **~₹1,838** | ~₹6.4k |
+| NIFTY | 47 | ~₹27,000 | ~₹1,321 | ~₹6.8k |
+| BANKNIFTY | 14 | ~₹10,600 | ~₹516 | ~₹5.7k |
 
-~**3 signals/month**, each held ~3 weeks, ≤2 open at once. Config: `SWING_*` in
-`engine/config.py`; logic in `engine/swing_credit.py`; book in `data/swing_positions.json`.
+~**3 signals/month**, each held ~3 weeks, ≤2 open at once. Config: `SWING_*` (incl. `SWING_LOTS`)
+in `engine/config.py`; logic in `engine/swing_credit.py`; book in `data/swing_positions.json`.
 
-> **Honest note:** still a **FORWARD-TEST** — thin sample (~63 trades / ~21 holdout) and backtest
-> fills ≠ live fills. **Sizing:** at ~3 signals/month this earns ~₹1–2k/month at 1 lot; a ₹5.5L
-> margin can technically stack ~38 lots but a normal 3-loss streak would then lose ₹8L+ — **never
-> fill the margin; ~5 lots is the prudent ceiling.** BANKNIFTY's backtest used coarser 500-pt
-> strikes than the live engine's 100-pt — NIFTY is the trustworthy core. Full record:
+> **Honest note:** still a **FORWARD-TEST** — thin sample (61 trades / ~20 holdout) and backtest
+> fills ≠ live fills. **Sizing:** ~₹1.8k/month at 1 lot; a ₹5.5L margin can technically stack ~38
+> lots but a normal 3-loss streak would then exceed the account — **never fill the margin; ~5 lots
+> is the prudent ceiling** (`SWING_LOTS`, keep at 1 to forward-test). An earlier +4%/p5+2.3% figure
+> was a width-bookkeeping bug (now fixed — the live engine was always correct). Full record:
 > [`studies/STOCK_OPTIONS_NO_EDGE.md`](studies/STOCK_OPTIONS_NO_EDGE.md) (Parts 5–6).
 
 ---

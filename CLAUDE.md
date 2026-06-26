@@ -58,7 +58,7 @@ breakout → **SELL a credit spread AGAINST it** (fade: up-break → bear-call, 
 mid-tenor (≥10 DTE), short 1-OTM, width 3, **hold to expiry**, hard stop at 2× credit. Overnight
 carry — NOT squared at 15:30. Signals-only paper forward-test (`engine/swing_credit.py`,
 `config.SWING_*`); its own **SWING CREDIT SPREADS** section on PM DECISIONS between stocks and index.
-The one validated edge (+4.0% net/trade real costs, holdout bootstrap p5 +2.3%) — still forward-test.
+The one validated edge (+12.3% net/trade real costs, both indices; HIGH variance — holdout p5 −9.7%, thin sample) — still forward-test.
 
 **REAL option data (expired-instruments / Upstox Plus) — honest standing after the 1-year test:**
 - **STOCKS: no proven durable edge.** The min-premium config looked like +1.5% (64% win) on a
@@ -72,10 +72,14 @@ The one validated edge (+4.0% net/trade real costs, holdout bootstrap p5 +2.3%) 
   it to −4.7% net, PF 0.87.** Dead. See `studies/STOCK_OPTIONS_NO_EDGE.md` Part 4.
 - **INDEX fade credit spread: VALIDATED & deployed (the 3rd strategy).** Selling a credit spread
   *against* a daily index breakout (theta + tightest bid-ask + trades with the reversion) clears
-  measured costs: **+4.0% net/trade, PF 1.83, both indices positive, survives 2× cost, holdout
-  bootstrap p5 +2.3%**, replicated on two entry signals. Runs as a parallel paper FORWARD-TEST in
-  `engine/swing_credit.py`. See Parts 5–6. NOTE: the *follow* version (with the breakout) loses
-  (40% win — breakouts revert); the edge is specifically the **fade**.
+  measured costs: **+12.3% net/trade (live geometry), PF 1.44, both indices ~+12–13%, survives 2×
+  cost (+6.8%)**, replicated on two entry signals (61 trades). But **HIGH variance** — wins ~+40–60%
+  of margin, losses ~−100% — so on the thin ~20-trade holdout the bootstrap 5th-percentile is
+  **−9.7%** (positive EV, but a bad draw can lose). At 1 lot: **~₹1,838/month** (margin ~₹6–7k/trade).
+  Runs as a parallel paper FORWARD-TEST in `engine/swing_credit.py` (`SWING_LOTS` sizes it; keep at
+  1). See Parts 5–6. NOTE: the *follow* version (with the breakout) loses (40% win — breakouts
+  revert); the edge is specifically the **fade**. (Earlier +4%/p5+2.3% figures were a width-
+  bookkeeping bug — backtest mislabeled BANKNIFTY width 1500 vs live 300; the live engine is correct.)
 - Lesson: a train/test split *inside a short window* is not true out-of-sample; use the longest
   window the data allows. See `studies/REAL_OPTION_OPTIMIZATION.md` (CORRECTION at the top).
 Old gates 4/5 are OFF tunables; everything is GROSS of costs.

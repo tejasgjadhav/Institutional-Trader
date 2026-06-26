@@ -92,14 +92,23 @@ Sell the OTM credit spread **against** the breakout (up-break → bear-call; dow
 mid-tenor (~2 weeks), short 1-OTM, width 3 strikes, hold to expiry with a 2× stop. The fade
 mechanism was *predicted in advance* by Part 5's 40% win rate, then confirmed:
 
-| Check | Result |
+| Check | Result (corrected, live strike geometry — see width-bug note) |
 |---|---|
-| ALL (63 tr, real costs) | 67% win, **+4.0% net/cap**, PF 1.83, worst −111% |
-| Train / Holdout | +1.2% / +5.9%, PF 1.28 / 2.25 |
-| NIFTY / BANKNIFTY (separately) | +4.0% / +3.9% — **both positive** |
-| Cost ×1.5 / ×2.0 | +3.5% / **+3.0%** (survives 2× slippage) |
-| Holdout bootstrap p5 | **+2.3%** (>0 — robust, not outlier-driven) |
+| ALL (61 tr, real costs) | 66% win, **+12.3% net/cap**, PF 1.44 |
+| Train / Holdout | +8.8% / +17.9%, PF 1.31 / 1.66 |
+| NIFTY / BANKNIFTY (separately) | +12.1% / **+13.3%** — both positive & consistent |
+| Cost ×1.5 / ×2.0 | +9.6% / **+6.8%** (survives 2× slippage) |
+| Holdout bootstrap p5 | **−9.7%** (HIGH variance on a thin ~20-trade holdout; median +18.8%) |
 | Independent replication | held on **both** Donchian-10 and Donchian-20 entry signals |
+
+> **Width-bookkeeping correction (important).** An earlier pass reported +4.0% net and a +2.3%
+> bootstrap p5. That used a buggy width: the collector computed the strike gap from the *tail* of
+> the ladder (NIFTY 1000-pt, BANKNIFTY 500-pt) instead of the **ATM-local** spacing the strikes were
+> actually selected at (NIFTY 50, BANKNIFTY 100). The premiums/paths were always for the correct
+> dense strikes; only the capital denominator was inflated — which *understated* the % return and
+> *dampened* the variance. Corrected: the edge is **larger** (+12.3%) but **higher-variance** (p5
+> −9.7%). The live engine (`swing_credit._pick_legs`) computes width from the actual selected
+> strikes, so it was always correct; only this backtest analysis needed the fix.
 
 Validated four independent ways (out-of-sample, two entry signals, both indices, 2× cost) with a
 positive bootstrap 5th-percentile — the first and only structure to do so. The mid-tenor sweep was
@@ -108,24 +117,21 @@ the key refinement (the near-weekly was worse; far-dated too slow). **Caveats:**
 by the coherent 14-config validated family, the pre-predicted mechanism, and the independent-signal
 replication. **Deployed as a parallel paper FORWARD-TEST**, not as proven-profitable capital.
 
-**Sample & economics (1 lot/signal, all signals, NIFTY 75 / BANKNIFTY 35, real costs).** The
-deployed config produced **63 signals over 20.5 months** — 6 had corrupted strike-spacing in the
-expired-option chain (sparse 1000/1500-pt gaps that pick the wrong strikes) and were dropped, so
-the clean economic sample is **57 trades (NIFTY 43, BANKNIFTY 14)**, ~3 signals/month, each held
-~3 weeks, ≤2 open at once:
+**Sample & economics (1 lot/signal, all signals, NIFTY 75 / BANKNIFTY 35, real costs, CORRECTED
+width).** 63 signals over 20.5 months; 2 dropped where credit ≥ width, leaving **61 trades
+(NIFTY 47, BANKNIFTY 14)**, ~3 signals/month, each held ~3 weeks, ≤2 open at once. Both indices now
+priced on the live strike geometry (50-pt NIFTY / 100-pt BANKNIFTY), so these transfer to the engine:
 
-| at 1 lot | trades | win | total net (20.5 mo) | per month | margin/trade |
-|---|---|---|---|---|---|
-| both (clean) | 57 | 65% | ₹49,825 | ~₹2,400 | ~₹16,570 |
-| **NIFTY (transfers to live)** | 43 | 65% | ₹21,823 | ~₹1,065 | ~₹7,125 |
-| BANKNIFTY (coarse-strike caveat) | 14 | 64% | ₹28,003 | ~₹1,370 | ~₹16k+ |
+| at 1 lot | trades | win | total net (20.5 mo) | per month | margin/trade | net/trade |
+|---|---|---|---|---|---|---|
+| **both** | 61 | 66% | **₹37,614** | **~₹1,838** | ~₹6.4k | — |
+| NIFTY | 47 | 66% | ₹27,041 | ~₹1,321 | ~₹6,763 | ₹575 |
+| BANKNIFTY | 14 | 64% | ₹10,574 | ~₹516 | ~₹5,689 | ₹755 |
 
-Two honest caveats on the rupees: (1) the backtest priced BANKNIFTY on coarse **500-pt** strikes
-(width 1,500) but `engine/swing_credit.py` trades the live **100-pt** strikes (width 300) — so live
-BANKNIFTY margin *and* profit will be smaller; **NIFTY (~₹508/trade) is the figure that transfers.**
-(2) Sizing: at ~3 signals/month and ≤2 concurrent positions the strategy cannot absorb a large
-margin — a ₹5.5L book could stack ~38 lots/position, but a normal 3-loss streak (seen in backtest)
-would then lose ₹8L+. Prudent ceiling ≈ 5 lots; **never fill the margin.**
+Sizing: at ~3 signals/month, ≤2 concurrent positions, and HIGH per-trade variance (a loss ≈ full
+margin), the strategy cannot absorb a large margin — a ₹5.5L book could stack ~38 lots/position, but
+a normal 3-loss streak (seen in backtest) would then lose more than the account. Prudent ceiling
+≈ 5 lots; **never fill the margin.** `config.SWING_LOTS` sizes the paper book per index (keep at 1).
 
 ## The unifying conclusion — one structural cause, one exception
 The **buying** strategies (Parts 1–3) and the **follow / 4-illiquid-leg** selling strategies

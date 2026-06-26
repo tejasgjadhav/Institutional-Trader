@@ -183,6 +183,10 @@ SWING_STOP_MULT        = 2.0     # stop if cost-to-close >= 2x the credit collec
 SWING_REENTRY_GAP_DAYS = 3        # min days between entries on the same index
 SWING_SCAN_AFTER       = "15:10"  # scan once/day after this (a daily breakout needs ~the close)
 SWING_RESOLVE_INTERVAL = 900      # mark-to-market open positions every 15 min (overnight carry)
+# Lots per spread (paper sizing for the forward-test P&L). KEEP AT 1 to forward-test — the edge is
+# +12%/trade but HIGH variance (a loss = ~full margin) on a thin sample; a 3-loss streak at many
+# lots can exceed the account. Prudent ceiling ≈ 5 even after live confirmation. Per-index override.
+SWING_LOTS             = {"NIFTY": 1, "BANKNIFTY": 1}
 
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own

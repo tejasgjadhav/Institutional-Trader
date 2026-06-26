@@ -27,7 +27,7 @@ from datetime import datetime, date, timedelta
 
 from engine.config import (
     IST, DATA_DIR, SWING_CREDIT_ENABLED, SWING_INDICES, SWING_DONCHIAN, SWING_MIN_DTE,
-    SWING_SHORT_OFFSET, SWING_WIDTH, SWING_STOP_MULT, SWING_REENTRY_GAP_DAYS,
+    SWING_SHORT_OFFSET, SWING_WIDTH, SWING_STOP_MULT, SWING_REENTRY_GAP_DAYS, SWING_LOTS,
 )
 from engine.data_fetcher import fetch_upstox_historical, fetch_upstox_quote, fetch_upstox_ltp
 from engine.instruments import to_instrument_key
@@ -180,6 +180,8 @@ def scan_swing_signals() -> list:
                 continue
             width_pts = abs(short["strike"] - long["strike"])
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
+            num_lots = int(SWING_LOTS.get(index, 1) or 1)   # paper sizing (lots per spread)
+            qty = lot * num_lots                              # total options per leg
             side = "BEAR_CALL" if opt_type == "CE" else "BULL_PUT"
             verb = "CE" if opt_type == "CE" else "PE"
             pos = {
@@ -188,13 +190,15 @@ def scan_swing_signals() -> list:
                 "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
                 "short_key": short["key"], "short_strike": int(short["strike"]),
                 "long_key": long["key"], "long_strike": int(long["strike"]),
-                "width_pts": int(width_pts), "lot": lot, "expiry": expiry,
+                "width_pts": int(width_pts), "lot": lot, "num_lots": num_lots, "qty": qty,
+                "expiry": expiry,
                 "credit": credit, "stop_cost": round(credit * SWING_STOP_MULT, 2),
                 "max_loss_pts": round(width_pts - credit, 2),
-                "capital": round((width_pts - credit) * lot, 0) if lot else None,
+                "capital": round((width_pts - credit) * qty, 0) if qty else None,
                 "order_label": (f"SELL {index} {int(short['strike'])} {verb} / "
                                 f"BUY {int(long['strike'])} {verb}  {expiry}  "
-                                f"({'bear-call' if side=='BEAR_CALL' else 'bull-put'}, credit Rs{credit})"),
+                                f"({'bear-call' if side=='BEAR_CALL' else 'bull-put'}, credit Rs{credit}"
+                                f"{f' x{num_lots} lots' if num_lots != 1 else ''})"),
                 "current_cost": credit, "pnl_pts": 0.0, "status": "OPEN",
                 "closed_date": None, "exit_cost": None,
             }
@@ -272,10 +276,11 @@ def swing_rows_for_ui(max_closed: int = 6) -> list:
     rows = []
     for p in opens + closed:
         lot = p.get("lot", 0) or 0
+        qty = p.get("qty") or (lot * int(p.get("num_lots", 1) or 1))   # total options (lots×lot size)
         pnl_pts = p.get("pnl_pts", 0.0) or 0.0
         cap = p.get("capital") or 0
-        pnl_rs = round(pnl_pts * lot, 0) if lot else None
-        pnl_pct = round(pnl_pts * lot / cap * 100, 1) if cap else None
+        pnl_rs = round(pnl_pts * qty, 0) if qty else None
+        pnl_pct = round(pnl_pts * qty / cap * 100, 1) if cap else None
         rows.append({
             "index": p["index"], "side": p["side"], "status": p.get("status", "OPEN"),
             "order_label": p.get("order_label", ""),
