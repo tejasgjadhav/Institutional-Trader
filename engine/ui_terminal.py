@@ -1180,6 +1180,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self._mkt_running = False
 
     def _on_market_data(self, d: dict):
+        self._holiday = bool(d.get("holiday"))   # weekday+hours but no live data = NSE holiday
         self._set_ticker(self.nifty_lbl, "NIFTY 50", d["nifty"])
         self._set_ticker(self.bnf_lbl, "BANKNIFTY", d["banknifty"])
         # VIX: arrow + colored by direction (down-vol = green calm, up-vol = red fear)
@@ -1215,11 +1216,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
     def _tick(self):
         now = datetime.now(IST)
         # EOD booking is done by the headless engine, not the GUI (read-only viewer).
-        is_open = self.agent.is_market_open()
-        mkt = "OPEN" if is_open else "CLOSED"
+        # HOLIDAY: weekday + market hours by the clock, but no live data flowing (engine-detected).
+        holiday = getattr(self, "_holiday", False) and self.agent.is_market_open()
+        is_open = self.agent.is_market_open() and not holiday
+        mkt = "HOLIDAY" if holiday else ("OPEN" if is_open else "CLOSED")
         # live clock in the index bar (top-right), green when market is open
         if hasattr(self, "clock_lbl"):
-            self.clock_lbl.setText(f"{now:%a %d %b  %H:%M:%S} IST   {'OPEN' if is_open else 'CLOSED'}")
+            self.clock_lbl.setText(f"{now:%a %d %b  %H:%M:%S} IST   {mkt}")
             self.clock_lbl.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         mode = "LIVE" if is_open else "SIMULATION"
         # Keep the AUTO badge in sync when idle (scanning sets it to LIVE·scanning)
@@ -1236,7 +1239,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self.auto_lbl.setText(f"READ-ONLY VIEWER  -  {fresh}")
             self.auto_lbl.setStyleSheet(f"color:{CYAN if is_open else AMBER}; padding:0 14px;")
         if hasattr(self, "mode_label"):
-            self.mode_label.setText(f"{'MARKET OPEN' if is_open else 'MARKET CLOSED'}  -  engine runs 9:00-15:30 Mon-Fri")
+            mlbl = "MARKET HOLIDAY (no trading today)" if holiday else ("MARKET OPEN" if is_open else "MARKET CLOSED")
+            self.mode_label.setText(f"{mlbl}  -  engine runs 9:00-15:30 Mon-Fri")
             self.mode_label.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         self.status.showMessage(
             f"  {now:%a %d %b %Y · %H:%M:%S} IST   ·   MARKET {mkt}   ·   MODE {mode}   ·   "

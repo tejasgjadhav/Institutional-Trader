@@ -65,8 +65,12 @@ class EngineRunner:
 
     def _market(self, now):
         try:
+            from engine.data_utils import market_is_trading_today, _market_is_open
             snap = get_market_snapshot()
-            self._write_json(MARKET_SNAP, {**snap, "ts": now.isoformat()})
+            trading = market_is_trading_today()
+            holiday = _market_is_open() and not trading   # weekday + hours but no data = holiday
+            self._write_json(MARKET_SNAP, {**snap, "ts": now.isoformat(),
+                                           "trading": trading, "holiday": holiday})
             store.save_market(snap, now)
         except Exception as e:
             logger.warning(f"market snapshot: {e}")

@@ -93,13 +93,38 @@ def _yahoo_index_prices(names: list) -> dict:
 
 
 def _market_is_open() -> bool:
-    """True during NSE trading hours (Mon–Fri, 09:15–15:30 IST)."""
+    """True during NSE trading hours (Mon–Fri, 09:15–15:30 IST) — TIME ONLY (holiday-blind)."""
     now = datetime.now(IST)
     if now.weekday() >= 5:
         return False
     o = datetime.strptime(MARKET_OPEN, "%H:%M").time()
     c = datetime.strptime(MARKET_CLOSE, "%H:%M").time()
     return o <= now.time() <= c
+
+
+_trading_cache = {"date": None, "at": None, "trading": None}
+
+
+def market_is_trading_today() -> bool:
+    """True only if the market is ACTUALLY trading now — weekday + hours AND live intraday data
+    flowing. Distinguishes a real session from an NSE HOLIDAY (when _market_is_open() still says
+    'open' by the clock but no candles form and the LTP is frozen at the prior close). No
+    hardcoded holiday calendar: it infers 'not trading' from the absence of today's data.
+    Cached ~5 min so it costs at most one NIFTY intraday call per cache window."""
+    now = datetime.now(IST)
+    if not _market_is_open():
+        return False
+    # Before ~09:25 the first 5-min candle may not have formed yet — assume trading.
+    if now.time() < datetime.strptime("09:25", "%H:%M").time():
+        return True
+    c = _trading_cache
+    if (c["date"] == now.date() and c["at"] and
+            (now - c["at"]).total_seconds() < 300 and c["trading"] is not None):
+        return c["trading"]
+    df = fetch_upstox_intraday("NIFTY", interval=5)
+    trading = (not df.empty) and (df.index[-1].date() == now.date())
+    _trading_cache.update(date=now.date(), at=now, trading=trading)
+    return trading
 
 
 def _prev_session_close_from_db(index_name: str) -> float:
