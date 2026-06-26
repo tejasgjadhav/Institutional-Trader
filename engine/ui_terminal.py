@@ -308,8 +308,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.pm_empty)
         return w
 
+    # Active gates only (G4 chase + G5 wide were retired 2026-06; min-premium folded into LIQ).
     WL_COLS = ["TICKER", "ALPHA-Z", "DIR", "G1 ALPHA", "G2 ORB", "G3 ALIGN",
-               "G4 CHASE", "G5 WIDE", "G6 LIQ", "PROGRESS"]
+               "PREM+LIQ", "PROGRESS"]
 
     def _screen_watchlist(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
@@ -330,10 +331,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # legend
         from engine import config as C
         leg = QLabel("PASS = gate cleared, wait = pending    |    G1 alpha, G2 ORB breakout+volume, "
-                     "G3 aligned with Nifty, G4 not over-extended (<="
-                     f"{C.MAX_ENTRY_EXTENSION_PCT}%), G5 wide opening range (>={C.ORB_RANGE_WIDTH_MIN}%), "
-                     f"G6 liquid option (spread <={C.MAX_OPTION_SPREAD_PCT}%, OI >={C.MIN_OPTION_OI}; "
-                     f"checked only after G1-G5)    |    all 6 PASS = fires on PM DECISIONS")
+                     "G3 aligned with Nifty, PREM+LIQ = OTM+1 option premium >= "
+                     f"Rs{C.MIN_OPTION_PREMIUM:.0f} AND liquid (spread <={C.MAX_OPTION_SPREAD_PCT}%, "
+                     f"OI >={C.MIN_OPTION_OI}; checked only after G1-G3)    |    all 4 PASS = fires "
+                     "on PM DECISIONS.   (G4 don't-chase & G5 wide-open retired 2026-06 — didn't "
+                     "hold on the real-option backtest.)")
         leg.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 2px;"); leg.setWordWrap(True)
         v.addWidget(leg)
         return w
@@ -1039,10 +1041,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
 
         def gates(s):
-            # G1 true for everyone here; G2-G5 are local; G6 (liquidity) is only evaluated
-            # AFTER G1-G5 pass, so it shows PASS only when actually checked-and-liquid.
+            # ACTIVE gates only (matches deployed config): G1 alpha, G2 ORB, G3 align,
+            # then PREM+LIQ (option >= min premium AND liquid; checked only after G1-G3).
             return [True, bool(s.get("gate_2")), bool(s.get("aligned")),
-                    bool(s.get("not_extended")), bool(s.get("wide_open")),
                     bool(s.get("liquid") and s.get("liquidity_checked"))]
 
         # closest-to-firing on top: most gates passed first, then alpha-z
@@ -1052,21 +1053,21 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             g = gates(sig)
             npass = sum(g)
             mark = lambda ok: "PASS" if ok else "wait"
-            if npass == 6:
-                prog = "6/6  READY -> PM"
+            if npass == 4:
+                prog = "4/4  READY -> PM"
             else:
-                nxt = ["alpha", "ORB", "align", "not-extended", "wide-open", "liquidity"][g.index(False)]
-                prog = f"{npass}/6  next: {nxt}"
+                nxt = ["alpha", "ORB", "align", "prem+liq"][g.index(False)]
+                prog = f"{npass}/4  next: {nxt}"
             tk = ("★ " if sig.get("priority") else "") + str(sig.get("ticker"))
             vals = [tk, f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
-                    mark(g[0]), mark(g[1]), mark(g[2]), mark(g[3]), mark(g[4]), mark(g[5]), prog]
+                    mark(g[0]), mark(g[1]), mark(g[2]), mark(g[3]), prog]
             self._set_row(self.wl_table, r, vals, fg=self._dir_color(sig.get("direction")))
             # color each gate cell: green when passed, dim when waiting; READY row glows green
-            for col, ok in zip((3, 4, 5, 6, 7, 8), g):
+            for col, ok in zip((3, 4, 5, 6), g):
                 it = self.wl_table.item(r, col)
                 if it: it.setForeground(QColor(GREEN) if ok else QColor(TEXT_DIM))
-            pit = self.wl_table.item(r, 9)
-            if pit: pit.setForeground(QColor(GREEN) if npass == 6 else QColor(AMBER))
+            pit = self.wl_table.item(r, 7)
+            if pit: pit.setForeground(QColor(GREEN) if npass == 4 else QColor(AMBER))
 
     def _refresh_alpha(self):
         rows = self.last_scan_results
