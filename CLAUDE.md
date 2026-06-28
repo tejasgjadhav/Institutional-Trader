@@ -60,6 +60,14 @@ carry — NOT squared at 15:30. Signals-only paper forward-test (`engine/swing_c
 `config.SWING_*`); its own **SWING CREDIT SPREADS** section on PM DECISIONS between stocks and index.
 The one validated edge — robust across 5 breakout defs (D10/15/20/30/prior-week) AND across NIFTY+FINNIFTY (BANKNIFTY dropped: tested −6.7%). HIGH variance; still forward-test.
 
+**Stock credit spread** (the 4th strategy, high-FREQUENCY ~16/mo) → same fade, on the full ~100-stock
+universe, but GATED: credit/width ≥ 0.40 (rich premium = elevated post-breakout IV — the edge) +
+short premium ≥ ₹50 + live liquidity gate (OI, bid-ask) + per-day/total-open caps. Backtest 65% win,
++16–25% net/trade, holdout p5 +6.8%, 76/100 stocks. The credit/width gate is essential — a *generic*
+stock spread LOSES (−4.7%, the 4-leg slippage wall). Signals-only paper forward-test
+(`engine/stock_credit.py`, `config.STOCK_CREDIT_*`); own STOCK CREDIT SPREADS PM + trade-log section.
+**Backtest is OPTIMISTIC (~20%/mo on margin won't fully survive live mid-cap fills) — KEEP LOTS AT 1.**
+
 **REAL option data (expired-instruments / Upstox Plus) — honest standing after the 1-year test:**
 - **STOCKS: no proven durable edge.** The min-premium config looked like +1.5% (64% win) on a
   180-day window but came in at **−1.0% (55% win) over a full year** — overfit to a recent

@@ -53,6 +53,8 @@ class EngineRunner:
         self._caffeinate = None   # power assertion held while the market is open
         self._last_swing_resolve = 0.0
         self._swing_scan_day = None
+        self._last_stockcr_resolve = 0.0
+        self._stockcr_scan_day = None
 
     # ── persistence helpers ──────────────────────────────────────────────────
     @staticmethod
@@ -226,6 +228,36 @@ class EngineRunner:
             except Exception as e:
                 logger.warning(f"swing scan: {e}")
 
+    def _stock_credit(self, now):
+        """STOCK CREDIT SPREADS (the 4th strategy) — high-frequency fade on the stock universe.
+        Once/day scan after the cutoff + periodic mark-to-market, same pattern as _swing."""
+        try:
+            from engine import config
+            if not getattr(config, "STOCK_CREDIT_ENABLED", False):
+                return
+            from engine import stock_credit
+        except Exception as e:
+            logger.warning(f"stock_credit import: {e}")
+            return
+        if (time.time() - self._last_stockcr_resolve) >= config.STOCK_CREDIT_RESOLVE_INTERVAL:
+            self._last_stockcr_resolve = time.time()
+            try:
+                n = stock_credit.resolve_positions()
+                if n:
+                    logger.info(f"stock_credit: resolved/closed {n} position(s)")
+            except Exception as e:
+                logger.warning(f"stock_credit resolve: {e}")
+        h, m = map(int, config.STOCK_CREDIT_SCAN_AFTER.split(":"))
+        after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
+        if (self.agent.is_market_open() and after_cutoff and self._stockcr_scan_day != now.date()):
+            self._stockcr_scan_day = now.date()
+            try:
+                new = stock_credit.scan_signals()
+                if new:
+                    logger.info(f"stock_credit: opened {len(new)} new spread(s)")
+            except Exception as e:
+                logger.warning(f"stock_credit scan: {e}")
+
     def _manage_wakelock(self):
         """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended
         laptop can't idle-sleep mid-session and suspend the engine (the system sleep timer is
@@ -255,6 +287,7 @@ class EngineRunner:
         self._maybe_eod(now)
         self._fast_resolve()
         self._swing(now)
+        self._stock_credit(now)
         if self.agent.is_market_open() and (time.time() - self._last_scan) >= SCAN_INTERVAL:
             self._last_scan = time.time()
             try:

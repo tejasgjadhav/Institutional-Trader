@@ -315,6 +315,36 @@ in `engine/config.py`; logic in `engine/swing_credit.py`; book in `data/swing_po
 
 ---
 
+## Parallel Strategy — Stock Credit Spread (the 4th, high-frequency)
+
+The **frequency** sibling of the index swing — the same fade, on the full ~100-stock universe, so it
+fires **~16×/month** (vs the index's ~3). Shown in its own **STOCK CREDIT SPREADS** section.
+
+- **Signal:** a daily **Donchian-10 breakout** on any F&O stock → **FADE** it (sell a credit spread).
+- **The gate that makes it work:** only trade when **credit ≥ 40% of the strike width** *and* short
+  premium ≥ ₹50, *and* it passes a **live liquidity gate** (OI, bid-ask). A breakout spikes IV → rich
+  premium; fading sells the inflated premium and rides the reversion + IV crush. (A *generic* stock
+  credit spread loses −4.7% — the gate is the edge.)
+- **Construct:** short 1-OTM, long 3 strikes wide, nearest monthly ≥10 DTE, hold to expiry, 2× stop.
+- **Caps:** ≤5 new/day, ≤20 open at once (breakouts cluster — avoid a one-day pile-on).
+
+**Backtest (full universe, ~19 mo, real expired-option premiums, credit/width≥0.40 + prem≥₹50):**
+
+| | Trades | Win % | Net/trade | Holdout p5 | Breadth |
+|---|--------|-------|-----------|-----------|---------|
+| Stock fade, gated | 307 (~16/mo) | 65% | +16% (5% slip) / +25% (3%) | +6.8% | 76/100 |
+
+Survives a 7%/leg slippage floor; concentrated in mid-caps. Config: `STOCK_CREDIT_*` in
+`engine/config.py`; logic in `engine/stock_credit.py`; book in `data/stock_credit_positions.json`.
+
+> **Honest note:** the ~+20%/month-on-margin backtest is **optimistic** — no persistent edge pays
+> that; it will shrink live. The unmodelled risk is real mid-cap 4-leg fills + gap risk on ~16
+> concurrent shorts. It runs as a **FORWARD-TEST at 1 lot** to find the real number. **Do not fill
+> your margin** — ~16 correlated mid-cap shorts hit together on a bad day. Full record:
+> [`studies/STOCK_OPTIONS_NO_EDGE.md`](studies/STOCK_OPTIONS_NO_EDGE.md) (Part 8).
+
+---
+
 ## Risk, Breakeven & Go-Live Bar
 
 - No per-day trade cap — every qualifying signal is taken · halt after 3 stop-outs · never overnight.
@@ -420,7 +450,8 @@ engine/
   events.py            NSE announcement scraper + keyword scoring (EVENT family)
   signals.py           3-family scoring + alpha-z + ORB gate
   orb_vwap_live.py     PARALLEL ORB+VWAP index strategy (ATM, trend-ride exit, PM DECISIONS)
-  swing_credit.py      PARALLEL swing credit-spread (multi-day · fade breakout · the validated edge)
+  swing_credit.py      PARALLEL swing credit-spread (index · multi-day · fade breakout · validated)
+  stock_credit.py      PARALLEL stock credit-spread (4th · high-frequency fade · gated credit/width)
   options.py           ATM/offset strike resolver + live option order builder
   portfolio.py         instrument decision + sizing
   trade_log.py         paper log: win rate, PF, expectancy, go-live check

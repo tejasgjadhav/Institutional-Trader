@@ -159,6 +159,40 @@ survive its thinner monthly-option slippage). The robustness test thus *raised* 
 mechanism while *fixing* the index selection — more valuable than 50 more BANKNIFTY trades would
 have been. Repro: `/tmp/idx_robust_collect.py` → `/tmp/idx_robust_analyze.py /tmp/idx_robust.json`.
 
+## Part 7 — ORB (intraday breakout): where the edge STOPS
+Tested the fade on an *intraday* opening-range breakout (first-hour range) instead of a daily level,
+held to expiry (NIFTY+FINNIFTY, 413 trades). **NIFTY −13.7% net, PF 0.71** (vs +21.7% on the daily
+Donchian). A first-hour ORB breaks ~80% of days — it's *noise*, not a real extension, so it doesn't
+reliably revert (53% win ≈ coin flip). **This maps the boundary: the edge is "fade a genuine
+multi-day extension," not "fade any breakout."** A good negative — it confirms the mechanism is
+specific (extended-move reversion), not generic premium-selling, and that the deployed daily-Donchian
+signal is on the right side of the line. Repro: `/tmp/idx_orb_collect.py`.
+
+## Part 8 — STOCK credit spread (the high-frequency sibling) — DEPLOYED with a gate
+Part 4 showed a *generic* stock credit spread loses (−4.7%) on the 4-leg slippage wall. But the
+**fade**, gated to **rich credit only**, beats it. Full ~100-stock universe, ~19 months, 4,228 fade
+spreads; filtered to **credit/width ≥ 0.40 + short premium ≥ ₹50**:
+
+| metric | value |
+|---|---|
+| trades | 307 (**~16/month** — the frequency play) |
+| win | 65% |
+| net/trade | **+16% (5% slip floor) / +25% (3%)**, ~₹1,560–2,400 on ~₹9.5k margin |
+| holdout bootstrap p5 | **+6.8%** (positive) |
+| breadth | 76/100 stocks net-positive |
+| survives 7%/leg slippage | yes (+7.7%) |
+
+**Why the gate is the edge, not cherry-picking:** a breakout spikes IV → rich premium (what
+credit/width ≥ 0.40 selects); fading sells the inflated premium AND rides the reversion + IV crush;
+~65% win on a ~1.2:1 payoff clears breakeven, and held-to-expiry winners pay no exit cost. Tightening
+to *tradeable* premium (≥₹50) makes it **better**, refuting the "edge hides in untradeable cheap
+options" worry. Concentrated in mid-caps (+27%) vs large-caps (+6.7%) — small-caps overshoot/revert
+harder. **Honest health-warning:** the ~+20%/month-on-deployed-margin backtest is almost certainly
+OPTIMISTIC — the unmodelled risk is real mid-cap 4-leg fills + gap risk on ~16 concurrent shorts.
+**Deployed as a paper FORWARD-TEST** (`engine/stock_credit.py`, `config.STOCK_CREDIT_*`) with a LIVE
+liquidity gate (OI, bid-ask) and per-day/total-open caps; KEEP LOTS AT 1. Repro:
+`/tmp/stock_fade_all_collect.py` → `/tmp/stock_fade_all_analyze.py`.
+
 ## The unifying conclusion — one structural cause, one exception
 The **buying** strategies (Parts 1–3) and the **follow / 4-illiquid-leg** selling strategies
 (Parts 4–5) all lose for the same reason: as a **retail taker you cross the bid-ask on every leg**

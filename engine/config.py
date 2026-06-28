@@ -193,6 +193,35 @@ SWING_RESOLVE_INTERVAL = 900      # mark-to-market open positions every 15 min (
 # lots can exceed the account. Prudent ceiling ≈ 5 even after live confirmation. Per-index override.
 SWING_LOTS             = {"NIFTY": 1, "FINNIFTY": 1}
 
+# === STOCK CREDIT SPREAD STRATEGY (the 4th — same fade, on the full stock universe) ===
+# The high-FREQUENCY sibling of the index swing: fade a daily Donchian-10 breakout on single
+# stocks by SELLING a credit spread, but ONLY when richly paid relative to risk. A breakout
+# spikes IV -> rich premium; fading sells the inflated premium AND rides the reversion + IV crush.
+#
+# Backtested on the FULL ~100-stock universe, ~19 months, REAL expired-option premiums:
+#   credit/width>=0.40 + short premium>=Rs50: 307 trades (16/mo), 65% win, +16% net (5% slip
+#   floor) / +25% (3%), holdout bootstrap p5 +6.8%, 76/100 stocks net-positive, survives 7%/leg
+#   slippage. The credit/width gate is the edge — generic stock credit spreads LOSE (Part 4).
+# STILL A FORWARD-TEST and almost certainly OPTIMISTIC: a ~20%/mo backtest return will shrink
+# live — the real risk is fills/liquidity on mid-cap 4-leg spreads + gap risk on ~16 concurrent
+# shorts. Hence the live LIQUIDITY GATE below and KEEP LOTS AT 1. See STOCK_OPTIONS_NO_EDGE Part 8.
+STOCK_CREDIT_ENABLED      = True
+STOCK_CREDIT_DONCHIAN     = 10
+STOCK_CREDIT_MIN_DTE      = 10      # nearest monthly expiry >= 10 days out (stocks are monthly-only)
+STOCK_CREDIT_SHORT_OFFSET = 1       # short 1 strike OTM
+STOCK_CREDIT_WIDTH        = 3       # long 3 strikes further OTM (defined risk)
+STOCK_CREDIT_MIN_CW       = 0.40    # THE EDGE: only trade when credit >= 40% of the strike width
+STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/untradeable options)
+STOCK_CREDIT_STOP_MULT    = 2.0     # stop if cost-to-close >= 2x credit
+STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
+STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)
+STOCK_CREDIT_MIN_OI       = 100     # live liquidity gate: short-leg OI >= 100
+STOCK_CREDIT_MAX_NEW_PER_DAY = 5    # cap new entries/day (breakouts cluster -> avoid 1-day pile-on)
+STOCK_CREDIT_MAX_OPEN     = 20      # cap total concurrent positions (margin + correlated-gap risk)
+STOCK_CREDIT_LOTS         = 1       # paper sizing — KEEP AT 1 to forward-test
+STOCK_CREDIT_SCAN_AFTER   = "15:10" # once/day after this (a daily breakout needs ~the close)
+STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight carry)
+
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own
 # section on PM DECISIONS. Signal: 15-min ORB break on the index FUTURES + hold VWAP

@@ -31,6 +31,8 @@ LATEST_SCAN = _os.path.join(DATA_DIR, "latest_scan.json")
 MARKET_SNAP = _os.path.join(DATA_DIR, "market_snapshot.json")
 SWING_SNAP = _os.path.join(DATA_DIR, "swing.json")
 SWING_BOOK = _os.path.join(DATA_DIR, "swing_positions.json")
+STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
+STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -65,6 +67,7 @@ class TerminalApp(QMainWindow):
         self.trade_log = TradeLog()
         self.last_scan_results = []
         self._swing_rows = []
+        self._stockcr_rows = []
         self.active_screen = 0
         self._mkt_running = False
         self._scanning = False
@@ -272,6 +275,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                     "EXIT RULE", "STOP -20%", "CURRENT", "LOT", "STATUS"]
     SWING_COLS = ["INDEX", "SPREAD  (sell / buy)", "EXPIRY", "CREDIT", "NOW",
                   "MAX LOSS", "LOT", "P&L", "STATUS"]
+    STOCKCR_COLS = ["STOCK", "SPREAD  (sell / buy)", "EXP", "CREDIT", "C/W", "NOW",
+                    "P&L", "STATUS"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -297,10 +302,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stock.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_stock, 2)   # shares space, scrolls internally
 
-        # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
-        # Sits BETWEEN the stock and index sections. Forward-test; place the spread manually.
+        # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "SWING CREDIT SPREADS  (multi-day · theta · SELL spread, place manually · forward-test)", CYAN))
+            "STOCK CREDIT SPREADS  (fade · credit/width≥0.40 · ~16/mo · SELL · forward-test)", GREEN))
+        self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.STOCKCR_COLS))
+        self.pm_stockcr.setHorizontalHeaderLabels(self.STOCKCR_COLS)
+        self.pm_stockcr.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pm_stockcr.setAlternatingRowColors(True); self.pm_stockcr.verticalHeader().setVisible(False)
+        self.pm_stockcr.verticalHeader().setDefaultSectionSize(32)
+        self.pm_stockcr.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_stockcr, 1)
+
+        # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
+        v.addWidget(self._section_label(
+            "SWING CREDIT SPREADS  (index · multi-day · SELL spread, place manually · forward-test)", CYAN))
         self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.SWING_COLS))
         self.pm_swing.setHorizontalHeaderLabels(self.SWING_COLS)
         self.pm_swing.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -371,6 +386,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
     SWING_LOG_COLS = ["ENTERED", "INDEX", "SPREAD (sell/buy)", "CREDIT", "NOW/EXIT", "OUTCOME", "P&L"]
+    STOCKCR_LOG_COLS = ["ENTERED", "STOCK", "SPREAD (sell/buy)", "C/W", "CREDIT", "NOW/EXIT", "OUTCOME", "P&L"]
 
     def _make_log_table(self, cols=None) -> QTableWidget:
         cols = cols or self.LOG_COLS
@@ -408,6 +424,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # 1) STOCK OPTIONS — the 3-Family intraday buying system (most trades).
         v.addWidget(self._section_label("STOCK OPTIONS  —  3-Family (intraday buy)", GREEN))
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 2)
+        # 1b) STOCK CREDIT SPREADS — the high-frequency fade-the-breakout SELL strategy (own schema).
+        v.addWidget(self._section_label(
+            "STOCK CREDIT SPREADS  —  fade (credit/width≥0.40 · ~16/mo · sell · forward-test)", GREEN))
+        self.log_stockcr = self._make_log_table(self.STOCKCR_LOG_COLS); v.addWidget(self.log_stockcr, 1)
         # 2) SWING CREDIT SPREADS — the fade-the-breakout multi-day SELL strategy (own schema).
         v.addWidget(self._section_label(
             "SWING CREDIT SPREADS  —  fade (NIFTY/FINNIFTY · multi-day · sell · forward-test)", CYAN))
@@ -417,7 +437,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
-        for t in (self.log_stock, self.log_swing, self.log_nifty, self.log_bnf):
+        for t in (self.log_stock, self.log_stockcr, self.log_swing, self.log_nifty, self.log_bnf):
             t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self._style_log_toggle()
         return w
@@ -473,7 +493,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "(PF 1.95) + FINNIFTY (PF 1.44) deployed; BANKNIFTY DROPPED (tested -6.7% on 40 trades — "
      "its earlier +13% was small-sample luck). HIGH variance (a loss ~= full margin); ~2-3 "
      "signals/month. Runs LIVE as a forward-test in its own PM section — NOT yet proven on live fills.")}
-{dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-7) · engine/swing_credit.py")}
+{p("<b>High-frequency sibling (stocks):</b> the same fade on the full ~100-stock universe, GATED to "
+   "credit/width &gt;= 0.40 + premium &gt;= Rs50 + a live liquidity check, fires <b>~16x/month</b>: "
+   "65% win, +16-25% net/trade, holdout p5 +6.8%, 76/100 stocks. A breakout spikes IV -&gt; you sell "
+   "the rich premium and ride the reversion + IV crush. (A <i>generic</i> stock spread loses -4.7% — "
+   "the credit/width gate IS the edge.) Backtest is OPTIMISTIC (~20%/mo on margin won't fully survive "
+   "live mid-cap fills) -&gt; runs as a FORWARD-TEST at 1 lot.")}
+{dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-8) · engine/swing_credit.py · engine/stock_credit.py")}
 
 {h("★ REAL-OPTION OPTIMIZATION + 1-YEAR REALITY CHECK (2026-06)")}
 {sub("Question: what is the edge on REAL option P&amp;L, not the underlying proxy?")}
@@ -809,6 +835,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 self._swing_rows = s.get("rows", []) or []
         except Exception as e:
             logger.warning(f"load swing.json failed: {e}")
+        try:
+            if _os.path.exists(STOCKCR_SNAP):
+                s = json.load(open(STOCKCR_SNAP))
+                self._stockcr_rows = s.get("rows", []) or []
+        except Exception as e:
+            logger.warning(f"load stock_credit.json failed: {e}")
 
     # ── refreshers ────────────────────────────────────────────────────────────
     @staticmethod
@@ -968,6 +1000,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
 
         self._fit_table(self.pm_stock)
         self._refresh_swing()
+        self._refresh_stock_credit()
         self._refresh_orbvwap()
 
     @staticmethod
@@ -1138,6 +1171,36 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                                  QColor(GREEN) if pnl_pts > 0 else QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))
         self._fit_table(self.pm_swing)
 
+    def _refresh_stock_credit(self):
+        """STOCK CREDIT SPREADS — read-only render of the engine's stock_credit.json snapshot."""
+        if not hasattr(self, "pm_stockcr"):
+            return
+        rows = list(self._stockcr_rows or [])
+        if not rows:
+            self.pm_stockcr.setRowCount(1)
+            self._set_row(self.pm_stockcr, 0,
+                          ["—", "no signal yet — fires on a stock breakout w/ rich credit (≥0.40)",
+                           "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
+            self._fit_table(self.pm_stockcr); return
+        self.pm_stockcr.setRowCount(len(rows))
+        for r, p in enumerate(rows):
+            status = p.get("status", "OPEN")
+            credit = p.get("credit"); now = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
+            pnl_pts = p.get("pnl_pts", 0.0) or 0.0; pnl_pct = p.get("pnl_pct")
+            pnl_txt = (f"{pnl_pts:+.1f}pt" + (f"/{pnl_pct:+.0f}%" if pnl_pct is not None else "")) \
+                if (status != "OPEN" or now is not None) else "—"
+            vals = [p.get("symbol", "—"), p.get("order_label", "—"), p.get("expiry", "—"),
+                    f"Rs {credit:.1f}" if credit is not None else "—",
+                    f"{p.get('credit_width','—')}",
+                    f"Rs {now:.1f}" if now is not None else "—", pnl_txt, status]
+            fg = QColor(GREEN) if p.get("side") == "BULL_PUT" else QColor(RED)
+            self._set_row(self.pm_stockcr, r, vals, fg=fg)
+            self._color_cell(self.pm_stockcr, r, 7, self._status_color(status))
+            if pnl_txt != "—":
+                self._color_cell(self.pm_stockcr, r, 6,
+                                 QColor(GREEN) if pnl_pts > 0 else QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))
+        self._fit_table(self.pm_stockcr)
+
     def _refresh_watchlist(self):
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
 
@@ -1244,8 +1307,44 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self._color_cell(self.log_swing, r, 5, self._status_color(status))
         self._fit_table(self.log_swing)
 
+    def _refresh_stock_credit_log(self):
+        """STOCK CREDIT SPREAD log — read-only from data/stock_credit_positions.json. Newest first."""
+        if not hasattr(self, "log_stockcr"):
+            return
+        import json
+        book = []
+        try:
+            if _os.path.exists(STOCKCR_BOOK):
+                book = json.load(open(STOCKCR_BOOK)) or []
+        except Exception as e:
+            logger.warning(f"load stock_credit book failed: {e}")
+        book = sorted(book, key=lambda p: p.get("entry_date") or "", reverse=True)[:60]
+        self.log_stockcr.setRowCount(len(book))
+        for r, p in enumerate(book):
+            status = p.get("status", "OPEN")
+            verb = "CE" if p.get("side") == "BEAR_CALL" else "PE"
+            spread = f"{p.get('short_strike','—')}/{p.get('long_strike','—')} {verb}"
+            credit = p.get("credit")
+            nowx = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
+            qty = p.get("qty") or ((p.get("lot", 0) or 0) * int(p.get("num_lots", 1) or 1))
+            pnl_pts = p.get("pnl_pts", 0.0) or 0.0; cap = p.get("capital") or 0
+            if status == "OPEN" and nowx is None:
+                pnl = "—"
+            else:
+                rs = pnl_pts * qty; pct = (rs / cap * 100) if cap else None
+                pnl = f"Rs {rs:+,.0f}" + (f"  ({pct:+.0f}%)" if pct is not None else "")
+            fg = (QColor(GREEN) if status == "WIN" else QColor(RED) if status == "LOSS" else QColor(AMBER))
+            vals = [p.get("entry_date", "—"), p.get("symbol", "—"), spread,
+                    f"{p.get('credit_width','—')}",
+                    f"Rs {credit:.1f}" if credit is not None else "—",
+                    f"Rs {nowx:.1f}" if nowx is not None else "—", status, pnl]
+            self._set_row(self.log_stockcr, r, vals, fg=fg)
+            self._color_cell(self.log_stockcr, r, 6, self._status_color(status))
+        self._fit_table(self.log_stockcr)
+
     def _refresh_log(self):
         self._refresh_swing_log()   # always refresh the swing log (independent of LIVE/SIM toggle)
+        self._refresh_stock_credit_log()
         self.trade_log._load()   # reload from disk — agent + resolver write to it
         live = [t for t in self.trade_log.trades if t.get("signal_time")]  # OPEN + closed
         sim = getattr(self, "sim_trades", [])
