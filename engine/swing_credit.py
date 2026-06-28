@@ -291,7 +291,7 @@ def swing_rows_for_ui(max_closed: int = 6) -> list:
             "expiry": p.get("expiry"), "credit": p.get("credit"), "stop_cost": p.get("stop_cost"),
             "current_cost": p.get("current_cost"), "exit_cost": p.get("exit_cost"),
             "max_loss_pts": p.get("max_loss_pts"),
-            "lot": lot, "capital": cap, "entry_date": p.get("entry_date"),
+            "lot": lot, "qty": qty, "capital": cap, "entry_date": p.get("entry_date"),
             "pnl_pts": pnl_pts, "pnl_rs": pnl_rs, "pnl_pct": pnl_pct,
         })
     return rows

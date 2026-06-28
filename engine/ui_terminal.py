@@ -273,10 +273,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                "TARGET +10%", "STOP -20%", "LOT", "CAPITAL", "STATUS"]
     ORBVWAP_COLS = ["TIME", "INDEX", "TYPE", "STRIKE", "EXPIRY", "ENTRY",
                     "EXIT RULE", "STOP -20%", "CURRENT", "LOT", "STATUS"]
-    SWING_COLS = ["INDEX", "SPREAD  (sell / buy)", "EXPIRY", "CREDIT", "NOW",
-                  "MAX LOSS", "LOT", "P&L", "STATUS"]
-    STOCKCR_COLS = ["STOCK", "SPREAD  (sell / buy)", "EXP", "CREDIT", "C/W", "NOW",
-                    "P&L", "STATUS"]
+    # Credit spreads on PM DECISIONS are shown TWO ROWS per trade (a SELL row + a BUY row).
+    PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -305,8 +303,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
             "STOCK CREDIT SPREADS  (fade · credit/width≥0.40 · ~16/mo · SELL · forward-test)", GREEN))
-        self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.STOCKCR_COLS))
-        self.pm_stockcr.setHorizontalHeaderLabels(self.STOCKCR_COLS)
+        self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
+        self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_stockcr.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.pm_stockcr.setAlternatingRowColors(True); self.pm_stockcr.verticalHeader().setVisible(False)
         self.pm_stockcr.verticalHeader().setDefaultSectionSize(32)
@@ -316,8 +314,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
         v.addWidget(self._section_label(
             "SWING CREDIT SPREADS  (index · multi-day · SELL spread, place manually · forward-test)", CYAN))
-        self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.SWING_COLS))
-        self.pm_swing.setHorizontalHeaderLabels(self.SWING_COLS)
+        self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.PM_CREDIT_COLS))
+        self.pm_swing.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_swing.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.pm_swing.setAlternatingRowColors(True); self.pm_swing.verticalHeader().setVisible(False)
         self.pm_swing.verticalHeader().setDefaultSectionSize(34)
@@ -1184,68 +1182,58 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self._fit_table(self.pm_orbvwap)
 
     def _refresh_swing(self):
-        """SWING CREDIT SPREADS — read-only render of the engine's swing.json snapshot. OPEN
-        positions on top (live mark-to-market), then recently closed. The engine owns the book."""
-        if not hasattr(self, "pm_swing"):
-            return
-        rows = list(self._swing_rows or [])
-        if not rows:
-            self.pm_swing.setRowCount(1)
-            self._set_row(self.pm_swing, 0,
-                          ["—", "no swing signal yet — fires on a daily index breakout (fade)",
-                           "—", "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
-            self._fit_table(self.pm_swing); return
-        self.pm_swing.setRowCount(len(rows))
-        for r, p in enumerate(rows):
-            status = p.get("status", "OPEN")
-            credit = p.get("credit"); now = p.get("current_cost")
-            pnl_pts = p.get("pnl_pts", 0.0) or 0.0
-            pnl_pct = p.get("pnl_pct")
-            pnl_txt = (f"{pnl_pts:+.1f} pt" + (f" / {pnl_pct:+.0f}%" if pnl_pct is not None else "")) \
-                if status != "OPEN" or now is not None else "—"
-            vals = [p.get("index", "—"), p.get("order_label", "—"), p.get("expiry", "—"),
-                    f"Rs {credit:.1f}" if credit is not None else "—",
-                    f"Rs {now:.1f}" if now is not None else "—",
-                    f"{p.get('max_loss_pts','—')} pt", p.get("lot", "—"),
-                    pnl_txt, status]
-            # bull-put (fade a down-break) is bullish=green; bear-call (fade an up-break) is red
-            fg = QColor(GREEN) if p.get("side") == "BULL_PUT" else QColor(RED)
-            self._set_row(self.pm_swing, r, vals, fg=fg)
-            self._color_cell(self.pm_swing, r, 8, self._status_color(status))
-            if pnl_txt != "—":
-                self._color_cell(self.pm_swing, r, 7,
-                                 QColor(GREEN) if pnl_pts > 0 else QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))
-        self._fit_table(self.pm_swing)
+        """SWING CREDIT SPREADS on PM DECISIONS — two rows per trade (SELL leg + BUY leg)."""
+        if hasattr(self, "pm_swing"):
+            self._fill_pm_credit(self.pm_swing, list(self._swing_rows or []), "index")
 
     def _refresh_stock_credit(self):
-        """STOCK CREDIT SPREADS — read-only render of the engine's stock_credit.json snapshot."""
-        if not hasattr(self, "pm_stockcr"):
-            return
-        rows = list(self._stockcr_rows or [])
+        """STOCK CREDIT SPREADS on PM DECISIONS — two rows per trade (SELL leg + BUY leg)."""
+        if hasattr(self, "pm_stockcr"):
+            self._fill_pm_credit(self.pm_stockcr, list(self._stockcr_rows or []), "stock")
+
+    def _fill_pm_credit(self, table, rows, kind):
+        """Render a PM credit-spread section as TWO ROWS per trade so it's unmistakable what to do:
+        a SELL row (the leg you SELL — premium received, net credit) and a BUY row (the hedge you
+        BUY — premium paid, max loss + live/booked P&L). Cols: ACTION·INSTRUMENT·PREMIUM·EXPIRY·AMOUNT·P&L/STATUS."""
+        hint = ("no swing signal yet — fires on a daily index breakout (fade)" if kind == "index"
+                else "no signal yet — fires on a stock breakout w/ rich credit (≥0.40)")
         if not rows:
-            self.pm_stockcr.setRowCount(1)
-            self._set_row(self.pm_stockcr, 0,
-                          ["—", "no signal yet — fires on a stock breakout w/ rich credit (≥0.40)",
-                           "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
-            self._fit_table(self.pm_stockcr); return
-        self.pm_stockcr.setRowCount(len(rows))
-        for r, p in enumerate(rows):
+            table.setRowCount(1)
+            self._set_row(table, 0, ["—", hint, "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
+            self._fit_table(table); return
+        table.setRowCount(len(rows) * 2)
+        for i, p in enumerate(rows):
             status = p.get("status", "OPEN")
-            credit = p.get("credit"); now = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
-            pnl_pts = p.get("pnl_pts", 0.0) or 0.0; pnl_pct = p.get("pnl_pct")
-            pnl_txt = (f"{pnl_pts:+.1f}pt" + (f"/{pnl_pct:+.0f}%" if pnl_pct is not None else "")) \
-                if (status != "OPEN" or now is not None) else "—"
-            vals = [p.get("symbol", "—"), p.get("order_label", "—"), p.get("expiry", "—"),
-                    f"Rs {credit:.1f}" if credit is not None else "—",
-                    f"{p.get('credit_width','—')}",
-                    f"Rs {now:.1f}" if now is not None else "—", pnl_txt, status]
-            fg = QColor(GREEN) if p.get("side") == "BULL_PUT" else QColor(RED)
-            self._set_row(self.pm_stockcr, r, vals, fg=fg)
-            self._color_cell(self.pm_stockcr, r, 7, self._status_color(status))
-            if pnl_txt != "—":
-                self._color_cell(self.pm_stockcr, r, 6,
-                                 QColor(GREEN) if pnl_pts > 0 else QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))
-        self._fit_table(self.pm_stockcr)
+            name = p.get("index") or p.get("symbol") or "—"
+            verb = "CE" if p.get("side") == "BEAR_CALL" else "PE"
+            sp, lp = p.get("short_prem"), p.get("long_prem")
+            sp_s = f"Rs {sp:.1f}" if sp is not None else "—"
+            lp_s = f"Rs {lp:.1f}" if lp is not None else "—"
+            exp = p.get("expiry", "—")
+            qty = p.get("qty") or ((p.get("lot", 0) or 0) * int(p.get("num_lots", 1) or 1))
+            credit = p.get("credit") or 0
+            cap = p.get("capital") or 0
+            pnl_pts = p.get("pnl_pts", 0.0) or 0.0
+            now = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
+            if status == "OPEN" and now is None:
+                pnl = "—"
+            else:
+                rs = pnl_pts * qty; pct = (rs / cap * 100) if cap else None
+                pnl = f"Rs {rs:+,.0f}" + (f" ({pct:+.0f}%)" if pct is not None else "")
+            rS, rB = 2 * i, 2 * i + 1
+            # Row 1 — SELL the near leg (collect premium)
+            self._set_row(table, rS,
+                          ["SELL", f"{name} {p.get('short_strike','—')} {verb}", sp_s, exp,
+                           f"credit Rs {credit*qty:,.0f}", status], fg=QColor(RED))
+            # Row 2 — BUY the far leg (the hedge that caps the loss)
+            self._set_row(table, rB,
+                          ["BUY", f"{name} {p.get('long_strike','—')} {verb}  (hedge)", lp_s, exp,
+                           f"max loss Rs {cap:,.0f}", pnl], fg=QColor(GREEN))
+            self._color_cell(table, rS, 5, self._status_color(status))     # STATUS on the SELL row
+            if pnl != "—":
+                self._color_cell(table, rB, 5, QColor(GREEN) if pnl_pts > 0 else
+                                 QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))   # P&L on the BUY row
+        self._fit_table(table)
 
     def _refresh_watchlist(self):
         wl = [s for s in self.last_scan_results if s.get("passes_gate_1")]
