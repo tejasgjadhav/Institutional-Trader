@@ -174,7 +174,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.stack = QStackedWidget()
         self.stack.addWidget(self._screen_pm())        # 0
         self.stack.addWidget(self._screen_watchlist())  # 1
-        self.stack.addWidget(self._screen_alpha())      # 2
+        self.stack.addWidget(self._screen_swing())      # 2
         self.stack.addWidget(self._screen_log())        # 3
         self.stack.addWidget(self._screen_studies())    # 4
         self.stack.addWidget(self._screen_readme())     # 5
@@ -234,7 +234,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         h = QHBoxLayout(w); h.setContentsMargins(8, 0, 8, 0); h.setSpacing(2)
 
         self.tab_btns = []
-        tabs = [("PM DECISIONS", 0), ("WATCHLIST", 1), ("ALPHA", 2), ("TRADE LOG", 3),
+        tabs = [("PM DECISIONS", 0), ("WATCHLIST", 1), ("SWING TRADES", 2), ("TRADE LOG", 3),
                 ("STUDIES", 4), ("README", 5)]
         for label, idx in tabs:
             b = QPushButton(label)
@@ -372,16 +372,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(leg)
         return w
 
-    def _screen_alpha(self) -> QWidget:
+    def _screen_swing(self) -> QWidget:
+        """SWING TRADES — the credit-spread strategies (index swing + stock), shown as big
+        readable BUY/SELL boxes (each leg, premium, expiry, net credit) + a closed-trades log."""
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("ALPHA  -  all 100 stocks scored, ranked by alpha-z"))
-        self.alpha_table = QTableWidget()
-        self.alpha_table.setColumnCount(7)
-        self.alpha_table.setHorizontalHeaderLabels(["TICKER", "ALPHA-Z", "DIR", "BREADTH", "TREND", "FLOW", "EVENT"])
-        self.alpha_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.alpha_table.setAlternatingRowColors(True)
-        self.alpha_table.verticalHeader().setVisible(False)
-        v.addWidget(self.alpha_table)
+        v.addWidget(self._panel_title("SWING TRADES  -  credit spreads: exactly what to SELL & BUY", CYAN))
+        self.swing_doc = QTextEdit(); self.swing_doc.setReadOnly(True); self.swing_doc.setFont(QFont("Menlo", 12))
+        v.addWidget(self.swing_doc)
         return w
 
     LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
@@ -398,9 +395,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return t
 
     def _screen_log(self) -> QWidget:
-        """TRADE LOG — LIVE paper trades and SIMULATION kept separate, split by underlying."""
+        """TRADE LOG — the BUY strategies (3-Family stocks + ORB index). Credit spreads (SELL) are
+        in the SWING TRADES tab. LIVE paper vs SIMULATION kept separate."""
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
-        v.addWidget(self._panel_title("TRADE LOG  -  LIVE paper vs SIMULATION (kept separate)"))
+        v.addWidget(self._panel_title("TRADE LOG  -  stocks (3-Family) + ORB index  ·  LIVE vs SIMULATION"))
 
         # LIVE / SIMULATION toggle
         self.log_view = "live"
@@ -422,22 +420,14 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # Three separate logs, one per strategy.
         # 1) STOCK OPTIONS — the 3-Family intraday buying system (most trades).
+        # BUY strategies only here. The credit-spread (SELL) logs live in the SWING TRADES tab.
         v.addWidget(self._section_label("STOCK OPTIONS  —  3-Family (intraday buy)", GREEN))
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 2)
-        # 1b) STOCK CREDIT SPREADS — the high-frequency fade-the-breakout SELL strategy (own schema).
-        v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS  —  fade (credit/width≥0.40 · ~16/mo · sell · forward-test)", GREEN))
-        self.log_stockcr = self._make_log_table(self.STOCKCR_LOG_COLS); v.addWidget(self.log_stockcr, 1)
-        # 2) SWING CREDIT SPREADS — the fade-the-breakout multi-day SELL strategy (own schema).
-        v.addWidget(self._section_label(
-            "SWING CREDIT SPREADS  —  fade (NIFTY/FINNIFTY · multi-day · sell · forward-test)", CYAN))
-        self.log_swing = self._make_log_table(self.SWING_LOG_COLS); v.addWidget(self.log_swing, 1)
-        # 3) ORB+VWAP INDEX — the intraday index trend-ride buying strategy, split by index.
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  NIFTY", PURPLE))
         self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
-        for t in (self.log_stock, self.log_stockcr, self.log_swing, self.log_nifty, self.log_bnf):
+        for t in (self.log_stock, self.log_nifty, self.log_bnf):
             t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self._style_log_toggle()
         return w
@@ -864,7 +854,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         """READ-ONLY: load the latest scan the headless engine wrote to disk and refresh
         the display. The GUI never scans, executes, or books — engine_runner does all that."""
         self._load_latest_scan()
-        self._refresh_pm(); self._refresh_watchlist(); self._refresh_alpha(); self._refresh_log()
+        self._refresh_pm(); self._refresh_watchlist(); self._refresh_swing_tab(); self._refresh_log()
 
     def _load_latest_scan(self):
         """Read the engine's latest scan snapshot (results + ORB+VWAP rows) from disk."""
@@ -1282,18 +1272,84 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             pit = self.wl_table.item(r, 7)
             if pit: pit.setForeground(QColor(GREEN) if npass == 4 else QColor(AMBER))
 
-    def _refresh_alpha(self):
-        rows = self.last_scan_results
-        self.alpha_table.setRowCount(len(rows))
-        for r, sig in enumerate(rows):
-            fam = sig.get("families_detail", {})
-            atk = ("★ " if sig.get("priority") else "") + str(sig.get("ticker"))
-            vals = [atk, f"{sig.get('alpha_z',0):.2f}", sig.get("direction"),
-                    f"{sig.get('breadth',0)}/3",
-                    f"{fam.get('TREND',{}).get('z_score',0):.2f}",
-                    f"{fam.get('FLOW',{}).get('z_score',0):.2f}",
-                    f"{fam.get('EVENT',{}).get('z_score',0):.2f}"]
-            self._set_row(self.alpha_table, r, vals, fg=self._dir_color(sig.get("direction")))
+    def _refresh_swing_tab(self):
+        """Render the SWING TRADES tab — elaborate BUY/SELL boxes for every credit-spread signal."""
+        if not hasattr(self, "swing_doc"):
+            return
+        try:
+            self.swing_doc.setHtml(self._swing_html())
+        except Exception as e:
+            logger.warning(f"swing tab render: {e}")
+
+    def _spread_box(self, p: dict) -> str:
+        """One readable HTML box for a credit spread: each leg, premium, expiry, net credit, P&L."""
+        name = p.get("symbol") or p.get("index") or "—"
+        side = p.get("side"); verb = "CE" if side == "BEAR_CALL" else "PE"
+        sidlbl = "BEAR-CALL (fade up-break)" if side == "BEAR_CALL" else "BULL-PUT (fade down-break)"
+        status = p.get("status", "OPEN")
+        sc = {"WIN": GREEN, "LOSS": RED, "OPEN": AMBER}.get(status, TEXT_DIM)
+        accent = GREEN if side == "BULL_PUT" else RED
+        qty = p.get("qty") or 0
+        credit = p.get("credit") or 0
+        sp = p.get("short_prem"); lp = p.get("long_prem")
+        sp_s = f"Rs {sp:.2f}" if sp is not None else "—"
+        lp_s = f"Rs {lp:.2f}" if lp is not None else "—"
+        cap = p.get("capital") or 0
+        credit_rs = credit * qty
+        now = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
+        pnl_rs = p.get("pnl_rs"); pnl_pct = p.get("pnl_pct")
+        pnl_line = ""
+        if pnl_rs is not None and (status != "OPEN" or now is not None):
+            pc = GREEN if pnl_rs > 0 else RED if pnl_rs < 0 else TEXT_DIM
+            tag = "BOOKED P&L" if status != "OPEN" else "LIVE P&L"
+            pnl_line = (f"<tr><td style='color:{TEXT_DIM};'>{tag}</td><td style='color:{pc};font-weight:bold;'>"
+                        f"Rs {pnl_rs:+,.0f}" + (f" ({pnl_pct:+.0f}%)" if pnl_pct is not None else "") + "</td></tr>")
+        nowline = f"<tr><td style='color:{TEXT_DIM};'>cost-to-close now</td><td>Rs {now:.2f}/sh</td></tr>" if now is not None else ""
+        cw = p.get("credit_width")
+        cwline = f" · credit/width {cw}" if cw is not None else ""
+        return f"""
+<table width="100%" cellpadding="6" cellspacing="0" style="border:1px solid {sc};margin:8px 0;background-color:{PANEL};">
+<tr><td colspan="2" style="color:{accent};font-size:14px;font-weight:bold;border-bottom:1px solid {BORDER};">
+  {name} &nbsp; <span style="color:{TEXT_DIM};font-weight:normal;">{sidlbl}</span>
+  &nbsp; <span style="color:{sc};">[{status}]</span></td></tr>
+<tr><td colspan="2" style="color:{RED};font-size:13px;font-weight:bold;padding-top:6px;">
+  1) SELL &nbsp; {name} {p.get('short_strike','—')} {verb} &nbsp; @ {sp_s}</td></tr>
+<tr><td colspan="2" style="color:{GREEN};font-size:13px;font-weight:bold;">
+  2) BUY &nbsp;&nbsp; {name} {p.get('long_strike','—')} {verb} &nbsp; @ {lp_s} &nbsp;<span style="color:{TEXT_DIM};font-weight:normal;">(the hedge — caps your loss)</span></td></tr>
+<tr><td style='color:{TEXT_DIM};'>expiry</td><td>{p.get('expiry','—')}</td></tr>
+<tr><td style='color:{CYAN};'>NET CREDIT received</td><td style='color:{CYAN};font-weight:bold;'>Rs {credit:.2f}/sh &times; {qty} = Rs {credit_rs:,.0f}{cwline}</td></tr>
+<tr><td style='color:{TEXT_DIM};'>max loss (margin)</td><td>Rs {cap:,.0f}</td></tr>
+{nowline}{pnl_line}
+</table>"""
+
+    def _swing_html(self) -> str:
+        idx_rows = list(self._swing_rows or [])
+        stk_rows = list(self._stockcr_rows or [])
+        def section(title, rows, sub):
+            opens = [p for p in rows if p.get("status") == "OPEN"]
+            closed = [p for p in rows if p.get("status") != "OPEN"]
+            html = f"<p style='color:{GREEN};font-size:15px;font-weight:bold;margin-top:14px;'>{title}</p>"
+            html += f"<p style='color:{TEXT_DIM};margin:2px 0;'>{sub}</p>"
+            if opens:
+                html += f"<p style='color:{AMBER};font-weight:bold;'>OPEN — place these in Upstox:</p>"
+                html += "".join(self._spread_box(p) for p in opens)
+            else:
+                html += f"<p style='color:{TEXT_DIM};'>No open positions — fires on a breakout with rich credit. Section shows WATCHING until then.</p>"
+            if closed:
+                html += f"<p style='color:{TEXT_DIM};margin-top:8px;'>Recent closed ({len(closed)}): "
+                html += " · ".join(
+                    f"<span style='color:{GREEN if p.get('pnl_rs',0)>0 else RED};'>{(p.get('symbol') or p.get('index'))} "
+                    f"{p.get('status')} Rs{(p.get('pnl_rs') or 0):+,.0f}</span>" for p in closed[:12])
+                html += "</p>"
+            return html
+        body = f"""<div style="color:{TEXT};">
+<p style="color:{CYAN};font-size:13px;">A <b>credit spread</b> = SELL one option (collect premium) + BUY a further one (caps the loss).
+You RECEIVE the net credit today; you keep it if the trade works. Place BOTH legs together in Upstox.</p>
+{section("INDEX SWING — NIFTY / FINNIFTY  (~3/month)", idx_rows, "Fade an index Donchian-10 breakout · hold ~2 weeks to expiry · stop at 2× credit.")}
+{section("STOCK CREDIT SPREADS  (~16/month)", stk_rows, "Fade a stock breakout, only when credit ≥ 40% of width · hold to monthly expiry · stop at 2× credit.")}
+<p style="color:{TEXT_DIM};font-size:10px;margin-top:12px;">Paper FORWARD-TEST. Signals only — you place every order manually. Backtests are real but optimistic until live fills confirm.</p>
+</div>"""
+        return body
 
     def _norm_trade(self, t: dict) -> dict:
         """Normalise a live paper-trade OR a simulation trade to a display row."""
@@ -1392,8 +1448,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self._fit_table(self.log_stockcr)
 
     def _refresh_log(self):
-        self._refresh_swing_log()   # always refresh the swing log (independent of LIVE/SIM toggle)
-        self._refresh_stock_credit_log()
+        # credit-spread (SELL) logs now live in the SWING TRADES tab; this tab = BUY strategies only.
         self.trade_log._load()   # reload from disk — agent + resolver write to it
         live = [t for t in self.trade_log.trades if t.get("signal_time")]  # OPEN + closed
         sim = getattr(self, "sim_trades", [])
