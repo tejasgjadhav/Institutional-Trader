@@ -15,6 +15,27 @@ realistic costs, validated out-of-sample. Reject anything that isn't robust. No 
 for a strategy because it "looked good" on an estimate — every survivor had to clear *measured*
 costs on a held-out sample.
 
+## Tests & trades that finalized the live strategies (the decision trail)
+Every row below is a real-option backtest run this cycle; the live credit-spread strategies are what
+*survived*. **~9,000 spread-trades evaluated across 9 tests** (plus thousands of config combinations).
+
+| # | Test | Trades | Result (real costs) | Decision |
+|---|------|--------|--------------------|----------|
+| 1 | Stock credit spread — *generic* (Part 4) | 2,387 | −4.7% net, PF 0.87 | ❌ rejected (4-leg slippage wall) |
+| 2 | Index credit spread — **follow** the breakout | 73 + 111 | −26% to −39%, 40% win | ❌ rejected → *breakouts revert* |
+| 3 | Index **fade** — mix-and-match grid (216 cfg) | 114 days | fade family validates on holdout | → switch to FADE |
+| 4 | Index fade — multi-tenor refinement (243 cfg) | 115 days | best = mid-tenor·1-OTM·w3·hold | → final config |
+| 5 | Index fade — corrected (width-bug fix) | 61 | **+12.3% net, both indices +** | ✅ validated |
+| 6 | Robustness — 5 breakout defs × 5 indices | 396 | def-robust; BANKNIFTY −6.7% | → **NIFTY + FINNIFTY** (drop BNF) |
+| 7 | ORB (intraday breakout) | 413 | NIFTY −13.7% | ❌ boundary (needs a real extension) |
+| 8 | Stock fade — 18 liquid names | 742 | −1.8% agg; credit/width signal | → add a gate |
+| 9 | Stock fade — full universe + gate | 4,228 → **307** | **+16–25% net, p5 +6.8%, 65% win** | ✅ deployed (gated) |
+
+**Two live credit strategies emerged:** the **index swing** (NIFTY+FINNIFTY, ~3/mo, rows 3–6) and the
+**stock high-frequency** fade (gated credit/width≥0.40 + prem≥₹50, ~16/mo, rows 8–9). Both are paper
+FORWARD-TESTS. The rejected rows (1, 2, 7) matter as much as the winners — they define where the edge
+*isn't*. Details for each row are in Parts 4–8 below.
+
 ## Data (the upgrade that made this honest)
 Upstox Plus **expired-instruments API** (`engine/expired_options.py`) provides real historical
 premiums for expired contracts (~18 months). So everything below is on **actual option P&L**,

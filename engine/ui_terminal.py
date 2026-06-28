@@ -481,6 +481,24 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
 
+{h("TESTS &amp; TRADES THAT FINALIZED THE LIVE STRATEGIES")}
+{dim("~9,000 real-option spread-trades across 9 tests (+ thousands of config combinations). The two "
+     "live credit strategies are what SURVIVED; the rejected rows define where the edge isn't.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>#</td><td>Test (real costs)</td><td>Trades</td><td>Result</td><td>Decision</td></tr>
+<tr><td>1</td><td>Stock credit spread — generic</td><td>2,387</td><td>&minus;4.7%</td><td style="color:{RED};">rejected (slippage wall)</td></tr>
+<tr><td>2</td><td>Index spread — FOLLOW breakout</td><td>73+111</td><td>&minus;26 to &minus;39%, 40% win</td><td style="color:{RED};">rejected &rarr; breakouts REVERT</td></tr>
+<tr><td>3</td><td>Index FADE — grid (216 cfg)</td><td>114 days</td><td>fade family validates</td><td style="color:{AMBER};">switch to FADE</td></tr>
+<tr><td>4</td><td>Index FADE — tenor refine (243 cfg)</td><td>115 days</td><td>mid-tenor&middot;1-OTM&middot;w3&middot;hold</td><td style="color:{AMBER};">final config</td></tr>
+<tr><td>5</td><td>Index FADE — corrected</td><td>61</td><td>+12.3% net, both idx +</td><td style="color:{GREEN};">VALIDATED</td></tr>
+<tr><td>6</td><td>Robustness — 5 defs &times; 5 indices</td><td>396</td><td>def-robust; BANKNIFTY &minus;6.7%</td><td style="color:{GREEN};">NIFTY+FINNIFTY (drop BNF)</td></tr>
+<tr><td>7</td><td>ORB (intraday breakout)</td><td>413</td><td>NIFTY &minus;13.7%</td><td style="color:{RED};">boundary (needs real extension)</td></tr>
+<tr><td>8</td><td>Stock FADE — 18 liquid</td><td>742</td><td>&minus;1.8% agg; c/w signal</td><td style="color:{AMBER};">add a gate</td></tr>
+<tr><td>9</td><td>Stock FADE — full univ + gate</td><td>4,228&rarr;307</td><td>+16-25%, p5 +6.8%, 65% win</td><td style="color:{GREEN};">DEPLOYED (gated)</td></tr>
+</table>
+{dim("LIVE result: index swing (NIFTY+FINNIFTY, ~3/mo, rows 3-6) + stock high-frequency fade "
+     "(credit/width&gt;=0.40 + prem&gt;=Rs50, ~16/mo, rows 8-9). Both paper FORWARD-TESTS.")}
+
 {h("★★ THE ONE EDGE THAT WORKED — SWING CREDIT SPREAD (fade the breakout)")}
 {sub("Question: after every option-BUYING idea failed real costs, does anything clear them?")}
 {p("Exhaustively, no buying strategy (intraday, spreads, multi-day) survives real costs + a "
