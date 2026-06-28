@@ -180,6 +180,8 @@ def scan_swing_signals() -> list:
                 continue
             width_pts = abs(short["strike"] - long["strike"])
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
+            if lot <= 0:                                     # no lot size -> not tradeable
+                continue
             num_lots = int(SWING_LOTS.get(index, 1) or 1)   # paper sizing (lots per spread)
             qty = lot * num_lots                              # total options per leg
             side = "BEAR_CALL" if opt_type == "CE" else "BULL_PUT"

@@ -186,6 +186,8 @@ def scan_signals() -> list:
                 if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
                     continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
+            if lot <= 0:                                            # no lot size -> not tradeable
+                continue
             num_lots = int(STOCK_CREDIT_LOTS or 1)
             qty = lot * num_lots
             side = "BEAR_CALL" if opt_type == "CE" else "BULL_PUT"
