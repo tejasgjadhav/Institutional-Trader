@@ -290,9 +290,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return l
 
     def _screen_pm(self) -> QWidget:
-        """PM DECISIONS — STOCK options on top (most signals), then NIFTY / BANKNIFTY."""
-        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
-        v.addWidget(self._panel_title("LATEST PM DECISIONS  -  BUY options, place manually in Upstox", AMBER))
+        """PM DECISIONS — all 4 strategies, each section sized to its content inside a scroll area."""
+        inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
+        v.addWidget(self._panel_title("LATEST PM DECISIONS  -  place manually in Upstox", AMBER))
 
         # STOCK options (single stocks; indices handled in the section below)
         v.addWidget(self._section_label("STOCK OPTIONS", GREEN))
@@ -336,7 +336,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
         v.addWidget(self.pm_empty)
-        return w
+        v.addStretch(1)
+        return self._scroll(inner)
 
     # Active gates only (G4 chase + G5 wide were retired 2026-06; min-premium folded into LIQ).
     WL_COLS = ["TICKER", "ALPHA-Z", "DIR", "G1 ALPHA", "G2 ORB", "G3 ALIGN",
@@ -376,15 +377,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_swing(self) -> QWidget:
         """SWING TRADES — the credit-spread TRADE LOG, split into the two strategies. Each row shows
         exactly what to SELL and what to BUY (strike + premium), expiry, net credit and P&L."""
-        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
+        inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("SWING TRADES  -  credit-spread trade log (what to SELL & BUY)", CYAN))
         v.addWidget(self._section_label("INDEX SWING  —  NIFTY / FINNIFTY  (~3/mo)", CYAN))
-        self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx, 1)
+        self.sw_idx_stats = self._stats_label(); v.addWidget(self.sw_idx_stats)
+        self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx)
         v.addWidget(self._section_label("STOCK CREDIT SPREADS  (~16/mo)", GREEN))
-        self.sw_stk = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_stk, 1)
-        for t in (self.sw_idx, self.sw_stk):
-            t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        return w
+        self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
+        self.sw_stk = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_stk)
+        v.addStretch(1)
+        return self._scroll(inner)
+
+    def _stats_label(self) -> QLabel:
+        l = QLabel("—"); l.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        l.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
+        return l
 
     LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
     SWING_LOG_COLS = ["ENTERED", "INDEX", "SPREAD (sell/buy)", "CREDIT", "NOW/EXIT", "OUTCOME", "P&L"]
@@ -402,7 +409,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_log(self) -> QWidget:
         """TRADE LOG — the BUY strategies (3-Family stocks + ORB index). Credit spreads (SELL) are
         in the SWING TRADES tab. LIVE paper vs SIMULATION kept separate."""
-        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
+        inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
         v.addWidget(self._panel_title("TRADE LOG  -  stocks (3-Family) + ORB index  ·  LIVE vs SIMULATION"))
 
         # LIVE / SIMULATION toggle
@@ -432,10 +439,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
-        for t in (self.log_stock, self.log_nifty, self.log_bnf):
-            t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addStretch(1)
         self._style_log_toggle()
-        return w
+        return self._scroll(inner)
 
     def _style_log_toggle(self):
         for b, key in ((self.log_live_btn, "live"), (self.log_sim_btn, "sim")):
@@ -975,10 +981,21 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
 
     @staticmethod
     def _fit_table(table):
-        """No-op. Tables scroll internally (ScrollBarAsNeeded) and share space via stretch
-        factors, which is resize-safe. (Previously set minimum heights that overflowed the
-        window on resize and pushed the nav off-screen.)"""
-        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        """Size the table to show ALL its rows (no cramped internal scroll). Safe because the
+        PM / TRADE LOG / SWING screens are each wrapped in a QScrollArea (see _scroll), so the
+        whole page scrolls smoothly and the nav bar stays fixed above."""
+        rh = table.verticalHeader().defaultSectionSize() or 32
+        n = max(table.rowCount(), 1)
+        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        table.setFixedHeight(34 + n * rh + 6)   # header + rows + padding
+
+    def _scroll(self, inner: QWidget) -> QScrollArea:
+        """Wrap a screen's content in a vertical scroll area so long/stacked sections stay
+        readable and navigation is smooth (the tab bar lives outside the stack, so it's unaffected)."""
+        sa = QScrollArea(); sa.setWidgetResizable(True); sa.setWidget(inner)
+        sa.setFrameShape(QFrame.Shape.NoFrame)
+        sa.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        return sa
 
     def _refresh_outcomes(self):
         """Fast (5s) refresh of the outcome-sensitive views only — PM DECISIONS + TRADE LOG —
@@ -1272,12 +1289,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if not hasattr(self, "sw_idx"):
             return
         try:
-            self._fill_swing_table(self.sw_idx, SWING_BOOK)
-            self._fill_swing_table(self.sw_stk, STOCKCR_BOOK)
+            self._fill_swing_table(self.sw_idx, SWING_BOOK, self.sw_idx_stats)
+            self._fill_swing_table(self.sw_stk, STOCKCR_BOOK, self.sw_stk_stats)
         except Exception as e:
             logger.warning(f"swing tab fill: {e}")
 
-    def _fill_swing_table(self, table, book_path):
+    def _fill_swing_table(self, table, book_path, stats_label=None):
         """One credit-spread trade log: each row spells out the SELL leg and BUY leg (strike +
         premium), expiry, net credit (total Rs), live/booked cost, P&L and status. Newest first."""
         import json
@@ -1287,11 +1304,31 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 book = json.load(open(book_path)) or []
         except Exception as e:
             logger.warning(f"swing table load {book_path}: {e}")
+        # ── summary stats (capital deployed, win rate, P&L) ──
+        if stats_label is not None:
+            def _qty(p): return p.get("qty") or ((p.get("lot", 0) or 0) * int(p.get("num_lots", 1) or 1))
+            def _pnl(p): return (p.get("pnl_pts", 0.0) or 0.0) * _qty(p)
+            n = len(book); opens = [p for p in book if p.get("status") == "OPEN"]
+            wins = sum(1 for p in book if p.get("status") == "WIN")
+            losses = sum(1 for p in book if p.get("status") == "LOSS")
+            closed = wins + losses
+            wr = (wins / closed * 100) if closed else 0
+            margin_now = sum((p.get("capital") or 0) for p in opens)        # capital deployed in open trades
+            booked = sum(_pnl(p) for p in book if p.get("status") in ("WIN", "LOSS"))
+            live = sum(_pnl(p) for p in opens)
+            pc = GREEN if booked >= 0 else RED
+            stats_label.setText(
+                f"  TRADES {n}  ·  OPEN {len(opens)}  ·  WIN {wins} / LOSS {losses}  ·  WIN {wr:.0f}%  "
+                f"·  margin deployed Rs {margin_now:,.0f}  ·  booked P&L Rs {booked:+,.0f}  ·  open MTM Rs {live:+,.0f}")
+            stats_label.setStyleSheet(
+                f"color:{pc}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         # open positions first, then newest closed
         book = sorted(book, key=lambda p: (p.get("status") != "OPEN", p.get("entry_date") or ""), reverse=False)
         book = sorted(book, key=lambda p: (p.get("status") == "OPEN", p.get("entry_date") or ""), reverse=True)
         rows = book[:60]
         if not rows:
+            if stats_label is not None:
+                stats_label.setText("  no trades yet — stats will populate after the first signal")
             table.setRowCount(1)
             self._set_row(table, 0, ["—", "no trades yet — fires on a breakout with rich credit",
                                      "—", "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
