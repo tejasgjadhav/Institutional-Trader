@@ -149,6 +149,13 @@ def scan_swing_signals() -> list:
     position there and re-entry spacing allows). Records to the book. Returns the new positions."""
     if not SWING_CREDIT_ENABLED:
         return []
+    # SAFETY: only create signals on a real trading day (see stock_credit.scan_signals).
+    try:
+        from engine.data_utils import market_is_trading_today
+        if not market_is_trading_today():
+            return []
+    except Exception:
+        pass
     book = _load_book()
     today = date.today()
     new = []

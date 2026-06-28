@@ -141,6 +141,16 @@ def scan_signals() -> list:
     (credit/width, premium, liquidity), respecting per-day and total-open caps. Returns new ones."""
     if not STOCK_CREDIT_ENABLED:
         return []
+    # SAFETY: only ever create signals on a real trading day (a daily breakout needs today's
+    # session). Without this, calling scan_signals() on a weekend/holiday — or in testing — would
+    # re-fire the previous session's breakout and pollute the book. The engine also gates by
+    # market-open + the 15:10 cutoff, but the function guards itself too.
+    try:
+        from engine.data_utils import market_is_trading_today
+        if not market_is_trading_today():
+            return []
+    except Exception:
+        pass
     book = _load_book()
     today = date.today()
     open_now = [p for p in book if p["status"] == "OPEN"]
