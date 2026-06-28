@@ -372,13 +372,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(leg)
         return w
 
+    SWING_TAB_COLS = ["ENTERED", "NAME", "SELL  (strike/prem)", "BUY  (strike/prem)", "EXPIRY",
+                      "CREDIT (total)", "NOW/EXIT", "P&L", "STATUS"]
+
     def _screen_swing(self) -> QWidget:
-        """SWING TRADES — the credit-spread strategies (index swing + stock), shown as big
-        readable BUY/SELL boxes (each leg, premium, expiry, net credit) + a closed-trades log."""
-        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
-        v.addWidget(self._panel_title("SWING TRADES  -  credit spreads: exactly what to SELL & BUY", CYAN))
-        self.swing_doc = QTextEdit(); self.swing_doc.setReadOnly(True); self.swing_doc.setFont(QFont("Menlo", 12))
-        v.addWidget(self.swing_doc)
+        """SWING TRADES — the credit-spread TRADE LOG, split into the two strategies. Each row shows
+        exactly what to SELL and what to BUY (strike + premium), expiry, net credit and P&L."""
+        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
+        v.addWidget(self._panel_title("SWING TRADES  -  credit-spread trade log (what to SELL & BUY)", CYAN))
+        v.addWidget(self._section_label("INDEX SWING  —  NIFTY / FINNIFTY  (~3/mo)", CYAN))
+        self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx, 1)
+        v.addWidget(self._section_label("STOCK CREDIT SPREADS  (~16/mo)", GREEN))
+        self.sw_stk = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_stk, 1)
+        for t in (self.sw_idx, self.sw_stk):
+            t.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         return w
 
     LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
@@ -1273,83 +1280,60 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             if pit: pit.setForeground(QColor(GREEN) if npass == 4 else QColor(AMBER))
 
     def _refresh_swing_tab(self):
-        """Render the SWING TRADES tab — elaborate BUY/SELL boxes for every credit-spread signal."""
-        if not hasattr(self, "swing_doc"):
+        """Fill the two split credit-spread trade-log tables (index swing + stock)."""
+        if not hasattr(self, "sw_idx"):
             return
         try:
-            self.swing_doc.setHtml(self._swing_html())
+            self._fill_swing_table(self.sw_idx, SWING_BOOK)
+            self._fill_swing_table(self.sw_stk, STOCKCR_BOOK)
         except Exception as e:
-            logger.warning(f"swing tab render: {e}")
+            logger.warning(f"swing tab fill: {e}")
 
-    def _spread_box(self, p: dict) -> str:
-        """One readable HTML box for a credit spread: each leg, premium, expiry, net credit, P&L."""
-        name = p.get("symbol") or p.get("index") or "—"
-        side = p.get("side"); verb = "CE" if side == "BEAR_CALL" else "PE"
-        sidlbl = "BEAR-CALL (fade up-break)" if side == "BEAR_CALL" else "BULL-PUT (fade down-break)"
-        status = p.get("status", "OPEN")
-        sc = {"WIN": GREEN, "LOSS": RED, "OPEN": AMBER}.get(status, TEXT_DIM)
-        accent = GREEN if side == "BULL_PUT" else RED
-        qty = p.get("qty") or 0
-        credit = p.get("credit") or 0
-        sp = p.get("short_prem"); lp = p.get("long_prem")
-        sp_s = f"Rs {sp:.2f}" if sp is not None else "—"
-        lp_s = f"Rs {lp:.2f}" if lp is not None else "—"
-        cap = p.get("capital") or 0
-        credit_rs = credit * qty
-        now = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
-        pnl_rs = p.get("pnl_rs"); pnl_pct = p.get("pnl_pct")
-        pnl_line = ""
-        if pnl_rs is not None and (status != "OPEN" or now is not None):
-            pc = GREEN if pnl_rs > 0 else RED if pnl_rs < 0 else TEXT_DIM
-            tag = "BOOKED P&L" if status != "OPEN" else "LIVE P&L"
-            pnl_line = (f"<tr><td style='color:{TEXT_DIM};'>{tag}</td><td style='color:{pc};font-weight:bold;'>"
-                        f"Rs {pnl_rs:+,.0f}" + (f" ({pnl_pct:+.0f}%)" if pnl_pct is not None else "") + "</td></tr>")
-        nowline = f"<tr><td style='color:{TEXT_DIM};'>cost-to-close now</td><td>Rs {now:.2f}/sh</td></tr>" if now is not None else ""
-        cw = p.get("credit_width")
-        cwline = f" · credit/width {cw}" if cw is not None else ""
-        return f"""
-<table width="100%" cellpadding="6" cellspacing="0" style="border:1px solid {sc};margin:8px 0;background-color:{PANEL};">
-<tr><td colspan="2" style="color:{accent};font-size:14px;font-weight:bold;border-bottom:1px solid {BORDER};">
-  {name} &nbsp; <span style="color:{TEXT_DIM};font-weight:normal;">{sidlbl}</span>
-  &nbsp; <span style="color:{sc};">[{status}]</span></td></tr>
-<tr><td colspan="2" style="color:{RED};font-size:13px;font-weight:bold;padding-top:6px;">
-  1) SELL &nbsp; {name} {p.get('short_strike','—')} {verb} &nbsp; @ {sp_s}</td></tr>
-<tr><td colspan="2" style="color:{GREEN};font-size:13px;font-weight:bold;">
-  2) BUY &nbsp;&nbsp; {name} {p.get('long_strike','—')} {verb} &nbsp; @ {lp_s} &nbsp;<span style="color:{TEXT_DIM};font-weight:normal;">(the hedge — caps your loss)</span></td></tr>
-<tr><td style='color:{TEXT_DIM};'>expiry</td><td>{p.get('expiry','—')}</td></tr>
-<tr><td style='color:{CYAN};'>NET CREDIT received</td><td style='color:{CYAN};font-weight:bold;'>Rs {credit:.2f}/sh &times; {qty} = Rs {credit_rs:,.0f}{cwline}</td></tr>
-<tr><td style='color:{TEXT_DIM};'>max loss (margin)</td><td>Rs {cap:,.0f}</td></tr>
-{nowline}{pnl_line}
-</table>"""
-
-    def _swing_html(self) -> str:
-        idx_rows = list(self._swing_rows or [])
-        stk_rows = list(self._stockcr_rows or [])
-        def section(title, rows, sub):
-            opens = [p for p in rows if p.get("status") == "OPEN"]
-            closed = [p for p in rows if p.get("status") != "OPEN"]
-            html = f"<p style='color:{GREEN};font-size:15px;font-weight:bold;margin-top:14px;'>{title}</p>"
-            html += f"<p style='color:{TEXT_DIM};margin:2px 0;'>{sub}</p>"
-            if opens:
-                html += f"<p style='color:{AMBER};font-weight:bold;'>OPEN — place these in Upstox:</p>"
-                html += "".join(self._spread_box(p) for p in opens)
+    def _fill_swing_table(self, table, book_path):
+        """One credit-spread trade log: each row spells out the SELL leg and BUY leg (strike +
+        premium), expiry, net credit (total Rs), live/booked cost, P&L and status. Newest first."""
+        import json
+        book = []
+        try:
+            if _os.path.exists(book_path):
+                book = json.load(open(book_path)) or []
+        except Exception as e:
+            logger.warning(f"swing table load {book_path}: {e}")
+        # open positions first, then newest closed
+        book = sorted(book, key=lambda p: (p.get("status") != "OPEN", p.get("entry_date") or ""), reverse=False)
+        book = sorted(book, key=lambda p: (p.get("status") == "OPEN", p.get("entry_date") or ""), reverse=True)
+        rows = book[:60]
+        if not rows:
+            table.setRowCount(1)
+            self._set_row(table, 0, ["—", "no trades yet — fires on a breakout with rich credit",
+                                     "—", "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
+            self._fit_table(table); return
+        table.setRowCount(len(rows))
+        for r, p in enumerate(rows):
+            status = p.get("status", "OPEN")
+            name = p.get("symbol") or p.get("index") or "—"
+            verb = "CE" if p.get("side") == "BEAR_CALL" else "PE"
+            sp, lp = p.get("short_prem"), p.get("long_prem")
+            sell = f"{p.get('short_strike','—')}{verb} @{sp:.1f}" if sp is not None else f"{p.get('short_strike','—')}{verb}"
+            buy = f"{p.get('long_strike','—')}{verb} @{lp:.1f}" if lp is not None else f"{p.get('long_strike','—')}{verb}"
+            qty = p.get("qty") or ((p.get("lot", 0) or 0) * int(p.get("num_lots", 1) or 1))
+            credit = p.get("credit") or 0
+            credit_cell = f"Rs {credit:.1f} (Rs {credit*qty:,.0f})"
+            nowx = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
+            pnl_pts = p.get("pnl_pts", 0.0) or 0.0; cap = p.get("capital") or 0
+            if status == "OPEN" and nowx is None:
+                pnl = "—"
             else:
-                html += f"<p style='color:{TEXT_DIM};'>No open positions — fires on a breakout with rich credit. Section shows WATCHING until then.</p>"
-            if closed:
-                html += f"<p style='color:{TEXT_DIM};margin-top:8px;'>Recent closed ({len(closed)}): "
-                html += " · ".join(
-                    f"<span style='color:{GREEN if p.get('pnl_rs',0)>0 else RED};'>{(p.get('symbol') or p.get('index'))} "
-                    f"{p.get('status')} Rs{(p.get('pnl_rs') or 0):+,.0f}</span>" for p in closed[:12])
-                html += "</p>"
-            return html
-        body = f"""<div style="color:{TEXT};">
-<p style="color:{CYAN};font-size:13px;">A <b>credit spread</b> = SELL one option (collect premium) + BUY a further one (caps the loss).
-You RECEIVE the net credit today; you keep it if the trade works. Place BOTH legs together in Upstox.</p>
-{section("INDEX SWING — NIFTY / FINNIFTY  (~3/month)", idx_rows, "Fade an index Donchian-10 breakout · hold ~2 weeks to expiry · stop at 2× credit.")}
-{section("STOCK CREDIT SPREADS  (~16/month)", stk_rows, "Fade a stock breakout, only when credit ≥ 40% of width · hold to monthly expiry · stop at 2× credit.")}
-<p style="color:{TEXT_DIM};font-size:10px;margin-top:12px;">Paper FORWARD-TEST. Signals only — you place every order manually. Backtests are real but optimistic until live fills confirm.</p>
-</div>"""
-        return body
+                rs = pnl_pts * qty; pct = (rs / cap * 100) if cap else None
+                pnl = f"Rs {rs:+,.0f}" + (f" ({pct:+.0f}%)" if pct is not None else "")
+            fg = QColor(GREEN) if p.get("side") == "BULL_PUT" else QColor(RED)
+            vals = [p.get("entry_date", "—"), name, sell, buy, p.get("expiry", "—"), credit_cell,
+                    f"Rs {nowx:.1f}" if nowx is not None else "—", pnl, status]
+            self._set_row(table, r, vals, fg=fg)
+            self._color_cell(table, r, 8, self._status_color(status))
+            if pnl != "—":
+                self._color_cell(table, r, 7, QColor(GREEN) if pnl_pts > 0 else QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))
+        self._fit_table(table)
 
     def _norm_trade(self, t: dict) -> dict:
         """Normalise a live paper-trade OR a simulation trade to a display row."""
