@@ -606,10 +606,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("File: studies/DATA_AVAILABILITY_LIMITS.md")}
 
 {h("The honest bottom line")}
-{p("After all of it: a <b>~54-70% win, thin-but-real</b> edge (option windows small; 365-day "
-   "directional ~54%). Gates 3, 4 and 5 are the proven improvements; the index trend-ride "
-   "stops a bleed; the exit-cap and forecasting ideas were tested and correctly NOT deployed. "
-   "Real profitability is unproven until the forward paper month logs real fills.")}
+{p("After ~9,000 real-option spread-trades: <b>option BUYING has no net edge</b> out-of-sample (the "
+   "3-Family gates and the index trend-ride are ~breakeven net — kept as forward-tests, not money-makers). "
+   "The real, repeatable edge is the opposite — <b>SELLING a credit spread that FADES a breakout</b>: "
+   "validated on the index (NIFTY+FINNIFTY swing, robust across 5 breakout definitions) and high-frequency "
+   "on stocks (gated credit/width≥0.40). Both are deployed as paper FORWARD-TESTS — the backtests are "
+   "real but optimistic, and live fills are the only honest judge.")}
 <p style="color:{TEXT_DIM};margin-top:14px;font-size:10px;">
 All studies reproducible from /studies on GitHub. Gross of costs. For educational use only. Not financial advice.
 </p>
@@ -639,23 +641,35 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
         return f"""
 <div style="color:{TEXT};">
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — NSE Intraday Options (paper)</p>
-{dim("Read top-to-bottom — it follows the real decision flow: how a stock becomes a SCORE, how the "
-     "score must clear four GATES, what you then TRADE, and how it all RUNS. Every step says WHY.")}
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — NSE Options (paper · 4 parallel strategies)</p>
+{dim("Grounded in the STUDIES tab. Mode: PAPER, signals-only — the headless engine fires signals and "
+     "records them to the local DB + trade log daily; YOU place every order manually in Upstox. It never "
+     "auto-trades. Each strategy has its own PM DECISIONS section and its own TRADE LOG.")}
 
-{p("<b>Mode:</b> PAPER — <b>BUY OPTIONS ONLY</b>. Never sells, never auto-places orders. The headless "
-   "engine fires signals and records each one to the local DB + trade log <b>daily</b>; <b>you</b> place "
-   "the order manually in Upstox.")}
-{p(f"<b style='color:{AMBER}'>Honest status:</b> 60-day backtest <b>61% win, +Rs36,792</b> (+2.8% on "
-   f"capital, 1 lot, GROSS); 30-day 58%; 365-day directional <b>~52%</b>. Net of brokerage + STT + spread "
-   f"it is roughly <b>BREAKEVEN</b> — a thin, real-but-small edge, <b>not proven profitable</b>. The "
-   f"forward paper month is the only honest judge. Full evidence: the <b>STUDIES</b> tab.")}
+{h("THE FOUR STRATEGIES AT A GLANCE")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>#</td><td>Strategy</td><td>Type</td><td>Backtest (real costs)</td><td>Status</td></tr>
+<tr><td>1</td><td style="color:{GREEN};">Stock options · 3-Family</td><td>intraday BUY</td><td>~breakeven net (1yr −1.0%)</td><td>forward-test</td></tr>
+<tr><td>2</td><td style="color:{GREEN};">Stock credit spreads</td><td>multi-day SELL (fade)</td><td>+16-25%, ~16/mo (optimistic)</td><td>forward-test</td></tr>
+<tr><td>3</td><td style="color:{CYAN};">Swing credit spreads · NIFTY+FINNIFTY</td><td>multi-day SELL (fade)</td><td>+12-20%, ~3/mo (the validated edge)</td><td>forward-test</td></tr>
+<tr><td>4</td><td style="color:{PURPLE};">ORB+VWAP index · NIFTY/BNF</td><td>intraday BUY</td><td>~breakeven net</td><td>forward-test</td></tr>
+</table>
+{p(f"<b style='color:{AMBER}'>Honest status (from the studies):</b> exhaustive testing — <b>~9,000 "
+   f"real-option spread-trades across 9 tests</b> — showed <b>NO option-BUYING strategy clears real costs "
+   f"out-of-sample</b> (you cross the bid-ask every leg and theta fights you). The real edge is the "
+   f"opposite: <b>SELLING a credit spread that FADES a breakout</b> — validated on the index (#3) and "
+   f"high-frequency on stocks (#2). All four run as <b>paper FORWARD-TESTS</b>; none is proven on live "
+   f"fills yet. See the <b>STUDIES</b> tab for the full tests-&amp;-trades trail.")}
 
-{h("THE BIG IDEA — why it is built this way")}
-{p("Intraday direction is close to a coin flip — you cannot reliably <i>predict</i> the next move, so "
-   "this system doesn't try. It does the two things you CAN do: <b>filter hard</b> (act only on the "
-   "cleanest setups) and <b>cap risk</b> (buy options, so the worst case is the premium paid). The edge — "
-   "if any — comes from <b>selectivity</b>, not forecasting. Everything below is a filter.")}
+{h("THE TWO BIG IDEAS")}
+{p("<b>Buying (#1, #4) — selectivity + capped risk.</b> Intraday direction is ~a coin flip, so don't "
+   "predict: <b>filter hard</b> (cleanest setups only) and <b>cap risk</b> (buy options → worst case is the "
+   "premium). Net of costs this is ~breakeven — kept as forward-tests, not money-makers.")}
+{p("<b>Selling (#2, #3) — fade the breakout, harvest theta + IV crush.</b> A breakout spikes implied "
+   "volatility and then mean-REVERTS. So <b>SELL</b> a defined-risk credit spread <i>against</i> the "
+   "breakout: you collect the inflated premium, theta works <i>for</i> you, and you win if it reverts or "
+   "just stalls. This is the only structure that beat real measured costs. <b>The credit/width gate is the "
+   "edge</b> — a generic credit spread loses (−4.7%); only selling when richly paid relative to risk works.")}
 
 {h("STEP 1 — Turn each stock into ONE number: alpha-z")}
 {p("<b>Why one number?</b> Many weak signals are easier to gate as a single <b>conviction</b> score — "
@@ -784,7 +798,24 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    f"<b>NIFTY + FINNIFTY</b>.")}
 {dim("HONEST: HIGH variance (a loss ≈ the full margin), thin sample, ~2–3 signals/month. Runs as a "
      "FORWARD-TEST at 1 lot (`SWING_LOTS`) — NOT proven on live fills. Full record: STUDIES tab / "
-     "studies/STOCK_OPTIONS_NO_EDGE.md Parts 5–7.")}
+     "studies/STOCK_OPTIONS_NO_EDGE.md Parts 5–8.")}
+
+{h("FOURTH STRATEGY — Stock Credit Spread (the high-frequency sibling)")}
+{p("The <b>frequency</b> version of #3 — the same FADE, on the full ~100-stock universe, so it fires "
+   "<b>~16×/month</b> (vs the index's ~3). Its own <b>STOCK CREDIT SPREADS</b> section + trade log.")}
+{p("<b>Signal:</b> a daily <b>Donchian-10 breakout</b> on any F&amp;O stock → FADE it (sell a credit "
+   "spread). <b>The gate that makes it work:</b> only trade when <b>credit ≥ 40% of the strike width</b> "
+   "AND short premium ≥ Rs50, AND it passes a <b>live liquidity check</b> (OI, bid-ask). A breakout spikes "
+   "IV → rich premium; the gate sells that inflated premium and rides the reversion + IV crush.")}
+{p("<b>Construct:</b> short 1-OTM, long 3 strikes wide, nearest monthly ≥10 DTE, hold to expiry, 2× stop. "
+   "<b>Caps:</b> ≤5 new/day, ≤20 open at once (breakouts cluster — avoid a one-day pile-on).")}
+{p(f"<b style='color:{GREEN}'>Backtest:</b> full universe, ~19mo, real premiums, credit/width≥0.40 + "
+   f"prem≥Rs50 → <b>307 trades (~16/mo), 65% win, +16% (5% slip) / +25% (3%)</b>, holdout p5 +6.8%, "
+   f"76/100 stocks net-positive, survives a 7%/leg slippage floor. A <i>generic</i> stock spread LOSES "
+   f"−4.7% — the credit/width gate IS the edge.")}
+{dim("HONEST: the ~+20%/month-on-margin backtest is OPTIMISTIC and WILL shrink live — the unmodelled risk "
+     "is real mid-cap 4-leg fills + gap risk on ~16 concurrent shorts. Runs as a FORWARD-TEST at 1 lot "
+     "(`STOCK_CREDIT_*`). DO NOT fill your margin. Full record: studies/STOCK_OPTIONS_NO_EDGE.md Part 8.")}
 
 {h("STEP 4 — How it runs (engine vs viewer), and why split")}
 {p("The <b>engine</b> (headless, launchd <b>…institutionaltrader.engine</b>, always on) does ALL the work — "
