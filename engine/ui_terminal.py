@@ -294,15 +294,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
         v.addWidget(self._panel_title("LATEST PM DECISIONS  -  place manually in Upstox", AMBER))
 
+        # Dynamic "where to look NOW" banner (updated each refresh from the IST clock).
+        self.pm_now_hint = QLabel("—"); self.pm_now_hint.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        self.pm_now_hint.setWordWrap(True)
+        self.pm_now_hint.setStyleSheet(f"color:{AMBER}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
+        v.addWidget(self.pm_now_hint)
+
         # STOCK options (single stocks; indices handled in the section below)
-        v.addWidget(self._section_label("STOCK OPTIONS", GREEN))
+        v.addWidget(self._section_label("STOCK OPTIONS — 3-Family  ·  signals 09:15–15:30 (peak 10:30–11:00)", GREEN))
         self.pm_stock = self._make_pm_table()
         self.pm_stock.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_stock, 2)   # shares space, scrolls internally
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS  (fade · credit/width≥0.40 · ~16/mo · SELL · forward-test)", GREEN))
+            "STOCK CREDIT SPREADS — fade  ·  signals ~15:10 daily  ·  ~16/mo  ·  SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_stockcr.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -313,7 +319,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
         v.addWidget(self._section_label(
-            "SWING CREDIT SPREADS  (index · multi-day · SELL spread, place manually · forward-test)", CYAN))
+            "SWING CREDIT SPREADS — NIFTY/FINNIFTY  ·  signals ~15:10 daily  ·  ~3/mo  ·  SELL", CYAN))
         self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_swing.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_swing.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -323,7 +329,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.pm_swing, 1)
 
         # NIFTY & BANKNIFTY index options — handled by the ORB+VWAP strategy below
-        v.addWidget(self._section_label("INDEX OPTIONS  (NIFTY / BANKNIFTY, paper forward-test)", PURPLE))
+        v.addWidget(self._section_label("INDEX OPTIONS — ORB+VWAP (NIFTY/BANKNIFTY)  ·  signals before 11:00", PURPLE))
         self.pm_orbvwap = QTableWidget(); self.pm_orbvwap.setColumnCount(len(self.ORBVWAP_COLS))
         self.pm_orbvwap.setHorizontalHeaderLabels(self.ORBVWAP_COLS)
         self.pm_orbvwap.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -1010,7 +1016,33 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         except Exception as e:
             logger.warning(f"outcome refresh (log): {e}")
 
+    def _update_pm_now_hint(self):
+        """Dynamic 'where to look NOW' banner on PM DECISIONS, driven by the IST clock."""
+        if not hasattr(self, "pm_now_hint"):
+            return
+        now = datetime.now(IST); m = now.hour * 60 + now.minute; wd = now.weekday()
+        holiday = getattr(self, "_holiday", False)
+        if wd >= 5:
+            txt, col = "Weekend — market closed. No signals today; next session Monday ~09:15.", TEXT_DIM
+        elif holiday:
+            txt, col = "Market holiday — no signals today. Next trading day ~09:15.", TEXT_DIM
+        elif m < 9 * 60 + 15:
+            txt, col = "Pre-open — scanning starts 09:15; intraday signals from ~09:30.", AMBER
+        elif m < 11 * 60:
+            txt, col = ("● NOW: intraday window — watch STOCK OPTIONS + INDEX (ORB+VWAP, fires before 11:00). "
+                        "Credit spreads scan at ~15:10.", GREEN)
+        elif m < 15 * 60 + 10:
+            txt, col = ("● NOW: stock intraday window (ORB+VWAP window closed at 11:00). "
+                        "Credit spreads scan at ~15:10.", GREEN)
+        elif m <= 15 * 60 + 35:
+            txt, col = ("● NOW: CREDIT-SPREAD scan (~15:10) — check STOCK CREDIT + SWING CREDIT sections.", CYAN)
+        else:
+            txt, col = "Market closed — today's signals are booked. Next session tomorrow ~09:15.", TEXT_DIM
+        self.pm_now_hint.setText("  " + txt)
+        self.pm_now_hint.setStyleSheet(f"color:{col}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
+
     def _refresh_pm(self):
+        self._update_pm_now_hint()
         self._ensure_fired_today()
         from engine.options import build_live_option_order
         from engine.data_fetcher import get_cached_ltp, fetch_upstox_ltp
