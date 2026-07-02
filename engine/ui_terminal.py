@@ -395,7 +395,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return self._scroll(inner)
 
     def _stats_label(self) -> QLabel:
-        l = QLabel("—"); l.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        l = QLabel("—"); l.setFont(QFont("Menlo", 12, QFont.Weight.Bold)); l.setWordWrap(True)
         l.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         return l
 
@@ -432,7 +432,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(toggle)
 
         self.log_stats = QLabel("—")
-        self.log_stats.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
+        self.log_stats.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        self.log_stats.setWordWrap(True)   # wrap to a 2nd line instead of overflowing (no horizontal drag)
         self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(self.log_stats)
 
@@ -1379,8 +1380,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             live = sum(_pnl(p) for p in opens)
             pc = GREEN if booked >= 0 else RED
             stats_label.setText(
-                f"  TRADES {n}  ·  OPEN {len(opens)}  ·  WIN {wins} / LOSS {losses}  ·  WIN {wr:.0f}%  "
-                f"·  margin deployed Rs {margin_now:,.0f}  ·  booked P&L Rs {booked:+,.0f}  ·  open MTM Rs {live:+,.0f}")
+                f"  TRADES {n} · OPEN {len(opens)} · W {wins} L {losses} · WIN {wr:.0f}% "
+                f"· margin Rs {margin_now:,.0f} · booked Rs {booked:+,.0f} · MTM Rs {live:+,.0f}")
             stats_label.setStyleSheet(
                 f"color:{pc}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         # open positions first, then newest closed
@@ -1604,22 +1605,22 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         closed = w + l
         wr = (w / closed * 100) if closed else 0
         tag = "LIVE PAPER" if view == "live" else "SIMULATION (30-day historical · reference only)"
-        openstr = f"  ·   OPEN {opn}" if (view == "live" and opn) else ""
+        openstr = f" · OPEN {opn}" if (view == "live" and opn) else ""
         if view == "live":
             s = self.trade_log.pnl_summary(chosen)
             im = self._intraday_capital_metrics(chosen)
             if im and im["avg_daily_cap"] > 0:
                 # intraday: the SAME capital cycles daily, so return % and IRR are on the
                 # AVERAGE CAPITAL DEPLOYED PER DAY (not the summed-across-all-trades capital).
-                extra = (f"·   P&L Rs {s['pnl']:+,.0f}   ·   avg capital/day Rs {im['avg_daily_cap']:,.0f} "
-                         f"(over {im['ndays']}d)   ·   return on it {im['period_ret']:+.0f}%   "
-                         f"·   ~{im['daily_ret']:+.2f}%/day   ·   IRR {im['irr_str']}")
+                extra = (f" · P&L Rs {s['pnl']:+,.0f} · avg cap/day Rs {im['avg_daily_cap']:,.0f} "
+                         f"({im['ndays']}d) · ret {im['period_ret']:+.0f}% · {im['daily_ret']:+.2f}%/day "
+                         f"· IRR {im['irr_str']}")
             else:
-                extra = f"·   P&L Rs {s['pnl']:+,.0f}   ·   {s['pct']:+.1f}%"
+                extra = f" · P&L Rs {s['pnl']:+,.0f} · {s['pct']:+.1f}%"
         else:
-            extra = "·   reference only"
+            extra = " · reference only"
         self.log_stats.setText(
-            f"  [{tag}]   TRADES {n}   ·   WINS {w}  LOSSES {l}{openstr}   ·   WIN {wr:.0f}%   {extra}")
+            f"  [{tag}] TRADES {n} · W {w} L {l}{openstr} · WIN {wr:.0f}%{extra}")
 
         buckets = {"NIFTY": [], "BANKNIFTY": [], "STOCK": []}
         for t in allt:
