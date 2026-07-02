@@ -470,6 +470,29 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(doc)
         return w
 
+    def _strategy_summary_table(self) -> str:
+        """The single source of truth for the strategy summary — shown identically at the top of
+        BOTH the README and STUDIES tabs. Columns: Strategy · Type · Win rate · Backtest window ·
+        Trades · Net (real costs). All figures are on REAL option prices, out-of-sample."""
+        rows = [
+            ("1", "Stock options · 3-Family", "intraday BUY", "~55%", "1 year (real option)", "232", "−1.0% (no edge)", GREEN),
+            ("2", "Stock credit spreads · fade", "multi-day SELL", "65%", "~19 mo · Oct'24–Jun'26", "307", "+16 to +25%", GREEN),
+            ("3", "Swing credit · NIFTY/FINNIFTY", "multi-day SELL", "67%", "~20 mo · Oct'24–Jun'26", "92", "+12 to +20%", CYAN),
+            ("4", "ORB+VWAP index · NIFTY/BNF", "intraday BUY", "63%", "60 days", "38", "~breakeven", PURPLE),
+        ]
+        trs = "".join(
+            f"<tr><td>{n}</td><td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td>"
+            f"<td>{w}</td><td>{d}</td><td>{tr}</td><td>{net}</td></tr>"
+            for n, s, ty, w, d, tr, net, c in rows)
+        return (f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
+                f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>Type</td>"
+                f"<td>Win rate</td><td>Backtest window</td><td>Trades</td><td>Net (real cost)</td></tr>"
+                f"{trs}</table>"
+                f"<p style='color:{TEXT_DIM};font-size:11px;'>Win rate &amp; net are on REAL option premiums, "
+                f"out-of-sample (real-option data limit: ~Oct 2024–Jun 2026). All four run as paper "
+                f"FORWARD-TESTS — none proven on live fills. The two SELL strategies (#2,#3) are the "
+                f"validated edges; the two BUY strategies (#1,#4) are ~breakeven and kept as forward-tests.</p>")
+
     def _studies_html(self) -> str:
         def h(t):
             return f'<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:20px;">{t}</p>'
@@ -487,6 +510,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+
+{h("THE FOUR LIVE STRATEGIES — SUMMARY")}
+{self._strategy_summary_table()}
 
 {h("TESTS &amp; TRADES THAT FINALIZED THE LIVE STRATEGIES")}
 {dim("~9,000 real-option spread-trades across 9 tests (+ thousands of config combinations). The two "
@@ -654,13 +680,7 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
      "auto-trades. Each strategy has its own PM DECISIONS section and its own TRADE LOG.")}
 
 {h("THE FOUR STRATEGIES AT A GLANCE")}
-<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>#</td><td>Strategy</td><td>Type</td><td>Backtest (real costs)</td><td>Status</td></tr>
-<tr><td>1</td><td style="color:{GREEN};">Stock options · 3-Family</td><td>intraday BUY</td><td>~breakeven net (1yr −1.0%)</td><td>forward-test</td></tr>
-<tr><td>2</td><td style="color:{GREEN};">Stock credit spreads</td><td>multi-day SELL (fade)</td><td>+16-25%, ~16/mo (optimistic)</td><td>forward-test</td></tr>
-<tr><td>3</td><td style="color:{CYAN};">Swing credit spreads · NIFTY+FINNIFTY</td><td>multi-day SELL (fade)</td><td>+12-20%, ~3/mo (the validated edge)</td><td>forward-test</td></tr>
-<tr><td>4</td><td style="color:{PURPLE};">ORB+VWAP index · NIFTY/BNF</td><td>intraday BUY</td><td>~breakeven net</td><td>forward-test</td></tr>
-</table>
+{self._strategy_summary_table()}
 {p(f"<b style='color:{AMBER}'>Honest status (from the studies):</b> exhaustive testing — <b>~9,000 "
    f"real-option spread-trades across 9 tests</b> — showed <b>NO option-BUYING strategy clears real costs "
    f"out-of-sample</b> (you cross the bid-ask every leg and theta fights you). The real edge is the "
