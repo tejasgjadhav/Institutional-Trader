@@ -1528,6 +1528,50 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self._color_cell(self.log_stockcr, r, 6, self._status_color(status))
         self._fit_table(self.log_stockcr)
 
+    @staticmethod
+    def _intraday_capital_metrics(trades):
+        """Intraday strategies redeploy the SAME capital every day, so returns should be measured on
+        the AVERAGE CAPITAL DEPLOYED PER DAY — not the sum of every trade's capital. Returns:
+          avg_daily_cap  — mean of each trading day's total deployed capital (premium × lot)
+          daily_ret      — average daily % return on that capital (≈ total P&L / total deployed)
+          period_ret     — cumulative % return on the avg daily capital over the logged days
+          irr_str        — annualized IRR = (1+daily_ret)^252 − 1, formatted (theoretical/compounded)."""
+        from collections import defaultdict
+        closed = [t for t in trades if t.get("outcome") in ("WIN", "LOSS")]
+        if not closed:
+            return None
+
+        def cap(t):
+            ep = t.get("entry_premium") if t.get("entry_premium") is not None else (t.get("entry") or 0)
+            lot = t.get("lot") if t.get("lot") is not None else t.get("qty")
+            return float(ep or 0) * float(lot or 0)
+
+        def day(t):
+            return (t.get("signal_time") or t.get("outcome_time") or "")[:10]
+
+        dc, dp = defaultdict(float), defaultdict(float)
+        for t in closed:
+            dc[day(t)] += cap(t)
+            dp[day(t)] += float(t.get("realized_pnl_inr") or 0)
+        ndays = len(dc)
+        total_cap, total_pnl = sum(dc.values()), sum(dp.values())
+        if ndays == 0 or total_cap <= 0:
+            return None
+        avg_daily_cap = total_cap / ndays
+        daily_ret = total_pnl / total_cap            # avg daily return on deployed capital (fraction)
+        period_ret = total_pnl / avg_daily_cap * 100  # cumulative % on the cycling capital base
+        # IRR compounds the daily return over ~252 trading days — meaningless on a tiny sample
+        # (a single outlier day sends it to absurd values), so require a real track record first.
+        if ndays < 20:
+            irr_str = f"n/a (need ~20+ days, have {ndays})"
+        elif daily_ret <= -1:
+            irr_str = "−100%/yr"
+        else:
+            irr = (1 + daily_ret) ** 252 - 1
+            irr_str = (f"{irr*100:+,.0f}%/yr" if abs(irr) < 100 else f"{irr:+,.1f}×/yr")
+        return {"ndays": ndays, "avg_daily_cap": avg_daily_cap, "daily_ret": daily_ret * 100,
+                "period_ret": period_ret, "irr_str": irr_str}
+
     def _refresh_log(self):
         # credit-spread (SELL) logs now live in the SWING TRADES tab; this tab = BUY strategies only.
         self.trade_log._load()   # reload from disk — agent + resolver write to it
@@ -1563,8 +1607,15 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         openstr = f"  ·   OPEN {opn}" if (view == "live" and opn) else ""
         if view == "live":
             s = self.trade_log.pnl_summary(chosen)
-            extra = (f"·   CAPITAL Rs {s['capital']:,.0f}   ·   P&L Rs {s['pnl']:+,.0f}   "
-                     f"·   {'GAIN' if s['pnl'] >= 0 else 'LOSS'} {s['pct']:+.1f}%")
+            im = self._intraday_capital_metrics(chosen)
+            if im and im["avg_daily_cap"] > 0:
+                # intraday: the SAME capital cycles daily, so return % and IRR are on the
+                # AVERAGE CAPITAL DEPLOYED PER DAY (not the summed-across-all-trades capital).
+                extra = (f"·   P&L Rs {s['pnl']:+,.0f}   ·   avg capital/day Rs {im['avg_daily_cap']:,.0f} "
+                         f"(over {im['ndays']}d)   ·   return on it {im['period_ret']:+.0f}%   "
+                         f"·   ~{im['daily_ret']:+.2f}%/day   ·   IRR {im['irr_str']}")
+            else:
+                extra = f"·   P&L Rs {s['pnl']:+,.0f}   ·   {s['pct']:+.1f}%"
         else:
             extra = "·   reference only"
         self.log_stats.setText(
