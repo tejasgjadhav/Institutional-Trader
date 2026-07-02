@@ -480,7 +480,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("1", "Stock options · 3-Family", "buy", "55 / 45", "−1.3%", "−0.1%", "232 · 1 yr", GREEN),
             ("2", "Stock credit spreads · fade", "sell", "65 / 35", "+15%", "+14%", "307 · 19 mo", GREEN),
             ("3", "Swing · NIFTY/FINNIFTY · fade", "sell", "67 / 33", "+12%", "+12%", "92 · 20 mo", CYAN),
-            ("4", "ORB+VWAP index", "buy", "63 / 37", "0%", "0%", "38 · 60 d", PURPLE),
+            ("4", "ORB+VWAP index", "buy", "63 / 37", "+0.8% gross", "~0% net", "38 · 60 d", PURPLE),
         ]
         trs = "".join(
             f"<tr><td>{n}</td><td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td>"
@@ -496,8 +496,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                 f"(on capital-at-risk)</span></p>"
                 f"<p style='color:{TEXT_DIM};font-size:11px;'><b>Return/month</b> = on the AVERAGE CAPITAL DEPLOYED "
                 f"(not your whole account) — for the SELL strategies this is optimistic backtest that will shrink "
-                f"on live mid-cap fills. All figures on REAL option premiums, out-of-sample (~Oct 2024–Jun 2026); "
-                f"all four run as paper FORWARD-TESTS. SELL (#2,#3) = the validated edges; BUY (#1,#4) = ~breakeven.</p>")
+                f"on live mid-cap fills. SELL (#2,#3) figures are NET of real costs; BUY (#1,#4) Avg P&amp;L/trade "
+                f"is GROSS — net of costs both buy strategies are ≈ breakeven (ORB +0.8% gross → ~0% net). "
+                f"All on REAL option premiums, out-of-sample (~Oct 2024–Jun 2026); all four are paper FORWARD-TESTS.</p>")
 
     def _studies_html(self) -> str:
         def h(t):
