@@ -472,27 +472,29 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return w
 
     def _strategy_summary_table(self) -> str:
-        """The single source of truth for the strategy summary — shown identically at the top of
-        BOTH the README and STUDIES tabs. Columns: Strategy · Type · Win rate · Backtest window ·
-        Trades · Net (real costs). All figures are on REAL option prices, out-of-sample."""
+        """Single source of truth for the strategy summary (shown at the top of the STUDIES tab).
+        Columns: Strategy · Win/Loss% · Avg P&L per trade (win/loss-weighted expectancy) · Return per
+        month on AVG CAPITAL DEPLOYED · Trades · window. All on REAL option premiums, out-of-sample."""
         rows = [
-            ("1", "Stock options · 3-Family", "intraday BUY", "~55%", "1 year (real option)", "232", "−1.0% (no edge)", GREEN),
-            ("2", "Stock credit spreads · fade", "multi-day SELL", "65%", "~19 mo · Oct'24–Jun'26", "307", "+16 to +25%", GREEN),
-            ("3", "Swing credit · NIFTY/FINNIFTY", "multi-day SELL", "67%", "~20 mo · Oct'24–Jun'26", "92", "+12 to +20%", CYAN),
-            ("4", "ORB+VWAP index · NIFTY/BNF", "intraday BUY", "63%", "60 days", "38", "~breakeven", PURPLE),
+            # (#, strategy, type, win/loss, avg P&L/trade (expectancy), return/mo on avg capital, trades·window, color)
+            ("1", "Stock options · 3-Family", "buy", "55 / 45", "−1.3% (~breakeven)", "~breakeven", "232 · 1 yr", GREEN),
+            ("2", "Stock credit spreads · fade", "sell", "65 / 35", "+15% · ~Rs1,400", "+14 to +22%", "307 · 19 mo", GREEN),
+            ("3", "Swing · NIFTY/FINNIFTY · fade", "sell", "67 / 33", "+12 to +20%", "+10 to +15%", "92 · 20 mo", CYAN),
+            ("4", "ORB+VWAP index", "buy", "63 / 37", "~breakeven", "~breakeven", "38 · 60 d", PURPLE),
         ]
         trs = "".join(
             f"<tr><td>{n}</td><td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td>"
-            f"<td>{w}</td><td>{d}</td><td>{tr}</td><td>{net}</td></tr>"
-            for n, s, ty, w, d, tr, net, c in rows)
+            f"<td>{wl}</td><td>{exp}</td><td>{rm}</td><td>{tw}</td></tr>"
+            for n, s, ty, wl, exp, rm, tw, c in rows)
         return (f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
-                f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>Type</td>"
-                f"<td>Win rate</td><td>Backtest window</td><td>Trades</td><td>Net (real cost)</td></tr>"
+                f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>B/S</td>"
+                f"<td>Win / Loss%</td><td>Avg P&amp;L / trade</td><td>Return / mo*</td><td>Trades · window</td></tr>"
                 f"{trs}</table>"
-                f"<p style='color:{TEXT_DIM};font-size:11px;'>Win rate &amp; net are on REAL option premiums, "
-                f"out-of-sample (real-option data limit: ~Oct 2024–Jun 2026). All four run as paper "
-                f"FORWARD-TESTS — none proven on live fills. The two SELL strategies (#2,#3) are the "
-                f"validated edges; the two BUY strategies (#1,#4) are ~breakeven and kept as forward-tests.</p>")
+                f"<p style='color:{TEXT_DIM};font-size:11px;'><b>Avg P&amp;L/trade</b> = win% × avg-win − loss% × "
+                f"avg-loss (expectancy, on capital-at-risk). <b>Return/mo*</b> = on the AVERAGE CAPITAL DEPLOYED "
+                f"(not your whole account) — for the SELL strategies this is optimistic backtest that will shrink "
+                f"on live mid-cap fills. All figures on REAL option premiums, out-of-sample (~Oct 2024–Jun 2026); "
+                f"all four run as paper FORWARD-TESTS. SELL (#2,#3) = the validated edges; BUY (#1,#4) = ~breakeven.</p>")
 
     def _studies_html(self) -> str:
         def h(t):
@@ -675,205 +677,82 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
         return f"""
 <div style="color:{TEXT};">
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">INSTITUTIONAL TRADER — NSE Options (paper · 4 parallel strategies)</p>
-{dim("Grounded in the STUDIES tab. Mode: PAPER, signals-only — the headless engine fires signals and "
-     "records them to the local DB + trade log daily; YOU place every order manually in Upstox. It never "
-     "auto-trades. Each strategy has its own PM DECISIONS section and its own TRADE LOG.")}
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">SYSTEM SETUP &amp; APPLICATION MANUAL</p>
+{dim("How this system is installed, how it runs, and how to use every tab. For WHAT the strategies are "
+     "and how they were validated, see the STUDIES tab. Mode: PAPER, signals-only — the headless engine "
+     "fires signals and records them daily; YOU place every order manually in Upstox. It never auto-trades.")}
 
-{h("THE FOUR STRATEGIES AT A GLANCE")}
-{self._strategy_summary_table()}
-{p(f"<b style='color:{AMBER}'>Honest status (from the studies):</b> exhaustive testing — <b>~9,000 "
-   f"real-option spread-trades across 9 tests</b> — showed <b>NO option-BUYING strategy clears real costs "
-   f"out-of-sample</b> (you cross the bid-ask every leg and theta fights you). The real edge is the "
-   f"opposite: <b>SELLING a credit spread that FADES a breakout</b> — validated on the index (#3) and "
-   f"high-frequency on stocks (#2). All four run as <b>paper FORWARD-TESTS</b>; none is proven on live "
-   f"fills yet. See the <b>STUDIES</b> tab for the full tests-&amp;-trades trail.")}
+{h("1 — WHAT IT IS (in one breath)")}
+{p(f"A paper-trading engine for NSE options running <b>4 parallel strategies</b> on ~{len(C.UNIVERSE)} "
+   "stocks + NIFTY/BANKNIFTY/FINNIFTY. It scans, scores, and surfaces BUY/SELL signals on a dashboard; "
+   "you place the orders. Two intraday BUY strategies (3-Family stocks, ORB+VWAP index) and two multi-day "
+   "SELL strategies (stock &amp; index credit spreads). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
 
-{h("THE TWO BIG IDEAS")}
-{p("<b>Buying (#1, #4) — selectivity + capped risk.</b> Intraday direction is ~a coin flip, so don't "
-   "predict: <b>filter hard</b> (cleanest setups only) and <b>cap risk</b> (buy options → worst case is the "
-   "premium). Net of costs this is ~breakeven — kept as forward-tests, not money-makers.")}
-{p("<b>Selling (#2, #3) — fade the breakout, harvest theta + IV crush.</b> A breakout spikes implied "
-   "volatility and then mean-REVERTS. So <b>SELL</b> a defined-risk credit spread <i>against</i> the "
-   "breakout: you collect the inflated premium, theta works <i>for</i> you, and you win if it reverts or "
-   "just stalls. This is the only structure that beat real measured costs. <b>The credit/width gate is the "
-   "edge</b> — a generic credit spread loses (−4.7%); only selling when richly paid relative to risk works.")}
+{h("2 — SETUP (from a fresh Mac)")}
+{p("<b>1.</b> <b>git clone</b> the repo &amp; <b>cd</b> in. "
+   "<b>2.</b> Run <b>./setup.sh</b> — makes the venv, installs deps, writes the "
+   ".env template, and installs the two launchd jobs (engine + viewer). "
+   "<b>3.</b> Edit <b>.env</b> and add your free Upstox <b>Analytics</b> token (read-only data feed — no "
+   "trading token needed). <b>4.</b> Kickstart the engine; the viewer auto-launches 09:00 on weekdays.")}
+{dim("SECURITY: .env holds your token — it is gitignored and must NEVER be committed. Requires macOS "
+     "(Apple Silicon), Python 3.9+, and an internet connection during market hours.")}
 
-{h("STEP 1 — Turn each stock into ONE number: alpha-z")}
-{p("<b>Why one number?</b> Many weak signals are easier to gate as a single <b>conviction</b> score — "
-   "<b>sign = direction</b> (+ long / − short), <b>size = conviction</b>. It is a weighted blend of 3 "
-   "<b>families</b> (grouped so correlated signals can't fake breadth):")}
-{p(f"<b style='color:{GREEN}'>TREND ({C.FAMILY_WEIGHTS['TREND']['weight']})</b> — three sub-factors, each "
-   "z-scored vs its own history: <b>momentum</b> (60-min intraday return), <b>trend quality</b> (daily "
-   "EMA-9 vs EMA-21 spread), <b>microstructure</b> (15-min opening-range break). <b>Why biggest:</b> "
-   "trend/momentum is the only family that held an edge in testing.")}
-{dim(f"&nbsp;&nbsp;Sub-factor weights (normalised within TREND by their sum "
-     f"{sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.2f}): momentum "
-     f"{C.FAMILY_WEIGHTS['TREND']['factor_weights']['momentum']} "
-     f"(~{C.FAMILY_WEIGHTS['TREND']['factor_weights']['momentum']/sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.0%}), "
-     f"trend-quality {C.FAMILY_WEIGHTS['TREND']['factor_weights']['trend_quality']} "
-     f"(~{C.FAMILY_WEIGHTS['TREND']['factor_weights']['trend_quality']/sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.0%}), "
-     f"microstructure {C.FAMILY_WEIGHTS['TREND']['factor_weights']['microstructure']} "
-     f"(~{C.FAMILY_WEIGHTS['TREND']['factor_weights']['microstructure']/sum(C.FAMILY_WEIGHTS['TREND']['factor_weights'].values()):.0%}).")}
-{dim("&nbsp;&nbsp;<b>How the weights were set — honest:</b> hit-rate-informed, NOT rigorously optimised. "
-     "TREND got the biggest family weight because it was the only family with a real edge; momentum is the "
-     "strongest sub-factor; <b>microstructure is deliberately tiny</b> because that ORB break is ALSO Gate 2 "
-     "— keeping it small avoids double-counting the same signal in both the score and the gate. Fitting all "
-     "weights to data (vs hand-set) is a known open improvement.")}
-{p(f"<b style='color:{CYAN}'>FLOW ({C.FAMILY_WEIGHTS['FLOW']['weight']})</b> — live per-stock option flow "
-   "(OI buildup + PCR trend). <b>Why:</b> an independent read of what option writers are positioning for.")}
-{p(f"<b style='color:{AMBER}'>EVENT ({C.FAMILY_WEIGHTS['EVENT']['weight']})</b> — NSE news, keyword-scored. "
-   "<b>Why tiny:</b> news is sparse and the scoring is crude — it nudges, it never decides.")}
-{p(f"<b style='color:{CYAN}'>alpha-z = Σ(family z × weight) ÷ Σ(weights)</b> &nbsp;(weights read live from "
-   f"config, sum = {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}).")}
-{dim(f"Example (bearish) — each family's <b>z-score × its weight</b>:")}
-{dim(f"&nbsp;&nbsp;TREND&nbsp; z=−0.9 × weight {C.FAMILY_WEIGHTS['TREND']['weight']} = {-0.9*C.FAMILY_WEIGHTS['TREND']['weight']:+.2f}")}
-{dim(f"&nbsp;&nbsp;FLOW&nbsp;&nbsp; z=−0.6 × weight {C.FAMILY_WEIGHTS['FLOW']['weight']} = {-0.6*C.FAMILY_WEIGHTS['FLOW']['weight']:+.2f}")}
-{dim(f"&nbsp;&nbsp;EVENT z=&nbsp;0.0 × weight {C.FAMILY_WEIGHTS['EVENT']['weight']} = {0.0*C.FAMILY_WEIGHTS['EVENT']['weight']:+.2f}&nbsp;&nbsp;(EVENT is usually neutral, so it adds nothing)")}
-{dim(f"&nbsp;&nbsp;alpha-z = sum ÷ (weights {sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}) = "
-     f"<b>{(-0.9*C.FAMILY_WEIGHTS['TREND']['weight'] - 0.6*C.FAMILY_WEIGHTS['FLOW']['weight'] + 0.0*C.FAMILY_WEIGHTS['EVENT']['weight'])/sum(f['weight'] for f in C.FAMILY_WEIGHTS.values()):.2f}</b> → SHORT")}
-{dim("Honest limitation: because EVENT rarely fires, in practice alpha-z is mostly TREND + FLOW — a "
-     "momentum signal with a flow tilt, not three equal voices. (A 4th mean-reversion family was removed: "
-     "it won only 47.6%.)")}
+{h("3 — HOW IT RUNS (engine vs viewer — two processes)")}
+{p(f"<b style='color:{GREEN}'>ENGINE</b> (headless, launchd job, always on): does ALL the work — scans "
+   "every 5 min in market hours, fires signals, resolves trades, books at the 15:30 close, and saves "
+   "everything to local files (engine.db, signals.db, trade_log.json, the credit-spread books). Wakes "
+   "every 5 s while the market is open; idles when closed. Runs whether or not this window is open.")}
+{p(f"<b style='color:{PURPLE}'>VIEWER</b> (this app, read-only): never scans/fires/writes — it only reads "
+   "what the engine wrote and displays it (header shows 'READ-ONLY VIEWER — engine scan Nm ago'). Re-reads "
+   "disk every ~5–15 s. <b>Why split:</b> a viewer crash can never stop trading, and timing is independent "
+   "of the display. <b>For unattended running:</b> keep the laptop on, lid open, on AC power.")}
 
-{h("STEP 2 — Six gates (each removes a known way to lose)")}
-{sub("Gate 1 · Alpha — strong AND broad?")}
-{p(f"Require |alpha-z| &gt; <b>{C.ALPHA_Z_THRESHOLD}</b> AND <b>≥{C.MIN_FAMILIES_AGREE} of 3</b> families "
-   f"agree. <b>Why:</b> one noisy family shouldn't trigger a trade — demand both conviction and agreement. "
-   f"Passing lands the stock on the <b>WATCHLIST</b>.")}
-{sub("Gate 2 · ORB breakout + volume — is it happening NOW?")}
-{p("The latest 5-min candle must break the opening range (with a volume surge), same direction as the "
-   "score. <b>Why:</b> a score can be right but early — require the move to actually start before paying.")}
-{sub("Gate 3 · Market alignment — don't fight the tape")}
-{p("Only <b>LONG when Nifty is up</b>, <b>SHORT when Nifty is down</b>. <b>Why:</b> the biggest losers came "
-   "from trades fighting the index. <i>Evidence: 60-day P&amp;L +Rs17k → +Rs31k (~2×) by cutting the trend-fighters.</i>")}
-{sub("Gate 4 · Don't chase — already over-extended?")}
-{p(f"Skip if the stock already moved &gt; <b>{C.MAX_ENTRY_EXTENSION_PCT}%</b> in the trade's direction from "
-   f"the open. <b>Why:</b> buying an already-run stock is buying the top. <i>Evidence (365 days): "
-   f"over-extended entries won ~45% vs ~55%; same profit on fewer trades.</i>")}
-{sub("Gate 5 · Wide open — is there real morning momentum?")}
-{p(f"Require the first-30-min opening range to be at least <b>{C.ORB_RANGE_WIDTH_MIN}%</b> of price wide. "
-   f"<b>Why:</b> a wide opening range means the day has real energy → cleaner breakouts; a narrow, quiet "
-   f"open is chop. <i>Evidence: validated on 365 days (506 trades) — directional win 51% → 54%; option win "
-   f"30-day 61% → 66%, 60-day 66% → 70% at +10/−20.</i>")}
-{sub("Gate 6 · Liquidity — can you actually fill and exit?")}
-{p(f"Before firing, fetch the exact OTM+1 option's <b>live bid/ask + OI</b> and require a two-sided "
-   f"market, spread <b>≤ {C.MAX_OPTION_SPREAD_PCT}%</b> of mid, and OI ≥ <b>{C.MIN_OPTION_OI}</b>. "
-   f"<b>Why:</b> you buy at the ask and sell at the bid — with a +10% target a wide spread eats the edge, "
-   f"and a stale LTP isn't a real price. Checked <b>only</b> for signals that already cleared Gates 1-5 "
-   f"(~1-2/day), so the cost is ~1-2 quote calls a day — negligible. (`LIQUIDITY_FILTER`)")}
-{p("All six pass → <b>PM DECISIONS</b>. The <b>WATCHLIST</b> tab shows each candidate's live gate "
-   "progress (PASS / wait, e.g. <b>5/6 next: liquidity</b>), sorted closest-to-firing on top.")}
+{h("4 — THE APP, TAB BY TAB")}
+{sub("PM DECISIONS — today's actions")}
+{p("The board of what to place TODAY. A live banner at the top says which window is active right now. One "
+   "section per strategy, each labelled with its signal window. <b>Credit spreads show as two rows</b> — a "
+   "SELL row (the leg you sell + premium received) and a BUY row (the hedge + premium paid) — with LOT and "
+   "total MARGIN. The option type (CE/PE) is in the ACTION column so it's never hidden by a long name. "
+   "Shows only <b>today's</b> credit-spread signals; ongoing ones live in SWING TRADES.")}
+{sub("WATCHLIST — the funnel (stocks)")}
+{p("Every stock that cleared Gate 1 (alpha), progressing through the remaining gates toward PM DECISIONS. "
+   "Sorted closest-to-firing on top (e.g. '3/4 next: ORB'). This is where you watch a 3-Family setup build.")}
+{sub("SWING TRADES — the credit-spread trade log")}
+{p("The two SELL strategies (index swing + stock), split. Each spread is <b>two leg rows</b> with per-leg "
+   "entry / current / P&amp;L, then the consolidated <b>NET</b>. A stats bar shows trades, win rate, margin "
+   "deployed and booked/open P&amp;L. The 'NOW' value keeps running live even after a WIN/LOSS is booked.")}
+{sub("TRADE LOG — the intraday BUY strategies")}
+{p("3-Family stocks + ORB NIFTY/BANKNIFTY, LIVE vs SIMULATION. Because intraday capital recycles daily, "
+   "returns are shown on the <b>average capital deployed per day</b>, with an <b>IRR</b> annualized over "
+   "CALENDAR days (idle weekends count) — the honest yardstick, gated until ~30 days of track record.")}
+{sub("STUDIES — the strategies &amp; the research")}
+{p("The strategy summary table (win/loss, avg P&amp;L per trade, return per month) + the full tests-and-"
+   "trades trail: ~9,000 real-option spread-trades across 9 tests, showing what worked and what was "
+   "rejected. This is the 'why' behind every live strategy.")}
 
-{h("STEP 3 — What you trade, and why")}
-{p("Every signal is a <b>bought option</b> (never sold): <b style='color:{0}'>LONG → buy CALL</b>, "
-   "<b style='color:{1}'>SHORT → buy PUT</b>. <b>Why buy-only:</b> loss is capped at the premium, and a "
-   "small underlying move becomes a large % move on the option (leverage).".format(GREEN, RED))}
-{p(f"<b style='color:{GREEN}'>STOCKS (the 3-Family system, {len(C.UNIVERSE)} names)</b> — buy <b>OTM+1</b>, "
-   f"exit <b>+{int(C.PREMIUM_TARGET_PCT)}% / −{int(C.PREMIUM_STOP_PCT)}%</b> on the premium. <b>Why small "
-   f"target / wide stop:</b> premiums are volatile, so a quick +{int(C.PREMIUM_TARGET_PCT)}% is hit often "
-   f"(that is what makes win rate ~58–61%), while the wider −{int(C.PREMIUM_STOP_PCT)}% avoids being stopped "
-   f"by noise. (Removing the cap was tested — worse, higher-variance — so it stays.)")}
+{h("5 — SIGNAL TIMING (IST, trading days only)")}
+{p(f"<b>Stock options (3-Family):</b> {C.MARKET_OPEN}–{C.MARKET_CLOSE}, most active 10:30–11:00 · "
+   f"<b>ORB+VWAP index:</b> before {C.ORB_VWAP_ENTRY_CUTOFF} · "
+   f"<b>Stock &amp; Swing credit spreads:</b> once/day, ~{C.STOCK_CREDIT_SCAN_AFTER} (a daily breakout needs "
+   "the near-close). Signals are selective — many days few or none; that's the point, not a fault.")}
 
-{h("STEP 3b — THE INDEX STRATEGY (NIFTY &amp; BANKNIFTY) — full logic")}
-{p("A <b>completely separate, parallel</b> strategy from the stock system. It does NOT use alpha-z, the 3 "
-   "families, or the 5 gates. It is an intraday <b>Opening-Range Breakout + VWAP</b> momentum play on the "
-   "two indices, in its own INDEX OPTIONS section on PM DECISIONS. (`engine/orb_vwap_live.py`)")}
-{sub("Entry — a signal fires only when ALL of these line up")}
-{p("<b>1. Opening range</b> = high/low of the first 15 min (first 3 × 5-min candles, 9:15–9:30).")}
-{p("<b>2. Breakout</b> = the latest 5-min close is <b>&gt;0.07% beyond</b> the range — above the high → "
-   "LONG, below the low → SHORT.")}
-{p("<b>3. VWAP</b> = the close must also be on the breakout side of VWAP. VWAP needs volume and the spot "
-   "index reports none on Upstox, so it is computed from the index <b>FUTURES</b> feed — but only OPTIONS "
-   "are ever traded.")}
-{p(f"<b>4. 30-min trend</b> = the close must be beyond where it was {C.ORB_VWAP_TREND_BARS} × 5-min = "
-   f"<b>30 min ago</b>. <i>This is the index's OWN trend agreeing — NOT the stocks' cross-market "
-   f"alignment gate (that does not apply here, since BankNifty almost always already moves with Nifty).</i>")}
-{p("<b>5. Clean-trend filter</b> = VWAP must be sloping the trade's way (rising over the last 3 bars for a "
-   "LONG) <b>and</b> price already <b>&gt;0.25% extended</b> from the open — cuts chop and false breaks.")}
-{p(f"<b>Plus:</b> entries only <b>before {C.ORB_VWAP_ENTRY_CUTOFF}</b> (the move needs the morning), "
-   f"<b>skip 0-DTE</b> expiry days (premium spikes), <b>one signal per index per day</b>.")}
-{sub("What you buy &amp; the exit")}
-{p(f"Buy the <b>ATM</b> CALL (LONG) / PUT (SHORT). <b>Exit = TREND-RIDE:</b> ride the winner; exit only "
-   f"when the futures <b>reclaim VWAP</b> after the trade is already +{int(C.ORB_VWAP_ARM_PCT)}% in profit; "
-   f"a <b>hard −{int(C.ORB_VWAP_STOP_PCT)}% premium stop</b> throughout; otherwise square off at the close. "
-   f"Live status: WATCHING → ● RIDING → EXITED VWAP / STOPPED −{int(C.ORB_VWAP_STOP_PCT)}%.")}
-{sub("Why these choices + what the backtest said")}
-{p("<b>Why trend-ride (not a fixed target)?</b> An ORB break is a <i>trend</i> setup — the old fixed +20% "
-   "target capped winners while still taking full −20% stops (backwards), and it <b>bled −2.6%/trade</b>. "
-   "Riding the winner fixed it. We backtested it 30 &amp; 60 days (`studies/INDEX_TREND_RIDE_EXIT.md`):")}
-{p("&nbsp;&nbsp;<b>30-day:</b> 65% win, +1.2%/trade &nbsp;·&nbsp; <b>60-day:</b> 63% win, +0.8%/trade "
-   "&nbsp;(both GROSS) &nbsp;·&nbsp; the fix took win rate <b>27% → 63%</b>.")}
-{dim("Capital per lot: Nifty ATM ~Rs8k, BankNifty ~Rs17k. <b>Honest:</b> those are GROSS — net of costs it "
-     "is roughly <b>breakeven</b>, fragile out-of-sample, and runs as a <b>FORWARD-TEST</b>, not because it "
-     "is proven. The big win was fixing the EXIT, not the trend filter (which was always there).")}
+{h("6 — HOW TO PLACE AN ORDER")}
+{p("<b>BUY strategies:</b> the PM row gives the exact BUY — e.g. 'BUY RELIANCE 1400 CE @ Rs X'. Place it in "
+   "Upstox; exit at the shown target/stop. <b>Credit spreads (SELL):</b> place <b>both legs together</b> — "
+   "the SELL row first (you receive the credit), the BUY row as the hedge (caps the loss). Read the strikes, "
+   "type and premiums straight off the two rows. Hold to expiry unless the stop (2× credit) triggers.")}
 
-{h("THIRD STRATEGY — Swing Credit Spread (the one that beat real costs)")}
-{p("A <b>third, separate</b> strategy — and the only structure that clears <b>real measured costs</b> out-of-"
-   "sample. The other two BUY options (you pay the bid-ask and fight theta). This one <b>SELLS</b> a "
-   "defined-risk credit spread, so theta works <i>for</i> you. It is multi-day (overnight carry), shown in "
-   "its own <b>SWING CREDIT SPREADS</b> section on PM DECISIONS between the stock and index sections.")}
-{p("<b>The signal:</b> a daily <b>Donchian-10 breakout</b> (a fresh 10-day high or low) on <b>NIFTY / "
-   "FINNIFTY</b>. <b>The twist — FADE it:</b> index breakouts mean-REVERT, so we sell AGAINST the breakout "
-   "(up-break → bear-call spread, down-break → bull-put spread). Selling <i>with</i> the breakout won only "
-   "40%; fading wins ~65%.")}
-{p("<b>Construct:</b> ~2-week expiry, short <b>1 strike OTM</b>, long <b>3 strikes</b> further (caps the "
-   "loss), <b>held to expiry</b>; hard stop if the spread's cost-to-close hits <b>2× the credit</b>. You "
-   "<b>receive</b> a credit up-front; best case both options expire worthless and you keep it.")}
-{p(f"<b style='color:{CYAN}'>Why it's deployed:</b> +12–20% net/trade on margin (real costs), PF 1.4–1.95, "
-   f"and <b>robust across 5 breakout definitions</b> (Donchian-10/15/20/30 + prior-week) — genuine "
-   f"reversion, not a curve-fit. A 5-index test DROPPED BankNifty (tested −6.7%) and kept "
-   f"<b>NIFTY + FINNIFTY</b>.")}
-{dim("HONEST: HIGH variance (a loss ≈ the full margin), thin sample, ~2–3 signals/month. Runs as a "
-     "FORWARD-TEST at 1 lot (`SWING_LOTS`) — NOT proven on live fills. Full record: STUDIES tab / "
-     "studies/STOCK_OPTIONS_NO_EDGE.md Parts 5–8.")}
+{h("7 — RISK CONTROLS")}
+{p(f"Halt after <b>{C.CONSECUTIVE_LOSS_HALT}</b> stop-outs in a row · intraday trades force-closed by "
+   f"{C.KILL_SWITCH_TIME} (never held overnight) · credit spreads are defined-risk (max loss = margin) and "
+   "carry overnight to expiry. <b>Sizing:</b> KEEP LOTS AT 1 while forward-testing; never fill your whole "
+   "margin — ~16 correlated stock spreads can move against you together on a bad day.")}
 
-{h("FOURTH STRATEGY — Stock Credit Spread (the high-frequency sibling)")}
-{p("The <b>frequency</b> version of #3 — the same FADE, on the full ~100-stock universe, so it fires "
-   "<b>~16×/month</b> (vs the index's ~3). Its own <b>STOCK CREDIT SPREADS</b> section + trade log.")}
-{p("<b>Signal:</b> a daily <b>Donchian-10 breakout</b> on any F&amp;O stock → FADE it (sell a credit "
-   "spread). <b>The gate that makes it work:</b> only trade when <b>credit ≥ 40% of the strike width</b> "
-   "AND short premium ≥ Rs50, AND it passes a <b>live liquidity check</b> (OI, bid-ask). A breakout spikes "
-   "IV → rich premium; the gate sells that inflated premium and rides the reversion + IV crush.")}
-{p("<b>Construct:</b> short 1-OTM, long 3 strikes wide, nearest monthly ≥10 DTE, hold to expiry, 2× stop. "
-   "<b>Caps:</b> ≤5 new/day, ≤20 open at once (breakouts cluster — avoid a one-day pile-on).")}
-{p(f"<b style='color:{GREEN}'>Backtest:</b> full universe, ~19mo, real premiums, credit/width≥0.40 + "
-   f"prem≥Rs50 → <b>307 trades (~16/mo), 65% win, +16% (5% slip) / +25% (3%)</b>, holdout p5 +6.8%, "
-   f"76/100 stocks net-positive, survives a 7%/leg slippage floor. A <i>generic</i> stock spread LOSES "
-   f"−4.7% — the credit/width gate IS the edge.")}
-{dim("HONEST: the ~+20%/month-on-margin backtest is OPTIMISTIC and WILL shrink live — the unmodelled risk "
-     "is real mid-cap 4-leg fills + gap risk on ~16 concurrent shorts. Runs as a FORWARD-TEST at 1 lot "
-     "(`STOCK_CREDIT_*`). DO NOT fill your margin. Full record: studies/STOCK_OPTIONS_NO_EDGE.md Part 8.")}
-
-{h("STEP 4 — How it runs (engine vs viewer), and why split")}
-{p("The <b>engine</b> (headless, launchd <b>…institutionaltrader.engine</b>, always on) does ALL the work — "
-   "scan every 5 min, fire signals, resolve trades, 15:30 force-book — and saves everything to the local DB "
-   "<b>daily</b> (engine.db = every scan + market snapshot; signals.db; trade_log.json). It wakes every 5 s "
-   "in market hours; idles when closed.")}
-{p("This <b>app is a read-only VIEWER</b> — it never scans / fires / resolves / writes; it only reads the "
-   "engine's files and displays them (header: <b>READ-ONLY VIEWER — engine scan Nm ago</b>). <b>Why split:</b> "
-   "a viewer crash can't stop trading, and execution timing is independent of the display.")}
-
-{h("HONEST RESULTS & GO-LIVE BAR")}
-{p(f"<b>Why the bar is high:</b> risking {int(C.PREMIUM_STOP_PCT)}% to make {int(C.PREMIUM_TARGET_PCT)}% means "
-   f"breakeven needs ~<b>{C.PAPER_TRADING_BREAKEVEN_WIN_RATE:.0%}</b> wins. Capital-weighted winners keep it "
-   f"net-positive gross, but costs + spread pull it back to ~breakeven. <b>Go-live bar:</b> win ≥ "
-   f"<b>{C.PAPER_TRADING_MIN_WIN_RATE:.0%}</b> AND profit factor &gt; {C.PAPER_TRADING_MIN_PF} across "
-   f"{C.PAPER_TRADING_MIN_SIGNALS}+ forward signals. Below that — don't automate.")}
-
-{h("RISK CONTROLS")}
-{p(f"No per-day trade cap (take every qualifying signal) · halt after <b>{C.CONSECUTIVE_LOSS_HALT}</b> "
-   f"stop-outs in a row · force-close by {C.KILL_SWITCH_TIME} · never hold overnight · size from the stop distance.")}
-
-{h("REFERENCE — timings & data")}
-{p(f"<b>Daily clock (IST):</b> 08:55 Mac wakes · {C.MARKET_OPEN} open (scan begins) · {C.TRADING_START} "
-   f"trading window · scan every 5 min · {C.NO_NEW_TRADES_AFTER} no new trades · {C.MARKET_CLOSE} force-book "
-   f"open trades. Signals are selective — ~1–2/day (365-day study: ~1.7/day), many days none; the edge is "
-   f"strongest 10:30–11:00.")}
-{p("<b>Freshness:</b> market bar ~3–5 s · TREND/FLOW/EVENT recompute every 5 min (options flow ≤10 min, "
-   "events ≤1 hour old) · a full ~102-instrument scan takes ~3–4 s (16 threads, batched LTP, cached daily history).")}
-{p("<b>Data:</b> Upstox V3 (live LTP, 5-min candles, ~400-day daily history) on a read-only Analytics token; "
-   "Yahoo is an emergency fallback only.")}
+{h("8 — HEALTH CHECKS &amp; DATA")}
+{p("<b>Engine alive?</b> the viewer header shows the last scan age; if it stops advancing during market "
+   "hours, the engine isn't scanning. <b>Data:</b> Upstox V3 on a read-only Analytics token (live LTP, "
+   "5-min &amp; daily candles, index/option chains); real expired-option history ~Oct 2024–Jun 2026 for "
+   "backtests. All data saved locally, daily. Yahoo is an emergency fallback only.")}
 
 <p style="color:{TEXT_DIM};margin-top:16px;font-size:10px;">
 Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHTS['TREND']['weight']} / FLOW {C.FAMILY_WEIGHTS['FLOW']['weight']} / EVENT {C.FAMILY_WEIGHTS['EVENT']['weight']} &nbsp;·&nbsp; For educational use only. Not financial advice.
