@@ -1278,13 +1278,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             num_lots = int(p.get("num_lots", 1) or 1)
             lot_str = f"{lot}" + (f"×{num_lots}" if num_lots > 1 else "")
             rS, rB = 2 * i, 2 * i + 1
+            # ACTION carries the option TYPE (CE/PE) so it's never truncated by a long stock name.
             # Row 1 — SELL the near leg (collect premium)
             self._set_row(table, rS,
-                          ["SELL", f"{name} {p.get('short_strike','—')} {verb}", lot_str, sp_s, exp,
+                          [f"SELL {verb}", f"{name} {p.get('short_strike','—')}", lot_str, sp_s, exp,
                            f"credit Rs {credit*qty:,.0f}", status], fg=QColor(RED))
             # Row 2 — BUY the far leg (the hedge) — AMOUNT here = total MARGIN required (= max loss)
             self._set_row(table, rB,
-                          ["BUY", f"{name} {p.get('long_strike','—')} {verb}  (hedge)", lot_str, lp_s, exp,
+                          [f"BUY {verb}", f"{name} {p.get('long_strike','—')}  (hedge)", lot_str, lp_s, exp,
                            f"margin Rs {cap:,.0f}", pnl], fg=QColor(GREEN))
             self._color_cell(table, rS, 6, self._status_color(status))     # STATUS on the SELL row
             if pnl != "—":
@@ -1392,14 +1393,15 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             def money(x): return f"Rs {x:+,.0f}" if x is not None else "—"
             def price(x): return f"Rs {x:.1f}" if x is not None else "—"
             rS, rB = 2 * i, 2 * i + 1
+            # LEG carries the option TYPE (CE/PE) so it's never truncated by a long stock name.
             # Row 1 — SELL leg (the short you sold)
             self._set_row(table, rS,
-                          [p.get("entry_date", "—"), "① SELL", f"{name} {p.get('short_strike','—')} {verb}",
+                          [p.get("entry_date", "—"), f"① SELL {verb}", f"{name} {p.get('short_strike','—')}",
                            lot_str, price(sp), price(sc), money(sell_pnl), status], fg=QColor(RED))
             # Row 2 — BUY leg (the hedge) + the consolidated NET for the whole spread
             net_txt = f"NET {money(net_rs)}" + (f" ({net_pct:+.0f}%)" if net_pct is not None else "")
             self._set_row(table, rB,
-                          ["", "② BUY", f"{name} {p.get('long_strike','—')} {verb}",
+                          ["", f"② BUY {verb}", f"{name} {p.get('long_strike','—')}",
                            lot_str, price(lp), price(lc), money(buy_pnl), net_txt], fg=QColor(GREEN))
             # colors: status on SELL row, per-leg P&L + NET tinted by sign
             self._color_cell(table, rS, 7, self._status_color(status))
