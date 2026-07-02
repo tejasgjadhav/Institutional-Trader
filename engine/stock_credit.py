@@ -216,7 +216,8 @@ def scan_signals() -> list:
                 "order_label": (f"SELL {sym} {int(short['strike'])} {verb} / BUY {int(long['strike'])} {verb}"
                                 f"  {expiry}  ({'bear-call' if side=='BEAR_CALL' else 'bull-put'}, credit Rs{credit}"
                                 f"{f' x{num_lots}' if num_lots != 1 else ''})"),
-                "current_cost": credit, "pnl_pts": 0.0, "status": "OPEN",
+                "current_cost": credit, "short_cur": round(sm, 2), "long_cur": round(lm, 2),
+                "pnl_pts": 0.0, "status": "OPEN",
                 "closed_date": None, "exit_cost": None,
             }
             book.append(pos); new.append(pos)
@@ -239,29 +240,36 @@ def resolve_positions() -> int:
     closed = 0
     changed = False
     for p in book:
-        if p.get("status") != "OPEN":
-            continue
         try:
             exp = date.fromisoformat(p["expiry"])
-            if today >= exp:
+            expired = today >= exp
+            # MTM current leg values for every non-expired position (open or closed) so the UI's
+            # 'current' keeps running even after a WIN/LOSS is booked; realized P&L preserved below.
+            if not expired:
+                sm, *_ = _quote(p["short_key"]); lm, *_ = _quote(p["long_key"])
+                if sm is not None and lm is not None:
+                    p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
+                    p["current_cost"] = round(sm - lm, 2); changed = True
+            if p.get("status") != "OPEN":
+                continue
+            if expired:
                 spot = _spot(p["symbol"]) or p.get("entry_spot") or 0
                 if p["side"] == "BEAR_CALL":
-                    intrinsic = max(0.0, spot - p["short_strike"])
+                    si = max(0.0, spot - p["short_strike"]); li = max(0.0, spot - p["long_strike"])
                 else:
-                    intrinsic = max(0.0, p["short_strike"] - spot)
-                cost = min(intrinsic, p["width_pts"])
+                    si = max(0.0, p["short_strike"] - spot); li = max(0.0, p["long_strike"] - spot)
+                cost = min(max(si - li, 0.0), p["width_pts"])
+                p["short_cur"] = round(si, 2); p["long_cur"] = round(li, 2)
                 p["exit_cost"] = round(cost, 2); p["current_cost"] = round(cost, 2)
                 p["pnl_pts"] = round(p["credit"] - cost, 2)
                 p["status"] = "WIN" if p["pnl_pts"] > 0 else "LOSS"
                 p["closed_date"] = today.isoformat()
                 closed += 1; changed = True
                 continue
-            sm, *_ = _quote(p["short_key"]); lm, *_ = _quote(p["long_key"])
-            if sm is None or lm is None:
+            cost = p.get("current_cost")
+            if cost is None:
                 continue
-            cost = sm - lm
-            p["current_cost"] = round(cost, 2); p["pnl_pts"] = round(p["credit"] - cost, 2)
-            changed = True
+            p["pnl_pts"] = round(p["credit"] - cost, 2)
             if cost >= p["stop_cost"]:
                 p["exit_cost"] = round(min(cost, p["width_pts"]), 2)
                 p["pnl_pts"] = round(p["credit"] - p["exit_cost"], 2)
@@ -290,6 +298,7 @@ def rows_for_ui(max_closed: int = 30) -> list:
             "order_label": p.get("order_label", ""),
             "short_strike": p.get("short_strike"), "long_strike": p.get("long_strike"),
             "short_prem": p.get("short_prem"), "long_prem": p.get("long_prem"),
+            "short_cur": p.get("short_cur"), "long_cur": p.get("long_cur"),
             "expiry": p.get("expiry"), "credit": p.get("credit"), "credit_width": p.get("credit_width"),
             "stop_cost": p.get("stop_cost"),
             "current_cost": p.get("current_cost"), "exit_cost": p.get("exit_cost"),

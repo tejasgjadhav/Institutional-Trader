@@ -377,8 +377,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(leg)
         return w
 
-    SWING_TAB_COLS = ["ENTERED", "NAME", "LOT", "SELL  (strike/prem)", "BUY  (strike/prem)", "EXPIRY",
-                      "CREDIT (total)", "MARGIN", "NOW/EXIT", "P&L", "STATUS"]
+    # Trade log: each spread = TWO leg rows (one below the other), per-leg P&L, then the NET.
+    SWING_TAB_COLS = ["ENTERED", "LEG", "INSTRUMENT", "LOT", "ENTRY", "NOW/EXIT", "LEG P&L", "NET / STATUS"]
 
     def _screen_swing(self) -> QWidget:
         """SWING TRADES — the credit-spread TRADE LOG, split into the two strategies. Each row shows
@@ -1244,8 +1244,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         """Render a PM credit-spread section as TWO ROWS per trade so it's unmistakable what to do:
         a SELL row (the leg you SELL — premium received, net credit) and a BUY row (the hedge you
         BUY — premium paid, max loss + live/booked P&L). Cols: ACTION·INSTRUMENT·PREMIUM·EXPIRY·AMOUNT·P&L/STATUS."""
-        hint = ("no swing signal yet — fires on a daily index breakout (fade)" if kind == "index"
-                else "no signal yet — fires on a stock breakout w/ rich credit (≥0.40)")
+        # PM DECISIONS shows only TODAY's signals (what to place now). Older/ongoing positions
+        # live in the SWING TRADES trade log.
+        today = datetime.now(IST).date().isoformat()
+        rows = [p for p in rows if p.get("entry_date") == today]
+        hint = ("no swing signal today — fires on a daily index breakout (fade), scan ~15:10"
+                if kind == "index"
+                else "no signal today — fires on a stock breakout w/ rich credit (≥0.40), scan ~15:10")
         if not rows:
             table.setRowCount(1)
             self._set_row(table, 0, ["—", hint, "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
@@ -1263,8 +1268,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             credit = p.get("credit") or 0
             cap = p.get("capital") or 0
             pnl_pts = p.get("pnl_pts", 0.0) or 0.0
-            now = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
-            if status == "OPEN" and now is None:
+            now = p.get("current_cost")   # LIVE cost-to-close — keeps running even after WIN/LOSS
+            if now is None:
                 pnl = "—"
             else:
                 rs = pnl_pts * qty; pct = (rs / cap * 100) if cap else None
@@ -1360,43 +1365,49 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         # open positions first, then newest closed
         book = sorted(book, key=lambda p: (p.get("status") != "OPEN", p.get("entry_date") or ""), reverse=False)
         book = sorted(book, key=lambda p: (p.get("status") == "OPEN", p.get("entry_date") or ""), reverse=True)
-        rows = book[:60]
+        rows = book[:40]
         if not rows:
             if stats_label is not None:
                 stats_label.setText("  no trades yet — stats will populate after the first signal")
             table.setRowCount(1)
-            self._set_row(table, 0, ["—", "no trades yet — fires on a breakout with rich credit",
-                                     "—", "—", "—", "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
+            self._set_row(table, 0, ["—", "—", "no trades yet — fires on a breakout with rich credit",
+                                     "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
             self._fit_table(table); return
-        table.setRowCount(len(rows))
-        for r, p in enumerate(rows):
+        table.setRowCount(len(rows) * 2)          # two leg rows per trade
+        for i, p in enumerate(rows):
             status = p.get("status", "OPEN")
             name = p.get("symbol") or p.get("index") or "—"
             verb = "CE" if p.get("side") == "BEAR_CALL" else "PE"
-            sp, lp = p.get("short_prem"), p.get("long_prem")
-            sell = f"{p.get('short_strike','—')}{verb} @{sp:.1f}" if sp is not None else f"{p.get('short_strike','—')}{verb}"
-            buy = f"{p.get('long_strike','—')}{verb} @{lp:.1f}" if lp is not None else f"{p.get('long_strike','—')}{verb}"
             lot = p.get("lot", 0) or 0; num_lots = int(p.get("num_lots", 1) or 1)
             lot_str = f"{lot}" + (f"×{num_lots}" if num_lots > 1 else "")
             qty = p.get("qty") or (lot * num_lots)
-            credit = p.get("credit") or 0
-            credit_cell = f"Rs {credit:.1f} (Rs {credit*qty:,.0f})"
-            cap = p.get("capital") or 0
-            margin_cell = f"Rs {cap:,.0f}" if cap else "—"   # total margin required (= max loss)
-            nowx = p.get("exit_cost") if status != "OPEN" else p.get("current_cost")
-            pnl_pts = p.get("pnl_pts", 0.0) or 0.0
-            if status == "OPEN" and nowx is None:
-                pnl = "—"
-            else:
-                rs = pnl_pts * qty; pct = (rs / cap * 100) if cap else None
-                pnl = f"Rs {rs:+,.0f}" + (f" ({pct:+.0f}%)" if pct is not None else "")
-            fg = QColor(GREEN) if p.get("side") == "BULL_PUT" else QColor(RED)
-            vals = [p.get("entry_date", "—"), name, lot_str, sell, buy, p.get("expiry", "—"),
-                    credit_cell, margin_cell, f"Rs {nowx:.1f}" if nowx is not None else "—", pnl, status]
-            self._set_row(table, r, vals, fg=fg)
-            self._color_cell(table, r, 10, self._status_color(status))
-            if pnl != "—":
-                self._color_cell(table, r, 9, QColor(GREEN) if pnl_pts > 0 else QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))
+            sp, lp = p.get("short_prem"), p.get("long_prem")            # entry premiums
+            sc, lc = p.get("short_cur"), p.get("long_cur")              # current/exit leg values
+            # per-leg P&L (rupees): SELL leg profits when it FALLS; BUY leg tracks its own move
+            sell_pnl = (sp - sc) * qty if (sp is not None and sc is not None) else None
+            buy_pnl = (lc - lp) * qty if (lp is not None and lc is not None) else None
+            net_pts = p.get("pnl_pts", 0.0) or 0.0; cap = p.get("capital") or 0
+            net_rs = net_pts * qty
+            net_pct = (net_rs / cap * 100) if cap else None
+            def money(x): return f"Rs {x:+,.0f}" if x is not None else "—"
+            def price(x): return f"Rs {x:.1f}" if x is not None else "—"
+            rS, rB = 2 * i, 2 * i + 1
+            # Row 1 — SELL leg (the short you sold)
+            self._set_row(table, rS,
+                          [p.get("entry_date", "—"), "① SELL", f"{name} {p.get('short_strike','—')} {verb}",
+                           lot_str, price(sp), price(sc), money(sell_pnl), status], fg=QColor(RED))
+            # Row 2 — BUY leg (the hedge) + the consolidated NET for the whole spread
+            net_txt = f"NET {money(net_rs)}" + (f" ({net_pct:+.0f}%)" if net_pct is not None else "")
+            self._set_row(table, rB,
+                          ["", "② BUY", f"{name} {p.get('long_strike','—')} {verb}",
+                           lot_str, price(lp), price(lc), money(buy_pnl), net_txt], fg=QColor(GREEN))
+            # colors: status on SELL row, per-leg P&L + NET tinted by sign
+            self._color_cell(table, rS, 7, self._status_color(status))
+            if sell_pnl is not None:
+                self._color_cell(table, rS, 6, QColor(GREEN) if sell_pnl > 0 else QColor(RED) if sell_pnl < 0 else QColor(TEXT_DIM))
+            if buy_pnl is not None:
+                self._color_cell(table, rB, 6, QColor(GREEN) if buy_pnl > 0 else QColor(RED) if buy_pnl < 0 else QColor(TEXT_DIM))
+            self._color_cell(table, rB, 7, QColor(GREEN) if net_rs > 0 else QColor(RED) if net_rs < 0 else QColor(TEXT_DIM))
         self._fit_table(table)
 
     def _norm_trade(self, t: dict) -> dict:
