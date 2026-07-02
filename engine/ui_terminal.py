@@ -477,10 +477,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         month on AVG CAPITAL DEPLOYED · Trades · window. All on REAL option premiums, out-of-sample."""
         rows = [
             # (#, strategy, type, win/loss, avg P&L/trade (expectancy), return/mo on avg capital, trades·window, color)
-            ("1", "Stock options · 3-Family", "buy", "55 / 45", "−1.3% (~breakeven)", "~breakeven", "232 · 1 yr", GREEN),
-            ("2", "Stock credit spreads · fade", "sell", "65 / 35", "+15% · ~Rs1,400", "+14 to +22%", "307 · 19 mo", GREEN),
+            ("1", "Stock options · 3-Family", "buy", "55 / 45", "−1.3%", "~breakeven", "232 · 1 yr", GREEN),
+            ("2", "Stock credit spreads · fade", "sell", "65 / 35", "+15%", "+14 to +22%", "307 · 19 mo", GREEN),
             ("3", "Swing · NIFTY/FINNIFTY · fade", "sell", "67 / 33", "+12 to +20%", "+10 to +15%", "92 · 20 mo", CYAN),
-            ("4", "ORB+VWAP index", "buy", "63 / 37", "~breakeven", "~breakeven", "38 · 60 d", PURPLE),
+            ("4", "ORB+VWAP index", "buy", "63 / 37", "~0%", "~breakeven", "38 · 60 d", PURPLE),
         ]
         trs = "".join(
             f"<tr><td>{n}</td><td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td>"
@@ -488,7 +488,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             for n, s, ty, wl, exp, rm, tw, c in rows)
         return (f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
                 f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>B/S</td>"
-                f"<td>Win / Loss%</td><td>Avg P&amp;L / trade</td><td>Return / mo*</td><td>Trades · window</td></tr>"
+                f"<td>Win / Loss%</td><td>Avg P&amp;L / trade %</td><td>Return / mo*</td><td>Trades · window</td></tr>"
                 f"{trs}</table>"
                 f"<p style='color:{CYAN};font-size:13px;margin:8px 0 2px 0;'>"
                 f"<b>Avg P&amp;L / trade&nbsp; =&nbsp; (win% × avg-win) &nbsp;−&nbsp; (loss% × avg-loss)</b>"
