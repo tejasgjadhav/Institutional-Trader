@@ -490,8 +490,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                 f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>B/S</td>"
                 f"<td>Win / Loss%</td><td>Avg P&amp;L / trade</td><td>Return / mo*</td><td>Trades · window</td></tr>"
                 f"{trs}</table>"
-                f"<p style='color:{TEXT_DIM};font-size:11px;'><b>Avg P&amp;L/trade</b> = win% × avg-win − loss% × "
-                f"avg-loss (expectancy, on capital-at-risk). <b>Return/mo*</b> = on the AVERAGE CAPITAL DEPLOYED "
+                f"<p style='color:{CYAN};font-size:13px;margin:8px 0 2px 0;'>"
+                f"<b>Avg P&amp;L / trade&nbsp; =&nbsp; (win% × avg-win) &nbsp;−&nbsp; (loss% × avg-loss)</b>"
+                f"&nbsp;&nbsp;<span style='color:{TEXT_DIM};'>← the win/loss-weighted expectancy per trade "
+                f"(on capital-at-risk)</span></p>"
+                f"<p style='color:{TEXT_DIM};font-size:11px;'><b>Return/mo*</b> = on the AVERAGE CAPITAL DEPLOYED "
                 f"(not your whole account) — for the SELL strategies this is optimistic backtest that will shrink "
                 f"on live mid-cap fills. All figures on REAL option premiums, out-of-sample (~Oct 2024–Jun 2026); "
                 f"all four run as paper FORWARD-TESTS. SELL (#2,#3) = the validated edges; BUY (#1,#4) = ~breakeven.</p>")
