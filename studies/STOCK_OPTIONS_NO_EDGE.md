@@ -214,6 +214,35 @@ OPTIMISTIC — the unmodelled risk is real mid-cap 4-leg fills + gap risk on ~16
 liquidity gate (OI, bid-ask) and per-day/total-open caps; KEEP LOTS AT 1. Repro:
 `/tmp/stock_fade_all_collect.py` → `/tmp/stock_fade_all_analyze.py`.
 
+## Part 9 — Out-of-time regime test (pre-Oct-2024) — a PROXY, not real premiums
+Real option premiums do not exist before Oct 2024 (Upstox floor), so this is **NOT a real-premium
+backtest** — it is a win-rate **PROXY** on the UNDERLYING daily prices (2019→Oct-2024): for each
+Donchian-10 breakout, does price stay OTM of a 1-OTM short strike ~12 trading days later (a win) or
+run through it (a loss)? Assumed strikes + fixed hold, no credit/IV/costs. But it is **CALIBRATED** —
+run on the real-data window it reproduces the measured win rates (NIFTY proxy 65% vs real 67%), so it
+is directionally trustworthy.
+
+**Fade win-rate by year (proxy, %):**
+
+| Year | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | 2025 | 2026 |
+|------|------|------|------|------|------|------|------|------|
+| **NIFTY index fade** | 56 | 43 | 55 | 45 | **35** | 53 | **69** | 67 |
+| **Stock fade (25 names)** | 72 | 57 | 74 | 70 | 72 | 74 | 75 | 68 |
+
+**The finding — it flips the risk picture:**
+- **STOCK fade = regime-ROBUST.** 68–75% every year for 7+ years (even COVID-2020 held 57%). Bull,
+  bear, or choppy — it holds. A genuine, durable cross-sectional anomaly; the Oct'24–Jun'26 real-data
+  result (65% win, +15%/trade) is representative, not lucky. **This is the trustworthy edge.**
+- **INDEX fade = regime-DEPENDENT.** It only "works" in 2025–26 — the *exact* window the real-option
+  data covers. Most other years it was ≤56% (35% in 2023): fading an index breakout only pays in a
+  range-bound market; in trending years index breakouts *continue* and the fade loses. **The
+  Oct'24–Jun'26 index result was flattered by the data window landing on a favorable regime.**
+
+**Implication:** trust the stock credit spread; **downgrade the index swing to regime-dependent /
+unproven-out-of-time** (do not treat it as validated). **Caveat:** this is a calibrated PROXY (assumed
+strikes/hold, no real premiums or costs) — a strong risk flag, not proof; real pre-2024 premiums (a
+paid vendor) or a live trending-regime forward-test would settle it.
+
 ## The unifying conclusion — one structural cause, one exception
 The **buying** strategies (Parts 1–3) and the **follow / 4-illiquid-leg** selling strategies
 (Parts 4–5) all lose for the same reason: as a **retail taker you cross the bid-ask on every leg**

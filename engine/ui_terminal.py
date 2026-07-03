@@ -557,7 +557,28 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "the rich premium and ride the reversion + IV crush. (A <i>generic</i> stock spread loses -4.7% — "
    "the credit/width gate IS the edge.) Backtest is OPTIMISTIC (~20%/mo on margin won't fully survive "
    "live mid-cap fills) -&gt; runs as a FORWARD-TEST at 1 lot.")}
-{dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-8) · engine/swing_credit.py · engine/stock_credit.py")}
+{dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-9) · engine/swing_credit.py · engine/stock_credit.py")}
+
+{h("★★ OUT-OF-TIME REGIME TEST (pre-Oct-2024) — a PROXY, not real premiums")}
+{sub("Question: is the fade edge durable, or was Oct'24–Jun'26 a lucky regime?")}
+{p("Real option premiums don't exist before Oct 2024, so this is NOT a real-premium backtest — it is a "
+   "win-rate PROXY on the UNDERLYING (2019→Oct-2024): after a Donchian-10 breakout, does price stay OTM "
+   "of a 1-OTM short strike ~12 trading days later (win) or run through it (loss)? Assumed strikes + "
+   "fixed hold, no credit/costs — but CALIBRATED (on the real window it reproduces the measured win "
+   "rates: NIFTY proxy 65% vs real 67%), so it's directionally trustworthy.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Fade win% by year</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024</td><td>2025</td><td>2026</td></tr>
+<tr><td style="color:{PURPLE};">NIFTY index fade</td><td>56</td><td>43</td><td>55</td><td>45</td><td style="color:{RED};">35</td><td>53</td><td style="color:{GREEN};">69</td><td>67</td></tr>
+<tr><td style="color:{GREEN};">Stock fade (25 names)</td><td>72</td><td>57</td><td>74</td><td>70</td><td>72</td><td>74</td><td>75</td><td>68</td></tr>
+</table>
+{res("Finding — it FLIPS the risk picture: STOCK fade is regime-ROBUST (68–75% every year for 7+ yrs, "
+     "even COVID-2020 at 57%) — a durable edge, the Oct'24–Jun'26 result is representative. INDEX fade "
+     "is regime-DEPENDENT — it only works in 2025–26 (the exact real-data window); most years ≤56% (35% "
+     "in 2023), because fading an index breakout only pays in a range-bound market. The index backtest "
+     "was flattered by the data window.")}
+{dim("Implication: trust the STOCK credit spread; DOWNGRADE the index swing to regime-dependent / "
+     "unproven-out-of-time. CAVEAT: a calibrated PROXY (no real pre-2024 premiums) — a strong risk flag, "
+     "not proof. File: studies/STOCK_OPTIONS_NO_EDGE.md (Part 9).")}
 
 {h("★ REAL-OPTION OPTIMIZATION + 1-YEAR REALITY CHECK (2026-06)")}
 {sub("Question: what is the edge on REAL option P&amp;L, not the underlying proxy?")}
