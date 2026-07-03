@@ -22,6 +22,7 @@ from engine.config import (
     STOCK_CREDIT_SHORT_OFFSET, STOCK_CREDIT_WIDTH, STOCK_CREDIT_MIN_CW, STOCK_CREDIT_MIN_PREM,
     STOCK_CREDIT_STOP_MULT, STOCK_CREDIT_REENTRY_GAP_DAYS, STOCK_CREDIT_MAX_SPREAD_PCT,
     STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MAX_NEW_PER_DAY, STOCK_CREDIT_MAX_OPEN, STOCK_CREDIT_LOTS,
+    STOCK_CREDIT_TAKE_PROFIT,
 )
 from engine.data_fetcher import fetch_upstox_historical, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
 from engine.instruments import to_instrument_key
@@ -270,7 +271,15 @@ def resolve_positions() -> int:
             if cost is None:
                 continue
             p["pnl_pts"] = round(p["credit"] - cost, 2)
-            if cost >= p["stop_cost"]:
+            tp = STOCK_CREDIT_TAKE_PROFIT
+            if tp and tp > 0 and cost <= p["credit"] * (1 - tp):
+                # captured >= tp of max profit -> BOOK the win early (de-risk the mid-cap tail)
+                p["exit_cost"] = round(cost, 2)
+                p["pnl_pts"] = round(p["credit"] - cost, 2)
+                p["status"] = "WIN"; p["closed_date"] = today.isoformat()
+                closed += 1
+                logger.info(f"stock_credit: {p['symbol']} {p['side']} TOOK PROFIT {tp:.0%} pnl {p['pnl_pts']:+.1f}")
+            elif cost >= p["stop_cost"]:
                 p["exit_cost"] = round(min(cost, p["width_pts"]), 2)
                 p["pnl_pts"] = round(p["credit"] - p["exit_cost"], 2)
                 p["status"] = "LOSS"; p["closed_date"] = today.isoformat()

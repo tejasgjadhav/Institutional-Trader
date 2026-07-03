@@ -185,6 +185,10 @@ SWING_MIN_DTE          = 10       # MID tenor: nearest expiry >= 10 days out (th
 SWING_SHORT_OFFSET     = 1        # short strike 1 step OTM from ATM
 SWING_WIDTH            = 3        # long strike 3 steps further OTM (defined risk)
 SWING_STOP_MULT        = 2.0     # stop if cost-to-close >= 2x the credit collected
+SWING_TAKE_PROFIT      = 0.0     # 0 = HOLD TO EXPIRY (the validated backtest). Set 0.50–0.75 to
+                                 # auto-BOOK a win once you've captured that fraction of max profit
+                                 # (closes when cost-to-close <= credit×(1−TAKE_PROFIT)). De-risks
+                                 # winners (locks gains, dodges expiry gamma) for a little less edge.
 SWING_REENTRY_GAP_DAYS = 3        # min days between entries on the same index
 SWING_SCAN_AFTER       = "15:10"  # scan once/day after this (a daily breakout needs ~the close)
 SWING_RESOLVE_INTERVAL = 900      # mark-to-market open positions every 15 min (overnight carry)
@@ -213,6 +217,8 @@ STOCK_CREDIT_WIDTH        = 3       # long 3 strikes further OTM (defined risk)
 STOCK_CREDIT_MIN_CW       = 0.40    # THE EDGE: only trade when credit >= 40% of the strike width
 STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/untradeable options)
 STOCK_CREDIT_STOP_MULT    = 2.0     # stop if cost-to-close >= 2x credit
+STOCK_CREDIT_TAKE_PROFIT  = 0.0     # 0 = HOLD TO EXPIRY (validated). Set 0.50–0.75 to auto-BOOK a win
+                                    # at that fraction of max profit (recommended for the mid-cap tail).
 STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
 STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)
 STOCK_CREDIT_MIN_OI       = 100     # live liquidity gate: short-leg OI >= 100

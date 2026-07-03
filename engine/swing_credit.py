@@ -28,6 +28,7 @@ from datetime import datetime, date, timedelta
 from engine.config import (
     IST, DATA_DIR, SWING_CREDIT_ENABLED, SWING_INDICES, SWING_DONCHIAN, SWING_MIN_DTE,
     SWING_SHORT_OFFSET, SWING_WIDTH, SWING_STOP_MULT, SWING_REENTRY_GAP_DAYS, SWING_LOTS,
+    SWING_TAKE_PROFIT,
 )
 from engine.data_fetcher import fetch_upstox_historical, fetch_upstox_quote, fetch_upstox_ltp
 from engine.instruments import to_instrument_key
@@ -265,7 +266,15 @@ def resolve_swing_positions() -> int:
             if cost is None:
                 continue                        # no quote this cycle — try again next
             p["pnl_pts"] = round(p["credit"] - cost, 2)
-            if cost >= p["stop_cost"]:
+            tp = SWING_TAKE_PROFIT
+            if tp and tp > 0 and cost <= p["credit"] * (1 - tp):
+                # captured >= tp of max profit -> BOOK the win early (de-risk)
+                p["exit_cost"] = round(cost, 2)
+                p["pnl_pts"] = round(p["credit"] - cost, 2)
+                p["status"] = "WIN"; p["closed_date"] = today.isoformat()
+                closed += 1
+                logger.info(f"swing: {p['index']} {p['side']} TOOK PROFIT {tp:.0%} pnl {p['pnl_pts']:+.1f}")
+            elif cost >= p["stop_cost"]:
                 p["exit_cost"] = round(min(cost, p["width_pts"]), 2)
                 p["pnl_pts"] = round(p["credit"] - p["exit_cost"], 2)
                 p["status"] = "LOSS"; p["closed_date"] = today.isoformat()
