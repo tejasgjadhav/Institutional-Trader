@@ -472,43 +472,51 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return w
 
     def _strategy_summary_table(self) -> str:
-        """Single source of truth for the strategy summary (shown at the top of the STUDIES tab).
-        Columns: Strategy · Win/Loss% · Avg P&L per trade (win/loss-weighted expectancy) · Return per
-        month on AVG CAPITAL DEPLOYED · Trades · window. All on REAL option premiums, out-of-sample."""
-        rows = [
-            # (#, strategy, type, win/loss, avg P&L/trade (recent-window), return/mo, trades·window, real-data verdict, color)
-            ("1", "Stock options · 3-Family", "buy", "55 / 45", "−1.3%", "−0.1%", "232 · 1 yr",
-             "~ real dir edge, not net", GREEN),
-            ("2", "Stock credit spreads · fade", "sell", "65 / 35", "+15%", "+14%", "307 · 19 mo",
-             "✓ VALIDATED on real data", GREEN),
-            ("3", "Swing · NIFTY/FINNIFTY · fade", "sell", "67 / 33", "+12%", "+12%", "92 · 20 mo",
-             "✗ regime-dep · failed OOS", CYAN),
-            ("4", "ORB+VWAP index", "buy", "63 / 37", "+0.8% gross", "~0% net", "38 · 60 d",
-             "~ thin & inconsistent", PURPLE),
+        """Canonical current-structure strategy table (top of the STUDIES tab) — mirrors
+        studies/STRATEGY_SUMMARY.md: the 4 live strategies + rejected variants, real-data verdicts."""
+        # (#, strategy, B/S, real-data result, verdict, status, color)
+        live = [
+            ("1", "Stock credit spread · fade", "SELL",
+             "+5.3% of width, 54% win, +ve 5/6 yrs (bhavcopy 2019→Sep24, 718 tr)",
+             "✓ VALIDATED", "deployed · 1 lot", GREEN),
+            ("2", "Index fade · NIFTY/FINNIFTY", "SELL",
+             "−1.4% of width, +ve only 2019 &amp; 2024; dir+flush salvage FAILED OOS",
+             "✗ regime-dep", "forward-test", CYAN),
+            ("3", "3-Family stocks", "BUY",
+             "dir +0.107%/tr, 50.6% hit, +ve EVERY yr 2019→26 (Kite 5-min); net −1.0% as options",
+             "~ dir edge, not net", "forward-test", GREEN),
+            ("4", "ORB+VWAP index", "BUY",
+             "dir +0.04%/tr, ~39% hit, −ve ~2/8 yrs (Kite 5-min); ~0% net",
+             "~ thin / inconsistent", "forward-test", PURPLE),
         ]
-        def vc(v):  # verdict color
+        rejected = [
+            ("MIDCPNIFTY fade", "~20% win, −25 to −28% of width, illiquid (options only from mid-2022)", "✗ reject"),
+            ("BANKNIFTY fade", "−6.7% (40 tr; earlier +13% was 14-trade luck)", "✗ dropped"),
+            ("Index spread — FOLLOW breakout", "~40% win, −26 to −39%", "✗ rejected → breakouts REVERT"),
+            ("Generic (ungated) stock spread", "−1.1% (real 4-leg slippage)", "✗ rejected → c/w gate IS the edge"),
+            ("Stock option-buying (min-prem)", "−1.0% full yr (looked +1.5% on 180d — overfit)", "✗ no edge (cost filter only)"),
+        ]
+        def vc(v):
             return GREEN if v.startswith("✓") else (RED if v.startswith("✗") else AMBER)
-        trs = "".join(
+        lt = "".join(
             f"<tr><td>{n}</td><td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td>"
-            f"<td>{wl}</td><td>{exp}</td><td>{rm}</td><td>{tw}</td>"
-            f"<td style='color:{vc(vd)};font-weight:bold;'>{vd}</td></tr>"
-            for n, s, ty, wl, exp, rm, tw, vd, c in rows)
+            f"<td>{rd}</td><td style='color:{vc(vd)};font-weight:bold;'>{vd}</td><td>{st}</td></tr>"
+            for n, s, ty, rd, vd, st, c in live)
+        rt = "".join(
+            f"<tr><td style='color:{TEXT_DIM};'>{nm}</td><td>{rs}</td><td style='color:{RED};'>{dc}</td></tr>"
+            for nm, rs, dc in rejected)
         return (f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
                 f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>B/S</td>"
-                f"<td>Win / Loss%</td><td>Avg P&amp;L / trade %</td><td>Return / month</td><td>Trades · window</td>"
-                f"<td>Real-data verdict</td></tr>"
-                f"{trs}</table>"
-                f"<p style='color:{CYAN};font-size:13px;margin:8px 0 2px 0;'>"
-                f"<b>Avg P&amp;L / trade&nbsp; =&nbsp; (win% × avg-win) &nbsp;−&nbsp; (loss% × avg-loss)</b>"
-                f"&nbsp;&nbsp;<span style='color:{TEXT_DIM};'>← the win/loss-weighted expectancy per trade "
-                f"(on capital-at-risk)</span></p>"
-                f"<p style='color:{TEXT_DIM};font-size:11px;'>The Avg P&amp;L / Return columns are the RECENT-WINDOW "
-                f"forward-test (~Oct 2024–Jun 2026), OPTIMISTIC and shrinking on live fills. The <b>Real-data verdict</b> "
-                f"is the out-of-sample truth after testing on NSE bhavcopy 2019→Sep 2024 + a fresh OOS window "
-                f"(see VALIDATION SCORECARD below): only the <b>stock fade</b> held across regimes (+5.3% of width, "
-                f"54% win, 5/6 yrs). The <b>index swing</b> was NET-NEGATIVE on real multi-year data (−1.4%) and a "
-                f"gate salvage FAILED out-of-sample. SELL figures are NET of costs; BUY are GROSS (≈ breakeven net). "
-                f"All four remain paper FORWARD-TESTS — none is proven on live fills.</p>")
+                f"<td>Real-data result</td><td>Verdict</td><td>Status</td></tr>{lt}</table>"
+                f"<p style='color:{AMBER};font-weight:bold;margin:10px 0 2px 0;'>Rejected / dropped variants — where the edge is NOT:</p>"
+                f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:2px 0;'>"
+                f"<tr style='color:{CYAN};font-weight:bold;'><td>Variant</td><td>Real-data</td><td>Decision</td></tr>{rt}</table>"
+                f"<p style='color:{TEXT_DIM};font-size:11px;'>SELL (fade) figures are NET of costs on real bhavcopy "
+                f"premiums 2019→Sep24; BUY figures are the UNDERLYING direction edge on real Kite 5-min 2019→date "
+                f"(intraday option premiums don't exist historically — options leverage the lean but costs eat it net). "
+                f"<b>Only the gated STOCK fade is VALIDATED;</b> all four remain paper FORWARD-TESTS — none proven on "
+                f"live fills (stock fade: ~+9%/trade on margin, high-variance, 2023 was −4.5%, lots stay at 1). "
+                f"Full detail: studies/STRATEGY_SUMMARY.md.</p>")
 
     def _studies_html(self) -> str:
         def h(t):
@@ -531,18 +539,14 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("THE FOUR LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
 
-{h("★★★ VALIDATION SCORECARD — what actually survived real out-of-sample data")}
-{sub("The honest bottom line after testing every strategy on REAL premiums across regimes:")}
-{p("<b>Only the STOCK fade credit spread validated on real data.</b> It stayed net-positive across "
-   "a topping regime (2024), COVID (2020, +0.4%) and a bull run — <b>+5.3% of width, 54% win, positive "
-   "in 5 of 6 years</b> on NSE bhavcopy 2019→Sep 2024. Every other strategy either failed OOS or is a "
-   "thin/breakeven survivor.")}
+{h("★★★ RECENT WINDOW vs REAL — why the optimistic numbers dropped")}
+{sub("The verdicts above are the real out-of-sample truth; the recent forward-test window flattered every strategy:")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Recent window</td><td>Real multi-year / OOS</td><td>Verdict</td></tr>
-<tr><td style="color:{GREEN};">Stock fade credit spread</td><td>+16–25% (Oct24→date)</td><td>+5.3% width, 5/6 yrs (bhavcopy)</td><td style="color:{GREEN};font-weight:bold;">✓ VALIDATED (real)</td></tr>
-<tr><td style="color:{PURPLE};">Index fade credit spread</td><td>+12% (Oct24→date)</td><td>−1.4%, sign FLIPPED OOS</td><td style="color:{RED};font-weight:bold;">✗ regime artifact</td></tr>
-<tr><td>3-Family stocks (intraday)</td><td>+1.5% on 180d</td><td>dir +0.107%/tr, +ve ALL 8 yrs · net −1.0%</td><td style="color:{AMBER};font-weight:bold;">~ real dir edge, not net</td></tr>
-<tr><td>ORB+VWAP index (intraday)</td><td>+0.9% / 18 mo (train+test)</td><td>dir +0.04%/tr, −ve ~2/8 yrs</td><td style="color:{AMBER};font-weight:bold;">~ thin &amp; inconsistent</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Recent window (optimistic)</td><td>Real multi-year / OOS</td></tr>
+<tr><td style="color:{GREEN};">Stock fade credit spread</td><td>+16–25% (Oct24→date)</td><td>+5.3% width, 5/6 yrs (bhavcopy) — <b>held</b></td></tr>
+<tr><td style="color:{PURPLE};">Index fade credit spread</td><td>+12% (Oct24→date)</td><td>−1.4%, sign FLIPPED OOS — <b>failed</b></td></tr>
+<tr><td>3-Family stocks (intraday)</td><td>+1.5% on 180d</td><td>dir +0.107%/tr, +ve ALL 8 yrs · net −1.0%</td></tr>
+<tr><td>ORB+VWAP index (intraday)</td><td>+0.9% / 18 mo (train+test)</td><td>dir +0.04%/tr, −ve ~2/8 yrs</td></tr>
 </table>
 {dim("BUY strategies now tested on REAL Kite 5-min back to 2019 (studies/BUY_STRATEGIES_2019_REALTEST.md) — "
      "the intraday data Upstox couldn't reach. Only the UNDERLYING direction is measurable (intraday option "
