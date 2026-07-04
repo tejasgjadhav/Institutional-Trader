@@ -476,29 +476,39 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         Columns: Strategy · Win/Loss% · Avg P&L per trade (win/loss-weighted expectancy) · Return per
         month on AVG CAPITAL DEPLOYED · Trades · window. All on REAL option premiums, out-of-sample."""
         rows = [
-            # (#, strategy, type, win/loss, avg P&L/trade (expectancy), return/mo on avg capital, trades·window, color)
-            ("1", "Stock options · 3-Family", "buy", "55 / 45", "−1.3%", "−0.1%", "232 · 1 yr", GREEN),
-            ("2", "Stock credit spreads · fade", "sell", "65 / 35", "+15%", "+14%", "307 · 19 mo", GREEN),
-            ("3", "Swing · NIFTY/FINNIFTY · fade", "sell", "67 / 33", "+12%", "+12%", "92 · 20 mo", CYAN),
-            ("4", "ORB+VWAP index", "buy", "63 / 37", "+0.8% gross", "~0% net", "38 · 60 d", PURPLE),
+            # (#, strategy, type, win/loss, avg P&L/trade (recent-window), return/mo, trades·window, real-data verdict, color)
+            ("1", "Stock options · 3-Family", "buy", "55 / 45", "−1.3%", "−0.1%", "232 · 1 yr",
+             "~ real dir edge, not net", GREEN),
+            ("2", "Stock credit spreads · fade", "sell", "65 / 35", "+15%", "+14%", "307 · 19 mo",
+             "✓ VALIDATED on real data", GREEN),
+            ("3", "Swing · NIFTY/FINNIFTY · fade", "sell", "67 / 33", "+12%", "+12%", "92 · 20 mo",
+             "✗ regime-dep · failed OOS", CYAN),
+            ("4", "ORB+VWAP index", "buy", "63 / 37", "+0.8% gross", "~0% net", "38 · 60 d",
+             "~ thin & inconsistent", PURPLE),
         ]
+        def vc(v):  # verdict color
+            return GREEN if v.startswith("✓") else (RED if v.startswith("✗") else AMBER)
         trs = "".join(
             f"<tr><td>{n}</td><td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td>"
-            f"<td>{wl}</td><td>{exp}</td><td>{rm}</td><td>{tw}</td></tr>"
-            for n, s, ty, wl, exp, rm, tw, c in rows)
+            f"<td>{wl}</td><td>{exp}</td><td>{rm}</td><td>{tw}</td>"
+            f"<td style='color:{vc(vd)};font-weight:bold;'>{vd}</td></tr>"
+            for n, s, ty, wl, exp, rm, tw, vd, c in rows)
         return (f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
                 f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>B/S</td>"
-                f"<td>Win / Loss%</td><td>Avg P&amp;L / trade %</td><td>Return / month</td><td>Trades · window</td></tr>"
+                f"<td>Win / Loss%</td><td>Avg P&amp;L / trade %</td><td>Return / month</td><td>Trades · window</td>"
+                f"<td>Real-data verdict</td></tr>"
                 f"{trs}</table>"
                 f"<p style='color:{CYAN};font-size:13px;margin:8px 0 2px 0;'>"
                 f"<b>Avg P&amp;L / trade&nbsp; =&nbsp; (win% × avg-win) &nbsp;−&nbsp; (loss% × avg-loss)</b>"
                 f"&nbsp;&nbsp;<span style='color:{TEXT_DIM};'>← the win/loss-weighted expectancy per trade "
                 f"(on capital-at-risk)</span></p>"
-                f"<p style='color:{TEXT_DIM};font-size:11px;'><b>Return/month</b> = on the AVERAGE CAPITAL DEPLOYED "
-                f"(not your whole account) — for the SELL strategies this is optimistic backtest that will shrink "
-                f"on live mid-cap fills. SELL (#2,#3) figures are NET of real costs; BUY (#1,#4) Avg P&amp;L/trade "
-                f"is GROSS — net of costs both buy strategies are ≈ breakeven (ORB +0.8% gross → ~0% net). "
-                f"All on REAL option premiums, out-of-sample (~Oct 2024–Jun 2026); all four are paper FORWARD-TESTS.</p>")
+                f"<p style='color:{TEXT_DIM};font-size:11px;'>The Avg P&amp;L / Return columns are the RECENT-WINDOW "
+                f"forward-test (~Oct 2024–Jun 2026), OPTIMISTIC and shrinking on live fills. The <b>Real-data verdict</b> "
+                f"is the out-of-sample truth after testing on NSE bhavcopy 2019→Sep 2024 + a fresh OOS window "
+                f"(see VALIDATION SCORECARD below): only the <b>stock fade</b> held across regimes (+5.3% of width, "
+                f"54% win, 5/6 yrs). The <b>index swing</b> was NET-NEGATIVE on real multi-year data (−1.4%) and a "
+                f"gate salvage FAILED out-of-sample. SELL figures are NET of costs; BUY are GROSS (≈ breakeven net). "
+                f"All four remain paper FORWARD-TESTS — none is proven on live fills.</p>")
 
     def _studies_html(self) -> str:
         def h(t):
@@ -521,6 +531,34 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("THE FOUR LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
 
+{h("★★★ VALIDATION SCORECARD — what actually survived real out-of-sample data")}
+{sub("The honest bottom line after testing every strategy on REAL premiums across regimes:")}
+{p("<b>Only the STOCK fade credit spread validated on real data.</b> It stayed net-positive across "
+   "a topping regime (2024), COVID (2020, +0.4%) and a bull run — <b>+5.3% of width, 54% win, positive "
+   "in 5 of 6 years</b> on NSE bhavcopy 2019→Sep 2024. Every other strategy either failed OOS or is a "
+   "thin/breakeven survivor.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Recent window</td><td>Real multi-year / OOS</td><td>Verdict</td></tr>
+<tr><td style="color:{GREEN};">Stock fade credit spread</td><td>+16–25% (Oct24→date)</td><td>+5.3% width, 5/6 yrs (bhavcopy)</td><td style="color:{GREEN};font-weight:bold;">✓ VALIDATED (real)</td></tr>
+<tr><td style="color:{PURPLE};">Index fade credit spread</td><td>+12% (Oct24→date)</td><td>−1.4%, sign FLIPPED OOS</td><td style="color:{RED};font-weight:bold;">✗ regime artifact</td></tr>
+<tr><td>3-Family stocks (intraday)</td><td>+1.5% on 180d</td><td>dir +0.107%/tr, +ve ALL 8 yrs · net −1.0%</td><td style="color:{AMBER};font-weight:bold;">~ real dir edge, not net</td></tr>
+<tr><td>ORB+VWAP index (intraday)</td><td>+0.9% / 18 mo (train+test)</td><td>dir +0.04%/tr, −ve ~2/8 yrs</td><td style="color:{AMBER};font-weight:bold;">~ thin &amp; inconsistent</td></tr>
+</table>
+{dim("BUY strategies now tested on REAL Kite 5-min back to 2019 (studies/BUY_STRATEGIES_2019_REALTEST.md) — "
+     "the intraday data Upstox couldn't reach. Only the UNDERLYING direction is measurable (intraday option "
+     "premiums don't exist historically). 3-FAMILY FULL-GATE (real code: alpha-z + volume-surge ORB + "
+     "alignment): 19,454 signals, 50.6% hit, +0.107%/trade, POSITIVE EVERY YEAR 2019→2026 — the gates are "
+     "real (a no-gate proxy is a 48% coin flip), a fairer verdict than 'overfit'. But +0.107% is underlying; "
+     "options leverage it ~10x yet theta/IV/spread/-15% stops/costs eat it -> the real-option year was −1.0% "
+     "net. ORB+VWAP: 2,303 signals, thin (+0.04%/tr) and negative in ~2/8 yrs per index. Neither survives "
+     "option-buying costs NET; both stay paper forward-tests — but 3-Family's DIRECTION edge is durable.")}
+{dim("Two caveats I won't hide: (1) 'Validated' = on real HISTORICAL premiums, not live fills — it's "
+     "+5.3% of width (~+9%/trade on margin), 54% win, and 2023 was −4.5%; modest, high-variance, still a "
+     "forward-test. Lots stay at 1. (2) The stock fade's multi-year number is CLEAN bhavcopy, but its "
+     "recent-window +16–25% is the older OPTIMISTIC (uncleaned) backtest — the identical clean OOS test "
+     "that broke the index fade has NOT yet been run on stocks. So 'held on both windows' is clean + "
+     "optimistic, not clean + clean. See studies/STOCK_OPTIONS_NO_EDGE.md Parts 10–11.")}
+
 {h("TESTS &amp; TRADES THAT FINALIZED THE LIVE STRATEGIES")}
 {dim("~9,000 real-option spread-trades across 9 tests (+ thousands of config combinations). The two "
      "live credit strategies are what SURVIVED; the rejected rows define where the edge isn't.")}
@@ -530,14 +568,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>2</td><td>Index spread — FOLLOW breakout</td><td>73+111</td><td>&minus;26 to &minus;39%, 40% win</td><td style="color:{RED};">rejected &rarr; breakouts REVERT</td></tr>
 <tr><td>3</td><td>Index FADE — grid (216 cfg)</td><td>114 days</td><td>fade family validates</td><td style="color:{AMBER};">switch to FADE</td></tr>
 <tr><td>4</td><td>Index FADE — tenor refine (243 cfg)</td><td>115 days</td><td>mid-tenor&middot;1-OTM&middot;w3&middot;hold</td><td style="color:{AMBER};">final config</td></tr>
-<tr><td>5</td><td>Index FADE — corrected</td><td>61</td><td>+12.3% net, both idx +</td><td style="color:{GREEN};">VALIDATED</td></tr>
+<tr><td>5</td><td>Index FADE — corrected</td><td>61</td><td>+12.3% net (Oct24→date only)</td><td style="color:{AMBER};">validated on RECENT window*</td></tr>
 <tr><td>6</td><td>Robustness — 5 defs &times; 5 indices</td><td>396</td><td>def-robust; BANKNIFTY &minus;6.7%</td><td style="color:{GREEN};">NIFTY+FINNIFTY (drop BNF)</td></tr>
 <tr><td>7</td><td>ORB (intraday breakout)</td><td>413</td><td>NIFTY &minus;13.7%</td><td style="color:{RED};">boundary (needs real extension)</td></tr>
 <tr><td>8</td><td>Stock FADE — 18 liquid</td><td>742</td><td>&minus;1.8% agg; c/w signal</td><td style="color:{AMBER};">add a gate</td></tr>
-<tr><td>9</td><td>Stock FADE — full univ + gate</td><td>4,228&rarr;307</td><td>+16-25%, p5 +6.8%, 65% win</td><td style="color:{GREEN};">DEPLOYED (gated)</td></tr>
+<tr><td>9</td><td>Stock FADE — full univ + gate</td><td>4,228&rarr;307</td><td>+16-25%, p5 +6.8%, 65% win (recent*)</td><td style="color:{GREEN};">DEPLOYED (gated)</td></tr>
+<tr style="color:{TEXT_DIM};"><td colspan="5"><i>— then the REAL pre-2024 test on NSE bhavcopy premiums (2019→Sep 2024) settled it —</i></td></tr>
+<tr><td>10</td><td>Index FADE — real bhavcopy</td><td>181</td><td>&minus;1.4%, +ve only 2019 &amp; 2024</td><td style="color:{RED};">DOWNGRADED (regime-dep)</td></tr>
+<tr><td>11</td><td>Index FADE — dir+flush gate</td><td>32&rarr;27</td><td>+15.1% in-sample, &minus;2.8% OOS</td><td style="color:{RED};">salvage FAILED OOS &rarr; reverted</td></tr>
+<tr><td>12</td><td>Stock FADE — real bhavcopy (gated)</td><td>718</td><td>+5.3% width, 54% win, 5/6 yrs</td><td style="color:{GREEN};">✓ VALIDATED on real data</td></tr>
 </table>
-{dim("LIVE result: index swing (NIFTY+FINNIFTY, ~3/mo, rows 3-6) + stock high-frequency fade "
-     "(credit/width&gt;=0.40 + prem&gt;=Rs50, ~16/mo, rows 8-9). Both paper FORWARD-TESTS.")}
+{dim("LIVE result: the STOCK high-frequency fade (credit/width&gt;=0.40 + prem&gt;=Rs50, ~16/mo, rows 8-9,12) "
+     "is the one edge VALIDATED on real multi-year premiums. The index swing (NIFTY+FINNIFTY, rows 3-6) was "
+     "DOWNGRADED — net-negative on real 2019→Sep24 data and a gate salvage failed OOS (rows 10-11); it runs "
+     "ungated as a small forward-test only. Both remain paper FORWARD-TESTS. *rows 5/9 are recent-window "
+     "optimistic figures; rows 10-12 are the real out-of-sample verdicts.")}
 
 {h("★★ THE ONE EDGE THAT WORKED — SWING CREDIT SPREAD (fade the breakout)")}
 {sub("Question: after every option-BUYING idea failed real costs, does anything clear them?")}
@@ -559,26 +604,32 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "live mid-cap fills) -&gt; runs as a FORWARD-TEST at 1 lot.")}
 {dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-9) · engine/swing_credit.py · engine/stock_credit.py")}
 
-{h("★★ OUT-OF-TIME REGIME TEST (pre-Oct-2024) — a PROXY, not real premiums")}
-{sub("Question: is the fade edge durable, or was Oct'24–Jun'26 a lucky regime?")}
-{p("Real option premiums don't exist before Oct 2024, so this is NOT a real-premium backtest — it is a "
-   "win-rate PROXY on the UNDERLYING (2019→Oct-2024): after a Donchian-10 breakout, does price stay OTM "
-   "of a 1-OTM short strike ~12 trading days later (win) or run through it (loss)? Assumed strikes + "
-   "fixed hold, no credit/costs — but CALIBRATED (on the real window it reproduces the measured win "
-   "rates: NIFTY proxy 65% vs real 67%), so it's directionally trustworthy.")}
+{h("★★★ OUT-OF-TIME REGIME TEST — REAL NSE bhavcopy premiums (2019→Sep-2024)")}
+{sub("Question: is the fade edge durable, or was Oct'24–Jun'26 a lucky regime? — now on REAL premiums")}
+{p("NSE F&amp;O <b>bhavcopy</b> carries the actual daily CLOSE + OI of every option contract (incl. "
+   "expired) back to 2019 — the data no broker API exposes. Downloaded every trading day 2019→Sep-2024 "
+   "for NIFTY/FINNIFTY + the full ~100-stock universe, then ran the DEPLOYED geometry on real premiums, "
+   "cleaned: OI liquidity filter, expiry settled via the UNDERLYING intrinsic, 2x stop on the real "
+   "premium path, P&amp;L as net % of width (lot-independent). This REPLACES the earlier calibrated "
+   "proxy — it is the real answer.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Fade win% by year</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024</td><td>2025</td><td>2026</td></tr>
-<tr><td style="color:{PURPLE};">NIFTY index fade</td><td>56</td><td>43</td><td>55</td><td>45</td><td style="color:{RED};">35</td><td>53</td><td style="color:{GREEN};">69</td><td>67</td></tr>
-<tr><td style="color:{GREEN};">Stock fade (25 names)</td><td>72</td><td>57</td><td>74</td><td>70</td><td>72</td><td>74</td><td>75</td><td>68</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>Config (deployed geometry)</td><td>Trades</td><td>Win%</td><td>Net % of width</td></tr>
+<tr><td style="color:{PURPLE};">Index fade — NIFTY (no gate)</td><td>181</td><td>54%</td><td style="color:{RED};">-1.4%</td></tr>
+<tr><td style="color:{TEXT};">Stock fade — UNGATED</td><td>6844</td><td>56%</td><td style="color:{RED};">-1.1%</td></tr>
+<tr><td style="color:{GREEN};">Stock fade — GATED (cw&gt;=0.40, prem&gt;=Rs50)</td><td>718</td><td>54%</td><td style="color:{GREEN};">+5.3%</td></tr>
 </table>
-{res("Finding — it FLIPS the risk picture: STOCK fade is regime-ROBUST (68–75% every year for 7+ yrs, "
-     "even COVID-2020 at 57%) — a durable edge, the Oct'24–Jun'26 result is representative. INDEX fade "
-     "is regime-DEPENDENT — it only works in 2025–26 (the exact real-data window); most years ≤56% (35% "
-     "in 2023), because fading an index breakout only pays in a range-bound market. The index backtest "
-     "was flattered by the data window.")}
-{dim("Implication: trust the STOCK credit spread; DOWNGRADE the index swing to regime-dependent / "
-     "unproven-out-of-time. CAVEAT: a calibrated PROXY (no real pre-2024 premiums) — a strong risk flag, "
-     "not proof. File: studies/STOCK_OPTIONS_NO_EDGE.md (Part 9).")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Gated stock fade, net % of width</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024</td></tr>
+<tr><td style="color:{GREEN};">Net %</td><td>+22.7</td><td>+0.4</td><td>+3.0</td><td>+13.4</td><td style="color:{RED};">-4.5</td><td>+1.1</td></tr>
+</table>
+{res("Finding — the credit/width gate IS the edge, and it survives out-of-time. Strip it and the stock "
+     "fade LOSES (-1.1%, like a generic spread and like the index). Keep it and the same universe returns "
+     "+5.3% of width (~+9%/trade on margin), positive in 5 of 6 years on REAL premiums — the ONE durable, "
+     "regime-robust edge. The INDEX fade is net-NEGATIVE out-of-time (-1.4%), positive only in 2019 &amp; "
+     "2024 (favorable regimes) — the Oct'24–Jun'26 '+12%' landed on a good regime, NOT a real edge.")}
+{dim("Reality check: the real edge is ~1/3-1/2 of the optimistic recent-window backtest (+16-25% -> +5.3% "
+     "of width; 65% -> 54% win). DOWNGRADE the index swing to regime-dependent; treat the GATED STOCK "
+     "credit spread as the primary fade. Keep lots at 1. File: studies/STOCK_OPTIONS_NO_EDGE.md (Part 10).")}
 
 {h("★ REAL-OPTION OPTIMIZATION + 1-YEAR REALITY CHECK (2026-06)")}
 {sub("Question: what is the edge on REAL option P&amp;L, not the underlying proxy?")}
@@ -669,10 +720,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("The honest bottom line")}
 {p("After ~9,000 real-option spread-trades: <b>option BUYING has no net edge</b> out-of-sample (the "
    "3-Family gates and the index trend-ride are ~breakeven net — kept as forward-tests, not money-makers). "
-   "The real, repeatable edge is the opposite — <b>SELLING a credit spread that FADES a breakout</b>: "
-   "validated on the index (NIFTY+FINNIFTY swing, robust across 5 breakout definitions) and high-frequency "
-   "on stocks (gated credit/width≥0.40). Both are deployed as paper FORWARD-TESTS — the backtests are "
-   "real but optimistic, and live fills are the only honest judge.")}
+   "The real, repeatable edge is the opposite — <b>SELLING a credit spread that FADES a breakout</b> — but "
+   "real pre-2024 premiums (NSE bhavcopy 2019→Sep 2024) narrowed that to ONE strategy: the <b>gated STOCK "
+   "fade</b> (credit/width≥0.40), which held +5.3% of width / 54% win across 5 of 6 years. The INDEX swing "
+   "did NOT hold — it was net-negative (−1.4%) on real multi-year data and a gate salvage failed "
+   "out-of-sample, so it's downgraded to a regime-dependent forward-test. Nothing here is proven on live "
+   "fills — the backtests are real but optimistic, and live fills are the only honest judge.")}
 <p style="color:{TEXT_DIM};margin-top:14px;font-size:10px;">
 All studies reproducible from /studies on GitHub. Gross of costs. For educational use only. Not financial advice.
 </p>

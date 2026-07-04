@@ -259,12 +259,20 @@ is ever traded. Config: `ORB_VWAP_*` in `engine/config.py`; logic in `engine/orb
 
 ---
 
-## Parallel Strategy — Swing Credit Spread (the 3rd, the validated one)
+## Parallel Strategy — Swing Credit Spread (the 3rd — DOWNGRADED on real pre-2024 data)
 
-A **third** strategy runs alongside the other two — **multi-day, and the only structure that
-cleared real costs out-of-sample.** It does the opposite of buying: it **SELLS** a defined-risk
-credit spread and harvests theta. Shown in its own **SWING CREDIT SPREADS** section on **PM
-DECISIONS**, between the stock and index sections.
+> **⚠️ CORRECTION (2026-07): this index swing is NOT the validated edge.** The numbers below are the
+> Oct 2024→date window. When re-tested on **real NSE bhavcopy premiums 2019→Sep 2024** (181 trades) the
+> index fade was **net-negative (−1.4% of width)**, positive only in 2019 & 2024 (favorable regimes). A
+> direction+flush gate that looked like +15.1%/78% win in-sample **failed out-of-sample** (−2.8% on a
+> fresh window; the direction edge reversed) and was reverted. **The one strategy that DID validate on
+> real multi-year data is the STOCK fade credit spread** (below) — +5.3% of width, 54% win, positive
+> 5 of 6 years. The index swing now runs as a small regime-dependent forward-test only. See
+> `studies/STOCK_OPTIONS_NO_EDGE.md` Parts 10–11.
+
+A **third** strategy runs alongside the other two — multi-day. It does the opposite of buying: it
+**SELLS** a defined-risk credit spread and harvests theta. Shown in its own **SWING CREDIT SPREADS**
+section on **PM DECISIONS**, between the stock and index sections.
 
 - **Signal:** a daily **Donchian-10 breakout** on NIFTY / FINNIFTY.
 - **The twist — FADE it:** index breakouts *mean-revert*, so we sell *against* the breakout
@@ -315,7 +323,14 @@ in `engine/config.py`; logic in `engine/swing_credit.py`; book in `data/swing_po
 
 ---
 
-## Parallel Strategy — Stock Credit Spread (the 4th, high-frequency)
+## Parallel Strategy — Stock Credit Spread (the 4th, high-frequency) — ✅ THE VALIDATED EDGE
+
+> **This is the one strategy that validated on real multi-year data.** On NSE bhavcopy premiums
+> 2019→Sep 2024 (718 gated trades) it held **+5.3% of width (~+9%/trade on margin), 54% win, positive
+> in 5 of 6 years** — across COVID (2020), a topping regime (2024) and a bull run, where the index fade
+> only worked in favorable years. Caveats kept honest: the real edge is ~⅓–½ of the recent-window
+> figures below (65%→54% win, +16–25%→+5.3%), 2023 was −4.5%, and it's validated on historical premiums
+> not live fills. Keep lots at 1. See `studies/STOCK_OPTIONS_NO_EDGE.md` Part 10.
 
 The **frequency** sibling of the index swing — the same fade, on the full ~100-stock universe, so it
 fires **~16×/month** (vs the index's ~3). Shown in its own **STOCK CREDIT SPREADS** section.
@@ -428,6 +443,7 @@ short-window rupee figures as directional. The in-app **STUDIES** tab shows the 
 | 4 | [Gate 5 — Wide Open](studies/GATE5_WIDE_OPEN.md) | Can a 5th gate raise win rate at the same +10/−20? | 365d win 51→54%; option 30d 61→66%, 60d 66→70% | **LIVE** |
 | 5 | [Index Trend-Ride Exit](studies/INDEX_TREND_RIDE_EXIT.md) | Why did the index lose daily? | Fixed +20% cap → trend-ride: win 27→63% | **LIVE** |
 | 6 | [365-Day Directional Validation](studies/UNDERLYING_VALIDATION_365D.md) | Does the edge last a year? | Aligned 52% hit, +0.13%/trade, holds 12 months | validated |
+| ★ | [**BUY strategies 2019→date (real Kite 5-min)**](studies/BUY_STRATEGIES_2019_REALTEST.md) | Do the intraday BUY edges hold across ALL regimes? | **3-Family full-gate: 50.6% hit, +0.107%/tr, +ve EVERY year (dir real, but −1.0% net as options). ORB+VWAP: +0.04%/tr, −ve ~2/8 yrs.** | honest |
 | 7 | [Stock Option Exit Cap](studies/STOCK_OPTION_EXIT_CAP.md) | Remove the +10% cap? | Inconsistent / high variance — kept +10% | not deployed |
 | 8 | [Prophet Forward-Test](studies/PROPHET_FORWARD_TEST.md) | Can forecasting predict it? | 20d direction worse than a coin flip | not deployed |
 | 9 | [Data Availability Limits](studies/DATA_AVAILABILITY_LIMITS.md) | Can we backtest 180/365d on options? | Option premiums only ~1 month back | reference |
@@ -450,7 +466,7 @@ engine/
   events.py            NSE announcement scraper + keyword scoring (EVENT family)
   signals.py           3-family scoring + alpha-z + ORB gate
   orb_vwap_live.py     PARALLEL ORB+VWAP index strategy (ATM, trend-ride exit, PM DECISIONS)
-  swing_credit.py      PARALLEL swing credit-spread (index · multi-day · fade breakout · validated)
+  swing_credit.py      PARALLEL swing credit-spread (index · multi-day · fade breakout · regime-dep, forward-test)
   stock_credit.py      PARALLEL stock credit-spread (4th · high-frequency fade · gated credit/width)
   options.py           ATM/offset strike resolver + live option order builder
   portfolio.py         instrument decision + sizing
