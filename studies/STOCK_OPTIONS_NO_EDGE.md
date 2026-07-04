@@ -243,6 +243,130 @@ unproven-out-of-time** (do not treat it as validated). **Caveat:** this is a cal
 strikes/hold, no real premiums or costs) — a strong risk flag, not proof; real pre-2024 premiums (a
 paid vendor) or a live trending-regime forward-test would settle it.
 
+## Part 10 — REAL pre-2024 premiums (NSE bhavcopy) — settles Part 9's proxy ✅
+Part 9 was a calibrated **proxy** (underlying reversion, assumed strikes, no premiums/costs). It is
+now replaced by the **real thing**: NSE F&O **bhavcopy** carries the actual daily CLOSE + OI of every
+option contract — including expired ones — back to 2019, free (the endpoint no broker API exposes).
+Downloaded every trading day **2019 → Sep 2024** for NIFTY/FINNIFTY (index) and the full ~100-stock
+universe (`/tmp/bhav_download*.py` → `/tmp/bhav_cache*`), then ran the **deployed geometry** on real
+premiums with a proper cleaning pass — OI liquidity filter, settle at expiry via the **underlying
+intrinsic** (not the erratic expiry-day option print), 2× stop on the real premium path, and P&L as
+**net % of width** (lot-independent, so tiny-margin trades can't distort the aggregate).
+
+**Real bhavcopy, cleaned, 2019 → Sep 2024:**
+
+| Config (deployed geometry) | Trades | Win% | Net % of width | Verdict |
+|---|---|---|---|---|
+| **Index fade** (NIFTY, no gate) | 181 | 54% | **−1.4%** | net-negative, regime-dependent |
+| **Stock fade — UNGATED** | 6,844 | 56% | **−1.1%** | generic spread loses (matches Part 4) |
+| **Stock fade — GATED** (credit/width ≥ 0.40, prem ≥ ₹50) | 718 | 54% | **+5.3%** | **durable edge** |
+
+**Gated stock fade, year by year (net % of width):**
+
+| Year | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 |
+|------|------|------|------|------|------|------|
+| **Win %** | 62 | 53 | 54 | 60 | 44 | 55 |
+| **Net %** | +22.7 | +0.4 | +3.0 | +13.4 | **−4.5** | +1.1 |
+
+**NIFTY index fade, year by year (net % of width):** 2019 +14.8 · 2020 −14.6 · 2021 −4.7 ·
+2022 −3.2 · 2023 −5.1 · 2024 +18.6 → **ALL −1.4%** (positive only 2019 & 2024). FINNIFTY too
+illiquid pre-2023 to judge (18 clean trades).
+
+**MIDCPNIFTY (added 2026-07-04) — REJECT.** Its options only launched mid-2022, so it can't be
+tested from 2019. On the real bhavcopy window 2022→Sep'24 it is both too illiquid (only ~15–18 fade
+trades survive an OI≥50–200 filter over 2.5 years) AND strongly negative: **~20% win, −25% to −28% of
+width**, in both years and both gated/ungated. Confirms the earlier "skip MIDCPNIFTY" decision — not a
+viable fade. (Small sample, but the sign is unambiguous across every filter/year cut.)
+
+**What the real data settles:**
+- **The `credit/width ≥ 0.40` gate IS the edge, and it survives out-of-time.** Strip it and the stock
+  fade loses (−1.1%, 5 of 6 years flat/negative) exactly like a generic spread (Part 4's −4.7%) and
+  exactly like the index. Keep it and the same universe returns **+5.3% of width, positive in 5 of 6
+  years** on real premiums. The gate selects elevated post-breakout IV — a real, durable mechanism,
+  not a curve-fit. This **confirms** Part 9's stock verdict (durable/robust) on real data — though the
+  real win rate is **~54%, not the proxy's 68–75%** (the proxy overstated win rate but got the
+  direction right; the positive net comes from winner/loser geometry, not a high hit rate).
+- **The index fade is NOT durable — Part 9's index warning is confirmed on real premiums.** Net
+  **−1.4%** long-run, positive only in the two favorable regimes (2019, 2024). The Oct'24–Jun'26
+  "+12%" landed on a good regime, not a real edge.
+- **The real edge is more modest than the recent-window backtest.** +5.3% of width ≈ **+9%/trade on
+  margin** (margin ≈ 0.6×width), vs the +16–25% the Oct'24→date window showed. 54% win, not 65%.
+  Solidly positive, still HIGH variance (2023 was −4.5%). CLAUDE.md's "backtest is OPTIMISTIC" is now
+  quantified: real ≈ **⅓ to ½** of the optimistic figure.
+
+**Implication (real-data, replaces Part 9's proxy caveat):** the **gated stock credit spread is the
+one durable, regime-robust edge**, confirmed on real premiums (+5.3% of width, 5/6 years). **Downgrade
+the index swing to regime-dependent / net-negative out-of-time** — keep it only as a small parallel
+forward-test, not a validated edge, and size the stock credit spread as the primary fade. Keep lots
+at 1: real fills on ~100 mid-cap names will erode the +5.3% further.
+
+**Reproduce:** `/tmp/bhav_download.py` + `/tmp/bhav_download_stk.py` (cache real premiums) →
+`/tmp/bhav_backtest_clean.py` (index, `DONE-CLEAN`) · `/tmp/bhav_backtest_stk_clean.py` (stocks
+ungated) · `/tmp/bhav_backtest_stk_gated.py` (stocks, deployed credit/width≥0.40 gate, `DONE-STKCLEAN`).
+
+## Part 11 — SALVAGING the index fade with two gates (winner/loser analysis) ✅
+Part 10 left the index fade net −1.4%. Instead of retiring it, instrumented all 181 real-bhavcopy
+NIFTY fade trades with entry features (direction, breakout depth, momentum, channel width, IV proxy
+credit/width, extension) and analyzed **winners vs losers** (`/tmp/idx_fade_features.py` →
+`/tmp/idx_fade_gates.py` → `/tmp/idx_fade_frontier.py`).
+
+**Losers vs winners — the two things that separate them:**
+1. **DIRECTION (the dominant lever).** Split by which breakout we fade:
+   - **CE = fade UP-break (bear-call): 124 trades, 48% win, −5.0%** → structurally loses.
+   - **PE = fade DOWN-break (bull-put): 57 trades, 65% win, +6.6%** → wins.
+   The index has an **upward drift**: up-breaks tend to *continue* (fading them fights the drift),
+   down-breaks *mean-revert* (fading them rides it). Half the trade book was structurally negative-EV.
+2. **FLUSH DEPTH.** Among losers, breakouts were shallow and momentum was hotter (5d mom 1.21 vs 0.12).
+   Requiring a *real* capitulation — close ≥ **0.5%** beyond the 10-day band — keeps only genuine
+   flushes that snap back, and drops the shallow noise-breaks that grind through the short strike.
+
+**The gate stack (both now live, `SWING_FADE_DOWN_ONLY` + `SWING_MIN_BREAKOUT_PCT`):**
+
+| Config | Trades | Win% | Net % of width | Boot p5 | Years positive |
+|---|---|---|---|---|---|
+| Baseline (all fade) | 181 | 54% | −1.4% | −6.6% | 2 of 6 |
+| PE only (drop up-break fades) | 57 | 65% | +6.6% | −1.8% | 4 of 6 |
+| **PE + breakout ≥ 0.5% (DEPLOYED)** | **32** | **78%** | **+15.1%** | **+4.1%** | **6 of 6** |
+
+Per-year (deployed): 2019 +44% · 2020 +8% · 2021 +24% · 2022 +3% · 2023 +11% · 2024 +32%. The win
+rate **rose** 54%→78% (target said "don't compromise win rate" — it improved), net cleared +15%, and
+the **bootstrap p5 is positive (+4.1%)** — even a bad draw stays green, unlike baseline (−6.6%). A
+tighter IV-gated variant (PE + credit/width ≥ 0.35 + breakout ≥ 0.75%) reaches +17.3%/79% but on 14
+trades with p5 −0.2% (fragile) — so the **32-trade PE+flush gate is the honest operating point**, not
+the higher-mean thinner slice.
+
+**Honest caveats:** the gates cut 181→32 trades (~5–6/yr). 32 trades is a small sample; +15% has wide
+bands (p95 +25%, p5 +4%). Positive every year and positive p5 → looked credible **in-sample.**
+
+### ❌ OUT-OF-SAMPLE FAILURE — the gate was a regime artifact (test: Upstox Oct 2024 → date)
+Re-ran the SAME config + gates on a **fresh data source and window** — real Upstox expired-instrument
+premiums, Oct 2024 → Jul 2026 (`/tmp/idx_fade_upstox_oct24.py`, 116 trades). It **broke**, and the
+direction asymmetry **reversed**:
+
+| Config (Upstox, Oct24→date) | Trades | Win% | Net % of width |
+|---|---|---|---|
+| Baseline (all fade) | 116 | 55% | −0.4% |
+| CE — fade UP-breaks | 58 | 62% | **+7.8%** |
+| PE — fade DOWN-breaks | 58 | 48% | **−8.7%** |
+| Deployed gate: PE + flush ≥0.5% | 27 | 56% | **−2.8%** |
+| — NIFTY only | 17 | 65% | +6.0% |
+| — FINNIFTY only | 10 | 40% | −17.7% |
+
+On 2019→Sep24, CE lost (−5.0%) and PE won (+6.6%); on Oct24→date, **CE won (+7.8%) and PE lost
+(−8.7%)** — the exact opposite. Cause: NIFTY peaked Sept 2024 and corrected into 2025, so the drift
+was DOWN — down-breaks *continued* (fading them lost), up-breaks *failed* (fading them won). The
+"upward-drift" mechanism was really just the 2019–24 bull regime. The in-sample robustness checks
+(6/6 positive years, boot p5 +4.1%) **did not protect against this** because all six years were one
+broad regime. Pooled across both windows the directional edge ~cancels → **no durable directional
+edge; it is regime timing.** Only NIFTY-PE-flush stayed marginally positive OOS (+6.0%, 17 trades),
+nowhere near +15%, and FINNIFTY (−17.7%) argues against even that.
+
+**Verdict: the "salvage" is REJECTED. Gates reverted to neutral** (`SWING_FADE_DOWN_ONLY=False`,
+`SWING_MIN_BREAKOUT_PCT=0.0`). The index fade returns to its Part 10 standing: **regime-dependent,
+net ≈0 to slightly negative, unproven out-of-time** — a small forward-test, not a validated edge.
+Lesson (again): 6 positive years inside one secular regime is **not** out-of-sample; a genuinely
+different regime (Oct24→date) is the only real test, and it failed.
+
 ## The unifying conclusion — one structural cause, one exception
 The **buying** strategies (Parts 1–3) and the **follow / 4-illiquid-leg** selling strategies
 (Parts 4–5) all lose for the same reason: as a **retail taker you cross the bid-ask on every leg**
