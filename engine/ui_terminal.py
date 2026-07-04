@@ -577,12 +577,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>10</td><td>Index FADE — real bhavcopy</td><td>181</td><td>&minus;1.4%, +ve only 2019 &amp; 2024</td><td style="color:{RED};">DOWNGRADED (regime-dep)</td></tr>
 <tr><td>11</td><td>Index FADE — dir+flush gate</td><td>32&rarr;27</td><td>+15.1% in-sample, &minus;2.8% OOS</td><td style="color:{RED};">salvage FAILED OOS &rarr; reverted</td></tr>
 <tr><td>12</td><td>Stock FADE — real bhavcopy (gated)</td><td>718</td><td>+5.3% width, 54% win, 5/6 yrs</td><td style="color:{GREEN};">✓ VALIDATED on real data</td></tr>
+<tr><td>13</td><td>MIDCPNIFTY FADE — real bhavcopy</td><td>~15</td><td>~20% win, &minus;25 to &minus;28% (illiquid)</td><td style="color:{RED};">✗ reject (opts only from mid-2022)</td></tr>
+<tr><td>14</td><td>BUY strategies — real Kite 5-min 2019→date</td><td>21.8k</td><td>3-Fam dir +.107%/tr +ve every yr; ORB +.04% thin</td><td style="color:{AMBER};">dir real, not net (option costs)</td></tr>
 </table>
 {dim("LIVE result: the STOCK high-frequency fade (credit/width&gt;=0.40 + prem&gt;=Rs50, ~16/mo, rows 8-9,12) "
      "is the one edge VALIDATED on real multi-year premiums. The index swing (NIFTY+FINNIFTY, rows 3-6) was "
      "DOWNGRADED — net-negative on real 2019→Sep24 data and a gate salvage failed OOS (rows 10-11); it runs "
      "ungated as a small forward-test only. Both remain paper FORWARD-TESTS. *rows 5/9 are recent-window "
-     "optimistic figures; rows 10-12 are the real out-of-sample verdicts.")}
+     "optimistic figures; rows 10-14 are the real out-of-sample verdicts. MIDCPNIFTY (row 13) rejected — "
+     "illiquid, options only from mid-2022. The BUY strategies (row 14) now tested on real Kite 5-min back "
+     "to 2019: 3-Family full-gate direction edge is +ve every year but net −1% as option-buying; ORB+VWAP "
+     "thin/inconsistent. See studies/BUY_STRATEGIES_2019_REALTEST.md.")}
 
 {h("★★ THE ONE EDGE THAT WORKED — SWING CREDIT SPREAD (fade the breakout)")}
 {sub("Question: after every option-BUYING idea failed real costs, does anything clear them?")}

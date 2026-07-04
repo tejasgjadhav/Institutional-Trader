@@ -55,7 +55,9 @@ filter → buy ATM, **trend-ride exit** (exit on VWAP reclaim after +12%, hard *
 
 **Swing credit spread** (NIFTY/FINNIFTY, the 3rd strategy, multi-day) → daily **Donchian-10**
 breakout → **SELL a credit spread AGAINST it** (fade: up-break → bear-call, down-break → bull-put),
-mid-tenor (≥10 DTE), short 1-OTM, width 3, **hold to expiry**, hard stop at 2× credit. Overnight
+mid-tenor (≥10 DTE), short 1-OTM, width 3, **hold to expiry**, hard stop at 2× credit. (A directional
++ flush gate was tried 2026-07 to lift it above +15% but FAILED out-of-sample — reverted; the fade
+runs ungated. `SWING_FADE_DOWN_ONLY`/`SWING_MIN_BREAKOUT_PCT` exist but default OFF. See Part 11.) Overnight
 carry — NOT squared at 15:30. Signals-only paper forward-test (`engine/swing_credit.py`,
 `config.SWING_*`); its own **SWING CREDIT SPREADS** section on PM DECISIONS between stocks and index.
 The one validated edge — robust across 5 breakout defs (D10/15/20/30/prior-week) AND across NIFTY+FINNIFTY (BANKNIFTY dropped: tested −6.7%). HIGH variance; still forward-test.
@@ -64,7 +66,11 @@ The one validated edge — robust across 5 breakout defs (D10/15/20/30/prior-wee
 universe, but GATED: credit/width ≥ 0.40 (rich premium = elevated post-breakout IV — the edge) +
 short premium ≥ ₹50 + live liquidity gate (OI, bid-ask) + per-day/total-open caps. Backtest 65% win,
 +16–25% net/trade, holdout p5 +6.8%, 76/100 stocks. The credit/width gate is essential — a *generic*
-stock spread LOSES (−4.7%, the 4-leg slippage wall). Signals-only paper forward-test
+stock spread LOSES (−4.7%, the 4-leg slippage wall). **REAL-DATA CONFIRMED (2026-07, NSE bhavcopy
+2019→Sep2024, 718 trades): gated = +5.3% of width (≈+9%/trade on margin), 54% win, positive 5 of 6
+years — the ONE durable, regime-robust edge. Strip the gate and it loses (−1.1%, like everything
+else). But the real edge is ~⅓–½ of the optimistic backtest (+16–25% → +5.3% of width; 65% → 54% win)
+— the backtest IS optimistic as warned. Keep lots at 1.** See `STOCK_OPTIONS_NO_EDGE.md` Part 10. Signals-only paper forward-test
 (`engine/stock_credit.py`, `config.STOCK_CREDIT_*`); own STOCK CREDIT SPREADS PM + trade-log section.
 **Backtest is OPTIMISTIC (~20%/mo on margin won't fully survive live mid-cap fills) — KEEP LOTS AT 1.**
 
@@ -75,6 +81,14 @@ stock spread LOSES (−4.7%, the 4-leg slippage wall). Signals-only paper forwar
   spread), NOT as a profit edge. Treat stocks as a paper forward-test, not a money-maker.
 - **INDEX: thin but durable edge.** Trend-ride (−15 stop) ran **+0.9% over 18 months (453 trades),
   positive on both train and test.** The one real (small) edge.
+- **BUY strategies tested to 2019 on real Kite 5-min (2026-07, `studies/BUY_STRATEGIES_2019_REALTEST.md`).**
+  Zerodha Kite historical gives 5-min UNDERLYING back to 2019 (intraday option premiums still don't
+  exist historically, so this measures the underlying DIRECTION edge). **3-Family FULL-GATE** (real
+  `compute_all_families` + `is_orb_confirmed`: alpha-z + volume-surge ORB + alignment), 19,454 signals:
+  **50.6% hit, +0.107%/trade, POSITIVE EVERY year 2019→2026** — the gates are real (a no-gate proxy is
+  a 48% coin flip), a fairer verdict than "overfit". BUT direction ≠ profit: net of option-buying costs
+  the real-option year was −1.0%. **ORB+VWAP**: 2,303 signals, +0.04%/trade, negative ~2/8 yrs per index
+  — thin & inconsistent. Neither survives option-buying costs NET; both stay paper forward-tests.
 - **STOCK multi-day credit spreads: rejected on real cost.** Sell-premium/theta-harvest looked
   like +6.9% holdout on an *estimated* cost, but **real per-leg cost (₹1,137/trade, 4 legs) flipped
   it to −4.7% net, PF 0.87.** Dead. See `studies/STOCK_OPTIONS_NO_EDGE.md` Part 4.
@@ -85,10 +99,21 @@ stock spread LOSES (−4.7%, the 4-leg slippage wall). Signals-only paper forwar
   **HIGH variance** (wins ~+40–60% of margin, losses ~−100%; thin-holdout bootstrap p5 negative —
   positive EV but a bad draw can lose). At 1 lot: **~₹1–2k/month** (margin ~₹6–7k/trade).
   **Lineup = NIFTY + FINNIFTY** (a 5-index robustness test DROPPED BANKNIFTY: −6.7% on 40 trades,
-  its earlier +13% was 14-trade luck; MIDCPNIFTY marginal+thin → skipped). Runs as a parallel paper
+  its earlier +13% was 14-trade luck; MIDCPNIFTY REJECTED on real bhavcopy 2022→Sep24: ~20% win,
+  −25 to −28% of width, illiquid, options only from mid-2022 so can't test from 2019). Runs as a parallel paper
   FORWARD-TEST in `engine/swing_credit.py` (`SWING_LOTS` sizes it; keep at 1). See Parts 5–7. NOTE:
   the *follow* version (with the breakout) loses (40% win); the edge is specifically the **fade**.
   (An earlier +4%/p5+2.3% figure was a width-bookkeeping bug — now fixed; the live engine was always correct.)
+  **REAL-DATA CAVEAT (2026-07, NSE bhavcopy 2019→Sep2024, cleaned): NIFTY index fade is net-NEGATIVE
+  out-of-time (−1.4% of width, 181 trades), positive only in 2019 & 2024 — the favorable regimes.
+  The Oct'24–Jun'26 "+12%" landed on a good regime, NOT a durable edge.** See Part 10.
+  **SALVAGE ATTEMPT — TRIED AND REJECTED (2026-07): a winner/loser analysis on bhavcopy 2019→Sep24
+  suggested two gates (fade DOWN-breaks only + flush ≥0.5%) giving +15.1%/78% win, positive all 6
+  years, boot p5 +4.1%. It FAILED out-of-sample: on real Upstox premiums Oct24→date the direction
+  asymmetry REVERSED (there CE won +7.8%, PE lost −8.7%) and the deployed gate came in −2.8%
+  (FINNIFTY −17.7%). The asymmetry was a 2019–24 bull-regime artifact, not structural. Gates
+  REVERTED to neutral (`SWING_FADE_DOWN_ONLY=False`, `SWING_MIN_BREAKOUT_PCT=0.0`). Index fade stays
+  regime-dependent / unproven. Lesson: 6 positive years in ONE regime ≠ out-of-sample.** See Part 11.
 - Lesson: a train/test split *inside a short window* is not true out-of-sample; use the longest
   window the data allows. See `studies/REAL_OPTION_OPTIMIZATION.md` (CORRECTION at the top).
 Old gates 4/5 are OFF tunables; everything is GROSS of costs.
