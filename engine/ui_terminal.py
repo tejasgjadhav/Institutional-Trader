@@ -34,6 +34,7 @@ SWING_BOOK = _os.path.join(DATA_DIR, "swing_positions.json")
 STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
 STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
+STOCKCR2_BOOK = _os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -389,6 +390,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         exactly what to SELL and what to BUY (strike + premium), expiry, net credit and P&L."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("SWING TRADES  -  credit-spread trade log (what to SELL & BUY)", CYAN))
+        # ★ STOCK CREDIT v2 — the TP-50 upgrade. Kept FIRST + gold-highlighted: this is the book
+        # with the validated 88% OOS / >=79%-every-year win rate — watch it closest.
+        v2hdr = QLabel("★ STOCK CREDIT v2 — TP-50  ·  THE HIGH-WIN BOOK  ·  88% OOS · ≥79% all 8 yrs  ·  ~4-6/mo ★")
+        v2hdr.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
+        v2hdr.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
+        v.addWidget(v2hdr)
+        self.sw_stk2_stats = self._stats_label()
+        self.sw_stk2_stats.setStyleSheet(f"color:{AMBER}; padding:8px; background-color:{PANEL}; border:2px solid {AMBER};")
+        v.addWidget(self.sw_stk2_stats)
+        self.sw_stk2 = self._make_log_table(self.SWING_TAB_COLS)
+        self.sw_stk2.setStyleSheet(f"QTableWidget {{ border: 2px solid {AMBER}; }}")
+        v.addWidget(self.sw_stk2)
         v.addWidget(self._section_label("INDEX SWING  —  NIFTY / FINNIFTY  (~3/mo)", CYAN))
         self.sw_idx_stats = self._stats_label(); v.addWidget(self.sw_idx_stats)
         self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx)
@@ -1332,6 +1345,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if not hasattr(self, "sw_idx"):
             return
         try:
+            self._fill_swing_table(self.sw_stk2, STOCKCR2_BOOK, self.sw_stk2_stats)
             self._fill_swing_table(self.sw_idx, SWING_BOOK, self.sw_idx_stats)
             self._fill_swing_table(self.sw_stk, STOCKCR_BOOK, self.sw_stk_stats)
         except Exception as e:
