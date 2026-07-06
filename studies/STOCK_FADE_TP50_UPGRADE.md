@@ -55,6 +55,36 @@ regime + profit) exceeded in-sample AND out-of-sample.
 - OOS is ~21 months — one broad era; durability rests on the 8-year in-sample breadth.
 - Take-profit exits assume you can close near the modeled daily closes.
 
+## Beginner walk-through — one real-style example (HAVELLS)
+
+**3:10 PM — the signal.** HAVELLS closes at **₹1,520**, breaking above its highest price of the last
+10 days (₹1,505). Crowd logic says "breakout — buy calls!" — so call options get expensive (IV spike).
+Our data says stock breakouts usually **stall or reverse**. v2 sells that expensive hope, with a
+safety net.
+
+**The two orders you place (exactly the two rows PM DECISIONS shows):**
+
+| Row | Order | Strike (why) | Premium |
+|---|---|---|---|
+| SELL | SELL 1 lot HAVELLS **1540 CE** | 2 strikes above the price (breathing room) | receive **₹55**/share |
+| BUY | BUY 1 lot HAVELLS **1580 CE** | 4 strikes further up (the safety net) | pay **₹36**/share |
+
+- **Credit (yours immediately):** 55 − 36 = **₹19/share × 500 lot = ₹9,500 in your account**
+- **Gate check:** credit ₹19 ÷ width ₹40 = **0.475 ≥ 0.40 ✓** (premium rich enough) · short prem ₹55 ≥ ₹50 ✓ · notional 40×500 = ₹20k ≤ ₹40k cap ✓
+- **Margin blocked = your absolute worst case:** (40 − 19) × 500 = **₹10,500**. Not one rupee more can
+  be lost — the 1580 CE you bought caps it.
+
+**What happens next (no babysitting — check once a day):**
+- **86% of the time:** HAVELLS stalls/dips, call prices deflate. When closing the spread costs
+  ≤ ₹9.5 (half the credit), the engine books the WIN: **+₹4,750-ish in days** — you don't wait for expiry.
+- **14% of the time:** HAVELLS keeps charging up through 1540. The engine signals exit (3× credit
+  stop); loss averages **−₹7,922**, and can never exceed the ₹10,500 the broker already blocked.
+
+**Why it's profitable:** (86% × ₹6,048 avg win) − (14% × ₹7,922 avg loss) = **+₹4,069 per trade**,
+about 4–6 trades a month = **~₹17.5k/month on ~₹1L of blocked margin (model).** You are the insurance
+company: selling overpriced protection after breakouts, keeping the premium 6 times out of 7, with
+every policy's payout capped in advance.
+
 ## Exact trade-level distribution (not averages)
 
 **In-sample (273 trades): 233 WINS / 40 LOSSES = 85.35%.** Win size (% of width): min +5.7,

@@ -619,6 +619,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "DEPLOYED 2026-07-04 as a PARALLEL book (1 lot) — gold sections on PM DECISIONS + SWING TRADES. "
      "Live fills are the only unproven link. File: studies/STOCK_FADE_TP50_UPGRADE.md")}
 
+{sub("BEGINNER EXAMPLE — one trade, start to finish (HAVELLS):")}
+{p("3:10 PM: HAVELLS closes ₹1,520, breaking its 10-day high. Crowd buys calls -> calls get "
+   "EXPENSIVE (IV spike). Breakouts usually stall — so v2 SELLS that expensive hope, with a safety net:")}
+{p("&nbsp;&nbsp;<b>SELL 1 lot 1540 CE @ ₹55</b> (2 strikes up = breathing room) &nbsp;·&nbsp; "
+   "<b>BUY 1 lot 1580 CE @ ₹36</b> (4 strikes up = the cap). "
+   "Credit = 19 × 500 = <b>₹9,500 received now</b>. Gate: 19/40 = 0.475 ≥ 0.40 ✓, prem 55 ≥ 50 ✓, "
+   "notional ₹20k ≤ ₹40k ✓. <b>Margin blocked = worst case = (40−19)×500 = ₹10,500</b> — not a rupee more.")}
+{p("86% of the time: stock stalls, spread deflates, engine books the WIN at half the credit "
+   "(<b>+₹4,750-ish within days</b>). 14%: stock keeps charging — stop fires, avg loss −₹7,922, "
+   "NEVER beyond the blocked ₹10,500. You are the insurance company: keep the premium 6 times "
+   "out of 7, every payout capped in advance.")}
+
 {h("★★★ RECENT WINDOW vs REAL — why the optimistic numbers dropped")}
 {sub("The verdicts above are the real out-of-sample truth; the recent forward-test window flattered every strategy:")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
