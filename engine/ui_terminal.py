@@ -583,9 +583,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td style="color:{TEXT_DIM};">Trades</td><td>15</td><td>74</td><td>43</td><td>132</td></tr>
 </table>
 {res("EXACT distribution (not averages): in-sample 233 WINS / 40 LOSSES; win median +32.0 / max +92 "
-     "of width, loss median −51.1 / worst −71.9 (capped by the hedge). Only 4 of 60 months negative "
-     "(worst Nov-2023 loss cluster); longest losing streak 4. OOS: 116 W / 16 L. "
-     "P&amp;L: MODEL ~Rs40-70k/mo at 1 lot · PRACTICAL plan ~Rs15-30k · LIVE column = the forward test.")}
+     "of width, loss median −51.1 / worst −71.9 (capped by the hedge). Longest losing streak 4. "
+     "OOS: 116 W / 16 L.")}
+{res("P&amp;L with the ₹40k EXPOSURE CAP (width×lot — live in the engine; win rate unchanged 85.7%): "
+     "<b>MODEL ₹16-17k/mo at 1 lot · PRACTICAL ~₹8-10k · 2 lots ≈ ₹32-34k / ₹16-20k.</b> "
+     "Worst month −₹26.4k, worst single loss −₹21.6k, best month +₹58.3k, 5/54 months negative. "
+     "LIVE column = the forward test.")}
+{dim("Worst-month forensic (pre-cap Feb-2021 '−₹2.28L'): ONE stock — BAJAJFINSV — lost the same spread "
+     "3× (re-entry into a relentless trend), AND the rupee figure was inflated by an era artifact: "
+     "today's lot (300) applied to 2021 pre-split prices (true 2021 loss ~₹35k/hit at lot 125). "
+     "Percent figures are exact; pre-cap rupee extremes were overstated — the cap blocks that whole "
+     "class of trade (₹120k notional skipped).")}
 {dim("Trade-off: ~4-6 signals/mo (vs v1's ~10) — deeper geometry clears the credit gate less often. "
      "DEPLOYED 2026-07-04 as a PARALLEL book (1 lot) — gold sections on PM DECISIONS + SWING TRADES. "
      "Live fills are the only unproven link. File: studies/STOCK_FADE_TP50_UPGRADE.md")}
@@ -1386,9 +1394,17 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
 <tr><td style="color:{TEXT_DIM};">Trades</td><td>15</td><td>74</td><td>43</td><td>132</td></tr>
 </table>
 {res("EXACT distribution (not averages): in-sample 233 WINS / 40 LOSSES; win median +32.0 / max +92 "
-     "of width, loss median −51.1 / worst −71.9 (capped by the hedge). Only 4 of 60 months negative "
-     "(worst Nov-2023 loss cluster); longest losing streak 4. OOS: 116 W / 16 L. "
-     "P&amp;L: MODEL ~Rs40-70k/mo at 1 lot · PRACTICAL plan ~Rs15-30k · LIVE column = the forward test.")}
+     "of width, loss median −51.1 / worst −71.9 (capped by the hedge). Longest losing streak 4. "
+     "OOS: 116 W / 16 L.")}
+{res("P&amp;L with the ₹40k EXPOSURE CAP (width×lot — live in the engine; win rate unchanged 85.7%): "
+     "<b>MODEL ₹16-17k/mo at 1 lot · PRACTICAL ~₹8-10k · 2 lots ≈ ₹32-34k / ₹16-20k.</b> "
+     "Worst month −₹26.4k, worst single loss −₹21.6k, best month +₹58.3k, 5/54 months negative. "
+     "LIVE column = the forward test.")}
+{dim("Worst-month forensic (pre-cap Feb-2021 '−₹2.28L'): ONE stock — BAJAJFINSV — lost the same spread "
+     "3× (re-entry into a relentless trend), AND the rupee figure was inflated by an era artifact: "
+     "today's lot (300) applied to 2021 pre-split prices (true 2021 loss ~₹35k/hit at lot 125). "
+     "Percent figures are exact; pre-cap rupee extremes were overstated — the cap blocks that whole "
+     "class of trade (₹120k notional skipped).")}
 {dim("Trade-off: ~4-6 signals/mo (vs v1's ~10) — deeper geometry clears the credit gate less often. "
      "DEPLOYED 2026-07-04 as a PARALLEL book (1 lot) — gold sections on PM DECISIONS + SWING TRADES. "
      "Live fills are the only unproven link. File: studies/STOCK_FADE_TP50_UPGRADE.md")}
