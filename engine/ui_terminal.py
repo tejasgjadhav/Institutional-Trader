@@ -432,15 +432,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("INTRADAY DECISIONS  -  0DTE NIFTY expiry-day call credit spread", CYAN))
         hdr = QLabel("★ 0DTE NIFTY — 85% WIN 2019→2026, +3.2% OF MARGIN/TRADE, POSITIVE EVERY YEAR ★   "
-                     "expiry day at the open: SELL the CE ~0.5% above spot · BUY the CE 200 pts higher · "
-                     "hold to the SAME-DAY settlement (no stop) · ~4-5 trades/month · margin ≈ ₹14k/lot "
-                     "(= the max loss — defined risk)")
+                     "EVERY TUESDAY (NIFTY weekly expiry) AT 9:16 AM: SELL the CE ~0.5% above spot · BUY the "
+                     "CE 200 pts higher · hold to the SAME-DAY 15:30 settlement (no stop) · ~4-5 trades/month "
+                     "· margin ≈ ₹14k/lot (= the max loss — defined risk)")
         hdr.setWordWrap(True)
         hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color:#000000; background-color:{CYAN}; padding:8px; border:2px solid {CYAN}; border-radius:4px;")
         v.addWidget(hdr)
-        how = QLabel("How to place it (manually, in Upstox): on a NIFTY weekly-expiry morning the row below "
-                     "spells out both legs — SELL the short CE, BUY the wing CE, same expiry (today). Do "
+        how = QLabel("How to place it (manually, in Upstox) — at 9:16 AM every TUESDAY (or whichever day is "
+                     "that week's NIFTY expiry, if a holiday shifts it): the row below spells out both legs — "
+                     "BUY the wing CE first (margin benefit), then SELL the short CE, same expiry (today). Do "
                      "nothing intraday. Both legs expire/settle at 15:30. Wins ~85% of weeks (small credits); "
                      "the ~15% losers can cost up to the full margin — that is the shape, sized by the wing. "
                      "Validated on REAL premiums 2019→Jun'26 (373 expiry days, in-sample + out-of-sample); "
@@ -449,6 +450,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         how.setWordWrap(True); how.setFont(QFont("Menlo", 11))
         how.setStyleSheet(f"color:{TEXT_DIM}; padding:6px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(how)
+        ex = QLabel("WORKED EXAMPLE — real expiry, real levels (Thu 4-Jul-2024, from the NSE record):   "
+                    "9:15 NIFTY opens 24,369.95 → strike = 24,370 × 1.005 ≈ 24,492 → nearest 50 = 24500.   "
+                    "9:16 BUY 24700 CE @ ₹1.50, SELL 24500 CE @ ₹15.20 → credit 13.70 pts · margin 186 pts "
+                    "≈ ₹14.0k (lot 75).   Loss only if NIFTY closes above ~24,514 (+0.6% from open).   "
+                    "Day's high: 24,401 — never close. 15:30: NIFTY settles 24,302 → both CEs expire "
+                    "worthless (24500 CE: ₹15.20 → ₹0) → keep the credit.   NET after costs ≈ +10.1 pts = "
+                    "₹756/lot = +5.4% on margin, in one session.   Same script on the last expiry "
+                    "(Tue 30-Jun-2026): open 24,032 → SELL 24150 CE / BUY 24350 CE; day high 24,036, "
+                    "close 23,866 → worthless → WIN.   The losing ~1-in-7: NIFTY rallies through the short "
+                    "strike and settlement charges up to the full width − credit (the capped ₹14k) — you "
+                    "still do nothing intraday; the wing is the insurance.")
+        ex.setWordWrap(True); ex.setFont(QFont("Menlo", 11))
+        ex.setStyleSheet(f"color:{TEXT}; padding:6px; background-color:{PANEL}; border:1px solid {CYAN};")
+        v.addWidget(ex)
         self.zdte_stats = self._stats_label()
         v.addWidget(self.zdte_stats)
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
