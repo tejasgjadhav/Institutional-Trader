@@ -307,7 +307,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
         pmv2 = QLabel("★ STOCK CREDIT v2 — WIN 86% OF THE TIME, ~17.5%/MONTH (model, ₹1L book) ★   "
                       "SELL a spread AGAINST a stock breakout · cash the win at HALF the credit · 4-6 signals/mo · every yr +ve since 2019")
-        pmv2.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
+        pmv2.setWordWrap(True)
+        pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
         v.addWidget(pmv2)
         self.pm_stockcr2 = QTableWidget(); self.pm_stockcr2.setColumnCount(len(self.PM_CREDIT_COLS))
@@ -399,7 +400,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # with the validated 88% OOS / >=79%-every-year win rate — watch it closest.
         v2hdr = QLabel("★ STOCK CREDIT v2 — WIN 86% OF THE TIME, ~17.5%/MONTH (model, ₹1L book) ★   "
                        "sell the breakout spread · book at half credit · stop 3x · +ve EVERY year 2019→2026 (in-sample 85% · OOS 88%)")
-        v2hdr.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
+        v2hdr.setWordWrap(True)
+        v2hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         v2hdr.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
         v.addWidget(v2hdr)
         self.sw_stk2_stats = self._stats_label()
