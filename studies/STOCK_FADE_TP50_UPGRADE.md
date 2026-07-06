@@ -55,7 +55,7 @@ regime + profit) exceeded in-sample AND out-of-sample.
 - Take-profit exits assume you can close near the modeled daily closes.
 
 ## Status
-**Validated (in-sample + OOS) — AWAITING DEPLOYMENT DECISION.** Wiring = `STOCK_CREDIT_SHORT_OFFSET=2,
+**DEPLOYED 2026-07-04 as a PARALLEL book (engine/stock_credit_v2.py, 1 lot) alongside v1; ORB+VWAP retired from the PM dashboard.** Wiring = `STOCK_CREDIT_SHORT_OFFSET=2,
 STOCK_CREDIT_WIDTH=4 (var names per config.py), STOCK_CREDIT_TAKE_PROFIT=0.50, STOCK_CREDIT_STOP_MULT=3.0`.
 
 ## Reproduce

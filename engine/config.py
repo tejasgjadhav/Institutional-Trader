@@ -185,6 +185,16 @@ SWING_MIN_DTE          = 10       # MID tenor: nearest expiry >= 10 days out (th
 SWING_SHORT_OFFSET     = 1        # short strike 1 step OTM from ATM
 SWING_WIDTH            = 3        # long strike 3 steps further OTM (defined risk)
 SWING_STOP_MULT        = 2.0     # stop if cost-to-close >= 2x the credit collected
+# ── DIRECTIONAL + FLUSH gates — TESTED AND REVERTED (see STUDIES Part 11) ──
+# On bhavcopy 2019→Sep24 these looked great: PE-only (fade DOWN-breaks) + flush ≥0.5% gave +15.1% net,
+# 78% win, positive all 6 years, boot p5 +4.1%. BUT the out-of-sample test on REAL Upstox premiums
+# Oct24→date FLIPPED the sign: there CE (fade UP-breaks) won +7.8% and PE LOST −8.7%; the deployed
+# gate came in −2.8% (FINNIFTY −17.7%). The direction asymmetry was a 2019–24 BULL-REGIME artifact, not
+# a structural drift edge. Reverted to neutral (fade both directions, no flush gate) — the index fade
+# stays regime-dependent / unproven, run as a small forward-test only. Flip these back ONLY with a
+# fresh cross-regime backtest that holds. Defaults below = original ungated behavior.
+SWING_FADE_DOWN_ONLY   = False   # False = fade BOTH breakout directions (original). True = down-only.
+SWING_MIN_BREAKOUT_PCT = 0.0     # 0 = no flush gate (original). >0 requires close that % beyond band.
 SWING_TAKE_PROFIT      = 0.0     # 0 = HOLD TO EXPIRY (the validated backtest). Set 0.50–0.75 to
                                  # auto-BOOK a win once you've captured that fraction of max profit
                                  # (closes when cost-to-close <= credit×(1−TAKE_PROFIT)). De-risks
@@ -217,8 +227,8 @@ STOCK_CREDIT_WIDTH        = 3       # long 3 strikes further OTM (defined risk)
 STOCK_CREDIT_MIN_CW       = 0.40    # THE EDGE: only trade when credit >= 40% of the strike width
 STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/untradeable options)
 STOCK_CREDIT_STOP_MULT    = 2.0     # stop if cost-to-close >= 2x credit
-STOCK_CREDIT_TAKE_PROFIT  = 0.0     # 0 = HOLD TO EXPIRY (validated). Set 0.50–0.75 to auto-BOOK a win
-                                    # at that fraction of max profit (recommended for the mid-cap tail).
+STOCK_CREDIT_TAKE_PROFIT  = 0.75    # BOOK a win at 75% of max profit — de-risks the mid-cap expiry
+                                    # tail (index stays at hold-to-expiry). 0 = hold to expiry.
 STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
 STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)
 STOCK_CREDIT_MIN_OI       = 100     # live liquidity gate: short-leg OI >= 100
@@ -234,7 +244,8 @@ STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight car
 # + 30-min trend aligned + entry before the cutoff. Buys ATM, exits +/-20% on premium.
 # NOTE: Apr-Jun 2026 backtests show this is ~breakeven (NIFTY -0.5%, BANKNIFTY +0.3%);
 # it runs LIVE here to forward-test it, NOT because it is proven profitable.
-ORB_VWAP_ENABLED      = True
+ORB_VWAP_ENABLED      = False  # RETIRED 2026-07: thin/inconsistent on real 2019->date 5-min
+                               # (+0.04%/tr, -ve ~2/8 yrs); PM slot replaced by STOCK CREDIT v2 (TP-50)
 # EXIT: trend-ride (not a fixed target). ORB+VWAP is a trend setup — a fixed +20%
 # cap chopped winners short while still eating full -20% stops (60d backtest: 27%
 # win, -2.6%/trade). Trend-ride lets winners run and exits only when the futures

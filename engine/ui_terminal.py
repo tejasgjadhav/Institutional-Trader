@@ -32,6 +32,7 @@ MARKET_SNAP = _os.path.join(DATA_DIR, "market_snapshot.json")
 SWING_SNAP = _os.path.join(DATA_DIR, "swing.json")
 SWING_BOOK = _os.path.join(DATA_DIR, "swing_positions.json")
 STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
+STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
@@ -68,6 +69,7 @@ class TerminalApp(QMainWindow):
         self.last_scan_results = []
         self._swing_rows = []
         self._stockcr_rows = []
+        self._stockcr2_rows = []
         self.active_screen = 0
         self._mkt_running = False
         self._scanning = False
@@ -328,15 +330,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_swing.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_swing, 1)
 
-        # NIFTY & BANKNIFTY index options — handled by the ORB+VWAP strategy below
-        v.addWidget(self._section_label("INDEX OPTIONS — ORB+VWAP (NIFTY/BANKNIFTY)  ·  signals before 11:00", PURPLE))
-        self.pm_orbvwap = QTableWidget(); self.pm_orbvwap.setColumnCount(len(self.ORBVWAP_COLS))
-        self.pm_orbvwap.setHorizontalHeaderLabels(self.ORBVWAP_COLS)
-        self.pm_orbvwap.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.pm_orbvwap.setAlternatingRowColors(True); self.pm_orbvwap.verticalHeader().setVisible(False)
-        self.pm_orbvwap.verticalHeader().setDefaultSectionSize(34)
-        self.pm_orbvwap.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        v.addWidget(self.pm_orbvwap, 1)
+        # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
+        # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
+        v.addWidget(self._section_label(
+            "STOCK CREDIT v2 — TP-50 fade  ·  win 88% OOS / ≥79% all 8 yrs  ·  ~4-6/mo  ·  SELL", PURPLE))
+        self.pm_stockcr2 = QTableWidget(); self.pm_stockcr2.setColumnCount(len(self.PM_CREDIT_COLS))
+        self.pm_stockcr2.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
+        self.pm_stockcr2.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pm_stockcr2.setAlternatingRowColors(True); self.pm_stockcr2.verticalHeader().setVisible(False)
+        self.pm_stockcr2.verticalHeader().setDefaultSectionSize(32)
+        self.pm_stockcr2.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_stockcr2, 1)
 
         self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min, 09:15-15:30 IST.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
@@ -481,7 +485,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
              "✓ VALIDATED", "deployed · 1 lot", GREEN),
             ("1b", "Stock fade v2 — TP-50 upgrade", "SELL",
              "85% win/+24.5% in-sample (273tr) · 88%/+31.9% OOS Oct24→Jul26 (132tr) · win ≥79% all 8 yrs · ~4-6/mo",
-             "✓ VALIDATED + OOS", "awaiting deploy", GREEN),
+             "✓ VALIDATED + OOS", "LIVE · parallel · 1 lot", GREEN),
             ("2", "Index fade · NIFTY/FINNIFTY", "SELL",
              "−1.4% of width, +ve only 2019 &amp; 2024; dir+flush salvage FAILED OOS",
              "✗ regime-dep", "forward-test", CYAN),
@@ -490,7 +494,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
              "~ dir edge, not net", "forward-test", GREEN),
             ("4", "ORB+VWAP index", "BUY",
              "dir +0.04%/tr, ~39% hit, −ve ~2/8 yrs (Kite 5-min); ~0% net",
-             "~ thin / inconsistent", "forward-test", PURPLE),
+             "~ thin / inconsistent", "RETIRED 2026-07", PURPLE),
         ]
         rejected = [
             ("MIDCPNIFTY fade", "~20% win, −25 to −28% of width, illiquid (options only from mid-2022)", "✗ reject"),
@@ -886,6 +890,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             if _os.path.exists(STOCKCR_SNAP):
                 s = json.load(open(STOCKCR_SNAP))
                 self._stockcr_rows = s.get("rows", []) or []
+            if _os.path.exists(STOCKCR2_SNAP):
+                s2 = json.load(open(STOCKCR2_SNAP))
+                self._stockcr2_rows = s2.get("rows", []) or []
         except Exception as e:
             logger.warning(f"load stock_credit.json failed: {e}")
 
@@ -1169,6 +1176,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         return out
 
     def _refresh_orbvwap(self):
+        if not hasattr(self, "pm_orbvwap"):
+            return   # RETIRED: PM slot now shows STOCK CREDIT v2
         """Index ORB+VWAP rows on PM DECISIONS. A FIRED signal persists for the whole day
         (from signals.db); an index with no signal yet shows the live WATCHING placeholder."""
         live = {s.get("index"): s for s in (getattr(self.agent, "orbvwap_signals", []) or [])}
@@ -1230,6 +1239,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         """STOCK CREDIT SPREADS on PM DECISIONS — two rows per trade (SELL leg + BUY leg)."""
         if hasattr(self, "pm_stockcr"):
             self._fill_pm_credit(self.pm_stockcr, list(self._stockcr_rows or []), "stock")
+        if hasattr(self, "pm_stockcr2"):
+            self._fill_pm_credit(self.pm_stockcr2, list(self._stockcr2_rows or []), "stock")
 
     def _fill_pm_credit(self, table, rows, kind):
         """Render a PM credit-spread section as TWO ROWS per trade so it's unmistakable what to do:

@@ -236,6 +236,7 @@ class EngineRunner:
             if not getattr(config, "STOCK_CREDIT_ENABLED", False):
                 return
             from engine import stock_credit
+            from engine import stock_credit_v2
         except Exception as e:
             logger.warning(f"stock_credit import: {e}")
             return
@@ -247,6 +248,12 @@ class EngineRunner:
                     logger.info(f"stock_credit: resolved/closed {n} position(s)")
             except Exception as e:
                 logger.warning(f"stock_credit resolve: {e}")
+            try:
+                n2 = stock_credit_v2.resolve_positions()
+                if n2:
+                    logger.info(f"stock_credit_v2: resolved/closed {n2} position(s)")
+            except Exception as e:
+                logger.warning(f"stock_credit_v2 resolve: {e}")
         h, m = map(int, config.STOCK_CREDIT_SCAN_AFTER.split(":"))
         after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
         if (self.agent.is_market_open() and after_cutoff and self._stockcr_scan_day != now.date()):
@@ -257,6 +264,12 @@ class EngineRunner:
                     logger.info(f"stock_credit: opened {len(new)} new spread(s)")
             except Exception as e:
                 logger.warning(f"stock_credit scan: {e}")
+            try:
+                new2 = stock_credit_v2.scan_signals()
+                if new2:
+                    logger.info(f"stock_credit_v2: opened {len(new2)} new spread(s)")
+            except Exception as e:
+                logger.warning(f"stock_credit_v2 scan: {e}")
 
     def _manage_wakelock(self):
         """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended
