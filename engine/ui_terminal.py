@@ -1294,6 +1294,807 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         # PM DECISIONS shows only TODAY's signals (what to place now). Older/ongoing positions
         # live in the SWING TRADES trade log.
         today = datetime.now(IST).date().isoformat()
+        rows = [
+            # (#, strategy, B/S, win rate, return, trades·window, freq/mo, Rs/mo @1lot (model·practical), verdict, status, color)
+            ("1b", "★ STOCK FADE v2 — TP-50 (LEADER)", "SELL", "85.4% IS · 87.9% OOS",
+             "+24.5% IS · +31.9% OOS (of width)", "273+132 · 2019→Jul26", "4-6",
+             "₹16-17k · ₹8-10k", "✓ VALIDATED + OOS", "LIVE · parallel · 1 lot", AMBER),
+            ("1", "Stock credit spread v1 · fade", "SELL", "54%",
+             "+5.3% of width", "718 · 2019→Sep24", "~10",
+             "not measured (fwd test)", "✓ VALIDATED", "deployed · 1 lot", GREEN),
+            ("2", "Index fade · NIFTY/FINNIFTY", "SELL", "54%",
+             "−1.4% of width", "181 · 2019→Sep24", "2-3",
+             "—", "✗ regime-dep · failed OOS", "forward-test", CYAN),
+            ("3", "3-Family stocks", "BUY", "50.6% (direction hit)",
+             "dir +0.107%/tr · −1.0% net as options", "19,454 · 2019→2026", "daily",
+             "—", "~ dir edge, not net", "forward-test", GREEN),
+            ("4", "ORB+VWAP index", "BUY", "~39%",
+             "dir +0.04%/tr · ~0% net", "2,303 · 2019→2026", "—",
+             "—", "~ thin / inconsistent", "RETIRED 2026-07", PURPLE),
+        ]
+        def vc(v):
+            return GREEN if v.startswith("✓") else (RED if v.startswith("✗") else AMBER)
+        lt = "".join(
+            f"<tr{' style=\'background-color:#2a2410;\'' if n=='1b' else ''}><td>{n}</td>"
+            f"<td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td><td>{wr}</td><td>{rt}</td>"
+            f"<td>{tw}</td><td>{fq}</td><td>{pnl}</td>"
+            f"<td style='color:{vc(vd)};font-weight:bold;'>{vd}</td><td>{stt}</td></tr>"
+            for n, s, ty, wr, rt, tw, fq, pnl, vd, stt, c in rows)
+        rejected = [
+            ("MIDCPNIFTY fade", "~20% win, −25 to −28% of width, illiquid (options only from mid-2022)", "✗ reject"),
+            ("BANKNIFTY fade", "−6.7% (40 tr; earlier +13% was 14-trade luck)", "✗ dropped"),
+            ("Index spread — FOLLOW breakout", "~40% win, −26 to −39%", "✗ rejected → breakouts REVERT"),
+            ("Generic (ungated) stock spread", "−1.1% (real 4-leg slippage)", "✗ rejected → c/w gate IS the edge"),
+            ("Stock option-buying (min-prem)", "−1.0% full yr (looked +1.5% on 180d — overfit)", "✗ no edge (cost filter only)"),
+        ]
+        rt2 = "".join(
+            f"<tr><td style='color:{TEXT_DIM};'>{nm}</td><td>{rs}</td><td style='color:{RED};'>{dc}</td></tr>"
+            for nm, rs, dc in rejected)
+        return (f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
+                f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>B/S</td>"
+                f"<td>Win rate</td><td>Return</td><td>Trades · window</td><td>Sig/mo</td>"
+                f"<td>₹/mo @1 lot (model · practical)</td><td>Verdict</td><td>Status</td></tr>{lt}</table>"
+                f"<p style='color:{AMBER};font-weight:bold;margin:10px 0 2px 0;'>Rejected / dropped variants — where the edge is NOT:</p>"
+                f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:2px 0;'>"
+                f"<tr style='color:{CYAN};font-weight:bold;'><td>Variant</td><td>Real-data</td><td>Decision</td></tr>{rt2}</table>"
+                f"<p style='color:{TEXT_DIM};font-size:11px;'>Leader ₹/mo is the EXACT capped backtest (width×lot ≤ ₹40k, "
+                f"85.7% win, worst month −₹26.4k, 5/54 months negative); PRACTICAL ≈ half of model until live fills prove it. "
+                f"Rupee history uses TODAY's lot sizes — pre-2022 splits (e.g. BAJAJFINSV) inflate old extremes, one more "
+                f"reason the cap exists. SELL returns are NET of entry+exit costs on real premiums; BUY are underlying-direction "
+                f"only. All books remain paper FORWARD-TESTS — none proven on live fills. Full detail: studies/STRATEGY_SUMMARY.md.</p>")
+
+    def _studies_html(self) -> str:
+        def h(t):
+            return f'<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:20px;">{t}</p>'
+        def sub(t):
+            return f'<p style="color:{AMBER};font-weight:bold;margin-top:8px;">{t}</p>'
+        def p(t):
+            return f'<p style="color:{TEXT};margin:4px 0;">{t}</p>'
+        def dim(t):
+            return f'<p style="color:{TEXT_DIM};margin:3px 0;">{t}</p>'
+        def res(t):  # result / verdict line
+            return f'<p style="color:{CYAN};margin:4px 0;">{t}</p>'
+
+        return f"""
+<div style="color:{TEXT};">
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
+{dim("Every change below was backtested before going live (or deliberately NOT deployed). "
+     "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+
+{h("THE FOUR LIVE STRATEGIES — SUMMARY")}
+{self._strategy_summary_table()}
+
+{h("★★★ THE LEADER — STOCK CREDIT v2 (TP-50)  ·  win ≥79% EVERY year 2019→2026")}
+{sub("Question: can the validated stock fade win >65% in every regime with good profit — and hold OOS?")}
+{p("Same signal + gate as v1 (Donchian-10 breakout → fade; credit/width ≥ 0.40 + prem ≥ Rs50), new "
+   "geometry + exits: <b>short 2-OTM · width 4 · TAKE-PROFIT at 50% of the credit · stop 3×</b>. "
+   "Found via a 96-config grid on real bhavcopy premiums (entry AND exit slippage charged) — 27 "
+   "configs hit the goal, the whole TP-50/stop-3× neighborhood passes (structural, not a fit cell). "
+   "Mechanism: book the win early (IV-crush harvest), give losers 3× room to mean-revert.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>IN-SAMPLE (bhavcopy, exit costs)</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024 Jan-Sep</td><td>ALL</td></tr>
+<tr><td style="color:{GREEN};">Win %</td><td>100</td><td>90</td><td>86</td><td>88</td><td>79</td><td>82</td><td><b>85.35</b></td></tr>
+<tr><td style="color:{GREEN};">Net % of width</td><td>+61.0</td><td>+25.4</td><td>+9.3</td><td>+30.5</td><td>+18.4</td><td>+22.3</td><td><b>+24.5</b></td></tr>
+<tr><td style="color:{TEXT_DIM};">Trades</td><td>18</td><td>31</td><td>51</td><td>51</td><td>62</td><td>60</td><td>273</td></tr>
+</table>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>OUT-OF-SAMPLE (Upstox, search never saw it — NO overlap: 2024 splits at Oct 1)</td><td>2024 Oct-Dec</td><td>2025</td><td>2026 Jan-Jul</td><td>ALL OOS</td></tr>
+<tr><td style="color:{GREEN};">Win %</td><td>87</td><td>86</td><td>91</td><td><b>87.88</b></td></tr>
+<tr><td style="color:{GREEN};">Net % of width</td><td>+19.5</td><td>+34.9</td><td>+31.3</td><td><b>+31.9</b></td></tr>
+<tr><td style="color:{TEXT_DIM};">Trades</td><td>15</td><td>74</td><td>43</td><td>132</td></tr>
+</table>
+{res("EXACT distribution (not averages): in-sample 233 WINS / 40 LOSSES; win median +32.0 / max +92 "
+     "of width, loss median −51.1 / worst −71.9 (capped by the hedge). Only 4 of 60 months negative "
+     "(worst Nov-2023 loss cluster); longest losing streak 4. OOS: 116 W / 16 L. "
+     "P&amp;L: MODEL ~Rs40-70k/mo at 1 lot · PRACTICAL plan ~Rs15-30k · LIVE column = the forward test.")}
+{dim("Trade-off: ~4-6 signals/mo (vs v1's ~10) — deeper geometry clears the credit gate less often. "
+     "DEPLOYED 2026-07-04 as a PARALLEL book (1 lot) — gold sections on PM DECISIONS + SWING TRADES. "
+     "Live fills are the only unproven link. File: studies/STOCK_FADE_TP50_UPGRADE.md")}
+
+{h("★★★ RECENT WINDOW vs REAL — why the optimistic numbers dropped")}
+{sub("The verdicts above are the real out-of-sample truth; the recent forward-test window flattered every strategy:")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Recent window (optimistic)</td><td>Real multi-year / OOS</td></tr>
+<tr><td style="color:{GREEN};">Stock fade credit spread</td><td>+16–25% (Oct24→date)</td><td>+5.3% width, 5/6 yrs (bhavcopy) — <b>held</b></td></tr>
+<tr><td style="color:{PURPLE};">Index fade credit spread</td><td>+12% (Oct24→date)</td><td>−1.4%, sign FLIPPED OOS — <b>failed</b></td></tr>
+<tr><td>3-Family stocks (intraday)</td><td>+1.5% on 180d</td><td>dir +0.107%/tr, +ve ALL 8 yrs · net −1.0%</td></tr>
+<tr><td>ORB+VWAP index (intraday)</td><td>+0.9% / 18 mo (train+test)</td><td>dir +0.04%/tr, −ve ~2/8 yrs</td></tr>
+</table>
+{dim("BUY strategies now tested on REAL Kite 5-min back to 2019 (studies/BUY_STRATEGIES_2019_REALTEST.md) — "
+     "the intraday data Upstox couldn't reach. Only the UNDERLYING direction is measurable (intraday option "
+     "premiums don't exist historically). 3-FAMILY FULL-GATE (real code: alpha-z + volume-surge ORB + "
+     "alignment): 19,454 signals, 50.6% hit, +0.107%/trade, POSITIVE EVERY YEAR 2019→2026 — the gates are "
+     "real (a no-gate proxy is a 48% coin flip), a fairer verdict than 'overfit'. But +0.107% is underlying; "
+     "options leverage it ~10x yet theta/IV/spread/-15% stops/costs eat it -> the real-option year was −1.0% "
+     "net. ORB+VWAP: 2,303 signals, thin (+0.04%/tr) and negative in ~2/8 yrs per index. Neither survives "
+     "option-buying costs NET; both stay paper forward-tests — but 3-Family's DIRECTION edge is durable.")}
+{dim("Two caveats I won't hide: (1) 'Validated' = on real HISTORICAL premiums, not live fills — it's "
+     "+5.3% of width (~+9%/trade on margin), 54% win, and 2023 was −4.5%; modest, high-variance, still a "
+     "forward-test. Lots stay at 1. (2) The stock fade's multi-year number is CLEAN bhavcopy, but its "
+     "recent-window +16–25% is the older OPTIMISTIC (uncleaned) backtest — the identical clean OOS test "
+     "that broke the index fade has NOT yet been run on stocks. So 'held on both windows' is clean + "
+     "optimistic, not clean + clean. See studies/STOCK_OPTIONS_NO_EDGE.md Parts 10–11.")}
+
+{h("TESTS &amp; TRADES THAT FINALIZED THE LIVE STRATEGIES")}
+{dim("~9,000 real-option spread-trades across 9 tests (+ thousands of config combinations). The two "
+     "live credit strategies are what SURVIVED; the rejected rows define where the edge isn't.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>#</td><td>Test (real costs)</td><td>Trades</td><td>Result</td><td>Decision</td></tr>
+<tr><td>1</td><td>Stock credit spread — generic</td><td>2,387</td><td>&minus;4.7%</td><td style="color:{RED};">rejected (slippage wall)</td></tr>
+<tr><td>2</td><td>Index spread — FOLLOW breakout</td><td>73+111</td><td>&minus;26 to &minus;39%, 40% win</td><td style="color:{RED};">rejected &rarr; breakouts REVERT</td></tr>
+<tr><td>3</td><td>Index FADE — grid (216 cfg)</td><td>114 days</td><td>fade family validates</td><td style="color:{AMBER};">switch to FADE</td></tr>
+<tr><td>4</td><td>Index FADE — tenor refine (243 cfg)</td><td>115 days</td><td>mid-tenor&middot;1-OTM&middot;w3&middot;hold</td><td style="color:{AMBER};">final config</td></tr>
+<tr><td>5</td><td>Index FADE — corrected</td><td>61</td><td>+12.3% net (Oct24→date only)</td><td style="color:{AMBER};">validated on RECENT window*</td></tr>
+<tr><td>6</td><td>Robustness — 5 defs &times; 5 indices</td><td>396</td><td>def-robust; BANKNIFTY &minus;6.7%</td><td style="color:{GREEN};">NIFTY+FINNIFTY (drop BNF)</td></tr>
+<tr><td>7</td><td>ORB (intraday breakout)</td><td>413</td><td>NIFTY &minus;13.7%</td><td style="color:{RED};">boundary (needs real extension)</td></tr>
+<tr><td>8</td><td>Stock FADE — 18 liquid</td><td>742</td><td>&minus;1.8% agg; c/w signal</td><td style="color:{AMBER};">add a gate</td></tr>
+<tr><td>9</td><td>Stock FADE — full univ + gate</td><td>4,228&rarr;307</td><td>+16-25%, p5 +6.8%, 65% win (recent*)</td><td style="color:{GREEN};">DEPLOYED (gated)</td></tr>
+<tr style="color:{TEXT_DIM};"><td colspan="5"><i>— then the REAL pre-2024 test on NSE bhavcopy premiums (2019→Sep 2024) settled it —</i></td></tr>
+<tr><td>10</td><td>Index FADE — real bhavcopy</td><td>181</td><td>&minus;1.4%, +ve only 2019 &amp; 2024</td><td style="color:{RED};">DOWNGRADED (regime-dep)</td></tr>
+<tr><td>11</td><td>Index FADE — dir+flush gate</td><td>32&rarr;27</td><td>+15.1% in-sample, &minus;2.8% OOS</td><td style="color:{RED};">salvage FAILED OOS &rarr; reverted</td></tr>
+<tr><td>12</td><td>Stock FADE — real bhavcopy (gated)</td><td>718</td><td>+5.3% width, 54% win, 5/6 yrs</td><td style="color:{GREEN};">✓ VALIDATED on real data</td></tr>
+<tr><td>13</td><td>MIDCPNIFTY FADE — real bhavcopy</td><td>~15</td><td>~20% win, &minus;25 to &minus;28% (illiquid)</td><td style="color:{RED};">✗ reject (opts only from mid-2022)</td></tr>
+<tr><td>14</td><td>BUY strategies — real Kite 5-min 2019→date</td><td>21.8k</td><td>3-Fam dir +.107%/tr +ve every yr; ORB +.04% thin</td><td style="color:{AMBER};">dir real, not net (option costs)</td></tr>
+<tr><td>15</td><td>Stock fade v2 — TP-50 grid + OOS</td><td>273+132</td><td>85%/+24.5% in-sample · 88%/+31.9% OOS · ≥79% win 8/8 yrs</td><td style="color:{GREEN};">✓ VALIDATED+OOS — awaiting deploy</td></tr>
+</table>
+{dim("LIVE result: the STOCK high-frequency fade (credit/width&gt;=0.40 + prem&gt;=Rs50, ~16/mo, rows 8-9,12) "
+     "is the one edge VALIDATED on real multi-year premiums. The index swing (NIFTY+FINNIFTY, rows 3-6) was "
+     "DOWNGRADED — net-negative on real 2019→Sep24 data and a gate salvage failed OOS (rows 10-11); it runs "
+     "ungated as a small forward-test only. Both remain paper FORWARD-TESTS. *rows 5/9 are recent-window "
+     "optimistic figures; rows 10-14 are the real out-of-sample verdicts. MIDCPNIFTY (row 13) rejected — "
+     "illiquid, options only from mid-2022. The BUY strategies (row 14) now tested on real Kite 5-min back "
+     "to 2019: 3-Family full-gate direction edge is +ve every year but net −1% as option-buying; ORB+VWAP "
+     "thin/inconsistent. See studies/BUY_STRATEGIES_2019_REALTEST.md.")}
+
+{h("★★ THE ONE EDGE THAT WORKED — SWING CREDIT SPREAD (fade the breakout)")}
+{sub("Question: after every option-BUYING idea failed real costs, does anything clear them?")}
+{p("Exhaustively, no buying strategy (intraday, spreads, multi-day) survives real costs + a "
+   "holdout — you cross the bid-ask every leg and theta works against you. The fix is to SELL "
+   "premium. A defined-risk credit spread sold AGAINST a daily index breakout (index breakouts "
+   "mean-REVERT, so we FADE them), mid-tenor, held to expiry, is the first structure to clear "
+   "<b>measured</b> costs out-of-sample.")}
+{res("Result (real costs, ~20mo): +12-20% net/trade on margin, PF 1.4-1.95. ROBUST across 5 "
+     "breakout definitions (Donchian-10/15/20/30 + prior-week) AND validated per-index: NIFTY "
+     "(PF 1.95) + FINNIFTY (PF 1.44) deployed; BANKNIFTY DROPPED (tested -6.7% on 40 trades — "
+     "its earlier +13% was small-sample luck). HIGH variance (a loss ~= full margin); ~2-3 "
+     "signals/month. Runs LIVE as a forward-test in its own PM section — NOT yet proven on live fills.")}
+{p("<b>High-frequency sibling (stocks):</b> the same fade on the full ~100-stock universe, GATED to "
+   "credit/width &gt;= 0.40 + premium &gt;= Rs50 + a live liquidity check, fires <b>~16x/month</b>: "
+   "65% win, +16-25% net/trade, holdout p5 +6.8%, 76/100 stocks. A breakout spikes IV -&gt; you sell "
+   "the rich premium and ride the reversion + IV crush. (A <i>generic</i> stock spread loses -4.7% — "
+   "the credit/width gate IS the edge.) Backtest is OPTIMISTIC (~20%/mo on margin won't fully survive "
+   "live mid-cap fills) -&gt; runs as a FORWARD-TEST at 1 lot. SUPERSEDED AS LEADER by "
+   "STOCK CREDIT v2 (TP-50) — see THE LEADER section above; v1 keeps running in parallel.")}
+{dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-9) · engine/swing_credit.py · engine/stock_credit.py")}
+
+{h("★★★ OUT-OF-TIME REGIME TEST — REAL NSE bhavcopy premiums (2019→Sep-2024)")}
+{sub("Question: is the fade edge durable, or was Oct'24–Jun'26 a lucky regime? — now on REAL premiums")}
+{p("NSE F&amp;O <b>bhavcopy</b> carries the actual daily CLOSE + OI of every option contract (incl. "
+   "expired) back to 2019 — the data no broker API exposes. Downloaded every trading day 2019→Sep-2024 "
+   "for NIFTY/FINNIFTY + the full ~100-stock universe, then ran the DEPLOYED geometry on real premiums, "
+   "cleaned: OI liquidity filter, expiry settled via the UNDERLYING intrinsic, 2x stop on the real "
+   "premium path, P&amp;L as net % of width (lot-independent). This REPLACES the earlier calibrated "
+   "proxy — it is the real answer.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Config (deployed geometry)</td><td>Trades</td><td>Win%</td><td>Net % of width</td></tr>
+<tr><td style="color:{PURPLE};">Index fade — NIFTY (no gate)</td><td>181</td><td>54%</td><td style="color:{RED};">-1.4%</td></tr>
+<tr><td style="color:{TEXT};">Stock fade — UNGATED</td><td>6844</td><td>56%</td><td style="color:{RED};">-1.1%</td></tr>
+<tr><td style="color:{GREEN};">Stock fade — GATED (cw&gt;=0.40, prem&gt;=Rs50)</td><td>718</td><td>54%</td><td style="color:{GREEN};">+5.3%</td></tr>
+</table>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Gated stock fade, net % of width</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024</td></tr>
+<tr><td style="color:{GREEN};">Net %</td><td>+22.7</td><td>+0.4</td><td>+3.0</td><td>+13.4</td><td style="color:{RED};">-4.5</td><td>+1.1</td></tr>
+</table>
+{res("Finding — the credit/width gate IS the edge, and it survives out-of-time. Strip it and the stock "
+     "fade LOSES (-1.1%, like a generic spread and like the index). Keep it and the same universe returns "
+     "+5.3% of width (~+9%/trade on margin), positive in 5 of 6 years on REAL premiums — the ONE durable, "
+     "regime-robust edge. The INDEX fade is net-NEGATIVE out-of-time (-1.4%), positive only in 2019 &amp; "
+     "2024 (favorable regimes) — the Oct'24–Jun'26 '+12%' landed on a good regime, NOT a real edge.")}
+{dim("Reality check: the real edge is ~1/3-1/2 of the optimistic recent-window backtest (+16-25% -> +5.3% "
+     "of width; 65% -> 54% win). DOWNGRADE the index swing to regime-dependent; treat the GATED STOCK "
+     "credit spread as the primary fade. Keep lots at 1. File: studies/STOCK_OPTIONS_NO_EDGE.md (Part 10).")}
+
+{h("★ REAL-OPTION OPTIMIZATION + 1-YEAR REALITY CHECK (2026-06)")}
+{sub("Question: what is the edge on REAL option P&amp;L, not the underlying proxy?")}
+{p("Upstox Plus unlocked historical premiums for EXPIRED contracts, so the strategy was "
+   "re-backtested on actual option P&amp;L. A min-premium config (option &gt;= Rs30 + alignment, "
+   "-15 stop) LOOKED great on a 180-day window: 64% win, +1.5%. But re-run on a FULL YEAR "
+   "(232 trades) it came in <b>55% win, -1.0% profit</b> — overfit to a recent ~6-month regime. "
+   "A train/test split INSIDE a short window is not true out-of-sample.")}
+{res("Honest verdict: STOCKS have NO proven durable edge — the min-premium gate is kept only "
+     "because richer options have ~3x tighter spreads (a cost filter), not for profit. The "
+     "INDEX trend-ride (-15 stop) DID hold: +0.9% over 18 months (453 trades), positive on both "
+     "train and test — the one real, thin edge. Stocks stay a paper forward-test.")}
+{dim("File: studies/REAL_OPTION_OPTIMIZATION.md (CORRECTION at top)")}
+
+{h("1 - Win-Rate Research Log (the baseline)")}
+{sub("Question: how high can the win rate realistically go?")}
+{p("Swept risk-reward, timeframes, ORB benchmarks and factor studies across many configs.")}
+{res("Result: a hard ~52-57% out-of-sample win-rate wall. No single tweak breaks it; the "
+     "edge has to come from FILTERING bad trades, not a magic indicator.")}
+{dim("File: studies/WIN_RATE_RESEARCH_LOG.md")}
+
+{h("2 - Gate 3: Market Alignment (the Final Strategy)")}
+{sub("Question: does NOT fighting the Nifty's intraday direction help?")}
+{p("Only LONG when Nifty is up, only SHORT when Nifty is down. Backtested 30 + 60 days.")}
+{res("Result (60-day): win ~59%, P&amp;L +Rs17,299 -&gt; +Rs30,911 (~2x), fewer trades. The gain "
+     "is risk, not hit-rate: it cuts the trend-fighting trades that lose BIG. NOW LIVE.")}
+{dim("File: studies/FINAL_STRATEGY_TESTING_60DAY.md")}
+
+{h("3 - Gate 4: Don't Chase (entry-extension filter)")}
+{sub("Question: do signals that fire after the stock already ran lose edge?")}
+{p("Found via 365-day analysis: entries already &gt;2.9% extended from the open won ~45% vs "
+   "~55% in the sweet spot. Skip the chasers. Tuned 2.6 vs 2.9 (2.9 won every metric).")}
+{res("Result (60-day): win 59% -&gt; 61%, P&amp;L +Rs32,519 -&gt; +Rs36,792, return-on-capital "
+     "+1.7% -&gt; +2.8% on 26% fewer trades. A risk-efficiency gain. NOW LIVE.")}
+{dim("File: studies/GATE4_DONT_CHASE.md")}
+
+{h("4 - Gate 5: Wide Open (opening-range width filter)")}
+{sub("Question: can a 5th gate raise the win rate at the same +10/-20 risk-reward?")}
+{p("A disciplined loop: collect 90 days of trades with features + premium paths, search "
+   "candidates by out-of-sample expectancy, then VALIDATE on 365 days. 'Wide opening range "
+   "(&gt;=0.8% of price)' = real morning momentum; narrow opens are chop. (Time-of-day looked "
+   "great on the small sample but flipped on 365 days -> rejected as noise.)")}
+{res("Result (365-day, 506 trades, validated): directional win 51% -&gt; 54%; option win 30-day "
+     "61% -&gt; 66%, 60-day 66% -&gt; 70% at the SAME +10/-20. DEPLOYED as Gate 5.")}
+{dim("File: studies/GATE5_WIDE_OPEN.md")}
+
+{h("5 - Index ORB+VWAP: Trend-Ride Exit (the index fix)")}
+{sub("Question: why was the index strategy losing every day?")}
+{p("The old fixed +20% target capped winners while still taking full -20% stops - backwards "
+   "for a trend setup. Replaced with: ride the winner, exit on VWAP reclaim after +12%, hard "
+   "-20% stop; plus a clean-trend entry filter.")}
+{res("Result (60-day): win 27% -&gt; 63%, -2.6%/trade -&gt; +0.8%/trade. Stops the bleed (still "
+     "~breakeven net, a forward-test). NOW LIVE.")}
+{dim("File: studies/INDEX_TREND_RIDE_EXIT.md")}
+
+{h("6 - 365-Day Directional Validation (does the edge last a year?)")}
+{sub("Question: does the signal predict direction over a full year, not just a lucky month?")}
+{p("Option premiums only reach ~1 month back, but 5-min PRICE reaches ~365 days. Tested the "
+   "directional edge on 1,117 signals over the year.")}
+{res("Result: raw signal = coin flip (49%). ALIGNED (Gate 3) = 52% hit, +0.13%/trade, and it "
+     "HOLDS across all 12 months (772 trades). The edge is real but THIN - options leverage it.")}
+{dim("File: studies/UNDERLYING_VALIDATION_365D.md")}
+
+{h("7 - Stock Option Exit Cap (+10% vs no cap)")}
+{sub("Question: should we remove the +10% target and let stock winners ride?")}
+{p("Tested +10% / +20% / +30% / no-cap on the same trades, -20% stop. NOT deployed.")}
+{res("Result: removing the cap is INCONSISTENT - worst on 30-day (+0.5%), best on 60-day "
+     "(+3.6%) = high variance, not a reliable edge. The +10% cap gives the best win rate "
+     "(~60%) and lowest variance. KEPT at +10%.")}
+{dim("File: studies/STOCK_OPTION_EXIT_CAP.md")}
+
+{h("8 - Prophet Forward-Test (forecasting models)")}
+{sub("Question: can a time-series forecaster (Prophet) predict the index or the P&amp;L?")}
+{p("Forecast NIFTY/BANKNIFTY + the equity curve, then cross-validated the error.")}
+{res("Result: 20-day directional hit-rate 43% (NIFTY) / 21% (BANKNIFTY) - WORSE than a coin "
+     "flip; the forecast error is bigger than the move it predicts. Daily markets are near-"
+     "random. NOT wired into the app - it would add noise, not signal.")}
+{dim("File: studies/PROPHET_FORWARD_TEST.md")}
+
+{h("9 - Data Availability Limits (what can be backtested)")}
+{sub("Question: can we backtest 180 / 365 days on real option data?")}
+{p("Probed Upstox depth. Daily price = 2+ yrs, 5-min price = ~1 yr, but option-premium "
+   "candles = only ~3-4 weeks (expired contracts drop out of the instrument master).")}
+{res("Result: a clean OPTION-P&amp;L backtest is capped at ~1 month. Longer validation needs the "
+     "underlying-proxy (done), synthetic Black-Scholes premiums, or a paid options vendor.")}
+{dim("File: studies/DATA_AVAILABILITY_LIMITS.md")}
+
+{h("The honest bottom line")}
+{p("After ~9,000 real-option spread-trades: <b>option BUYING has no net edge</b> out-of-sample (the "
+   "3-Family gates and the index trend-ride are ~breakeven net — kept as forward-tests, not money-makers). "
+   "The real, repeatable edge is the opposite — <b>SELLING a credit spread that FADES a breakout</b> — but "
+   "real pre-2024 premiums (NSE bhavcopy 2019→Sep 2024) narrowed that to ONE strategy: the <b>gated STOCK "
+   "fade</b> (credit/width≥0.40), which held +5.3% of width / 54% win across 5 of 6 years. The INDEX swing "
+   "did NOT hold — it was net-negative (−1.4%) on real multi-year data and a gate salvage failed "
+   "out-of-sample, so it's downgraded to a regime-dependent forward-test. Nothing here is proven on live "
+   "fills — the backtests are real but optimistic, and live fills are the only honest judge.")}
+<p style="color:{TEXT_DIM};margin-top:14px;font-size:10px;">
+All studies reproducible from /studies on GitHub. Gross of costs. For educational use only. Not financial advice.
+</p>
+</div>
+"""
+
+    def _screen_readme(self) -> QWidget:
+        w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
+        v.addWidget(self._panel_title("README  -  how this system trades, in plain language"))
+        doc = QTextEdit(); doc.setReadOnly(True); doc.setFont(QFont("Menlo", 11))
+        doc.setHtml(self._readme_html())
+        v.addWidget(doc)
+        return w
+
+    def _readme_html(self) -> str:
+        from engine import config as C
+
+        def h(t):   # section header
+            return f'<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:18px;">{t}</p>'
+        def sub(t):
+            return f'<p style="color:{AMBER};font-weight:bold;margin-top:10px;">{t}</p>'
+        def p(t):
+            return f'<p style="color:{TEXT};margin:4px 0;">{t}</p>'
+        def dim(t):
+            return f'<p style="color:{TEXT_DIM};margin:3px 0;">{t}</p>'
+
+        return f"""
+<div style="color:{TEXT};">
+
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">SYSTEM SETUP &amp; APPLICATION MANUAL</p>
+{dim("How this system is installed, how it runs, and how to use every tab. For WHAT the strategies are "
+     "and how they were validated, see the STUDIES tab. Mode: PAPER, signals-only — the headless engine "
+     "fires signals and records them daily; YOU place every order manually in Upstox. It never auto-trades.")}
+
+{h("1 — WHAT IT IS (in one breath)")}
+{p(f"A paper-trading engine for NSE options running <b>4 parallel strategies</b> on ~{len(C.UNIVERSE)} "
+   "stocks + NIFTY/BANKNIFTY/FINNIFTY. It scans, scores, and surfaces BUY/SELL signals on a dashboard; "
+   "you place the orders. One intraday BUY strategy (3-Family stocks; ORB+VWAP RETIRED 2026-07) and THREE multi-day "
+   "SELL strategies (stock &amp; index credit spreads). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
+
+{h("2 — SETUP (from a fresh Mac)")}
+{p("<b>1.</b> <b>git clone</b> the repo &amp; <b>cd</b> in. "
+   "<b>2.</b> Run <b>./setup.sh</b> — makes the venv, installs deps, writes the "
+   ".env template, and installs the two launchd jobs (engine + viewer). "
+   "<b>3.</b> Edit <b>.env</b> and add your free Upstox <b>Analytics</b> token (read-only data feed — no "
+   "trading token needed). <b>4.</b> Kickstart the engine; the viewer auto-launches 09:00 on weekdays.")}
+{dim("SECURITY: .env holds your token — it is gitignored and must NEVER be committed. Requires macOS "
+     "(Apple Silicon), Python 3.9+, and an internet connection during market hours.")}
+
+{h("3 — HOW IT RUNS (engine vs viewer — two processes)")}
+{p(f"<b style='color:{GREEN}'>ENGINE</b> (headless, launchd job, always on): does ALL the work — scans "
+   "every 5 min in market hours, fires signals, resolves trades, books at the 15:30 close, and saves "
+   "everything to local files (engine.db, signals.db, trade_log.json, the credit-spread books). Wakes "
+   "every 5 s while the market is open; idles when closed. Runs whether or not this window is open.")}
+{p(f"<b style='color:{PURPLE}'>VIEWER</b> (this app, read-only): never scans/fires/writes — it only reads "
+   "what the engine wrote and displays it (header shows 'READ-ONLY VIEWER — engine scan Nm ago'). Re-reads "
+   "disk every ~5–15 s. <b>Why split:</b> a viewer crash can never stop trading, and timing is independent "
+   "of the display. <b>For unattended running:</b> keep the laptop on, lid open, on AC power.")}
+
+{h("4 — THE APP, TAB BY TAB")}
+{sub("PM DECISIONS — today's actions")}
+{p("The board of what to place TODAY. A live banner at the top says which window is active right now. One "
+   "section per strategy, each labelled with its signal window. <b>Credit spreads show as two rows</b> — a "
+   "SELL row (the leg you sell + premium received) and a BUY row (the hedge + premium paid) — with LOT and "
+   "total MARGIN. The option type (CE/PE) is in the ACTION column so it's never hidden by a long name. "
+   "Shows only <b>today's</b> credit-spread signals; ongoing ones live in SWING TRADES.")}
+{sub("WATCHLIST — the funnel (stocks)")}
+{p("Every stock that cleared Gate 1 (alpha), progressing through the remaining gates toward PM DECISIONS. "
+   "Sorted closest-to-firing on top (e.g. '3/4 next: ORB'). This is where you watch a 3-Family setup build.")}
+{sub("SWING TRADES — the credit-spread trade log")}
+{p("The two SELL strategies (index swing + stock), split. Each spread is <b>two leg rows</b> with per-leg "
+   "entry / current / P&amp;L, then the consolidated <b>NET</b>. A stats bar shows trades, win rate, margin "
+   "deployed and booked/open P&amp;L. The 'NOW' value keeps running live even after a WIN/LOSS is booked.")}
+{sub("TRADE LOG — the intraday BUY strategies")}
+{p("3-Family stocks + ORB NIFTY/BANKNIFTY, LIVE vs SIMULATION. Because intraday capital recycles daily, "
+   "returns are shown on the <b>average capital deployed per day</b>, with an <b>IRR</b> annualized over "
+   "CALENDAR days (idle weekends count) — the honest yardstick, gated until ~30 days of track record.")}
+{sub("STUDIES — the strategies &amp; the research")}
+{p("The strategy summary table (win/loss, avg P&amp;L per trade, return per month) + the full tests-and-"
+   "trades trail: ~9,000 real-option spread-trades across 9 tests, showing what worked and what was "
+   "rejected. This is the 'why' behind every live strategy.")}
+
+{h("5 — SIGNAL TIMING (IST, trading days only)")}
+{p(f"<b>Stock options (3-Family):</b> {C.MARKET_OPEN}–{C.MARKET_CLOSE}, most active 10:30–11:00 · "
+   f"<b>ORB+VWAP index:</b> before {C.ORB_VWAP_ENTRY_CUTOFF} · "
+   f"<b>Stock &amp; Swing credit spreads:</b> once/day, ~{C.STOCK_CREDIT_SCAN_AFTER} (a daily breakout needs "
+   "the near-close). Signals are selective — many days few or none; that's the point, not a fault.")}
+
+{h("6 — HOW TO PLACE AN ORDER")}
+{p("<b>BUY strategies:</b> the PM row gives the exact BUY — e.g. 'BUY RELIANCE 1400 CE @ Rs X'. Place it in "
+   "Upstox; exit at the shown target/stop. <b>Credit spreads (SELL):</b> place <b>both legs together</b> — "
+   "the SELL row first (you receive the credit), the BUY row as the hedge (caps the loss). Read the strikes, "
+   "type and premiums straight off the two rows. Hold to expiry unless the stop (2× credit) triggers.")}
+
+{h("7 — RISK CONTROLS")}
+{p(f"Halt after <b>{C.CONSECUTIVE_LOSS_HALT}</b> stop-outs in a row · intraday trades force-closed by "
+   f"{C.KILL_SWITCH_TIME} (never held overnight) · credit spreads are defined-risk (max loss = margin) and "
+   "carry overnight to expiry. <b>Sizing:</b> KEEP LOTS AT 1 while forward-testing; never fill your whole "
+   "margin — ~16 correlated stock spreads can move against you together on a bad day.")}
+
+{h("8 — HEALTH CHECKS &amp; DATA")}
+{p("<b>Engine alive?</b> the viewer header shows the last scan age; if it stops advancing during market "
+   "hours, the engine isn't scanning. <b>Data:</b> Upstox V3 on a read-only Analytics token (live LTP, "
+   "5-min &amp; daily candles, index/option chains); real expired-option history ~Oct 2024–Jun 2026 for "
+   "backtests. All data saved locally, daily. Yahoo is an emergency fallback only.")}
+
+<p style="color:{TEXT_DIM};margin-top:16px;font-size:10px;">
+Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHTS['TREND']['weight']} / FLOW {C.FAMILY_WEIGHTS['FLOW']['weight']} / EVENT {C.FAMILY_WEIGHTS['EVENT']['weight']} &nbsp;·&nbsp; For educational use only. Not financial advice.
+</p>
+
+</div>
+"""
+
+    # ── interactions ──────────────────────────────────────────────────────────
+    def switch(self, idx: int):
+        self.active_screen = idx
+        self.stack.setCurrentIndex(idx)
+        self._highlight_tab(idx)
+
+    def trigger_scan(self):
+        """READ-ONLY: load the latest scan the headless engine wrote to disk and refresh
+        the display. The GUI never scans, executes, or books — engine_runner does all that."""
+        self._load_latest_scan()
+        self._refresh_pm(); self._refresh_watchlist(); self._refresh_swing_tab(); self._refresh_log()
+
+    def _load_latest_scan(self):
+        """Read the engine's latest scan snapshot (results + ORB+VWAP rows) from disk."""
+        import json
+        try:
+            if _os.path.exists(LATEST_SCAN):
+                d = json.load(open(LATEST_SCAN))
+                self.last_scan_results = d.get("results", []) or []
+                self.agent.orbvwap_signals = d.get("orbvwap", []) or []
+                self._latest_scan_ts = d.get("ts")
+        except Exception as e:
+            logger.warning(f"load latest_scan failed: {e}")
+        # swing credit spreads — its own snapshot (engine writes data/swing.json on resolve/scan)
+        try:
+            if _os.path.exists(SWING_SNAP):
+                s = json.load(open(SWING_SNAP))
+                self._swing_rows = s.get("rows", []) or []
+        except Exception as e:
+            logger.warning(f"load swing.json failed: {e}")
+        try:
+            if _os.path.exists(STOCKCR_SNAP):
+                s = json.load(open(STOCKCR_SNAP))
+                self._stockcr_rows = s.get("rows", []) or []
+            if _os.path.exists(STOCKCR2_SNAP):
+                s2 = json.load(open(STOCKCR2_SNAP))
+                self._stockcr2_rows = s2.get("rows", []) or []
+        except Exception as e:
+            logger.warning(f"load stock_credit.json failed: {e}")
+
+    # ── refreshers ────────────────────────────────────────────────────────────
+    @staticmethod
+    def _underlying_kind(ticker: str) -> str:
+        if ticker == "NIFTY": return "NIFTY"
+        if ticker == "BANKNIFTY": return "BANKNIFTY"
+        return "STOCK"
+
+    def _dir_color(self, d):
+        return QColor(GREEN) if d == "LONG" else QColor(RED) if d == "SHORT" else QColor(TEXT_DIM)
+
+    def _set_row(self, table, row, values, fg=None, bg=None):
+        for col, val in enumerate(values):
+            it = QTableWidgetItem(str(val))
+            if fg: it.setForeground(QBrush(fg))
+            if bg: it.setBackground(QBrush(bg))
+            table.setItem(row, col, it)
+
+    def _color_cell(self, table, row, col, color):
+        it = table.item(row, col)
+        if it:
+            it.setForeground(QBrush(color))
+
+    # ── PM DECISIONS persists the DAY'S fired signals (not just the current scan) ──
+    def _ensure_fired_today(self):
+        """READ-ONLY: reset at day rollover, then RE-SEED from the engine's trade log on
+        EVERY refresh so PM DECISIONS picks up signals the headless engine writes mid-day.
+        (_seed_fired_from_log is idempotent — it skips tickers already shown.)"""
+        today = datetime.now(IST).date()
+        if getattr(self, "_fired_day", None) != today:
+            self._fired_day = today
+            self._fired_today = []
+            try:    # refresh the daily CSV snapshot of signals.db (once per day)
+                from engine import signal_db
+                signal_db.export_csv()
+            except Exception:
+                pass
+        self._seed_fired_from_log(today)   # re-read the trade log each refresh (read-only viewer)
+
+    def _seed_fired_from_log(self, today):
+        try:
+            import os, json
+            from engine.config import TRADE_LOG_PATH
+            if not os.path.exists(TRADE_LOG_PATH):
+                return
+            with open(TRADE_LOG_PATH) as f:
+                data = json.load(f)
+            trades = data.get("trades", []) if isinstance(data, dict) else data
+            for t in trades:
+                st = str(t.get("signal_time", ""))
+                tk = t.get("ticker")
+                if not tk or not st.startswith(today.isoformat()):
+                    continue
+                if any(x["ticker"] == tk for x in self._fired_today):
+                    continue
+                self._fired_today.append({
+                    "time": st[11:19] if len(st) >= 19 else st, "ticker": tk,
+                    "direction": t.get("direction"),
+                    "instrument": t.get("instrument") or ("CALL" if t.get("direction") == "LONG" else "PUT"),
+                    "kind": self._underlying_kind(tk), "order": None,
+                    "alpha_z": t.get("alpha_z"), "breadth": t.get("breadth"), "vol_ratio": None,
+                })
+        except Exception as e:
+            logger.warning(f"Seed fired-from-log failed: {e}")
+
+    def _record_fired(self, sig):
+        """Capture a freshly-fired signal so it stays on PM DECISIONS all day."""
+        self._ensure_fired_today()
+        tk = sig.get("ticker")
+        if not tk or any(x["ticker"] == tk for x in self._fired_today):
+            return
+        order = None
+        try:
+            from engine.options import build_live_option_order
+            from engine.data_fetcher import get_cached_ltp
+            spot = get_cached_ltp(tk) or sig.get("entry_price") or 0
+            order = build_live_option_order(tk, spot, sig.get("direction", "LONG"))
+        except Exception:
+            pass
+        self._fired_today.append({
+            "time": datetime.now(IST).strftime("%H:%M:%S"), "ticker": tk,
+            "direction": sig.get("direction"),
+            "instrument": "CALL" if sig.get("direction") == "LONG" else "PUT",
+            "kind": self._underlying_kind(tk), "order": order,
+            "alpha_z": sig.get("alpha_z"), "breadth": sig.get("breadth"),
+            "vol_ratio": sig.get("vol_ratio"),
+        })
+
+    @staticmethod
+    def _fit_table(table):
+        """Size the table to show ALL its rows (no cramped internal scroll). Safe because the
+        PM / TRADE LOG / SWING screens are each wrapped in a QScrollArea (see _scroll), so the
+        whole page scrolls smoothly and the nav bar stays fixed above."""
+        rh = table.verticalHeader().defaultSectionSize() or 32
+        n = max(table.rowCount(), 1)
+        table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        table.setFixedHeight(34 + n * rh + 6)   # header + rows + padding
+
+    def _scroll(self, inner: QWidget) -> QScrollArea:
+        """Wrap a screen's content in a vertical scroll area so long/stacked sections stay
+        readable and navigation is smooth (the tab bar lives outside the stack, so it's unaffected)."""
+        sa = QScrollArea(); sa.setWidgetResizable(True); sa.setWidget(inner)
+        sa.setFrameShape(QFrame.Shape.NoFrame)
+        sa.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        return sa
+
+    def _refresh_outcomes(self):
+        """Fast (5s) refresh of the outcome-sensitive views only — PM DECISIONS + TRADE LOG —
+        so a freshly booked WIN/LOSS appears within seconds. Fully guarded: a read error here
+        must never crash the read-only viewer."""
+        try:
+            self._refresh_pm()
+        except Exception as e:
+            logger.warning(f"outcome refresh (pm): {e}")
+        try:
+            self._refresh_log()
+        except Exception as e:
+            logger.warning(f"outcome refresh (log): {e}")
+
+    def _update_pm_now_hint(self):
+        """Dynamic 'where to look NOW' banner on PM DECISIONS, driven by the IST clock."""
+        if not hasattr(self, "pm_now_hint"):
+            return
+        now = datetime.now(IST); m = now.hour * 60 + now.minute; wd = now.weekday()
+        holiday = getattr(self, "_holiday", False)
+        if wd >= 5:
+            txt, col = "Weekend — market closed. No signals today; next session Monday ~09:15.", TEXT_DIM
+        elif holiday:
+            txt, col = "Market holiday — no signals today. Next trading day ~09:15.", TEXT_DIM
+        elif m < 9 * 60 + 15:
+            txt, col = "Pre-open — scanning starts 09:15; intraday signals from ~09:30.", AMBER
+        elif m < 11 * 60:
+            txt, col = ("● NOW: intraday window — watch STOCK OPTIONS + INDEX (ORB+VWAP, fires before 11:00). "
+                        "Credit spreads scan at ~15:10.", GREEN)
+        elif m < 15 * 60 + 10:
+            txt, col = ("● NOW: stock intraday window (ORB+VWAP window closed at 11:00). "
+                        "Credit spreads scan at ~15:10.", GREEN)
+        elif m <= 15 * 60 + 35:
+            txt, col = ("● NOW: CREDIT-SPREAD scan (~15:10) — check STOCK CREDIT + SWING CREDIT sections.", CYAN)
+        else:
+            txt, col = "Market closed — today's signals are booked. Next session tomorrow ~09:15.", TEXT_DIM
+        self.pm_now_hint.setText("  " + txt)
+        self.pm_now_hint.setStyleSheet(f"color:{col}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
+
+    def _refresh_pm(self):
+        self._update_pm_now_hint()
+        self._ensure_fired_today()
+        from engine.options import build_live_option_order
+        from engine.data_fetcher import get_cached_ltp, fetch_upstox_ltp
+        fired = sorted([f for f in self._fired_today if f["kind"] == "STOCK"],
+                       key=lambda f: f["time"], reverse=True)   # newest on top
+        outcomes = self._today_trade_outcomes()
+        self.pm_empty.setVisible(len(fired) == 0)
+        self.pm_stock.setRowCount(len(fired))
+        for r, f in enumerate(fired):
+            order = f.get("order")
+            if order is None:  # seeded-from-log row — try to build the option order now
+                try:
+                    spot = get_cached_ltp(f["ticker"]) or 0
+                    order = build_live_option_order(f["ticker"], spot, f.get("direction", "LONG"))
+                    f["order"] = order
+                except Exception:
+                    order = None
+            sym = f["ticker"].replace(".NS", "")
+            # (read-only viewer — the engine writes signals.db, the GUI only displays)
+            oc_rec = outcomes.get((sym, "3-Family"))
+            status = self._pm_status(self._oc_status(oc_rec))   # OPEN / WIN / LOSS, synced to trade log
+            kind = (order["instrument"] if order else f.get("instrument", ""))
+            fg = QColor(GREEN) if kind == "CALL" else (QColor(RED) if kind == "PUT" else QColor(AMBER))
+            if not order:
+                vals = [f["time"], sym, kind, "—", "—", "—", "—", "—", "—", "—", "—", status]
+                self._set_row(self.pm_stock, r, vals, fg=fg)
+                self._color_cell(self.pm_stock, r, 11, self._status_color(status)); continue
+            # live current premium of the exact option — fetch ONLY while OPEN. A booked
+            # (WIN/LOSS) trade needs no live quote, so skipping it keeps the fast 5s outcome
+            # refresh off the network for closed rows (no GUI-thread stall, no wasted API calls).
+            curp = "—"
+            if status == "OPEN":
+                try:
+                    lt = fetch_upstox_ltp(order["option_key"])
+                    if lt.get("success") and lt.get("price"):
+                        curp = f"Rs {lt['price']:.2f}"
+                except Exception:
+                    pass
+            elif oc_rec and oc_rec.get("exit"):
+                curp = f"Rs {oc_rec['exit']:.2f}"   # booked exit price (closed) — not a stale live quote
+            cap = f"Rs {order['capital']:,.0f}" if order.get("capital") else "—"
+            vals = [f["time"], sym, kind, f"{order['strike']:.2f}", order["expiry"],
+                    f"Rs {order['premium']:.2f}", curp,
+                    f"Rs {order['target_premium']:.2f}", f"Rs {order['stop_premium']:.2f}",
+                    order.get("lot_size", "—"), cap, status]
+            self._set_row(self.pm_stock, r, vals, fg=fg)
+            self._color_cell(self.pm_stock, r, 11, self._status_color(status))
+
+        self._fit_table(self.pm_stock)
+        self._refresh_swing()
+        self._refresh_stock_credit()
+        self._refresh_orbvwap()
+
+    @staticmethod
+    def _db_record_stock(f, order, sym):
+        try:
+            from engine import signal_db
+            o = order or {}
+            signal_db.record_signal(
+                time=f.get("time"), strategy="3-Family", symbol=sym,
+                direction=f.get("direction"), opt_type=f.get("instrument"),
+                strike=o.get("strike"), expiry=o.get("expiry"),
+                entry_premium=o.get("premium"), target_premium=o.get("target_premium"),
+                stop_premium=o.get("stop_premium"), lot=o.get("lot_size"),
+                capital=o.get("capital"), alpha_z=f.get("alpha_z"),
+                breadth=f.get("breadth"), vol_ratio=f.get("vol_ratio"), status="OPEN")
+        except Exception:
+            pass
+
+    def _today_trade_outcomes(self):
+        """Map today's booked trades -> outcome, so PM DECISIONS shows the SAME status as the
+        authoritative trade log: OPEN while live, WIN/LOSS once closed. Read-only (the viewer
+        never writes). Keyed by (symbol-without-.NS, strategy)."""
+        out = {}
+        try:
+            import json as _json
+            p = _os.path.join(DATA_DIR, "trade_log.json")
+            if not _os.path.exists(p):
+                return out
+            d = _json.load(open(p))
+            today = datetime.now(IST).date().isoformat()
+            for t in d.get("trades", []):
+                if (t.get("signal_time") or "").startswith(today):
+                    key = ((t.get("ticker") or "").replace(".NS", ""), t.get("strategy"))
+                    out[key] = {"outcome": t.get("outcome"),         # 'WIN'/'LOSS'/None(open)
+                                "exit": t.get("exit_premium"),       # the price it was BOOKED at
+                                "option_key": t.get("option_key")}   # for a LIVE quote while open
+        except Exception as e:
+            logger.warning(f"trade outcomes read failed: {e}")
+        return out
+
+    @staticmethod
+    def _oc_status(rec):
+        return rec.get("outcome") if isinstance(rec, dict) else rec
+
+    @staticmethod
+    def _pm_status(outcome):
+        """PM DECISIONS status label, synced to the trade log: WIN / LOSS when booked, else OPEN."""
+        if outcome == "WIN":
+            return "WIN"
+        if outcome == "LOSS":
+            return "LOSS"
+        return "OPEN"
+
+    def _status_color(self, status):
+        if status == "WIN":
+            return QColor(GREEN)
+        if status == "LOSS":
+            return QColor(RED)
+        return QColor(AMBER)   # OPEN
+
+    def _today_index_signals(self):
+        """Today's ORB+VWAP signals from signals.db — PERSISTENT (survives engine restart
+        and the 11:00 entry cutoff), so a fired NIFTY/BANKNIFTY signal stays on PM all day."""
+        out = {}
+        try:
+            import sqlite3
+            db = _os.path.join(DATA_DIR, "signals.db")
+            if not _os.path.exists(db):
+                return out
+            con = sqlite3.connect(db)
+            today = datetime.now(IST).date().isoformat()
+            cols = ["time", "symbol", "direction", "opt_type", "strike", "expiry",
+                    "entry_premium", "stop_premium", "lot", "status"]
+            for row in con.execute(
+                    f"SELECT {','.join(cols)} FROM pm_signals WHERE date=? AND strategy='ORB+VWAP'",
+                    (today,)):
+                d = dict(zip(cols, row))
+                out[d["symbol"]] = d            # latest row per index (UNIQUE constraint)
+            con.close()
+        except Exception as e:
+            logger.warning(f"index signals read failed: {e}")
+        return out
+
+    def _refresh_orbvwap(self):
+        if not hasattr(self, "pm_orbvwap"):
+            return   # RETIRED: PM slot now shows STOCK CREDIT v2
+        """Index ORB+VWAP rows on PM DECISIONS. A FIRED signal persists for the whole day
+        (from signals.db); an index with no signal yet shows the live WATCHING placeholder."""
+        live = {s.get("index"): s for s in (getattr(self.agent, "orbvwap_signals", []) or [])}
+        fired = self._today_index_signals()
+        outcomes = self._today_trade_outcomes()
+        indices = ["NIFTY", "BANKNIFTY"]
+        self.pm_orbvwap.setRowCount(len(indices))
+        for r, idx in enumerate(indices):
+            rec = fired.get(idx)
+            status = None
+            if rec and rec.get("entry_premium"):     # a real fired signal today — persist it
+                kind = rec.get("opt_type") or "—"
+                strike = f"{rec['strike']:.2f}" if isinstance(rec.get("strike"), (int, float)) else "—"
+                entry = f"Rs {rec['entry_premium']:.2f}"
+                stop = f"Rs {rec['stop_premium']:.2f}" if rec.get("stop_premium") else "—"
+                oc_rec = outcomes.get((idx, "ORB+VWAP"))
+                status = self._pm_status(self._oc_status(oc_rec))   # OPEN / WIN / LOSS, synced to trade log
+                # CURRENT premium:
+                #  - booked (WIN/LOSS): the EXIT it was booked at (the engine 'current' goes
+                #    stale post-11:00 cutoff and can read below intrinsic — the impossible 370).
+                #  - OPEN: a LIVE option quote fetched here every refresh (~5s), so it's dynamic
+                #    like the stock rows — not the engine's frozen 5-min/post-cutoff value.
+                lr = live.get(idx) or {}
+                cur = "—"
+                if status in ("WIN", "LOSS") and oc_rec and oc_rec.get("exit"):
+                    cur = f"Rs {oc_rec['exit']:.2f}"
+                elif status == "OPEN" and oc_rec and oc_rec.get("option_key"):
+                    try:
+                        from engine.data_fetcher import fetch_upstox_ltp
+                        lt = fetch_upstox_ltp(oc_rec["option_key"])
+                        if lt.get("success") and lt.get("price"):
+                            cur = f"Rs {lt['price']:.2f}"
+                    except Exception:
+                        pass
+                    if cur == "—" and lr.get("current"):   # fallback to engine's value
+                        cur = f"Rs {lr['current']:.2f}"
+                elif lr.get("current"):
+                    cur = f"Rs {lr['current']:.2f}"
+                vals = [rec.get("time", "—"), idx, kind, strike, rec.get("expiry", "—"),
+                        entry, "VWAP-break · -20%", stop, cur, rec.get("lot", "—"),
+                        status]
+                fg = QColor(GREEN) if kind == "CALL" else QColor(RED)
+            else:                                     # no signal yet — live placeholder
+                lr = live.get(idx, {})
+                vals = [datetime.now(IST).strftime("%H:%M"), idx, "—", "—", "—", "—", "—",
+                        "—", "—", "—", lr.get("status", "WATCHING")]
+                fg = QColor(TEXT_DIM)
+            self._set_row(self.pm_orbvwap, r, vals, fg=fg)
+            if status:
+                self._color_cell(self.pm_orbvwap, r, 10, self._status_color(status))
+        self._fit_table(self.pm_orbvwap)
+
+    def _refresh_swing(self):
+        """SWING CREDIT SPREADS on PM DECISIONS — two rows per trade (SELL leg + BUY leg)."""
+        if hasattr(self, "pm_swing"):
+            self._fill_pm_credit(self.pm_swing, list(self._swing_rows or []), "index")
+
+    def _refresh_stock_credit(self):
+        """STOCK CREDIT SPREADS on PM DECISIONS — two rows per trade (SELL leg + BUY leg)."""
+        if hasattr(self, "pm_stockcr"):
+            self._fill_pm_credit(self.pm_stockcr, list(self._stockcr_rows or []), "stock")
+        if hasattr(self, "pm_stockcr2"):
+            self._fill_pm_credit(self.pm_stockcr2, list(self._stockcr2_rows or []), "stock")
+
+    def _fill_pm_credit(self, table, rows, kind):
+        """Render a PM credit-spread section as TWO ROWS per trade so it's unmistakable what to do:
+        a SELL row (the leg you SELL — premium received, net credit) and a BUY row (the hedge you
+        BUY — premium paid, max loss + live/booked P&L). Cols: ACTION·INSTRUMENT·PREMIUM·EXPIRY·AMOUNT·P&L/STATUS."""
+        # PM DECISIONS shows only TODAY's signals (what to place now). Older/ongoing positions
+        # live in the SWING TRADES trade log.
+        today = datetime.now(IST).date().isoformat()
         rows = [p for p in rows if p.get("entry_date") == today]
         hint = ("no swing signal today — fires on a daily index breakout (fade), scan ~15:10"
                 if kind == "index"
