@@ -238,6 +238,22 @@ STOCK_CREDIT_LOTS         = 1       # paper sizing — KEEP AT 1 to forward-test
 STOCK_CREDIT_SCAN_AFTER   = "15:10" # once/day after this (a daily breakout needs ~the close)
 STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight carry)
 
+# === 0DTE INTRADAY (the 5th strategy, paper forward-test) ===
+# NIFTY expiry-day CALL credit spread: at the open, SELL the CE ~0.5% OTM of spot, BUY the CE
+# 200 pts further out, hold to same-day settlement. NO intraday stop (backtested that way).
+# Validated on REAL premiums: bhavcopy 2019->Sep'24 (282 expiry days) + Upstox OOS Oct'24->Jun'26
+# (91): combined 373 trades, 85.0% win, +3.20% of margin/trade, positive EVERY year.
+# See studies/INTRADAY_85PCT_0DTE_CE_SPREAD.md. Fires only on a weekly-expiry day (~4-5/month).
+ZERO_DTE_ENABLED   = True
+ZERO_DTE_INDEX     = "NIFTY"
+ZERO_DTE_OTM_PCT   = 0.005   # short CE at the strike nearest spot*(1+0.5%)
+ZERO_DTE_WIDTH_PTS = 200     # long wing ~200 pts further out (defined risk)
+ZERO_DTE_LOTS      = 1       # paper sizing — KEEP AT 1 to forward-test
+ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
+ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day
+ZERO_DTE_SETTLE_AFTER = "15:30"  # book at expiry settlement (intrinsic vs spot)
+ZERO_DTE_RESOLVE_INTERVAL = 120  # intraday mark-to-market cadence (s)
+
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own
 # section on PM DECISIONS. Signal: 15-min ORB break on the index FUTURES + hold VWAP

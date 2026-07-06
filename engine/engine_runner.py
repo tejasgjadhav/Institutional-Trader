@@ -55,6 +55,8 @@ class EngineRunner:
         self._swing_scan_day = None
         self._last_stockcr_resolve = 0.0
         self._stockcr_scan_day = None
+        self._last_zdte_resolve = 0.0
+        self._zdte_scan_day = None
 
     # ── persistence helpers ──────────────────────────────────────────────────
     @staticmethod
@@ -271,6 +273,39 @@ class EngineRunner:
             except Exception as e:
                 logger.warning(f"stock_credit_v2 scan: {e}")
 
+    def _zero_dte(self, now):
+        """0DTE INTRADAY (5th strategy) — NIFTY expiry-day CE credit spread. One entry right
+        after the open on weekly-expiry days; intraday MTM; booked at 15:30 settlement.
+        Signals-only paper forward-test — see studies/INTRADAY_85PCT_0DTE_CE_SPREAD.md."""
+        try:
+            from engine import config
+            if not getattr(config, "ZERO_DTE_ENABLED", False):
+                return
+            from engine import zero_dte
+        except Exception as e:
+            logger.warning(f"zero_dte import: {e}")
+            return
+        if (time.time() - self._last_zdte_resolve) >= config.ZERO_DTE_RESOLVE_INTERVAL:
+            self._last_zdte_resolve = time.time()
+            try:
+                n = zero_dte.resolve_positions()
+                if n:
+                    logger.info(f"zero_dte: settled {n} position(s)")
+            except Exception as e:
+                logger.warning(f"zero_dte resolve: {e}")
+        h1, m1 = map(int, config.ZERO_DTE_SCAN_AFTER.split(":"))
+        h2, m2 = map(int, config.ZERO_DTE_ENTRY_CUTOFF.split(":"))
+        mins = now.hour * 60 + now.minute
+        in_window = (h1 * 60 + m1) <= mins <= (h2 * 60 + m2)
+        if (self.agent.is_market_open() and in_window and self._zdte_scan_day != now.date()):
+            self._zdte_scan_day = now.date()
+            try:
+                new = zero_dte.scan_signal()
+                if new:
+                    logger.info(f"zero_dte: opened {new[0]['order_label']}")
+            except Exception as e:
+                logger.warning(f"zero_dte scan: {e}")
+
     def _manage_wakelock(self):
         """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended
         laptop can't idle-sleep mid-session and suspend the engine (the system sleep timer is
@@ -301,6 +336,7 @@ class EngineRunner:
         self._fast_resolve()
         self._swing(now)
         self._stock_credit(now)
+        self._zero_dte(now)
         if self.agent.is_market_open() and (time.time() - self._last_scan) >= SCAN_INTERVAL:
             self._last_scan = time.time()
             try:

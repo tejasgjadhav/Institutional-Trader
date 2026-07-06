@@ -35,6 +35,7 @@ STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
 STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
 STOCKCR2_BOOK = _os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
+ZDTE_BOOK = _os.path.join(DATA_DIR, "zero_dte_positions.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -181,6 +182,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.stack.addWidget(self._screen_log())        # 3
         self.stack.addWidget(self._screen_studies())    # 4
         self.stack.addWidget(self._screen_readme())     # 5
+        self.stack.addWidget(self._screen_zero_dte())   # 6
         v.addWidget(self.stack, 1)
 
         self.status = QStatusBar(); self.setStatusBar(self.status)
@@ -237,14 +239,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         h = QHBoxLayout(w); h.setContentsMargins(8, 0, 8, 0); h.setSpacing(2)
 
         self.tab_btns = []
-        tabs = [("PM DECISIONS", 0), ("WATCHLIST", 1), ("SWING TRADES", 2), ("TRADE LOG", 3),
-                ("STUDIES", 4), ("README", 5)]
+        tabs = [("PM DECISIONS", 0), ("INTRADAY DECISIONS", 6), ("WATCHLIST", 1),
+                ("SWING TRADES", 2), ("TRADE LOG", 3), ("STUDIES", 4), ("README", 5)]
         for label, idx in tabs:
             b = QPushButton(label)
             b.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
             b.setMinimumHeight(44); b.setMinimumWidth(160)
             b.setCursor(Qt.CursorShape.PointingHandCursor)
             b.clicked.connect(lambda _=False, i=idx: self.switch(i))
+            b.setProperty("stack_idx", idx)   # button order ≠ stack order (INTRADAY sits 2nd)
             self.tab_btns.append(b); h.addWidget(b)
         h.addStretch()
 
@@ -256,8 +259,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return w
 
     def _highlight_tab(self, idx: int):
-        for i, b in enumerate(self.tab_btns):
-            if i == idx:
+        for b in self.tab_btns:
+            if b.property("stack_idx") == idx:
                 b.setStyleSheet(
                     f"background-color:{BG};color:{GREEN};border:none;"
                     f"border-top:2px solid {GREEN};border-bottom:2px solid {GREEN};")
@@ -423,6 +426,45 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         l.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         return l
 
+    def _screen_zero_dte(self) -> QWidget:
+        """INTRADAY DECISIONS — the 0DTE NIFTY expiry-day CE credit spread (5th strategy).
+        One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:30."""
+        inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
+        v.addWidget(self._panel_title("INTRADAY DECISIONS  -  0DTE NIFTY expiry-day call credit spread", CYAN))
+        hdr = QLabel("★ 0DTE NIFTY — 85% WIN 2019→2026, +3.2% OF MARGIN/TRADE, POSITIVE EVERY YEAR ★   "
+                     "expiry day at the open: SELL the CE ~0.5% above spot · BUY the CE 200 pts higher · "
+                     "hold to the SAME-DAY settlement (no stop) · ~4-5 trades/month · margin ≈ ₹14k/lot "
+                     "(= the max loss — defined risk)")
+        hdr.setWordWrap(True)
+        hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
+        hdr.setStyleSheet(f"color:#000000; background-color:{CYAN}; padding:8px; border:2px solid {CYAN}; border-radius:4px;")
+        v.addWidget(hdr)
+        how = QLabel("How to place it (manually, in Upstox): on a NIFTY weekly-expiry morning the row below "
+                     "spells out both legs — SELL the short CE, BUY the wing CE, same expiry (today). Do "
+                     "nothing intraday. Both legs expire/settle at 15:30. Wins ~85% of weeks (small credits); "
+                     "the ~15% losers can cost up to the full margin — that is the shape, sized by the wing. "
+                     "Validated on REAL premiums 2019→Jun'26 (373 expiry days, in-sample + out-of-sample); "
+                     "backtest details: STUDIES tab + studies/INTRADAY_85PCT_0DTE_CE_SPREAD.md. "
+                     "PAPER forward-test — live fills at the open are the unproven link; keep 1 lot.")
+        how.setWordWrap(True); how.setFont(QFont("Menlo", 11))
+        how.setStyleSheet(f"color:{TEXT_DIM}; padding:6px; background-color:{PANEL}; border:1px solid {BORDER};")
+        v.addWidget(how)
+        self.zdte_stats = self._stats_label()
+        v.addWidget(self.zdte_stats)
+        self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
+        self.zdte_table.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
+        v.addWidget(self.zdte_table, 1)
+        v.addStretch(0)
+        return self._scroll(inner)
+
+    def _refresh_zero_dte_tab(self):
+        if not hasattr(self, "zdte_table"):
+            return
+        try:
+            self._fill_swing_table(self.zdte_table, ZDTE_BOOK, self.zdte_stats)
+        except Exception as e:
+            logger.warning(f"zero_dte tab fill: {e}")
+
     LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
     SWING_LOG_COLS = ["ENTERED", "INDEX", "SPREAD (sell/buy)", "CREDIT", "NOW/EXIT", "OUTCOME", "P&L"]
     STOCKCR_LOG_COLS = ["ENTERED", "STOCK", "SPREAD (sell/buy)", "C/W", "CREDIT", "NOW/EXIT", "OUTCOME", "P&L"]
@@ -501,6 +543,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("1b", "★ STOCK FADE v2 — TP-50 (LEADER)", "SELL", "85.4% IS · 87.9% OOS",
              "+24.5% IS · +31.9% OOS (of width)", "273+132 · 2019→Jul26", "4-6",
              "₹16-17k · ₹8-10k", "✓ VALIDATED + OOS", "LIVE · parallel · 1 lot", AMBER),
+            ("5", "★ 0DTE NIFTY CE spread (INTRADAY)", "SELL", "84.4% IS · 86.8% OOS",
+             "+3.2% of margin/trade · +ve EVERY yr", "282+91 · 2019→Jun26", "4-5",
+             "~₹1.5k/mo/lot (model)", "✓ VALIDATED + OOS", "LIVE 2026-07-06 · 1 lot", CYAN),
             ("1", "Stock credit spread v1 · fade", "SELL", "54%",
              "+5.3% of width", "718 · 2019→Sep24", "~10",
              "not measured (fwd test)", "✓ VALIDATED", "deployed · 1 lot", GREEN),
@@ -565,8 +610,38 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
 
-{h("THE FOUR LIVE STRATEGIES — SUMMARY")}
+{h("THE LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
+
+{h("★ NEW — 0DTE INTRADAY (the 5th strategy)  ·  85% win 2019→2026, positive EVERY year")}
+{sub("Question (user goal): an INTRADAY strategy — closed the same day — with ≥85% win rate, "
+     "positive net returns and >2% per trade on capital, retail-tradeable?")}
+{p("First, what does NOT work (so nobody re-mines it): on 7.5 years of real 5-min data (100 F&O "
+   "stocks), NO directional intraday strategy on the underlying reaches even 82% win with net>0 — "
+   "234 variants tested (flushes, RSI/z confluence, gap fades, VWAP targets, trailing stops). A "
+   "90%+ win rate IS manufacturable (tiny target / wide stop: 92% win, 7,688 trades) but earns "
+   "≈0.00% gross — geometry, not edge. Files: INTRADAY_90PCT_WINRATE.md.")}
+{p("What DOES work — selling expiry-day premium with defined risk: <b>on each NIFTY weekly expiry "
+   "day, at the open, SELL the CE ~0.5% above spot and BUY the CE 200 pts further out; hold both "
+   "to the same-day settlement (no intraday stop).</b> One trade a week, 2 legs, margin ≈ the max "
+   "loss ≈ ₹14k/lot.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>REAL premiums, costs charged</td><td>n</td><td>Win</td><td>Avg net (% of margin)</td></tr>
+<tr><td>In-sample — NSE bhavcopy 2019→Sep'24 (config chosen here)</td><td>282</td><td>84.4%</td><td>+3.17%</td></tr>
+<tr style="color:{GREEN};"><td><b>Out-of-sample — Upstox Oct'24→Jun'26 (search never saw it)</b></td><td><b>91</b></td><td><b>86.8%</b></td><td><b>+3.28%</b></td></tr>
+<tr><td>Combined 2019→2026 — positive EVERY calendar year</td><td>373</td><td>85.0%</td><td>+3.20%</td></tr>
+</table>
+{res("Per-year (win / avg %margin): 2019 87/+1.4 · 2020 79/+0.8 · 2021 87/+3.1 · 2022 87/+8.5 · "
+     "2023 85/+2.3 · 2024 85/+5.1 · 2025 87/+0.4 · 2026 85/+5.7. Higher-win variant (short 0.75% "
+     "OTM): 90.1% win OOS but +1.7%/trade — the win-vs-return dial.")}
+{res("The honest shape: avg win +9.8%m · avg loss −34.1%m · worst −102%m (one full-width day — "
+     "capped, that IS the max loss) · max losing streak 3 · 28/87 months negative · median month "
+     "+₹2.1k, worst −₹14.8k (1 lot). ~4.3 trades/mo · avg ₹348/trade · ≈₹1.5k/mo per lot (MODEL).")}
+{dim("Why the CALL side: expiry-day up-moves from the open are structurally more muted than "
+     "down-moves (pinning; call writers defend) + IV crush — held across 8 years INCLUDING the "
+     "2021 bull. Put-side selling FAILS OOS. Risks: short-gamma tail (a violent gap-up rally "
+     "costs the full width), fills at the opening print unproven live — hence PAPER forward-test, "
+     "1 lot, on the INTRADAY DECISIONS tab. Files: INTRADAY_85PCT_0DTE_CE_SPREAD.md + studies/ndte/.")}
 
 {h("★★★ THE LEADER — STOCK CREDIT v2 (TP-50)  ·  win ≥79% EVERY year 2019→2026")}
 {sub("Question: can the validated stock fade win >65% in every regime with good profit — and hold OOS?")}
@@ -953,6 +1028,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         the display. The GUI never scans, executes, or books — engine_runner does all that."""
         self._load_latest_scan()
         self._refresh_pm(); self._refresh_watchlist(); self._refresh_swing_tab(); self._refresh_log()
+        self._refresh_zero_dte_tab()
 
     def _load_latest_scan(self):
         """Read the engine's latest scan snapshot (results + ORB+VWAP rows) from disk."""
