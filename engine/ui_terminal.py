@@ -563,6 +563,33 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("THE FOUR LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
 
+{h("★★★ THE LEADER — STOCK CREDIT v2 (TP-50)  ·  win ≥79% EVERY year 2019→2026")}
+{sub("Question: can the validated stock fade win >65% in every regime with good profit — and hold OOS?")}
+{p("Same signal + gate as v1 (Donchian-10 breakout → fade; credit/width ≥ 0.40 + prem ≥ Rs50), new "
+   "geometry + exits: <b>short 2-OTM · width 4 · TAKE-PROFIT at 50% of the credit · stop 3×</b>. "
+   "Found via a 96-config grid on real bhavcopy premiums (entry AND exit slippage charged) — 27 "
+   "configs hit the goal, the whole TP-50/stop-3× neighborhood passes (structural, not a fit cell). "
+   "Mechanism: book the win early (IV-crush harvest), give losers 3× room to mean-revert.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>IN-SAMPLE (bhavcopy, exit costs)</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024</td><td>ALL</td></tr>
+<tr><td style="color:{GREEN};">Win %</td><td>100</td><td>90</td><td>86</td><td>88</td><td>79</td><td>82</td><td><b>85.35</b></td></tr>
+<tr><td style="color:{GREEN};">Net % of width</td><td>+61.0</td><td>+25.4</td><td>+9.3</td><td>+30.5</td><td>+18.4</td><td>+22.3</td><td><b>+24.5</b></td></tr>
+<tr><td style="color:{TEXT_DIM};">Trades</td><td>18</td><td>31</td><td>51</td><td>51</td><td>62</td><td>60</td><td>273</td></tr>
+</table>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>OUT-OF-SAMPLE (Upstox, search never saw it)</td><td>2024</td><td>2025</td><td>2026</td><td>ALL OOS</td></tr>
+<tr><td style="color:{GREEN};">Win %</td><td>87</td><td>86</td><td>91</td><td><b>87.88</b></td></tr>
+<tr><td style="color:{GREEN};">Net % of width</td><td>+19.5</td><td>+34.9</td><td>+31.3</td><td><b>+31.9</b></td></tr>
+<tr><td style="color:{TEXT_DIM};">Trades</td><td>15</td><td>74</td><td>43</td><td>132</td></tr>
+</table>
+{res("EXACT distribution (not averages): in-sample 233 WINS / 40 LOSSES; win median +32.0 / max +92 "
+     "of width, loss median −51.1 / worst −71.9 (capped by the hedge). Only 4 of 60 months negative "
+     "(worst Nov-2023 loss cluster); longest losing streak 4. OOS: 116 W / 16 L. "
+     "P&amp;L: MODEL ~Rs40-70k/mo at 1 lot · PRACTICAL plan ~Rs15-30k · LIVE column = the forward test.")}
+{dim("Trade-off: ~4-6 signals/mo (vs v1's ~10) — deeper geometry clears the credit gate less often. "
+     "DEPLOYED 2026-07-04 as a PARALLEL book (1 lot) — gold sections on PM DECISIONS + SWING TRADES. "
+     "Live fills are the only unproven link. File: studies/STOCK_FADE_TP50_UPGRADE.md")}
+
 {h("★★★ RECENT WINDOW vs REAL — why the optimistic numbers dropped")}
 {sub("The verdicts above are the real out-of-sample truth; the recent forward-test window flattered every strategy:")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
@@ -635,7 +662,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "65% win, +16-25% net/trade, holdout p5 +6.8%, 76/100 stocks. A breakout spikes IV -&gt; you sell "
    "the rich premium and ride the reversion + IV crush. (A <i>generic</i> stock spread loses -4.7% — "
    "the credit/width gate IS the edge.) Backtest is OPTIMISTIC (~20%/mo on margin won't fully survive "
-   "live mid-cap fills) -&gt; runs as a FORWARD-TEST at 1 lot.")}
+   "live mid-cap fills) -&gt; runs as a FORWARD-TEST at 1 lot. SUPERSEDED AS LEADER by "
+   "STOCK CREDIT v2 (TP-50) — see THE LEADER section above; v1 keeps running in parallel.")}
 {dim("Files: studies/STOCK_OPTIONS_NO_EDGE.md (Parts 5-9) · engine/swing_credit.py · engine/stock_credit.py")}
 
 {h("★★★ OUT-OF-TIME REGIME TEST — REAL NSE bhavcopy premiums (2019→Sep-2024)")}
@@ -797,7 +825,7 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {h("1 — WHAT IT IS (in one breath)")}
 {p(f"A paper-trading engine for NSE options running <b>4 parallel strategies</b> on ~{len(C.UNIVERSE)} "
    "stocks + NIFTY/BANKNIFTY/FINNIFTY. It scans, scores, and surfaces BUY/SELL signals on a dashboard; "
-   "you place the orders. Two intraday BUY strategies (3-Family stocks, ORB+VWAP index) and two multi-day "
+   "you place the orders. One intraday BUY strategy (3-Family stocks; ORB+VWAP RETIRED 2026-07) and THREE multi-day "
    "SELL strategies (stock &amp; index credit spreads). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
 
 {h("2 — SETUP (from a fresh Mac)")}
