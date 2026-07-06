@@ -40,6 +40,11 @@ EXACT stats (per-trade dumps /tmp/stkfade_exact_trades.json + /tmp/stkfade_oos.j
 HONESTY: never promise riches; 5%/mo infeasible (capital-curve memory); per-year gross→net always;
 live fills unproven — keep 1 lot.
 
+## Post-loop upgrades (2026-07-06)
+v2 hardened: ₹40k exposure cap live (85.7% win, worst mo −₹26.4k); exact stats + capital table
+(margin=max loss ₹10k/tr, ₹1L book, MODEL ₹17.5k/mo=17.5%, since-2019 ₹14.3L) in study+UI; UI method
+duplication bug fixed (stale table was live); banners simplified+wrapped. All pushed through 36d3155.
+
 ## Security constraints (permanent)
 - `.env` (Upstox+Kite keys) NEVER committed. Check `git diff --cached --name-only | grep .env` pre-commit.
 - Kite API secret was pasted in chat once — user advised to regenerate.

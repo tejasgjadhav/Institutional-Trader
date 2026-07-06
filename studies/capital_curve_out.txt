@@ -1,0 +1,18 @@
+
+======================================================================
+INDEX FADE CREDIT SPREAD — capital-curve backtest
+window 2024-11-15 -> 2026-06-18 | NIFTY+FINNIFTY | 1 lot | hold-to-expiry | 2x stop
+======================================================================
+
+trades: 43  |  win rate: 60.5%  |  net P&L: Rs31,174 (1 lot, GROSS of bid-ask)
+avg margin/trade: Rs5,738
+
+   capital   ret/mo   max DD  worst mo  best mo   win%    PF  verdict
+------------------------------------------------------------------------------
+   100,000    1.63%    26.0%    -14.6%     8.9%  60.5%  1.44  DD BREACH / below 5%
+   200,000    0.82%    13.0%     -7.3%     4.5%  60.5%  1.44  DD OK / below 5%
+   300,000    0.54%     8.7%     -4.9%     3.0%  60.5%  1.44  DD OK / below 5%
+
+span: 20 months, 19.1 elapsed | ~2.2 trades/mo
+NOTE: GROSS of bid-ask. Index spreads are India's tightest, but live fills shave more.
+NOTE: defined-risk; the per-trade margin is what's actually at stake, not the full base.

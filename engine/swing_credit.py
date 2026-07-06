@@ -28,7 +28,7 @@ from datetime import datetime, date, timedelta
 from engine.config import (
     IST, DATA_DIR, SWING_CREDIT_ENABLED, SWING_INDICES, SWING_DONCHIAN, SWING_MIN_DTE,
     SWING_SHORT_OFFSET, SWING_WIDTH, SWING_STOP_MULT, SWING_REENTRY_GAP_DAYS, SWING_LOTS,
-    SWING_TAKE_PROFIT,
+    SWING_TAKE_PROFIT, SWING_FADE_DOWN_ONLY, SWING_MIN_BREAKOUT_PCT,
 )
 from engine.data_fetcher import fetch_upstox_historical, fetch_upstox_quote, fetch_upstox_ltp
 from engine.instruments import to_instrument_key
@@ -107,8 +107,18 @@ def _todays_breakout(index: str):
     prior_lo = float(df["Low"].rolling(SWING_DONCHIAN).min().shift(1).iloc[-1])
     c = float(df["Close"].iloc[-1])
     if c > prior_hi:
+        # UP-break → fade with a bear-call. STRUCTURALLY loses (−5.0%, 48% win): fading the
+        # index's upward drift. Gated OFF by default (SWING_FADE_DOWN_ONLY).
+        if SWING_FADE_DOWN_ONLY:
+            return None
+        if (c - prior_hi) / prior_hi * 100 < SWING_MIN_BREAKOUT_PCT:
+            return None                       # shallow break = noise, not a tradeable move
         return "LONG"
     if c < prior_lo:
+        # DOWN-break → fade with a bull-put. The edge (+6.6% raw, +15.1% with the flush gate):
+        # sell the capitulation, ride the reversion + IV crush. Require a REAL flush beyond the band.
+        if (prior_lo - c) / prior_lo * 100 < SWING_MIN_BREAKOUT_PCT:
+            return None                       # shallow break = noise; wait for a genuine flush
         return "SHORT"
     return None
 

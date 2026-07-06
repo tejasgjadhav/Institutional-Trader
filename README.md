@@ -325,7 +325,13 @@ in `engine/config.py`; logic in `engine/swing_credit.py`; book in `data/swing_po
 
 ## Parallel Strategy — Stock Credit Spread (the 4th, high-frequency) — ✅ THE VALIDATED EDGE
 
-> **This is the one strategy that validated on real multi-year data.** On NSE bhavcopy premiums
+> **UPGRADED 2026-07: v2 (TP-50) now runs as a PARALLEL book and is THE LEADER.** Same signal+gate,
+> short 2-OTM / width 4 / take-profit 50% of credit / stop 3× / ₹40k exposure cap: **85.35% win
+> in-sample (233W/40L, 2019→Sep'24) · 87.88% OOS (Oct'24→Jul'26) · positive EVERY year · MODEL
+> ₹17.5k/mo on a ₹1L book (~17.5%/mo; practical ≈ half until live fills prove it).** ORB+VWAP was
+> retired from the dashboard to make room. Full math: `studies/STOCK_FADE_TP50_UPGRADE.md`.
+>
+> **v1 below remains valid and runs in parallel.** This is the one strategy family that validated on real multi-year data. On NSE bhavcopy premiums
 > 2019→Sep 2024 (718 gated trades) it held **+5.3% of width (~+9%/trade on margin), 54% win, positive
 > in 5 of 6 years** — across COVID (2020), a topping regime (2024) and a bull run, where the index fade
 > only worked in favorable years. Caveats kept honest: the real edge is ~⅓–½ of the recent-window
@@ -437,7 +443,7 @@ short-window rupee figures as directional. The in-app **STUDIES** tab shows the 
 | # | Study | Question | Headline result | Status |
 |---|-------|----------|-----------------|--------|
 | ★ | [**Strategy Summary (start here)**](studies/STRATEGY_SUMMARY.md) | Where does every strategy stand on real data? | **One table: gated stock fade VALIDATED; index fades regime-dep/illiquid; BUY strategies real-but-tiny direction edge, not net.** | canonical |
-| ★ | [**Stock fade v2 — TP-50 upgrade**](studies/STOCK_FADE_TP50_UPGRADE.md) | Can the fade win >65% EVERY year? | **85% win / +24.5% width in-sample (2019–24) · 88% / +31.9% OOS (Oct24→Jul26) · ≥79% win all 8 yrs · ~4–6 tr/mo** | validated · awaiting deploy |
+| ★ | [**Stock fade v2 — TP-50 upgrade**](studies/STOCK_FADE_TP50_UPGRADE.md) | Can the fade win >65% EVERY year? | **85% win / +24.5% width in-sample (2019–24) · 88% / +31.9% OOS (Oct24→Jul26) · ≥79% win all 8 yrs · ~4–6 tr/mo** | **DEPLOYED (parallel book, 1 lot)** |
 | ★ | [**Real-Option Optimization**](studies/REAL_OPTION_OPTIMIZATION.md) | What's the edge on REAL option P&L (Upstox Plus)? | **STOCK 180d +1.5% did NOT hold 1yr (−1.0%, overfit). INDEX trend-ride +0.9% over 18mo holds.** | honest |
 | 1 | [Win-Rate Research Log](studies/WIN_RATE_RESEARCH_LOG.md) | How high can win rate go? | A ~52–57% out-of-sample wall; edge must come from filtering | baseline |
 | 2 | [Gate 3 — Market Alignment](studies/FINAL_STRATEGY_TESTING_60DAY.md) | Does not fighting the Nifty help? | 60d: ~59% win, P&L +₹17k → +₹31k (~2×) | **LIVE** |
