@@ -36,6 +36,7 @@ STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
 STOCKCR2_BOOK = _os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
 ZDTE_BOOK = _os.path.join(DATA_DIR, "zero_dte_positions.json")
+ZDTE_STATUS = _os.path.join(DATA_DIR, "zero_dte_status.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -431,6 +432,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:30."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("INTRADAY DECISIONS  -  0DTE NIFTY expiry-day call credit spread", CYAN))
+        # dynamic pre-market checker — engine refreshes data/zero_dte_status.json every ~2-5 min
+        self.zdte_status = QLabel("checking today's status…")
+        self.zdte_status.setWordWrap(True)
+        self.zdte_status.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
+        self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
+        v.addWidget(self.zdte_status)
         hdr = QLabel("★ 0DTE NIFTY — WITH CALM-REGIME FILTER: 87.8% WIN 2019→2026, +4.0% OF MARGIN/TRADE ★   "
                      "EVERY TUESDAY (NIFTY weekly expiry) AT 9:16 AM — but ONLY when the 5-day realized vol "
                      "< 0.9% (skips ~1 week in 4): SELL the CE ~0.5% above spot · BUY the CE 200 pts higher · "
@@ -484,6 +491,30 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             self._fill_swing_table(self.zdte_table, ZDTE_BOOK, self.zdte_stats)
         except Exception as e:
             logger.warning(f"zero_dte tab fill: {e}")
+        try:
+            import json
+            st = json.load(open(ZDTE_STATUS)) if _os.path.exists(ZDTE_STATUS) else {}
+            v = st.get("verdict")
+            rv = st.get("rv5")
+            rvtxt = f"rv5 {rv:.2f}% vs limit {st.get('rv5_max')}%" if rv is not None else "rv5 n/a (fails open)"
+            asof = (st.get("ts") or "")[11:16]
+            if v == "EXPECTED":
+                done = "  ·  ENTERED ✓ (see book below)" if st.get("entered_today") else ""
+                self.zdte_status.setText(
+                    f"  ✓ SIGNAL EXPECTED TODAY at 9:16  ·  expiry day  ·  {rvtxt} (calm){done}\n"
+                    f"  preview off last spot {st.get('spot')}: SELL ~{st.get('preview_short')} CE / BUY ~{st.get('preview_wing')} CE — "
+                    f"FINAL strikes come from the LIVE 9:15-9:16 price, not the previous close  (as of {asof})")
+                self.zdte_status.setStyleSheet(f"color:#000000; background-color:{GREEN}; padding:10px; border:2px solid {GREEN};")
+            elif v == "SKIP":
+                self.zdte_status.setText(
+                    f"  ✗ NO TRADE THIS WEEK — calm-regime filter says SKIP  ·  {rvtxt} (hot tape)  (as of {asof})")
+                self.zdte_status.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:10px; border:2px solid {AMBER};")
+            elif v == "NO-ENTRY":
+                self.zdte_status.setText(
+                    f"  — not an expiry day  ·  next NIFTY weekly expiry: {st.get('next_expiry','?')}  ·  {rvtxt}  (as of {asof})")
+                self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
+        except Exception as e:
+            logger.warning(f"zero_dte status fill: {e}")
 
     LOG_COLS = ["TIME", "UNDERLYING", "OPT", "DIR", "ENTRY", "TARGET", "STOP", "OUTCOME", "P&L"]
     SWING_LOG_COLS = ["ENTERED", "INDEX", "SPREAD (sell/buy)", "CREDIT", "NOW/EXIT", "OUTCOME", "P&L"]

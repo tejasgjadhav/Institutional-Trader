@@ -293,6 +293,10 @@ class EngineRunner:
                     logger.info(f"zero_dte: settled {n} position(s)")
             except Exception as e:
                 logger.warning(f"zero_dte resolve: {e}")
+            try:
+                zero_dte.write_status()   # pre-market "signal expected?" checker for the UI
+            except Exception as e:
+                logger.warning(f"zero_dte status: {e}")
         h1, m1 = map(int, config.ZERO_DTE_SCAN_AFTER.split(":"))
         h2, m2 = map(int, config.ZERO_DTE_ENTRY_CUTOFF.split(":"))
         mins = now.hour * 60 + now.minute

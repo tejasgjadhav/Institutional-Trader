@@ -30,6 +30,7 @@ from engine.instruments import to_instrument_key
 logger = logging.getLogger(__name__)
 
 BOOK_PATH = os.path.join(DATA_DIR, "zero_dte_positions.json")
+STATUS_PATH = os.path.join(DATA_DIR, "zero_dte_status.json")
 
 
 def _load_book() -> list:
@@ -107,6 +108,62 @@ def _todays_ce_chain():
     chain = [c for c in _load_index().get(uk, [])
              if c["type"] == "CE" and datetime.fromtimestamp(c["expiry"] / 1000).date() == today]
     return sorted(chain, key=lambda c: c["strike"])
+
+
+def _rv5_cached():
+    """rv5 computed at most once per day (inputs are prior closes — final before the open)."""
+    today = date.today().isoformat()
+    if getattr(_rv5_cached, "day", None) == today:
+        return _rv5_cached.val
+    v = _rv5()
+    if v is not None:
+        _rv5_cached.day, _rv5_cached.val = today, v
+    return v
+
+
+def write_status() -> None:
+    """data/zero_dte_status.json — the pre-market 'signal expected today?' checker the UI shows.
+    Verdict is decidable by 9:00 (expiry calendar + rv5 from prior closes); strikes shown are a
+    PREVIEW off the latest spot — the real strikes come from the live price at 9:16."""
+    if not ZERO_DTE_ENABLED:
+        return
+    today = date.today()
+    st = {"ts": datetime.now(IST).isoformat(), "date": today.isoformat(),
+          "rv5_max": ZERO_DTE_RV5_MAX}
+    try:
+        chain = _todays_ce_chain()
+        st["is_expiry_today"] = bool(chain)
+        if not chain:
+            from engine.options import _load_index
+            uk = to_instrument_key(ZERO_DTE_INDEX)
+            exps = sorted({datetime.fromtimestamp(c["expiry"] / 1000).date()
+                           for c in _load_index().get(uk, []) if c["type"] == "CE"})
+            fut = [e for e in exps if e > today]
+            st["next_expiry"] = fut[0].isoformat() if fut else None
+        rv = _rv5_cached()
+        st["rv5"] = round(rv, 3) if rv is not None else None
+        spot = _spot()
+        st["spot"] = spot
+        if spot:
+            ks = round(spot * (1 + ZERO_DTE_OTM_PCT) / 50) * 50
+            st["preview_short"] = ks
+            st["preview_wing"] = ks + ZERO_DTE_WIDTH_PTS
+        if not st["is_expiry_today"]:
+            st["verdict"] = "NO-ENTRY"
+        elif rv is not None and ZERO_DTE_RV5_MAX and rv >= ZERO_DTE_RV5_MAX:
+            st["verdict"] = "SKIP"
+        else:
+            st["verdict"] = "EXPECTED"
+        st["entered_today"] = any(p["entry_date"] == today.isoformat() for p in _load_book())
+    except Exception as e:
+        st["error"] = str(e)
+    try:
+        tmp = STATUS_PATH + ".tmp"
+        with open(tmp, "w") as f:
+            json.dump(st, f)
+        os.replace(tmp, STATUS_PATH)
+    except Exception as e:
+        logger.warning(f"zero_dte status save: {e}")
 
 
 def scan_signal() -> list:
