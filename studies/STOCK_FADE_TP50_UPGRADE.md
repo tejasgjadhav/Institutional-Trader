@@ -90,6 +90,21 @@ when it lands, it replaces both.
 | **Monthly, 2 lots (capped)** | **median ₹32k · mean ₹34k** | **~₹16–20k** | TBD |
 | Margin deployed (2 lots) | ~₹1.5–2.5L + stop buffer | same | — |
 
+### Capital required & % return (plain language — 1 lot, capped, taking every signal)
+
+| Question | Answer (exact from the capped backtest) |
+|---|---|
+| Margin per trade | **~₹10,000** (mean notional ₹17.4k × ~0.575 after credit) |
+| Signals per month | 4.3 (2019–24 avg) · ~6 recently |
+| Open at once (typical ~2-wk holds) | 2–3 spreads ≈ ₹20–30k deployed |
+| **Capital to run the book** | **₹75k minimum (6 concurrent + buffer) · ₹1L comfortable** |
+| **Model profit/month** | **₹17.5k → ~17–23%/mo on that capital** |
+| **Practical plan** | **₹8–9k → ~9–12%/mo** |
+| Worst backtest month | −₹26.4k = about −26% of a ₹1L book |
+
+These % returns are on the SMALL margin capital of this one defined-risk book — not a whole-account
+promise. Live fills are still the unproven link; the % shrinks if fills come in under model.
+
 If LIVE tracks ≥60% of MODEL for a month, scale to 2 lots and adopt the model numbers with a
 smaller haircut. If LIVE lands at/below PRACTICAL, stay at 1 lot and investigate fills.
 

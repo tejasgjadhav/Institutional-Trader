@@ -591,6 +591,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "<b>MODEL ₹16-17k/mo at 1 lot · PRACTICAL ~₹8-10k · 2 lots ≈ ₹32-34k / ₹16-20k.</b> "
      "Worst month −₹26.4k, worst single loss −₹21.6k, best month +₹58.3k, 5/54 months negative. "
      "LIVE column = the forward test.")}
+{res("CAPITAL (plain, 1 lot, every signal): margin ≈ ₹10k/trade · 2-3 open at once · run the book on "
+     "<b>₹75k-1L</b>. MODEL ₹17.5k/mo ≈ <b>17-23%/mo on that capital</b> · PRACTICAL ₹8-9k ≈ 9-12%/mo · "
+     "worst month −₹26.4k ≈ −26% of ₹1L. These % are on this one small book's margin — not a whole account.")}
 {dim("Worst-month forensic (pre-cap Feb-2021 '−₹2.28L'): ONE stock — BAJAJFINSV — lost the same spread "
      "3× (re-entry into a relentless trend), AND the rupee figure was inflated by an era artifact: "
      "today's lot (300) applied to 2021 pre-split prices (true 2021 loss ~₹35k/hit at lot 125). "
