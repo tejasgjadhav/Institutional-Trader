@@ -1314,8 +1314,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         ]
         def vc(v):
             return GREEN if v.startswith("✓") else (RED if v.startswith("✗") else AMBER)
+        def rowbg(n):
+            return " style='background-color:#2a2410;'" if n == "1b" else ""
         lt = "".join(
-            f"<tr{' style=\'background-color:#2a2410;\'' if n=='1b' else ''}><td>{n}</td>"
+            f"<tr{rowbg(n)}><td>{n}</td>"
             f"<td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td><td>{wr}</td><td>{rt}</td>"
             f"<td>{tw}</td><td>{fq}</td><td>{pnl}</td>"
             f"<td style='color:{vc(vd)};font-weight:bold;'>{vd}</td><td>{stt}</td></tr>"
