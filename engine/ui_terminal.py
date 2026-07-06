@@ -489,6 +489,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             return
         try:
             self._fill_swing_table(self.zdte_table, ZDTE_BOOK, self.zdte_stats)
+            if hasattr(self, "log_zdte"):
+                self._fill_swing_table(self.log_zdte, ZDTE_BOOK)   # mirror into TRADE LOG tab
         except Exception as e:
             logger.warning(f"zero_dte tab fill: {e}")
         try:
@@ -561,6 +563,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 2)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  NIFTY", PURPLE))
         self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
+        # INTRADAY 0DTE credit spreads (SELL) — same 2-leg format as SWING TRADES
+        v.addWidget(self._section_label("INTRADAY 0DTE  —  NIFTY expiry-day CE spread (SELL, ~1/wk)", CYAN))
+        self.log_zdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_zdte, 1)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
         v.addStretch(1)
