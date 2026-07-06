@@ -22,7 +22,7 @@ from datetime import datetime, date
 
 from engine.config import (
     IST, DATA_DIR, ZERO_DTE_ENABLED, ZERO_DTE_INDEX, ZERO_DTE_OTM_PCT, ZERO_DTE_WIDTH_PTS,
-    ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX,
+    ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX, ZERO_DTE_STOP_MULT,
 )
 from engine.data_fetcher import fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp, fetch_upstox_historical
 from engine.instruments import to_instrument_key
@@ -201,6 +201,14 @@ def resolve_positions() -> int:
                     p["current_cost"] = round(sm - lm, 2)
                     p["pnl_pts"] = round(p["credit"] - p["current_cost"], 2)
                     changed = True
+                    # OPTIONAL short-leg stop (default OFF): buy back the spread intraday
+                    if ZERO_DTE_STOP_MULT and sm >= ZERO_DTE_STOP_MULT * p["short_prem"]:
+                        p["exit_cost"] = p["current_cost"]
+                        p["status"] = "WIN" if p["pnl_pts"] > 0 else "LOSS"
+                        p["closed_date"] = today.isoformat()
+                        closed += 1
+                        logger.info(f"zero_dte: STOPPED {p['id']} at {ZERO_DTE_STOP_MULT}x "
+                                    f"(short {sm:.1f} vs entry {p['short_prem']:.1f}) pnl {p['pnl_pts']:+.1f}")
                 continue
             spot = _spot() or p.get("entry_spot") or 0
             si = max(0.0, spot - p["short_strike"])

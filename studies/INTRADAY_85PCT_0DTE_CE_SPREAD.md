@@ -92,6 +92,33 @@ during filter selection, so the true test is the forward paper-test; the filter 
 alternative `ret5<1.5%` (no 5-day run-up); do NOT stack filters (overfit).
 **Deployed: `ZERO_DTE_RV5_MAX = 0.9` (0 disables), checked live at 9:16, SKIP logged.**
 
+## Intraday stop-loss study (2026-07-06 night) — REAL 1-minute premiums; stop stays OFF
+
+**Data unlock:** the Upstox expired-instruments API serves **1-minute candles for expired
+contracts** (`DATA_AVAILABILITY_LIMITS.md`'s "no historical intraday option data" is now
+outdated). So the buy-back stop was tested on real minute paths, not the pessimistic daily-high
+model. 91 expiries Oct'24→Jun'26, entry at the 09:16 bar, stop fill = max(level, bar open)
+×1.01, wing at its concurrent 1-min bar, settlement at intrinsic vs NIFTY close (this fresh
+rebuild also re-verified the earlier 4 suspect rows). Script `studies/ndte/ndte7_stops.py`,
+cache `/tmp/ndte_intra/`.
+
+| Config (with rv5 filter) | Win | Avg %m | Total ₹ (1 lot) | Worst trade |
+|---|---|---|---|---|
+| **NO-STOP (deployed)** | **90.4%** | **+5.85%** | **+₹49,527** | −₹11,703 |
+| Short-leg stop ×3.0 | 82.2% | +4.50% | +₹35,804 | **−₹6,517** |
+| Short-leg stop ×4.0 | 87.7% | +4.54% | +₹37,632 | −₹11,304 |
+| Short-leg stop ×2.0 | 68.5% | +4.08% | +₹32,053 | −₹3,958 |
+
+Findings: (1) **without** the calm-regime filter, stops help enormously (no-stop ₹18.4k → ×2-3
+₹36-37k) — stop and filter fix the same hot-week disasters; (2) **with** the filter already on,
+every stop LOWERS total P&L and win rate — it only buys a smaller worst trade (×3 halves it for
+~₹650/mo of expected cost); (3) tight stops whipsaw: ×1.5 stops 40 of 91 trades and win falls to
+56% — 0DTE premium noise routinely doubles and then decays. Note the filtered no-stop baseline
+here (+5.85%m, intrinsic settlement) is BETTER than the earlier stale-close estimate (+4.0%m) —
+the daily-candle "close" understated wins on far-OTM legs.
+**Decision: filter + no stop stays deployed; `ZERO_DTE_STOP_MULT` added (default 0 = off) for a
+tail-cutting ×3 preference.**
+
 ## Reproduce
 Scripts copied to `studies/ndte/`: `bhav_expiry_dl.py` (NSE expiry-day download →
 `/tmp/ndte_bhav/`), `ndte3_bhav_bt.py` (2019-24 grid, per-year PASS bar), `ndte4_oos.py`

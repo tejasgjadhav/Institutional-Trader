@@ -254,6 +254,11 @@ ZERO_DTE_RV5_MAX   = 0.9     # CALM-REGIME FILTER: skip the week when NIFTY 5-da
                              # 87.8% win / +4.0%m (2025: +Rs1.7k -> +Rs23.2k at 1 lot); cost:
                              # 2019 ~flat (-Rs1.7k). Robust across thresholds 0.7-1.2 AND on the
                              # 0.75%-OTM sibling config. 0 = disabled. See study.
+ZERO_DTE_STOP_MULT = 0.0     # OPTIONAL short-leg stop: buy back when short premium >= mult x
+                             # entry. REAL 1-min backtest (91 expiries): with the rv5 filter ON,
+                             # no-stop wins (90.4%/+5.85%m/worst -11.7k); x3.0 halves the worst
+                             # trade (-6.5k) but costs ~Rs14k total and win drops to 82%. Tight
+                             # stops (<=x2) whipsaw badly. 0 = disabled (recommended with filter).
 ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
 ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day
 ZERO_DTE_SETTLE_AFTER = "15:30"  # book at expiry settlement (intrinsic vs spot)
