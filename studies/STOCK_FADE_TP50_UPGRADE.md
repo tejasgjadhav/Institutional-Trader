@@ -27,16 +27,17 @@ give losers 3× room to mean-revert, sell from 2 strikes deeper.
 
 ## Results — real premiums, entry + exit costs
 
-**In-sample (bhavcopy 2019→Sep'24, 273 trades, ~4/mo):**
+**In-sample (bhavcopy, Jan 2019 → Sep 2024, 273 trades, ~4/mo):**
 
-| Year | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 | ALL |
+| Year | 2019 | 2020 | 2021 | 2022 | 2023 | 2024 *(Jan–Sep)* | ALL |
 |---|---|---|---|---|---|---|---|
 | Win% | 100 | 90 | 86 | 88 | 79 | 82 | **85%** |
 | Net (% width) | +64.3 | +27.0 | +13.5 | +31.6 | +20.1 | +24.6 | **+24.5%** |
 
-**Out-of-sample (Upstox Oct'24→Jul'26, 132 trades, ~6/mo) — search never saw this data:**
+**Out-of-sample (Upstox, Oct 2024 → Jul 2026, 132 trades, ~6/mo) — search never saw this data.**
+*No overlap with the table above: 2024 is split at Oct 1 — bhavcopy covers Jan–Sep, this covers Oct–Dec.*
 
-| Year | 2024 | 2025 | 2026 | ALL OOS |
+| Year | 2024 *(Oct–Dec)* | 2025 | 2026 *(Jan–Jul)* | ALL OOS |
 |---|---|---|---|---|
 | Win% | 87 | 86 | 91 | **88%** |
 | Net (% width) | +19.5 | +34.9 | +31.3 | **+31.9%** |

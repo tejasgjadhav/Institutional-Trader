@@ -571,13 +571,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "configs hit the goal, the whole TP-50/stop-3× neighborhood passes (structural, not a fit cell). "
    "Mechanism: book the win early (IV-crush harvest), give losers 3× room to mean-revert.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>IN-SAMPLE (bhavcopy, exit costs)</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024</td><td>ALL</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>IN-SAMPLE (bhavcopy, exit costs)</td><td>2019</td><td>2020</td><td>2021</td><td>2022</td><td>2023</td><td>2024 Jan-Sep</td><td>ALL</td></tr>
 <tr><td style="color:{GREEN};">Win %</td><td>100</td><td>90</td><td>86</td><td>88</td><td>79</td><td>82</td><td><b>85.35</b></td></tr>
 <tr><td style="color:{GREEN};">Net % of width</td><td>+61.0</td><td>+25.4</td><td>+9.3</td><td>+30.5</td><td>+18.4</td><td>+22.3</td><td><b>+24.5</b></td></tr>
 <tr><td style="color:{TEXT_DIM};">Trades</td><td>18</td><td>31</td><td>51</td><td>51</td><td>62</td><td>60</td><td>273</td></tr>
 </table>
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>OUT-OF-SAMPLE (Upstox, search never saw it)</td><td>2024</td><td>2025</td><td>2026</td><td>ALL OOS</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>OUT-OF-SAMPLE (Upstox, search never saw it — NO overlap: 2024 splits at Oct 1)</td><td>2024 Oct-Dec</td><td>2025</td><td>2026 Jan-Jul</td><td>ALL OOS</td></tr>
 <tr><td style="color:{GREEN};">Win %</td><td>87</td><td>86</td><td>91</td><td><b>87.88</b></td></tr>
 <tr><td style="color:{GREEN};">Net % of width</td><td>+19.5</td><td>+34.9</td><td>+31.3</td><td><b>+31.9</b></td></tr>
 <tr><td style="color:{TEXT_DIM};">Trades</td><td>15</td><td>74</td><td>43</td><td>132</td></tr>
