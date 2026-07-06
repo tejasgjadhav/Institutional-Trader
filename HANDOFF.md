@@ -33,7 +33,7 @@ Goal: win% >65% EVERY year 2019–2026 + net>0 every year, monthly deployable, h
   Config A (DC10/s2/w4/TP0.5/stop3, cw≥0.40+prem≥50) on Upstox Oct'24→Jul'26, 132 trades:
   **88% win, +31.9% of width net; 2024 87%/+19.5, 2025 86%/+34.9, 2026 91%/+31.3.**
   Combined with in-sample: 8 straight years positive, win ≥79% every year, 405 total trades.
-- **AWAITING USER APPROVAL to wire** `STOCK_CREDIT_*` → SHORT_OFFSET 2, WIDTH 4, TAKE_PROFIT 0.5,
+- **DEPLOYED 2026-07-04**: v2 runs PARALLEL (engine/stock_credit_v2.py, own book stock_credit_v2*.json, 1 lot); ORB+VWAP RETIRED (ORB_VWAP_ENABLED=False); PM slot + gold-highlighted SWING TRADES section show v2 with win-rate banners. Loop ENDED. (superseded: awaiting-approval note) — `STOCK_CREDIT_*` → SHORT_OFFSET 2, WIDTH 4, TAKE_PROFIT 0.5,
   STOP_MULT 3.0 (DC stays 10) + kickstart engine + studies/UI/wiki updates. USER SAID: show results
   first, do NOT wire without explicit go. Loop STOPPED after presenting.
 HONESTY: never promise riches; 5%/mo infeasible (capital-curve memory); per-year gross→net always;

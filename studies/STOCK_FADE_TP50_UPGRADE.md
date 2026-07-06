@@ -54,6 +54,27 @@ regime + profit) exceeded in-sample AND out-of-sample.
 - OOS is ~21 months — one broad era; durability rests on the 8-year in-sample breadth.
 - Take-profit exits assume you can close near the modeled daily closes.
 
+## P&L — model vs practical (honest, both on the record)
+
+The MODEL column is the measured backtest arithmetic (405 real-premium trades, entry+exit slippage
+charged) — not a guess. The PRACTICAL column is a ~50% planning discount, justified only by this
+repo's history that live fills come in under model (min-prem +1.5%→−1.0%; v1 fade +16–25%→+5.3%
+clean). The LIVE column is the truth and gets filled by the forward test (~20–30 trades ≈ 1 month);
+when it lands, it replaces both.
+
+| Metric | MODEL (backtest) | PRACTICAL (plan on) | LIVE (forward test) |
+|---|---|---|---|
+| Win rate | 85% in-sample · 88% OOS | ≥70% still expected | TBD |
+| Net per trade (% of width) | +24.5% → +31.9% | ~+12–16% | TBD |
+| Net per trade, 1 lot (₹) | ~₹8–14k | ~₹4–7k | TBD |
+| Trades / month | 4–6 | 4–6 | TBD |
+| **Monthly, 1 lot** | **~₹40–70k** | **~₹15–30k** | TBD |
+| **Monthly, 2 lots** | **~₹80k–1.4L** | **~₹30–60k** | TBD |
+| Margin deployed (2 lots) | ~₹1.5–2.5L + stop buffer | same | — |
+
+If LIVE tracks ≥60% of MODEL for a month, scale to 2 lots and adopt the model numbers with a
+smaller haircut. If LIVE lands at/below PRACTICAL, stay at 1 lot and investigate fills.
+
 ## Status
 **DEPLOYED 2026-07-04 as a PARALLEL book (engine/stock_credit_v2.py, 1 lot) alongside v1; ORB+VWAP retired from the PM dashboard.** Wiring = `STOCK_CREDIT_SHORT_OFFSET=2,
 STOCK_CREDIT_WIDTH=4 (var names per config.py), STOCK_CREDIT_TAKE_PROFIT=0.50, STOCK_CREDIT_STOP_MULT=3.0`.

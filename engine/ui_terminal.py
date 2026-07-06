@@ -333,14 +333,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        v.addWidget(self._section_label(
-            "STOCK CREDIT v2 — TP-50 fade  ·  win 88% OOS / ≥79% all 8 yrs  ·  ~4-6/mo  ·  SELL", PURPLE))
+        pmv2 = QLabel("★ STOCK CREDIT v2 — TP-50  ·  THE HIGH-WIN BOOK  ·  88% OOS · ≥79% all 8 yrs  ·  ~4-6/mo  ·  SELL ★")
+        pmv2.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
+        pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
+        v.addWidget(pmv2)
         self.pm_stockcr2 = QTableWidget(); self.pm_stockcr2.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr2.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_stockcr2.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.pm_stockcr2.setAlternatingRowColors(True); self.pm_stockcr2.verticalHeader().setVisible(False)
         self.pm_stockcr2.verticalHeader().setDefaultSectionSize(32)
         self.pm_stockcr2.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.pm_stockcr2.setStyleSheet(f"QTableWidget {{ border: 2px solid {AMBER}; }}")
         v.addWidget(self.pm_stockcr2, 1)
 
         self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min, 09:15-15:30 IST.")
