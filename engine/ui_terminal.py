@@ -431,10 +431,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:30."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("INTRADAY DECISIONS  -  0DTE NIFTY expiry-day call credit spread", CYAN))
-        hdr = QLabel("★ 0DTE NIFTY — 85% WIN 2019→2026, +3.2% OF MARGIN/TRADE, POSITIVE EVERY YEAR ★   "
-                     "EVERY TUESDAY (NIFTY weekly expiry) AT 9:16 AM: SELL the CE ~0.5% above spot · BUY the "
-                     "CE 200 pts higher · hold to the SAME-DAY 15:30 settlement (no stop) · ~4-5 trades/month "
-                     "· margin ≈ ₹14k/lot (= the max loss — defined risk)")
+        hdr = QLabel("★ 0DTE NIFTY — WITH CALM-REGIME FILTER: 87.8% WIN 2019→2026, +4.0% OF MARGIN/TRADE ★   "
+                     "EVERY TUESDAY (NIFTY weekly expiry) AT 9:16 AM — but ONLY when the 5-day realized vol "
+                     "< 0.9% (skips ~1 week in 4): SELL the CE ~0.5% above spot · BUY the CE 200 pts higher · "
+                     "hold to the SAME-DAY 15:30 settlement (no stop) · ~4/month · margin ≈ ₹14k/lot (= max loss)")
         hdr.setWordWrap(True)
         hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color:#000000; background-color:{CYAN}; padding:8px; border:2px solid {CYAN}; border-radius:4px;")
@@ -460,7 +460,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                     "(Tue 30-Jun-2026): open 24,032 → SELL 24150 CE / BUY 24350 CE; day high 24,036, "
                     "close 23,866 → worthless → WIN.   The losing ~1-in-7: NIFTY rallies through the short "
                     "strike and settlement charges up to the full width − credit (the capped ₹14k) — you "
-                    "still do nothing intraday; the wing is the insurance.")
+                    "still do nothing intraday; the wing is the insurance.   THE FILTER (added after a "
+                    "loss-forensics study of all 56 losing weeks): losses cluster when the tape is HOT — "
+                    "skip the week when NIFTY's last-5-day realized vol ≥ 0.9%. 2019→2026 with the filter: "
+                    "87.8% win · +4.0%/margin · 2025 goes +₹1.7k → +₹23.2k · cost: 2019 ends ~flat "
+                    "(−₹1.7k, 7 of 8 years positive). Robust across thresholds 0.7–1.2 and on the "
+                    "0.75%-OTM sibling config. The engine checks it automatically at 9:16 and logs a SKIP.")
         ex.setWordWrap(True); ex.setFont(QFont("Menlo", 11))
         ex.setStyleSheet(f"color:{TEXT}; padding:6px; background-color:{PANEL}; border:1px solid {CYAN};")
         v.addWidget(ex)

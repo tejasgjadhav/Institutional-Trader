@@ -249,6 +249,11 @@ ZERO_DTE_INDEX     = "NIFTY"
 ZERO_DTE_OTM_PCT   = 0.005   # short CE at the strike nearest spot*(1+0.5%)
 ZERO_DTE_WIDTH_PTS = 200     # long wing ~200 pts further out (defined risk)
 ZERO_DTE_LOTS      = 1       # paper sizing — KEEP AT 1 to forward-test
+ZERO_DTE_RV5_MAX   = 0.9     # CALM-REGIME FILTER: skip the week when NIFTY 5-day realized vol
+                             # (std of last 5 daily log-returns, %) >= this. Lifts 2019-26 to
+                             # 87.8% win / +4.0%m (2025: +Rs1.7k -> +Rs23.2k at 1 lot); cost:
+                             # 2019 ~flat (-Rs1.7k). Robust across thresholds 0.7-1.2 AND on the
+                             # 0.75%-OTM sibling config. 0 = disabled. See study.
 ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
 ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day
 ZERO_DTE_SETTLE_AFTER = "15:30"  # book at expiry settlement (intrinsic vs spot)

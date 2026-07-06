@@ -66,6 +66,32 @@ full-width day — that IS the max loss, it's capped); payoff 0.29; max losing s
 - This repo's rule applies: **backtest > live, always.** Paper forward-test (signals-only)
   before money; start at 1 lot. NOT wired into the engine yet.
 
+## Loss-forensics upgrade (2026-07-06 evening): the CALM-REGIME filter — DEPLOYED
+
+**Question (user):** 2025 netted only +₹1.7k/lot (46W ₹+55.6k vs 7L ₹−53.9k) — can technical
+filters avoid the losers? **Method:** per-trade feature table for all 373 trades (overnight gap,
+prior-day/5-day momentum, open-vs-prior-high, SMA extension, ATR, realized vol, up-streaks, VIX
+level/change, credit richness — all computable at 9:16, no lookahead), loser-vs-winner
+forensics, threshold sweep. Rule: a filter counts only if it improves IS (2019–24) AND OOS
+(Oct'24–Jun'26), not just erases 2025. Script `studies/ndte/ndte6_filters.py`.
+
+**Finding: losses cluster when the tape is hot.** The one robust family = recent-volatility /
+momentum regime. Winner: **skip the week when NIFTY 5-day realized vol (std of last 5 daily
+log-returns) ≥ 0.9%** — trades ~3 of 4 weeks. VIX itself adds nothing (info already in rv5).
+
+| CE d=0.5% W=200 | n | Win | Avg %margin | 2025 (1 lot) | worst year |
+|---|---|---|---|---|---|
+| Unfiltered | 373 | 85.0% | +3.20% | +₹1,715 | all 8 positive (2025 thinnest) |
+| **rv5 < 0.9%** | **278** | **87.8%** | **+4.02%** | **+₹23,219** | 2019 ≈ flat (−₹1.7k) — 7/8 positive |
+
+Robustness: (a) whole threshold neighborhood 0.7–1.2 improves OOS with IS held; (b) **sibling
+config** d=0.75 W=200 (never used in the search): OOS +1.68→+3.33%m, win 90.1→94.5%; (c)
+mechanism-first (short gamma in a calm regime). Honest caveats: the OOS window was visible
+during filter selection, so the true test is the forward paper-test; the filter trades away
+2019's small profit (the "positive every year" claim becomes 7-of-8 + one flat); equal-quality
+alternative `ret5<1.5%` (no 5-day run-up); do NOT stack filters (overfit).
+**Deployed: `ZERO_DTE_RV5_MAX = 0.9` (0 disables), checked live at 9:16, SKIP logged.**
+
 ## Reproduce
 Scripts copied to `studies/ndte/`: `bhav_expiry_dl.py` (NSE expiry-day download →
 `/tmp/ndte_bhav/`), `ndte3_bhav_bt.py` (2019-24 grid, per-year PASS bar), `ndte4_oos.py`

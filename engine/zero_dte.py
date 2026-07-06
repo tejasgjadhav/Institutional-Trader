@@ -22,9 +22,9 @@ from datetime import datetime, date
 
 from engine.config import (
     IST, DATA_DIR, ZERO_DTE_ENABLED, ZERO_DTE_INDEX, ZERO_DTE_OTM_PCT, ZERO_DTE_WIDTH_PTS,
-    ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER,
+    ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX,
 )
-from engine.data_fetcher import fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
+from engine.data_fetcher import fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp, fetch_upstox_historical
 from engine.instruments import to_instrument_key
 
 logger = logging.getLogger(__name__)
@@ -74,6 +74,29 @@ def _quote(key: str):
     return None
 
 
+def _rv5():
+    """NIFTY 5-day realized vol (std of last 5 daily log-returns, %), using closes STRICTLY
+    before today (no lookahead at 9:16). Caches result on the function. None on data failure."""
+    import numpy as np
+    try:
+        from datetime import timedelta
+        df = fetch_upstox_historical(ZERO_DTE_INDEX, unit="days", interval=1,
+                                     from_date=(date.today() - timedelta(days=30)).isoformat(),
+                                     to_date=date.today().isoformat())
+        if df is None or df.empty:
+            return None
+        df = df.sort_index()
+        closes = [float(c) for ix, c in zip(df.index, df["Close"]) if ix.date() < date.today()][-6:]
+        if len(closes) < 6:
+            return None
+        rv = float(np.std(np.diff(np.log(np.array(closes)))) * 100)
+        _rv5.last = rv
+        return rv
+    except Exception as e:
+        logger.warning(f"zero_dte rv5: {e}")
+        return None
+
+
 def _todays_ce_chain():
     """CE contracts expiring TODAY, sorted by strike — empty list on non-expiry days."""
     from engine.options import _load_index
@@ -103,6 +126,10 @@ def scan_signal() -> list:
         return []
     chain = _todays_ce_chain()
     if not chain:            # not a weekly-expiry day
+        return []
+    rv = _rv5() if ZERO_DTE_RV5_MAX else None
+    if rv is not None and rv >= ZERO_DTE_RV5_MAX:
+        logger.info(f"zero_dte: SKIP — calm-regime filter (rv5 {rv:.2f}% >= {ZERO_DTE_RV5_MAX}%)")
         return []
     spot = _spot()
     if not spot:
