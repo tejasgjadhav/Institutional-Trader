@@ -1,10 +1,13 @@
 # Institutional Trader — 3-Family Alpha · NSE Intraday Options
 
-A disciplined **paper-trading** system for NSE intraday. It scans NIFTY, BANKNIFTY
-and 100 liquid stocks every 5 minutes, scores each with a 3-family model, and only
-flags a trade when it clears its **strict gates** (alpha, ORB, alignment, min-premium, liquidity). Every trade is a **bought option**
-(CALL/PUT) and you place the order yourself in Upstox — the software never sends
-orders. It is a process for collecting honest evidence, not a proven money-maker.
+A disciplined **paper-trading** system for NSE options. Four books run in parallel — the
+flagship is the **STOCK CREDIT v2 (TP-50) fade**: sell a defined-risk credit spread against a
+stock breakout, book the win at half the credit. **85.35% win in-sample (2019→Sep'24) ·
+87.88% out-of-sample (Oct'24→Jul'26) · positive every year · MODEL ~₹17.5k/mo on a ₹1L book.**
+Alongside it: the v1 stock fade, an index-fade forward-test, and the intraday 3-Family
+buy-option scanner. Signals only — **you place every order yourself in Upstox; the software
+never sends orders.** It is a process for collecting honest evidence, not a proven money-maker
+(live fills remain the unproven link — practical planning ≈ half of model).
 
 > Full plain-language walkthrough is on the **README tab** inside the dashboard. The
 > **current** research + backtests live in **`studies/`** (and the in-app **STUDIES tab**).
@@ -61,8 +64,20 @@ crash can't stop trading, and execution latency is independent of the display.
 
 ## What It Does (in one breath)
 
-Two strategies run in parallel, both reported on **PM DECISIONS**, both options-only,
-both manual-execution:
+Four books run in parallel, all reported on **PM DECISIONS** (leader first, gold-highlighted),
+all options-only, all manual-execution:
+
+- **★ STOCK CREDIT v2 — TP-50 (THE LEADER, SELL):** Donchian-10 stock breakout → sell a credit
+  spread AGAINST it (short 2-OTM, width 4), gate credit/width ≥ 0.40 + prem ≥ ₹50 + ₹40k exposure
+  cap; **take profit at 50% of the credit, stop 3×**. 86% win, ~4–6 signals/mo, positive every year
+  2019→2026 (in-sample + OOS). `studies/STOCK_FADE_TP50_UPGRADE.md`
+- **Stock credit spread v1 (SELL):** same fade, original geometry (1-OTM, width 3, TP 75%) — the
+  validated base edge (+5.3% of width, 54% win on 2019→Sep'24). Runs in parallel for comparison.
+- **Index fade NIFTY/FINNIFTY (SELL, forward-test):** downgraded on real pre-2024 data
+  (regime-dependent) — kept small, signals ~15:10.
+- *(ORB+VWAP index was RETIRED 2026-07 — thin/inconsistent on real 2019→date 5-min data.)*
+
+The intraday BUY scanner:
 
 - **3-Family system (100 stocks):** every 5 min it (1) pulls fresh **Upstox** prices,
   (2) scores each stock into one number, **alpha-z**, (3) checks the score is strong
@@ -220,7 +235,11 @@ move swings the premium 10%+.
 
 ---
 
-## Parallel Strategy — ORB+VWAP Index (forward-test)
+## Parallel Strategy — ORB+VWAP Index — ⛔ RETIRED 2026-07
+
+> Retired after the real Kite 5-min test back to 2019: +0.04%/trade underlying direction, ~39% hit,
+> negative in ~2 of 8 years per index → ~0% net as options. Its PM slot now shows STOCK CREDIT v2.
+> Kept below for the historical record; `ORB_VWAP_ENABLED=False`.
 
 A second, independent strategy runs **alongside** the 3-Family system on **NIFTY &
 BANKNIFTY index options only**, shown in its own section on **PM DECISIONS**:
