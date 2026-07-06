@@ -591,13 +591,22 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "<b>MODEL ₹16-17k/mo at 1 lot · PRACTICAL ~₹8-10k · 2 lots ≈ ₹32-34k / ₹16-20k.</b> "
      "Worst month −₹26.4k, worst single loss −₹21.6k, best month +₹58.3k, 5/54 months negative. "
      "LIVE column = the forward test.")}
-{res("PROFIT EQUATION: (Win% × AvgWin) − (Loss% × AvgLoss) = (86% × ₹6,048) − (14% × ₹7,922) = "
-     "<b>₹4,069/trade</b> × 4.3/mo ≈ <b>₹17.5k/mo</b> (MODEL, capped book).")}
-{res("CAPITAL (MODEL): margin/trade = MAX LOSS only (hedged spread — all the broker blocks) = "
-     "(width−credit)×lot ≈ ₹10k. Book = 6 concurrent × margin + buffer ≈ ₹1L. 1 lot → ₹17.5k/mo "
-     "(₹17.5k ÷ ₹1L ≈ 17.5%/mo) · 2 lots → ₹2L, ₹35k/mo · 5 lots → ₹5L, ₹87.5k/mo. "
-     "Run since Jan-2019: ₹14.3L / ₹28.6L / ₹71.4L (fixed lots, no compounding; ₹9.48L of the 1-lot "
-     "figure is EXACT capped backtest, OOS leg estimated).")}
+{sub("PROFIT EQUATION (simple):")}
+{p("<b>Profit/trade = (Win% × AvgWin) − (Loss% × AvgLoss) = (86% × ₹6,048) − (14% × ₹7,922) = ₹4,069</b> "
+   "&nbsp;→&nbsp; Monthly = 4.3 trades × ₹4,069 ≈ <b>₹17.5k</b>")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>MODEL (capped book)</td><td>1 lot</td><td>2 lots</td><td>5 lots</td><td>How it's calculated</td></tr>
+<tr><td>Margin/trade <b>(= MAX LOSS — all the broker blocks)</b></td><td>₹10k</td><td>₹20k</td><td>₹50k</td><td>(width − credit) × lot ≈ 0.575 × avg notional ₹17.4k</td></tr>
+<tr style="color:{AMBER};"><td><b>Investment (book capital)</b></td><td><b>₹1L</b></td><td><b>₹2L</b></td><td><b>₹5L</b></td><td>≈ 6 concurrent × margin + buffer</td></tr>
+<tr><td>Avg win / trade</td><td>+₹6,048</td><td>+₹12.1k</td><td>+₹30.2k</td><td>mean of the 200 capped wins</td></tr>
+<tr><td>Avg loss / trade</td><td>−₹7,922</td><td>−₹15.8k</td><td>−₹39.6k</td><td>mean of the 33 capped losses (each ≤ max loss)</td></tr>
+<tr><td>Profit / trade</td><td>₹4,069</td><td>₹8,138</td><td>₹20,345</td><td>(86% × 6,048) − (14% × 7,922)</td></tr>
+<tr style="color:{GREEN};"><td><b>Profit / month</b></td><td><b>₹17.5k</b></td><td><b>₹35.0k</b></td><td><b>₹87.5k</b></td><td>4.3 trades/mo × profit/trade</td></tr>
+<tr style="color:{GREEN};"><td><b>% gain / month</b></td><td><b>~17.5%</b></td><td><b>~17.5%</b></td><td><b>~17.5%</b></td><td>₹17,500 ÷ ₹1,00,000</td></tr>
+<tr style="color:{GREEN};"><td><b>Run since Jan 2019 → Jul 2026</b></td><td><b>₹14.3L</b></td><td><b>₹28.6L</b></td><td><b>₹71.4L</b></td><td>exact ₹9.48L (233 tr) + ₹4.8L (≈118 OOS tr × ₹4,069)</td></tr>
+</table>
+{dim("Fixed lots, NO compounding, MODEL numbers (today's lot sizes). Practical planning ≈ half until "
+     "live fills prove the model — the forward test's LIVE column is the referee.")}
 {dim("Worst-month forensic (pre-cap Feb-2021 '−₹2.28L'): ONE stock — BAJAJFINSV — lost the same spread "
      "3× (re-entry into a relentless trend), AND the rupee figure was inflated by an era artifact: "
      "today's lot (300) applied to 2021 pre-split prices (true 2021 loss ~₹35k/hit at lot 125). "
