@@ -205,6 +205,11 @@ def scan_signals() -> list:
                 if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
                     continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
+            # EXPOSURE CAP (v2): skip extreme-notional names — width x lot <= Rs40k. Backtest with the
+            # cap: win rate unchanged (85.7%), worst single loss -84.7k -> -21.6k, worst MONTH
+            # -2.28L -> -26.4k, monthly mean~median ~Rs16-17k/lot (clean distribution, no whale risk).
+            if lot > 0 and width_pts * lot > 40000:
+                continue
             if lot <= 0:                                            # no lot size -> not tradeable
                 continue
             num_lots = int(STOCK_CREDIT_LOTS or 1)

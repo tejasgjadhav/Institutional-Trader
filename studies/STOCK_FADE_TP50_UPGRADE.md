@@ -64,6 +64,13 @@ a loss cluster), best +419, median month +85. Longest consecutive-loss streak: *
 Losses: worst −69.3, median −57.8. Per-trade records: `/tmp/stkfade_exact_trades.json`,
 `/tmp/stkfade_oos.json`.
 
+## Exposure cap (extremes removed) — DEPLOYED in v2
+Rupee exposure per trade (width × lot) varies ~10× across the universe; a few giant-notional names
+drove the worst month (Feb-2021 −₹2.28L at 1 lot) and the +₹9.6L best month. Capping **width × lot ≤
+₹40k** (90th pctile; drops 26/256 trades) leaves the win rate at **85.7%** and gives a clean, honest
+distribution at 1 lot: **monthly median ₹16.0k / mean ₹17.0k · best +₹58.3k · worst −₹26.4k · worst
+single loss −₹21.6k · 5/54 months negative.** The cap is live in `stock_credit_v2.py`.
+
 ## P&L — model vs practical (honest, both on the record)
 
 The MODEL column is the measured backtest arithmetic (405 real-premium trades, entry+exit slippage
@@ -78,8 +85,8 @@ when it lands, it replaces both.
 | Net per trade (% of width) | +24.5% → +31.9% | ~+12–16% | TBD |
 | Net per trade, 1 lot (₹) | ~₹8–14k | ~₹4–7k | TBD |
 | Trades / month | 4–6 | 4–6 | TBD |
-| **Monthly, 1 lot** | **~₹40–70k** | **~₹15–30k** | TBD |
-| **Monthly, 2 lots** | **~₹80k–1.4L** | **~₹30–60k** | TBD |
+| **Monthly, 1 lot (capped)** | **median ₹16k · mean ₹17k** | **~₹8–10k** | TBD |
+| **Monthly, 2 lots (capped)** | **median ₹32k · mean ₹34k** | **~₹16–20k** | TBD |
 | Margin deployed (2 lots) | ~₹1.5–2.5L + stop buffer | same | — |
 
 If LIVE tracks ≥60% of MODEL for a month, scale to 2 lots and adopt the model numbers with a
