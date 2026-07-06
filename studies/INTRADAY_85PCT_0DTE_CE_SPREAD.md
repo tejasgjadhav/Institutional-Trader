@@ -119,6 +119,26 @@ the daily-candle "close" understated wins on far-OTM legs.
 **Decision: filter + no stop stays deployed; `ZERO_DTE_STOP_MULT` added (default 0 = off) for a
 tail-cutting ×3 preference.**
 
+## Frequency extension (2026-07-06 night): other expiries + the "almost daily" test
+
+**SENSEX Thursday 0DTE** (same structure, wing ~0.83% of spot, BSE weeklies, 89 expiries
+Oct'24→Jul'26, `studies/ndte/ndte8_sensex.py`): **88.8% win, +7.57%m, +₹67,248/lot (20 qty),
+worst −₹8,963.** Oct–Dec'24 negative (expiry-day transition era); 2025: 90.2%/+₹34.1k; 2026:
+92.3%/+₹37.3k. NIFTY's rv5 filter does NOT transfer (slightly hurts) — run unfiltered. Caveats:
+21 months only (BSE weeklies are young), BSE spreads wider than NIFTY (cost model may be light).
+NOT yet wired into the engine — deliberately waiting until the NIFTY book's first live morning
+runs clean.
+
+**BANKNIFTY 0DTE monthlies** (23 tradeable expiry days): 91.3% win, +10.95%m, +₹17,214, worst
+−₹14,298. Small sample; adds ~1 payday/month. (`studies/ndte/ndte9_daily.py`)
+
+**Near-DAILY selling: REJECTED.** Same spread sold every morning on the NEAREST weekly (DTE
+1–6), closed same day (424 day-trades): non-expiry days sum to **−₹3.4k over 333 trades**, win
+50–64% with no structure across DTE buckets (2 and 5 positive, 1/3/6 negative = noise). **The
+edge is specifically expiry-day theta collapse — it does not exist on other days.** The honest
+maximum frequency from this edge: Tuesday (NIFTY) + Thursday (SENSEX) + ~1 monthly (BANKNIFTY)
+≈ 9–10 paydays/month.
+
 ## Reproduce
 Scripts copied to `studies/ndte/`: `bhav_expiry_dl.py` (NSE expiry-day download →
 `/tmp/ndte_bhav/`), `ndte3_bhav_bt.py` (2019-24 grid, per-year PASS bar), `ndte4_oos.py`
