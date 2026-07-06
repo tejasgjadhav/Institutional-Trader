@@ -1,4 +1,10 @@
-# Institutional Trader — 3-Family Alpha · NSE Intraday Options
+# Institutional Trader — STOCK CREDIT v2 fade (the winner) · NSE Options
+
+**Start here — the winner:** ★ **STOCK CREDIT v2 (TP-50)** — sell a defined-risk credit spread
+against a stock breakout, book the win at half the credit. **86% win rate, ~17.5%/month (model,
+₹1L book), positive every year 2019→2026, validated in-sample AND out-of-sample.** Everything
+else in this repo is either its supporting cast (v1 base book, index-fade forward-test, the
+3-Family intraday scanner it grew out of) or the honest research trail that found it.
 
 A disciplined **paper-trading** system for NSE options. Four books run in parallel — the
 flagship is the **STOCK CREDIT v2 (TP-50) fade**: sell a defined-risk credit spread against a
@@ -104,6 +110,19 @@ ORB+VWAP strategy.
 
 ---
 
+## When do signals come? (all books, IST)
+
+| Time | Book | What fires |
+|------|------|-----------|
+| **~15:10 daily** | **★ STOCK CREDIT v2 (leader)** | Donchian-10 needs the day's close → engine scans once after 15:10; ~4–6 spreads/mo appear on PM DECISIONS (gold section) to place before 15:30 |
+| ~15:10 daily | Stock credit v1 | same scan, original geometry (~10/mo) |
+| ~15:10 daily | Index fade NIFTY/FINNIFTY | same scan (~2–3/mo, forward-test) |
+| 09:45–13:00 (peak 10:30–11:00) | 3-Family stocks (BUY) | intraday scanner, ~1–2 signals/day |
+| — | ORB+VWAP | retired 2026-07 |
+
+**Practical routine: one look at ~15:10–15:25 covers all three credit books** (they hold days–weeks,
+nothing intraday to babysit); the 3-Family scanner is the only intraday screen if you follow it.
+
 ## The Daily Clock (IST)
 
 | Time | What happens |
@@ -116,7 +135,7 @@ ORB+VWAP strategy.
 | **09:45** | Trading window opens |
 | every 5 min | Engine re-scans NIFTY + BANKNIFTY + 100 stocks (~0.6–2.7 sec) |
 | **13:00** | No new trades after 1 PM |
-| **15:10** | Kill switch — exit guideline (don't hold into the last 20 min) |
+| **15:10** | Kill switch for intraday BUYS · **CREDIT SCAN fires: ★v2 + v1 + index swing spreads appear on PM DECISIONS** |
 | **15:30** | Market closes — **every OPEN paper trade is force-booked WIN/LOSS at the close** (Mon–Fri) |
 
 Signals are selective — **~1–2 a day** (365-day study: ~1.7/day), many days none. The

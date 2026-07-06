@@ -305,7 +305,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 — WIN 86% OF THE TIME, ~17.5%/MONTH (model, ₹1L book) · 4-6 signals/mo · every yr +ve since 2019 ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 — WIN 86% OF THE TIME, ~17.5%/MONTH (model, ₹1L book) · signals ~15:10 daily · 4-6/mo · every yr +ve since 2019 ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -1100,14 +1100,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             txt, col = "Market holiday — no signals today. Next trading day ~09:15.", TEXT_DIM
         elif m < 9 * 60 + 15:
             txt, col = "Pre-open — scanning starts 09:15; intraday signals from ~09:30.", AMBER
-        elif m < 11 * 60:
-            txt, col = ("● NOW: intraday window — watch STOCK OPTIONS + INDEX (ORB+VWAP, fires before 11:00). "
-                        "Credit spreads scan at ~15:10.", GREEN)
         elif m < 15 * 60 + 10:
-            txt, col = ("● NOW: stock intraday window (ORB+VWAP window closed at 11:00). "
-                        "Credit spreads scan at ~15:10.", GREEN)
+            txt, col = ("● NOW: 3-Family intraday window (09:45-13:00, peak 10:30-11:00). "
+                        "The CREDIT books — ★v2 + v1 + index swing — all scan at ~15:10.", GREEN)
         elif m <= 15 * 60 + 35:
-            txt, col = ("● NOW: CREDIT-SPREAD scan (~15:10) — check STOCK CREDIT + SWING CREDIT sections.", CYAN)
+            txt, col = ("● NOW: ~15:10 CREDIT SCAN — check ★ STOCK CREDIT v2 (gold) first, then v1 + INDEX SWING. "
+                        "New spreads appear here to place before the close.", CYAN)
         else:
             txt, col = "Market closed — today's signals are booked. Next session tomorrow ~09:15.", TEXT_DIM
         self.pm_now_hint.setText("  " + txt)
