@@ -437,6 +437,7 @@ short-window rupee figures as directional. The in-app **STUDIES** tab shows the 
 | # | Study | Question | Headline result | Status |
 |---|-------|----------|-----------------|--------|
 | ★ | [**Strategy Summary (start here)**](studies/STRATEGY_SUMMARY.md) | Where does every strategy stand on real data? | **One table: gated stock fade VALIDATED; index fades regime-dep/illiquid; BUY strategies real-but-tiny direction edge, not net.** | canonical |
+| ★ | [**Stock fade v2 — TP-50 upgrade**](studies/STOCK_FADE_TP50_UPGRADE.md) | Can the fade win >65% EVERY year? | **85% win / +24.5% width in-sample (2019–24) · 88% / +31.9% OOS (Oct24→Jul26) · ≥79% win all 8 yrs · ~4–6 tr/mo** | validated · awaiting deploy |
 | ★ | [**Real-Option Optimization**](studies/REAL_OPTION_OPTIMIZATION.md) | What's the edge on REAL option P&L (Upstox Plus)? | **STOCK 180d +1.5% did NOT hold 1yr (−1.0%, overfit). INDEX trend-ride +0.9% over 18mo holds.** | honest |
 | 1 | [Win-Rate Research Log](studies/WIN_RATE_RESEARCH_LOG.md) | How high can win rate go? | A ~52–57% out-of-sample wall; edge must come from filtering | baseline |
 | 2 | [Gate 3 — Market Alignment](studies/FINAL_STRATEGY_TESTING_60DAY.md) | Does not fighting the Nifty help? | 60d: ~59% win, P&L +₹17k → +₹31k (~2×) | **LIVE** |
