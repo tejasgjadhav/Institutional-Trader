@@ -90,20 +90,30 @@ when it lands, it replaces both.
 | **Monthly, 2 lots (capped)** | **median ₹32k · mean ₹34k** | **~₹16–20k** | TBD |
 | Margin deployed (2 lots) | ~₹1.5–2.5L + stop buffer | same | — |
 
-### Capital required & % return (plain language — 1 lot, capped, taking every signal)
+### Capital & returns — MODEL, 1 / 2 / 5 lots (capped book, every signal)
 
-| Question | Answer (exact from the capped backtest) |
-|---|---|
-| Margin per trade | **~₹10,000** (mean notional ₹17.4k × ~0.575 after credit) |
-| Signals per month | 4.3 (2019–24 avg) · ~6 recently |
-| Open at once (typical ~2-wk holds) | 2–3 spreads ≈ ₹20–30k deployed |
-| **Capital to run the book** | **₹75k minimum (6 concurrent + buffer) · ₹1L comfortable** |
-| **Model profit/month** | **₹17.5k → ~17–23%/mo on that capital** |
-| **Practical plan** | **₹8–9k → ~9–12%/mo** |
-| Worst backtest month | −₹26.4k = about −26% of a ₹1L book |
+**How profit is calculated (simple):**
+```
+Profit per trade = (Win% × Avg Win) − (Loss% × Avg Loss)
+                 = (86% × ₹6,048) − (14% × ₹7,922)
+                 = ₹5,189 − ₹1,120  =  ₹4,069 per trade
+Monthly ≈ 4.3 trades × ₹4,069 ≈ ₹17.5k
+```
 
-These % returns are on the SMALL margin capital of this one defined-risk book — not a whole-account
-promise. Live fills are still the unproven link; the % shrinks if fills come in under model.
+| MODEL | 1 lot | 2 lots | 5 lots |
+|---|---|---|---|
+| Margin per trade | ₹10k | ₹20k | ₹50k |
+| Avg capital deployed (2–3 open) | ₹20–30k | ₹40–60k | ₹1–1.5L |
+| **Investment (capital for the book)** | **₹1L** | **₹2L** | **₹5L** |
+| Avg win / avg loss per trade | +₹6,048 / −₹7,922 | +₹12.1k / −₹15.8k | +₹30.2k / −₹39.6k |
+| Profit per trade (equation above) | ₹4,069 | ₹8,138 | ₹20,345 |
+| **Profit per month** | **₹17.5k** | **₹35.0k** | **₹87.5k** |
+| **% gain per month (on investment)** | **~17.5%** | **~17.5%** | **~17.5%** |
+| **If run since Jan 2019 → Jul 2026** | **₹14.3L earned on ₹1L** | **₹28.6L on ₹2L** | **₹71.4L on ₹5L** |
+
+Since-2019 figure = exact capped backtest ₹9.48L (Jan'19–Sep'24, 233 trades) + OOS estimate ₹4.8L
+(Oct'24–Jul'26, ~118 capped trades × ₹4,069). Fixed lots, no compounding, MODEL numbers (today's lot
+sizes; live fills unproven — practical planning ≈ half).
 
 If LIVE tracks ≥60% of MODEL for a month, scale to 2 lots and adopt the model numbers with a
 smaller haircut. If LIVE lands at/below PRACTICAL, stay at 1 lot and investigate fills.
