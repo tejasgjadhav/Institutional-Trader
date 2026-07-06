@@ -100,16 +100,16 @@ Profit per trade = (Win% × Avg Win) − (Loss% × Avg Loss)
 Monthly ≈ 4.3 trades × ₹4,069 ≈ ₹17.5k
 ```
 
-| MODEL | 1 lot | 2 lots | 5 lots |
-|---|---|---|---|
-| Margin per trade | ₹10k | ₹20k | ₹50k |
-| Avg capital deployed (2–3 open) | ₹20–30k | ₹40–60k | ₹1–1.5L |
-| **Investment (capital for the book)** | **₹1L** | **₹2L** | **₹5L** |
-| Avg win / avg loss per trade | +₹6,048 / −₹7,922 | +₹12.1k / −₹15.8k | +₹30.2k / −₹39.6k |
-| Profit per trade (equation above) | ₹4,069 | ₹8,138 | ₹20,345 |
-| **Profit per month** | **₹17.5k** | **₹35.0k** | **₹87.5k** |
-| **% gain per month (on investment)** | **~17.5%** | **~17.5%** | **~17.5%** |
-| **If run since Jan 2019 → Jul 2026** | **₹14.3L earned on ₹1L** | **₹28.6L on ₹2L** | **₹71.4L on ₹5L** |
+| MODEL | 1 lot | 2 lots | 5 lots | How it's calculated |
+|---|---|---|---|---|
+| Margin per trade **(= MAX LOSS — all the broker blocks)** | ₹10k | ₹20k | ₹50k | (width − credit) × lot ≈ (1 − 0.425 c/w) × avg notional ₹17.4k |
+| **Investment (book capital)** | **₹1L** | **₹2L** | **₹5L** | ≈ 6 concurrent trades × margin, + buffer, rounded |
+| Avg win per trade | +₹6,048 | +₹12.1k | +₹30.2k | mean of the 200 capped winning trades |
+| Avg loss per trade | −₹7,922 | −₹15.8k | −₹39.6k | mean of the 33 capped losing trades (each ≤ max loss) |
+| Profit per trade | ₹4,069 | ₹8,138 | ₹20,345 | (86% × 6,048) − (14% × 7,922) |
+| **Profit per month** | **₹17.5k** | **₹35.0k** | **₹87.5k** | 4.3 trades/mo × ₹4,069 |
+| **% gain per month** | **~17.5%** | **~17.5%** | **~17.5%** | ₹17,500 ÷ ₹1,00,000 investment |
+| **Run since Jan 2019 → Jul 2026** | **₹14.3L** | **₹28.6L** | **₹71.4L** | exact ₹9.48L (233 tr, Jan19–Sep24) + ₹4.8L (≈118 OOS tr × ₹4,069) |
 
 Since-2019 figure = exact capped backtest ₹9.48L (Jan'19–Sep'24, 233 trades) + OOS estimate ₹4.8L
 (Oct'24–Jul'26, ~118 capped trades × ₹4,069). Fixed lots, no compounding, MODEL numbers (today's lot

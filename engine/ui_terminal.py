@@ -593,9 +593,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "LIVE column = the forward test.")}
 {res("PROFIT EQUATION: (Win% × AvgWin) − (Loss% × AvgLoss) = (86% × ₹6,048) − (14% × ₹7,922) = "
      "<b>₹4,069/trade</b> × 4.3/mo ≈ <b>₹17.5k/mo</b> (MODEL, capped book).")}
-{res("CAPITAL (MODEL): 1 lot → ₹1L book, ₹17.5k/mo (~17.5%/mo) · 2 lots → ₹2L, ₹35k/mo · 5 lots → ₹5L, "
-     "₹87.5k/mo. Run since Jan-2019: ₹14.3L / ₹28.6L / ₹71.4L earned respectively (fixed lots, no "
-     "compounding; ₹9.48L of the 1-lot figure is EXACT capped backtest, OOS leg estimated).")}
+{res("CAPITAL (MODEL): margin/trade = MAX LOSS only (hedged spread — all the broker blocks) = "
+     "(width−credit)×lot ≈ ₹10k. Book = 6 concurrent × margin + buffer ≈ ₹1L. 1 lot → ₹17.5k/mo "
+     "(₹17.5k ÷ ₹1L ≈ 17.5%/mo) · 2 lots → ₹2L, ₹35k/mo · 5 lots → ₹5L, ₹87.5k/mo. "
+     "Run since Jan-2019: ₹14.3L / ₹28.6L / ₹71.4L (fixed lots, no compounding; ₹9.48L of the 1-lot "
+     "figure is EXACT capped backtest, OOS leg estimated).")}
 {dim("Worst-month forensic (pre-cap Feb-2021 '−₹2.28L'): ONE stock — BAJAJFINSV — lost the same spread "
      "3× (re-entry into a relentless trend), AND the rupee figure was inflated by an era artifact: "
      "today's lot (300) applied to 2021 pre-split prices (true 2021 loss ~₹35k/hit at lot 125). "
