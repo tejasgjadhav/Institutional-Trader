@@ -139,6 +139,31 @@ edge is specifically expiry-day theta collapse — it does not exist on other da
 maximum frequency from this edge: Tuesday (NIFTY) + Thursday (SENSEX) + ~1 monthly (BANKNIFTY)
 ≈ 9–10 paydays/month.
 
+## BANKNIFTY 2019→2024 validation (2026-07-06 late) — QUALIFIED PASS, monthly-only deploy
+
+Full NSE bhavcopy check the user asked for (`studies/ndte/ndte10_bnf.py`, 273 weekly expiries,
+`/tmp/ndte_bhav_bnf`): **79.5% win, +7.42%/margin, +₹89,616 (lot 30), worst −₹10.7k.** Per year
+(win / ₹): 2019 84%/+21.5k · 2020 68%/+12.3k · 2021 85%/+25.7k · 2022 74%/+18.8k ·
+2023 89%/+24.5k · 2024(→Jul) 76%/−13.1k. Plus monthlies Oct'24→Jun'26: 91.3%/+10.95%m (23 tr).
+BNF weeklies were abolished (SEBI Nov'24) → deployable ONLY on its ~monthly expiry day.
+SENSEX pre-2023 is untestable (market didn't exist in liquid form — 21-month history stands).
+
+## Consolidated portfolio — expected monthly P&L (all 5 books, MODEL vs PLAN-ON)
+
+| Book | Signals/mo | 1 lot model | 1 lot plan-on | 2 lots model | 2 lots plan-on |
+|---|---|---|---|---|---|
+| Stock fade v2 (swing) | 4–6 | ₹17,500 | ₹8–10k | ₹35,000 | ₹16–20k |
+| Stock credit v1 (swing) | ~10 | ₹9,000 | ₹4–5k | ₹18,000 | ₹8–10k |
+| NIFTY Tue 0DTE | ~3.5 | ₹2,360 | ₹1.2k | ₹4,700 | ₹2.4k |
+| SENSEX Thu 0DTE | ~4.2 | ₹3,200 | ₹1.5k | ₹6,400 | ₹3k |
+| BANKNIFTY monthly 0DTE | ~1 | ₹820 | ₹0.4k | ₹1,600 | ₹0.8k |
+| **TOTAL** | ~23 | **~₹33k** | **~₹15–18k** | **~₹66k** | **~₹30–36k** |
+
+Capital: ~₹2–2.5L at 1 lot / ~₹4–5L at 2 lots (swing books + recycling intraday margins).
+Warnings that make it honest: monthly figures are AVERAGES (combined bad month at 2 lots can be
+−₹40–60k); the 0DTE books' live history starts 2026-07-07; all five books are correlated short
+premium in a crash — treat as ONE portfolio, size on the worst month.
+
 ## Reproduce
 Scripts copied to `studies/ndte/`: `bhav_expiry_dl.py` (NSE expiry-day download →
 `/tmp/ndte_bhav/`), `ndte3_bhav_bt.py` (2019-24 grid, per-year PASS bar), `ndte4_oos.py`

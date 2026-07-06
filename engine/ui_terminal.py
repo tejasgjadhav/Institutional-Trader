@@ -664,6 +664,25 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("THE LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
 
+{h("CONSOLIDATED PORTFOLIO — EXPECTED MONTHLY P&L (all 5 books)")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON</td><td>2 lots MODEL</td><td>2 lots PLAN-ON</td></tr>
+<tr><td>Stock fade v2 (swing)</td><td>4–6</td><td>₹17,500</td><td>₹8–10k</td><td>₹35,000</td><td>₹16–20k</td></tr>
+<tr><td>Stock credit v1 (swing)</td><td>~10</td><td>₹9,000</td><td>₹4–5k</td><td>₹18,000</td><td>₹8–10k</td></tr>
+<tr><td>NIFTY Tue 0DTE</td><td>~3.5</td><td>₹2,360</td><td>₹1.2k</td><td>₹4,700</td><td>₹2.4k</td></tr>
+<tr><td>SENSEX Thu 0DTE</td><td>~4.2</td><td>₹3,200</td><td>₹1.5k</td><td>₹6,400</td><td>₹3k</td></tr>
+<tr><td>BANKNIFTY monthly 0DTE</td><td>~1</td><td>₹820</td><td>₹0.4k</td><td>₹1,600</td><td>₹0.8k</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td>TOTAL</td><td>~23</td><td>~₹33k</td><td>~₹15–18k</td><td>~₹66k</td><td>~₹30–36k</td></tr>
+</table>
+{res("Capital: ~₹2–2.5L at 1 lot each · ~₹4–5L at 2 lots (swing books + recycling intraday margins). "
+     "PLAN-ON = ~half of model until live fills prove out (this repo's standing rule).")}
+{dim("Honesty: monthly figures are AVERAGES — a combined bad month at 2 lots can be −₹40–60k; the three "
+     "0DTE books' LIVE history starts 2026-07-07; all five books are correlated short-premium in a crash — "
+     "size on the worst month, not the average. Frequency extension verdicts: SENSEX Thu 88.8%/+7.6%m "
+     "(89 exp, 21-mo history only); BANKNIFTY 2019→24 weeklies 79.5%/+7.4%m +₹89.6k, positive 2019–23, "
+     "2024 −₹13k, weeklies abolished → MONTHLY-only deploy (91%/+11%m, 23 tr); near-DAILY selling "
+     "REJECTED (−₹3.4k/333 non-expiry day-trades — the edge is expiry-day theta only).")}
+
 {h("★ NEW — 0DTE INTRADAY (the 5th strategy)  ·  85% win 2019→2026, positive EVERY year")}
 {sub("Question (user goal): an INTRADAY strategy — closed the same day — with ≥85% win rate, "
      "positive net returns and >2% per trade on capital, retail-tradeable?")}
