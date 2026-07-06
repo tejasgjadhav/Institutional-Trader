@@ -54,6 +54,16 @@ regime + profit) exceeded in-sample AND out-of-sample.
 - OOS is ~21 months — one broad era; durability rests on the 8-year in-sample breadth.
 - Take-profit exits assume you can close near the modeled daily closes.
 
+## Exact trade-level distribution (not averages)
+
+**In-sample (273 trades): 233 WINS / 40 LOSSES = 85.35%.** Win size (% of width): min +5.7,
+median **+32.0**, max +92.0. Loss size: mildest −15.1, median **−51.1**, worst **−71.9**.
+60 calendar months traded, only **4 negative months (7%)** — worst month Nov-2023 (−208 %w units,
+a loss cluster), best +419, median month +85. Longest consecutive-loss streak: **4**.
+**OOS (132 trades): 116 WINS / 16 LOSSES = 87.88%.** Wins: min +16.3, median +34.8, max +93.0.
+Losses: worst −69.3, median −57.8. Per-trade records: `/tmp/stkfade_exact_trades.json`,
+`/tmp/stkfade_oos.json`.
+
 ## P&L — model vs practical (honest, both on the record)
 
 The MODEL column is the measured backtest arithmetic (405 real-premium trades, entry+exit slippage

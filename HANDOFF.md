@@ -36,6 +36,7 @@ Goal: win% >65% EVERY year 2019–2026 + net>0 every year, monthly deployable, h
 - **DEPLOYED 2026-07-04**: v2 runs PARALLEL (engine/stock_credit_v2.py, own book stock_credit_v2*.json, 1 lot); ORB+VWAP RETIRED (ORB_VWAP_ENABLED=False); PM slot + gold-highlighted SWING TRADES section show v2 with win-rate banners. Loop ENDED. (superseded: awaiting-approval note) — `STOCK_CREDIT_*` → SHORT_OFFSET 2, WIDTH 4, TAKE_PROFIT 0.5,
   STOP_MULT 3.0 (DC stays 10) + kickstart engine + studies/UI/wiki updates. USER SAID: show results
   first, do NOT wire without explicit go. Loop STOPPED after presenting.
+EXACT stats (per-trade dumps /tmp/stkfade_exact_trades.json + /tmp/stkfade_oos.json): IS 233W/40L=85.35%, win med +32/max+92, loss med −51/worst −72 (%width); 4/60 months negative (worst Nov23 −208); max streak 4L. OOS 116W/16L=87.88%.
 HONESTY: never promise riches; 5%/mo infeasible (capital-curve memory); per-year gross→net always;
 live fills unproven — keep 1 lot.
 
