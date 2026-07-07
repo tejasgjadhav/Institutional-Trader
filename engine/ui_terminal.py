@@ -349,14 +349,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_swing.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_swing, 1)
 
-        # STOCK options (single stocks; indices handled in the section below)
-        v.addWidget(self._section_label("STOCK OPTIONS — 3-Family  ·  signals 09:15–15:30 (peak 10:30–11:00)", GREEN))
+        # 3-Family stock-options section retired from view 2026-07-07 (engine still scans)
         self.pm_stock = self._make_pm_table()
-        self.pm_stock.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        v.addWidget(self.pm_stock, 2)   # shares space, scrolls internally
+        self.pm_stock.setVisible(False)
 
 
-        self.pm_empty = QLabel("No trade-ready signals yet. Auto-scan runs every 5 min, 09:15-15:30 IST.")
+        self.pm_empty = QLabel("Credit-spread signals appear ~15:10; 0DTE books live on the INTRADAY DECISIONS tab.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
         v.addWidget(self.pm_empty)
@@ -550,7 +548,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """TRADE LOG — the BUY strategies (3-Family stocks + ORB index). Credit spreads (SELL) are
         in the SWING TRADES tab. LIVE paper vs SIMULATION kept separate."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
-        v.addWidget(self._panel_title("TRADE LOG  -  stocks (3-Family) + ORB index  ·  LIVE vs SIMULATION"))
+        v.addWidget(self._panel_title("TRADE LOG  -  intraday 0DTE books (2-leg format)"))
 
         # LIVE / SIMULATION toggle
         self.log_view = "live"

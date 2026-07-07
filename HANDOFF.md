@@ -182,6 +182,8 @@ SENSEX chain; UI: FOCUS banner + 2 strips/tables. 16:00 routine: install steps n
 should only run the earnings-avoidance study (REPORT-ONLY) + dated v2 OOS trade list + verify
 NIFTY settle. First live NIFTY 0DTE settled WIN ~Rs300 today (thin-credit week).
 
+## (Jul 7 eve) Removing stale UI sections (PM tab 3-family/ORB blocks, TRADE LOG title).
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
