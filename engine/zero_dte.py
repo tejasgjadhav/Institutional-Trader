@@ -23,6 +23,7 @@ from datetime import datetime, date
 from engine.config import (
     IST, DATA_DIR, ZERO_DTE_ENABLED, ZERO_DTE_INDEX, ZERO_DTE_OTM_PCT, ZERO_DTE_WIDTH_PTS,
     ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX, ZERO_DTE_STOP_MULT,
+    ZERO_DTE_MIN_CREDIT_PCT,
 )
 from engine.data_fetcher import fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp, fetch_upstox_historical
 from engine.instruments import to_instrument_key
@@ -203,6 +204,9 @@ def scan_signal() -> list:
         return []
     credit = round(sm - lm, 2)
     if credit <= 0:
+        return []
+    if ZERO_DTE_MIN_CREDIT_PCT and credit < spot * ZERO_DTE_MIN_CREDIT_PCT / 100:
+        logger.info(f"zero_dte: SKIP — thin credit ({credit:.1f} pts < {spot*ZERO_DTE_MIN_CREDIT_PCT/100:.1f} = {ZERO_DTE_MIN_CREDIT_PCT}% of spot) — dead-EV week")
         return []
     lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
     if lot <= 0:
