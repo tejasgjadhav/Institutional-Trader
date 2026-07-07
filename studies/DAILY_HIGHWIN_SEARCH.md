@@ -32,6 +32,23 @@ per the approval-first rule; if approved, deploys as paper book #6 first. Remain
 21-month single-era window (older data physically unavailable), up to ~5 concurrent same-side
 spreads (a gap-up week hits several at once), CE-side regime dependence.
 
+### NIFTY vs SENSEX daily ladder — full data (both gated, Oct'24→Jun'26, real premiums)
+
+| | NIFTY | SENSEX |
+|---|---|---|
+| n | 349 | 343 |
+| Win | **81.2%** | 75.8% |
+| Avg %margin/trade | +9.06% | +2.90% |
+| Total 1 lot | **+₹2,66,000** | +₹93,051 |
+| Worst trade | −₹13,264 | −₹12,528 |
+
+SENSEX per-year: 2024 77.8%/+₹8.9k · **2025 72.9%/−₹8.9k (lost)** · 2026 83.6%/+₹93.1k — the
+entire result is one 2026 stretch; 2025 was net-negative. Per-DTE only DTE=1 is clean (84.6%);
+longer rungs whipsaw (DTE=3: 66%/−9%m). **NIFTY ladder beats SENSEX ladder on every metric.**
+Both remain SHELVED (ladder stacks ~5 correlated same-side spreads → a rally week takes several
+full-width losses at once; the Jul-1-7 NIFTY autopsy was −₹27k at 1 lot). Deployable SENSEX =
+the Thursday expiry-day 0DTE book, not the ladder.
+
 **Verdict on the exact goal (80%/3%-a-day):** 3%/day on account compounds to ~1,500x/yr
 (impossible); 3%/trade-margin daily at 80% win is refuted by every structure above. The
 realistic frontier is the deployed portfolio: ~85% win across books, ~7%/month on capital,

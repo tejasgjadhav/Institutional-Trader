@@ -220,6 +220,11 @@ DEPLOYED + since-inception table. SENSEX/BNF unchanged (CE, validated-only param
 ## (Jul 7 ~23:55) FLIP deployed (a1e67bc). Adding profit numbers + net-gain verdict to study
 MD and UI STUDIES tab per user (2019 loss negligible vs 2020 gain; win rate better).
 
+## (Jul 7 late) Stale STUDIES text purged (013d0f5). User asks re SENSEX results — clarifying:
+SENSEX daily-LADDER bt finished but INVALID (quota killed 274/350 legs, only 73 mostly-expiry
+entries). SENSEX Thursday 0DTE book goes LIVE 2026-07-09 (not yet). Offering to re-run ladder
+now if quota reset.
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
