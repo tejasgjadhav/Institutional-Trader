@@ -175,6 +175,11 @@ absolute threshold does not transfer. Recalibrated to a sanity floor: **skip onl
 while blocking exactly the risk-₹13k-for-₹300 shape of the day-1 trade. Frequency impact:
 ~1-2 skips/year; ~4.2 trades/month retained.  live.
 
+## Forward test — live paper log
+2026-07-07 (day 1, NIFTY): SELL 24600 CE / BUY 24800 CE @ 9:17, credit ₹4.7 (VIX ~11.8; the
+thin-credit week that motivated the ₹5-pt floor). NIFTY closed ~24,460 → both legs worthless →
+**WIN ~₹300 (1 lot, 65 qty)**. SENSEX book live from 2026-07-09; BANKNIFTY monthly from 2026-07-28.
+
 ## Reproduce
 Scripts copied to `studies/ndte/`: `bhav_expiry_dl.py` (NSE expiry-day download →
 `/tmp/ndte_bhav/`), `ndte3_bhav_bt.py` (2019-24 grid, per-year PASS bar), `ndte4_oos.py`

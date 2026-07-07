@@ -34,6 +34,10 @@ never sends orders.** It is a process for collecting honest evidence, not a prov
 | 3-Family stocks (BUY) | daily scan | direction +0.107%/tr real, but −1.0% net as options | paper only, HIDDEN from UI 2026-07-07 |
 | ORB+VWAP index (BUY) | — | thin/inconsistent | RETIRED |
 
+Notes (2026-07-07): NIFTY 0DTE's first live paper trade settled a WIN (thin-credit week —
+which prompted the ₹5-pt credit sanity floor, user-reviewed). 3-Family stays RUNNING by
+deliberate decision (its 5-min scan is the engine's data heartbeat; its direction edge is real
+but un-monetizable net of option-buying costs) — it is simply hidden from the dashboard.
 Consolidated expected P&L (model vs plan-on), the 0DTE studies, gates (calm-regime rv5,
 thin-credit floor), stop-loss verdict and the near-daily rejection: see
 `studies/INTRADAY_85PCT_0DTE_CE_SPREAD.md` and the STUDIES tab.

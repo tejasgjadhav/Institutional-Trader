@@ -484,11 +484,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v = st.get("verdict")
         if v == "EXPECTED":
             done = " · ENTERED ✓" if st.get("entered_today") else ""
-            label.setText(f"  ✓ {name} SIGNAL EXPECTED TODAY 9:16 · preview SELL ~{st.get('preview_short')} CE / "
+            label.setText(f"  ✓ {name} SIGNAL EXPECTED TODAY 9:16 · EXPIRY {st.get('date')} · preview SELL ~{st.get('preview_short')} CE / "
                           f"BUY ~{st.get('preview_wing')} CE (final = live 9:16 price){done}")
             label.setStyleSheet(f"color:#000000; background-color:{GREEN}; padding:8px;")
         elif v == "NO-ENTRY":
-            label.setText(f"  {name}: not an expiry day · next: {st.get('next_expiry','?')}")
+            label.setText(f"  {name}: not an expiry day · NEXT EXPIRY {st.get('next_expiry','?')}")
             label.setStyleSheet(f"color:{TEXT_DIM}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         else:
             label.setText(f"  {name}: status pending (engine writes every ~2 min)")
@@ -518,7 +518,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             if v == "EXPECTED":
                 done = "  ·  ENTERED ✓ (see book below)" if st.get("entered_today") else ""
                 self.zdte_status.setText(
-                    f"  ✓ SIGNAL EXPECTED TODAY at 9:16  ·  expiry day  ·  {rvtxt} (calm){done}\n"
+                    f"  ✓ SIGNAL EXPECTED TODAY at 9:16  ·  NIFTY weekly EXPIRY {st.get('date')}  ·  {rvtxt} (calm){done}\n"
                     f"  preview off last spot {st.get('spot')}: SELL ~{st.get('preview_short')} CE / BUY ~{st.get('preview_wing')} CE — "
                     f"FINAL strikes come from the LIVE 9:15-9:16 price, not the previous close  (as of {asof})")
                 self.zdte_status.setStyleSheet(f"color:#000000; background-color:{GREEN}; padding:10px; border:2px solid {GREEN};")
