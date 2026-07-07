@@ -22,6 +22,22 @@ never sends orders.** It is a process for collecting honest evidence, not a prov
 
 ---
 
+## Current lineup (updated 2026-07-07)
+
+| Book | Cadence | Validated result (real premiums) | Status |
+|---|---|---|---|
+| ★ Stock fade v2 (TP-50) | 4–6/mo, multi-day | 85% IS / 88% OOS win · +24.5/+31.9% of width | LIVE paper · gold on SWING TRADES |
+| Stock credit v1 | ~10/mo, multi-day | 54% win · +5.3% of width (2019–24 clean) | LIVE paper |
+| 0DTE NIFTY CE spread | Tuesdays 9:16 | 90.4% win OOS · +5.85%/margin (rv5 filter + ₹5-pt credit floor) | LIVE paper since 2026-07-07 (day-1 WIN) |
+| 0DTE SENSEX CE spread | Thursdays 9:16 | 88.8% win · +7.6%/margin (89 expiries, 21-mo history) | LIVE paper — first signal 2026-07-09 |
+| 0DTE BANKNIFTY CE spread | Monthly expiry | 79.5%/+7.4%m 2019-24 wk + 91%/+11%m monthlies | LIVE paper — next 2026-07-28 |
+| 3-Family stocks (BUY) | daily scan | direction +0.107%/tr real, but −1.0% net as options | paper only, HIDDEN from UI 2026-07-07 |
+| ORB+VWAP index (BUY) | — | thin/inconsistent | RETIRED |
+
+Consolidated expected P&L (model vs plan-on), the 0DTE studies, gates (calm-regime rv5,
+thin-credit floor), stop-loss verdict and the near-daily rejection: see
+`studies/INTRADAY_85PCT_0DTE_CE_SPREAD.md` and the STUDIES tab.
+
 ## Quick Start
 
 ```bash
