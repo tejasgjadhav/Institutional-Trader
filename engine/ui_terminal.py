@@ -1647,7 +1647,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             # Row 2 — BUY leg (the hedge) + the consolidated NET for the whole spread
             net_txt = f"NET {money(net_rs)}" + (f" ({net_pct:+.0f}%)" if net_pct is not None else "")
             self._set_row(table, rB,
-                          ["", f"② BUY {verb}", f"{name} {p.get('long_strike','—')}",
+                          [f"exp {p.get('expiry','—')}", f"② BUY {verb}", f"{name} {p.get('long_strike','—')}",
                            lot_str, price(lp), price(lc), money(buy_pnl), net_txt], fg=QColor(GREEN))
             # colors: status on SELL row, per-leg P&L + NET tinted by sign
             self._color_cell(table, rS, 7, self._status_color(status))
