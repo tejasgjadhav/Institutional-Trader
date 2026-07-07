@@ -16,10 +16,28 @@ never sell calls into a grinding rally (the exact failure of the CE ladder in th
 
 OOS per year: 2024-stub 83%/−Rs7.7k (12 tr, lot-transition era) · 2025 94.2%/+Rs44.6k ·
 2026 88.0%/+Rs28.6k. Threshold neighborhood 0.5–2.0 all beat baseline IS (not a fit cell);
-gap-based flip also works (+3.0-3.5%m) — momentum family is robust. PE-always loses both eras
+gap-based flip also works (+3.0-3.5%m) — momentum family is robust. ### Since-inception, uniform W=200 both sides (372 expiries 2019→2026, PE legs downloaded)
+
+| Year | CE-ALWAYS win / ₹ | FLIP win / ₹ |
+|---|---|---|
+| 2019 | 87.0% / +₹2,888 | 84.8% / **−₹3,859** |
+| 2020 | 79.2% / +₹1,843 | 83.0% / +₹22,758 |
+| 2021 | 84.6% / +₹16,863 | 76.9% / +₹11,406 |
+| 2022 | 86.5% / +₹45,476 | 86.5% / +₹38,736 |
+| 2023 | 86.5% / +₹16,392 | 94.2% / +₹27,819 |
+| 2024 | 82.1% / +₹14,588 | 89.7% / +₹33,610 |
+| 2025 | 86.8% / +₹3,897 | 94.3% / +₹42,921 |
+| 2026 H1 | 84.0% / +₹14,821 | 88.0% / +₹18,620 |
+| **ALL** | **84.7% / +₹116,768** | **87.1% / +₹192,010** |
+
+Flip wins 6 of 8 years and dominates 2023–26 (the maturing-market era where momentum-following
+firmed up); it LOSES 2019 (−₹3.9k) and is weak in 2021 (77% win) — so its edge is recent-regime,
+not universal. The paper forward-test is the referee if 2019-style behavior returns.
+
+PE-always loses both eras
 (confirms side-selection is the edge, not the PE side itself).
 
 Caveats: expiry-day cadence (~4-5/mo — extendable to the daily ladder pending PE leg data);
 wings W=200 IS vs W=300 OOS (cache constraint — direction consistent across both); 2024-stub
-negative in rupees. **REPORT-ONLY — not deployed; needs user review per the approval-first
-rule.** Repro: scratchpad flip scripts; data /tmp/ndte_bhav + /tmp/ndte_cache + /tmp/ndte_daily.
+negative in rupees. **DEPLOYED 2026-07-07 (user-approved) on the live NIFTY Tuesday paper book** —
+`ZERO_DTE_FLIP_RET5 = 1.0`; SENSEX/BANKNIFTY stay plain-CE (validated-only). Repro: scratchpad flip scripts; data /tmp/ndte_bhav + /tmp/ndte_cache + /tmp/ndte_daily.

@@ -270,6 +270,12 @@ ZERO_DTE_STOP_MULT = 0.0     # OPTIONAL short-leg stop: buy back when short prem
                              # no-stop wins (90.4%/+5.85%m/worst -11.7k); x3.0 halves the worst
                              # trade (-6.5k) but costs ~Rs14k total and win drops to 82%. Tight
                              # stops (<=x2) whipsaw badly. 0 = disabled (recommended with filter).
+ZERO_DTE_FLIP_RET5 = 1.0     # FLIP rule (user-approved 2026-07-07): if NIFTY 5-day return >=
+                             # this %, SELL the PE spread (fade downside, ride momentum) instead
+                             # of the CE. Since-inception 2019-26 (372 expiries, real premiums,
+                             # W=200 both sides): FLIP 87.1% win / +Rs192k vs CE-always 84.7% /
+                             # +Rs117k; OOS-era 91-94% win. Flip's weak years: 2019 (-Rs3.9k),
+                             # 2021 (77% win). 0 = disabled (CE always). studies/FLIP_SIDE_CREDIT_FADE.md
 ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
 ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day
 ZERO_DTE_SETTLE_AFTER = "15:30"  # book at expiry settlement (intrinsic vs spot)

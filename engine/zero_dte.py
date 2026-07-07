@@ -23,7 +23,7 @@ from datetime import datetime, date
 from engine.config import (
     IST, DATA_DIR, ZERO_DTE_ENABLED, ZERO_DTE_INDEX, ZERO_DTE_OTM_PCT, ZERO_DTE_WIDTH_PTS,
     ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX, ZERO_DTE_STOP_MULT,
-    ZERO_DTE_MIN_CREDIT_PCT,
+    ZERO_DTE_MIN_CREDIT_PCT, ZERO_DTE_FLIP_RET5,
 )
 from engine.data_fetcher import fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp, fetch_upstox_historical
 from engine.instruments import to_instrument_key
@@ -93,22 +93,27 @@ def _rv5():
             return None
         rv = float(np.std(np.diff(np.log(np.array(closes)))) * 100)
         _rv5.last = rv
+        _rv5.ret5 = float((closes[-1] / closes[0] - 1) * 100)   # 5-day return for the FLIP rule
         return rv
     except Exception as e:
         logger.warning(f"zero_dte rv5: {e}")
         return None
 
 
-def _todays_ce_chain():
-    """CE contracts expiring TODAY, sorted by strike — empty list on non-expiry days."""
+def _todays_chain(opt_type="CE"):
+    """Contracts of opt_type expiring TODAY, sorted by strike — empty on non-expiry days."""
     from engine.options import _load_index
     uk = to_instrument_key(ZERO_DTE_INDEX)
     if not uk:
         return []
     today = date.today()
     chain = [c for c in _load_index().get(uk, [])
-             if c["type"] == "CE" and datetime.fromtimestamp(c["expiry"] / 1000).date() == today]
+             if c["type"] == opt_type and datetime.fromtimestamp(c["expiry"] / 1000).date() == today]
     return sorted(chain, key=lambda c: c["strike"])
+
+
+def _todays_ce_chain():
+    return _todays_chain("CE")
 
 
 def _rv5_cached():
@@ -143,12 +148,16 @@ def write_status() -> None:
             st["next_expiry"] = fut[0].isoformat() if fut else None
         rv = _rv5_cached()
         st["rv5"] = round(rv, 3) if rv is not None else None
+        ret5 = getattr(_rv5, "ret5", None)
+        st["ret5"] = round(ret5, 2) if ret5 is not None else None
+        st["flip_side"] = "PE" if (ZERO_DTE_FLIP_RET5 and ret5 is not None and ret5 >= ZERO_DTE_FLIP_RET5) else "CE"
         spot = _spot()
         st["spot"] = spot
         if spot:
-            ks = round(spot * (1 + ZERO_DTE_OTM_PCT) / 50) * 50
+            sg = 1 if st.get("flip_side", "CE") == "CE" else -1
+            ks = round(spot * (1 + sg * ZERO_DTE_OTM_PCT) / 50) * 50
             st["preview_short"] = ks
-            st["preview_wing"] = ks + ZERO_DTE_WIDTH_PTS
+            st["preview_wing"] = ks + sg * ZERO_DTE_WIDTH_PTS
         if not st["is_expiry_today"]:
             st["verdict"] = "NO-ENTRY"
         elif rv is not None and ZERO_DTE_RV5_MAX and rv >= ZERO_DTE_RV5_MAX:
@@ -185,19 +194,29 @@ def scan_signal() -> list:
     chain = _todays_ce_chain()
     if not chain:            # not a weekly-expiry day
         return []
-    rv = _rv5() if ZERO_DTE_RV5_MAX else None
-    if rv is not None and rv >= ZERO_DTE_RV5_MAX:
+    rv = _rv5()
+    if ZERO_DTE_RV5_MAX and rv is not None and rv >= ZERO_DTE_RV5_MAX:
         logger.info(f"zero_dte: SKIP — calm-regime filter (rv5 {rv:.2f}% >= {ZERO_DTE_RV5_MAX}%)")
         return []
+    # FLIP rule (user-approved): momentum week -> sell the PE side instead of the CE
+    ret5 = getattr(_rv5, "ret5", None)
+    opt = "PE" if (ZERO_DTE_FLIP_RET5 and ret5 is not None and ret5 >= ZERO_DTE_FLIP_RET5) else "CE"
+    sgn = 1 if opt == "CE" else -1
+    if opt == "PE":
+        chain = _todays_chain("PE")
+        if not chain:
+            return []
     spot = _spot()
     if not spot:
         return []
     strikes = [c["strike"] for c in chain]
-    si = min(range(len(strikes)), key=lambda i: abs(strikes[i] - spot * (1 + ZERO_DTE_OTM_PCT)))
-    li = min(range(len(strikes)), key=lambda i: abs(strikes[i] - (strikes[si] + ZERO_DTE_WIDTH_PTS)))
+    si = min(range(len(strikes)), key=lambda i: abs(strikes[i] - spot * (1 + sgn * ZERO_DTE_OTM_PCT)))
+    li = min(range(len(strikes)), key=lambda i: abs(strikes[i] - (strikes[si] + sgn * ZERO_DTE_WIDTH_PTS)))
     short, long = chain[si], chain[li]
-    width_pts = long["strike"] - short["strike"]
+    width_pts = abs(long["strike"] - short["strike"])
     if width_pts < ZERO_DTE_WIDTH_PTS * 0.5:     # chain too short / clamped
+        return []
+    if (sgn == 1 and long["strike"] <= short["strike"]) or (sgn == -1 and long["strike"] >= short["strike"]):
         return []
     sm, lm = _quote(short["key"]), _quote(long["key"])
     if sm is None or lm is None:
@@ -215,7 +234,7 @@ def scan_signal() -> list:
     qty = lot * num_lots
     pos = {
         "id": f"0DTE-{today.isoformat()}", "symbol": ZERO_DTE_INDEX, "breakout_dir": None,
-        "side": "BEAR_CALL", "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
+        "side": "BEAR_CALL" if opt == "CE" else "BULL_PUT", "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
         "short_key": short["key"], "short_strike": int(short["strike"]),
         "long_key": long["key"], "long_strike": int(long["strike"]),
         "width_pts": int(width_pts), "lot": lot, "num_lots": num_lots, "qty": qty,
@@ -224,8 +243,8 @@ def scan_signal() -> list:
         "stop_cost": None,                      # NO intraday stop — hold to settlement
         "max_loss_pts": round(width_pts - credit, 2),
         "capital": round((width_pts - credit) * qty, 0),
-        "order_label": (f"SELL {ZERO_DTE_INDEX} {int(short['strike'])} CE / BUY {int(long['strike'])} CE"
-                        f"  0DTE {today.isoformat()}  (bear-call, credit Rs{credit}"
+        "order_label": (f"SELL {ZERO_DTE_INDEX} {int(short['strike'])} {opt} / BUY {int(long['strike'])} {opt}"
+                        f"  0DTE {today.isoformat()}  ({'bear-call' if opt=='CE' else 'bull-put (FLIP: 5d %+.1f%%)' % (ret5 or 0)}, credit Rs{credit}"
                         f"{f' x{num_lots}' if num_lots != 1 else ''}, settles today 15:30)"),
         "current_cost": credit, "short_cur": round(sm, 2), "long_cur": round(lm, 2),
         "pnl_pts": 0.0, "status": "OPEN",
@@ -272,8 +291,12 @@ def resolve_positions() -> int:
                                     f"(short {sm:.1f} vs entry {p['short_prem']:.1f}) pnl {p['pnl_pts']:+.1f}")
                 continue
             spot = _spot() or p.get("entry_spot") or 0
-            si = max(0.0, spot - p["short_strike"])
-            li = max(0.0, spot - p["long_strike"])
+            if p.get("side") == "BULL_PUT":
+                si = max(0.0, p["short_strike"] - spot)
+                li = max(0.0, p["long_strike"] - spot)
+            else:
+                si = max(0.0, spot - p["short_strike"])
+                li = max(0.0, spot - p["long_strike"])
             cost = min(max(si - li, 0.0), p["width_pts"])
             p["short_cur"] = round(si, 2); p["long_cur"] = round(li, 2)
             p["exit_cost"] = round(cost, 2); p["current_cost"] = round(cost, 2)

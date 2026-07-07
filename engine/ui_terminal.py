@@ -441,7 +441,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
         hdr = QLabel("★ 0DTE NIFTY CE SPREAD — 90% WIN OOS · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
-                     "MARGIN ≈ ₹14k/LOT (= MAX LOSS, defined risk)")
+                     "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise")
         hdr.setWordWrap(True)
         hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color:#000000; background-color:{CYAN}; padding:8px; border:2px solid {CYAN}; border-radius:4px;")

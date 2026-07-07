@@ -187,6 +187,36 @@ NIFTY settle. First live NIFTY 0DTE settled WIN ~Rs300 today (thin-credit week).
 ## (Jul 7 eve) APPROVED: SCAN_3FAMILY_ENABLED=False (5-min scan off; _market heartbeat stays).
 Demo-verifying all 5 books, then push so a fresh clone replicates (setup.sh + README).
 
+## (Jul 7 night) NEW USER GOAL: daily trading, >80% win, >3%/day — HONEST BOUNDARY GIVEN
+Told user: 3%/day = impossible (compounding absurdity); 80% win daily non-expiry already
+refuted this session (daily 1-6DTE selling negative; intraday underlying caps ~72%/~0 net).
+Portfolio he owns (Tue/Thu/monthly 0DTE + v1/v2) IS the realistic frontier (~85% win, ~7%/mo).
+QUEUED STUDY (report-only, fresh session): INTRADAY PAIRS MEAN-REVERSION on /tmp/k5m
+(100 stocks, 5-min, 2019-2026): (1) cointegration/correlation screen on 2019-23 dailies
+(sector pairs: banks, IT, autos, cement...); (2) intraday spread z-score entry (|z|>2), exit
+z->0 or EOD, both legs cash/futures; (3) costs 0.05-0.10%/leg round trip; (4) IS 2019-23 /
+OOS 2024-26, per-year; (5) report win/net/frequency vs the 80%/daily ask. Expectation set with
+user: likely 60-70% win after costs — test honestly, do NOT deploy without his confirmation.
+
+## (Jul 7 late) Daily-ladder found (81.2%/+4.3%m-day, report-only, study updated). User asked:
+same-day close? (NO — clarifying: enter daily, HOLD to weekly expiry; same-day close version was
+REJECTED). NIFTY vs SENSEX ladder: NIFTY tested; SENSEX ladder needs ~880 leg fetches (chains
+cached in /tmp/ndte_sensex; only expiry-day legs cached) — launching if quota allows.
+
+## (Jul 7 ~23:00) FLIP study done+pushed (f2f4cdb): ret5>=1%% -> sell PE spread else CE, 85.8/91.0
+win IS/OOS, ~2x money. REPORT-ONLY. Explaining mechanics to user + recommending: upgrade NIFTY
+Tue book to flip rule (paper) if he approves. SENSEX ladder bg job still running (bc5fx89cs).
+
+## (Jul 7 ~23:15) Building since-inception FLIP vs CE-always table (2019-2026); downloading OOS
+PE wing legs at W=200 for era-consistent compare. 91%% figure was OOS-only — clarifying to user.
+
+## (Jul 7 ~23:30) Since-inception FLIP table delivered (87.1%% vs 84.7%%, Rs192k vs 117k, W=200
+uniform; flip loses 2019, weak 2021, dominates 2023-26). SENSEX ladder bg job finished — reading.
+
+## (Jul 7 ~23:40) USER APPROVED: NIFTY Tue book upgraded to FLIP rule (ret5>=1.0 -> PE spread,
+else CE). ZERO_DTE_FLIP_RET5=1.0; PE settlement path added; status/UI show side. Study updated
+DEPLOYED + since-inception table. SENSEX/BNF unchanged (CE, validated-only params).
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
