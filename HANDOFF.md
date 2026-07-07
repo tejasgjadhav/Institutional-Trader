@@ -152,6 +152,36 @@ STUDIES html gets a PORTFOLIO P&L table (model vs plan-on, 1/2 lots); study MD g
 ## (00:xx Jul 7) UI cleanup pass: INTRADAY tab decluttered (compact banner+rules, example
 shortened), bug-check before first 9:16 live run. TRADE LOG mirror added earlier (e0a4e9b).
 
+## (Jul 7 morning) USER FLAG: today's live credit looks tiny (~Rs4 pts vs backtest median 15.6)
+Checking live book + testing a MIN-CREDIT gate on bhav-era trades (credit vs outcome). Calm
+filter selects low-vol weeks = low premiums; may need credit floor. IN PROGRESS.
+
+## (Jul 7) Thin-credit gate DEPLOYED (d02ff7a). Now quantifying: how many trades the gate
+skips per year/month, esp. last 2 yrs from REAL 1-min premiums (/tmp/ndte_intra pairs).
+
+## (Jul 7) Gate recalibrated 0.08->0.02 (6ef40a9). User Q: P(swing v1/v2 signal today).
+
+## (Jul 7) USER REQUEST for tonight's 16:00 routine — ADD: earnings-avoidance study for v1/v2
+Question: skip stocks with quarterly results pending before the spread's expiry — win rate and
+signal-count impact? Needs: (a) re-run stkfade OOS (Oct'24->Jul'26) logging DATES+SYMBOLS per
+trade (user also wants the last-30-day dated v2 trade list); (b) per-company historical earnings
+dates (yfinance Ticker.earnings_dates for .NS names, or NSE board-meetings archive) mapped to
+each trade's entry->expiry window; (c) report win/net/count with vs without pending-earnings
+trades, 2024+ first then full. Season-proxy quick pass done in-session (see chat Jul 7).
+*** STANDING USER RULE (2026-07-07): DO NOT deploy/configure ANY new gate, filter, or tunable
+without showing the user the backtest results and getting explicit confirmation first. The
+earnings-avoidance study tonight is REPORT-ONLY. (The SENSEX + BNF-monthly book INSTALL was
+explicitly pre-approved by the user and proceeds; but their parameters use only what was already
+validated — no new filters on them either.) ***
+
+## (Jul 7) User Q: no v1/v2 signals today — checking scan-time gating vs bug.
+
+## (Jul 7 15:45) EXECUTING SENSEX+BNF INSTALL NOW (user moved it up from the 16:00 routine).
+New engine/dte_multi.py (generic, param'd; NIFTY zero_dte.py untouched); BSE master ingest for
+SENSEX chain; UI: FOCUS banner + 2 strips/tables. 16:00 routine: install steps now DONE — it
+should only run the earnings-avoidance study (REPORT-ONLY) + dated v2 OOS trade list + verify
+NIFTY settle. First live NIFTY 0DTE settled WIN ~Rs300 today (thin-credit week).
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30

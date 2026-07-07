@@ -297,6 +297,18 @@ class EngineRunner:
                 zero_dte.write_status()   # pre-market "signal expected?" checker for the UI
             except Exception as e:
                 logger.warning(f"zero_dte status: {e}")
+        # SENSEX + BANKNIFTY 0DTE books (engine/dte_multi.py) share the cadence
+        try:
+            from engine import dte_multi
+            hs, ms_ = map(int, config.ZERO_DTE_SETTLE_AFTER.split(":"))
+            past_settle = (now.hour * 60 + now.minute) >= (hs * 60 + ms_)
+            if (time.time() - getattr(self, "_dtem_resolve", 0)) >= config.ZERO_DTE_RESOLVE_INTERVAL:
+                self._dtem_resolve = time.time()
+                n = dte_multi.resolve_positions(past_settle)
+                if n:
+                    logger.info(f"dte_multi: settled {n} position(s)")
+        except Exception as e:
+            logger.warning(f"dte_multi resolve: {e}")
         h1, m1 = map(int, config.ZERO_DTE_SCAN_AFTER.split(":"))
         h2, m2 = map(int, config.ZERO_DTE_ENTRY_CUTOFF.split(":"))
         mins = now.hour * 60 + now.minute
@@ -309,6 +321,13 @@ class EngineRunner:
                     logger.info(f"zero_dte: opened {new[0]['order_label']}")
             except Exception as e:
                 logger.warning(f"zero_dte scan: {e}")
+            try:
+                from engine import dte_multi
+                n = dte_multi.scan_signals()
+                if n:
+                    logger.info(f"dte_multi: opened {n} spread(s)")
+            except Exception as e:
+                logger.warning(f"dte_multi scan: {e}")
 
     def _manage_wakelock(self):
         """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended

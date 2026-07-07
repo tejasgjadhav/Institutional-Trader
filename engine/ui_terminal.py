@@ -37,6 +37,10 @@ STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
 STOCKCR2_BOOK = _os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
 ZDTE_BOOK = _os.path.join(DATA_DIR, "zero_dte_positions.json")
 ZDTE_STATUS = _os.path.join(DATA_DIR, "zero_dte_status.json")
+SDTE_BOOK = _os.path.join(DATA_DIR, "sensex_dte_positions.json")
+SDTE_STATUS = _os.path.join(DATA_DIR, "sensex_dte_status.json")
+BDTE_BOOK = _os.path.join(DATA_DIR, "bnf_dte_positions.json")
+BDTE_STATUS = _os.path.join(DATA_DIR, "bnf_dte_status.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -458,8 +462,37 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
         self.zdte_table.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.zdte_table, 1)
+        v.addWidget(self._section_label("SENSEX 0DTE — THURSDAYS · 88.8% win · +7.6%/margin "
+                                        "(89 expiries · 21-month history only · unfiltered)", AMBER))
+        self.sdte_status = self._stats_label(); v.addWidget(self.sdte_status)
+        self.sdte_stats = self._stats_label(); v.addWidget(self.sdte_stats)
+        self.sdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sdte_table, 1)
+        v.addWidget(self._section_label("BANKNIFTY 0DTE — MONTHLY EXPIRY (~1/mo) · 79.5%/+7.4%m "
+                                        "2019-24 weeklies + 91%/+11%m recent monthlies", PURPLE))
+        self.bdte_status = self._stats_label(); v.addWidget(self.bdte_status)
+        self.bdte_stats = self._stats_label(); v.addWidget(self.bdte_stats)
+        self.bdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.bdte_table, 1)
         v.addStretch(0)
         return self._scroll(inner)
+
+    def _fill_dte_status(self, label, path, name):
+        import json
+        try:
+            st = json.load(open(path)) if _os.path.exists(path) else {}
+        except Exception:
+            st = {}
+        v = st.get("verdict")
+        if v == "EXPECTED":
+            done = " · ENTERED ✓" if st.get("entered_today") else ""
+            label.setText(f"  ✓ {name} SIGNAL EXPECTED TODAY 9:16 · preview SELL ~{st.get('preview_short')} CE / "
+                          f"BUY ~{st.get('preview_wing')} CE (final = live 9:16 price){done}")
+            label.setStyleSheet(f"color:#000000; background-color:{GREEN}; padding:8px;")
+        elif v == "NO-ENTRY":
+            label.setText(f"  {name}: not an expiry day · next: {st.get('next_expiry','?')}")
+            label.setStyleSheet(f"color:{TEXT_DIM}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
+        else:
+            label.setText(f"  {name}: status pending (engine writes every ~2 min)")
+            label.setStyleSheet(f"color:{TEXT_DIM}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
 
     def _refresh_zero_dte_tab(self):
         if not hasattr(self, "zdte_table"):
@@ -468,6 +501,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             self._fill_swing_table(self.zdte_table, ZDTE_BOOK, self.zdte_stats)
             if hasattr(self, "log_zdte"):
                 self._fill_swing_table(self.log_zdte, ZDTE_BOOK)   # mirror into TRADE LOG tab
+            if hasattr(self, "sdte_table"):
+                self._fill_swing_table(self.sdte_table, SDTE_BOOK, self.sdte_stats)
+                self._fill_swing_table(self.bdte_table, BDTE_BOOK, self.bdte_stats)
+                self._fill_dte_status(self.sdte_status, SDTE_STATUS, "SENSEX")
+                self._fill_dte_status(self.bdte_status, BDTE_STATUS, "BANKNIFTY")
         except Exception as e:
             logger.warning(f"zero_dte tab fill: {e}")
         try:
