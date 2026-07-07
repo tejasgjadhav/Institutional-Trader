@@ -164,6 +164,17 @@ Warnings that make it honest: monthly figures are AVERAGES (combined bad month a
 −₹40–60k); the 0DTE books' live history starts 2026-07-07; all five books are correlated short
 premium in a crash — treat as ONE portfolio, size on the worst month.
 
+## Thin-credit gate (2026-07-07, user-caught live) — deployed at 0.02% of spot after recalibration
+
+Day-1 live trade collected only ₹4.7 pts vs ₹195 risk (VIX ~11.8). 2019-24 real data: credits
+below 0.08% of spot were dead weight (-0.4%m over 100 calm-week trades) vs +6.75%m above. BUT
+the last 21 months of REAL 1-min premiums show premiums have structurally compressed: an 0.08%
+floor would skip 64% of modern trades (58/91) INCLUDING +₹13.2k of realized profit — the old
+absolute threshold does not transfer. Recalibrated to a sanity floor: **skip only when credit
+< 0.02% of spot (~₹5 pts)** — that excluded just 3 trades in 21 months (total +₹955 forgone)
+while blocking exactly the risk-₹13k-for-₹300 shape of the day-1 trade. Frequency impact:
+~1-2 skips/year; ~4.2 trades/month retained.  live.
+
 ## Reproduce
 Scripts copied to `studies/ndte/`: `bhav_expiry_dl.py` (NSE expiry-day download →
 `/tmp/ndte_bhav/`), `ndte3_bhav_bt.py` (2019-24 grid, per-year PASS bar), `ndte4_oos.py`

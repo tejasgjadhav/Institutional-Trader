@@ -254,8 +254,8 @@ ZERO_DTE_RV5_MAX   = 0.9     # CALM-REGIME FILTER: skip the week when NIFTY 5-da
                              # 87.8% win / +4.0%m (2025: +Rs1.7k -> +Rs23.2k at 1 lot); cost:
                              # 2019 ~flat (-Rs1.7k). Robust across thresholds 0.7-1.2 AND on the
                              # 0.75%-OTM sibling config. 0 = disabled. See study.
-ZERO_DTE_MIN_CREDIT_PCT = 0.08  # THIN-CREDIT GATE (user-caught 2026-07-07): skip when the
-                             # spread credit < 0.08% of spot (~Rs20 pts at 24.5k). Real 2019-24
+ZERO_DTE_MIN_CREDIT_PCT = 0.02  # THIN-CREDIT GATE (user-caught 2026-07-07): skip when the
+                             # spread credit < 0.02% of spot (~Rs5 pts at 24.5k). RECALIBRATED
                              # trades: credit below this = -0.4%m dead weight (100 calm-week
                              # trades); above = +6.75%m, 87% win, +ve 2020-24. Same principle as
                              # stock fade v2's credit/width gate. 0 = disabled.
