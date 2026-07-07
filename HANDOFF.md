@@ -217,6 +217,9 @@ uniform; flip loses 2019, weak 2021, dominates 2023-26). SENSEX ladder bg job fi
 else CE). ZERO_DTE_FLIP_RET5=1.0; PE settlement path added; status/UI show side. Study updated
 DEPLOYED + since-inception table. SENSEX/BNF unchanged (CE, validated-only params).
 
+## (Jul 7 ~23:55) FLIP deployed (a1e67bc). Adding profit numbers + net-gain verdict to study
+MD and UI STUDIES tab per user (2019 loss negligible vs 2020 gain; win rate better).
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30

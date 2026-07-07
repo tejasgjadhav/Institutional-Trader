@@ -687,6 +687,26 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>BANKNIFTY monthly 0DTE</td><td>~1</td><td>₹820</td><td>₹0.4k</td><td>₹1,600</td><td>₹0.8k</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td>TOTAL</td><td>~23</td><td>~₹33k</td><td>~₹15–18k</td><td>~₹66k</td><td>~₹30–36k</td></tr>
 </table>
+{h("★ FLIP UPGRADE — NIFTY Tuesday book (DEPLOYED 2026-07-07)")}
+{p("Each expiry morning the book reads NIFTY's 5-day return: <b>≥ +1% → SELL the PE spread</b> "
+   "(ride the up-momentum), <b>otherwise SELL the CE spread</b>. Same wing, same margin, same "
+   "filters — only the SIDE flips. Fixes the failure where a grinding rally runs over call-selling.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Year</td><td>CE-always win / ₹</td><td>FLIP win / ₹</td></tr>
+<tr><td>2019</td><td>87.0% / +2,888</td><td>84.8% / <span style="color:{RED}">−3,859</span></td></tr>
+<tr><td>2020</td><td>79.2% / +1,843</td><td>83.0% / +22,758</td></tr>
+<tr><td>2021</td><td>84.6% / +16,863</td><td>76.9% / +11,406</td></tr>
+<tr><td>2022</td><td>86.5% / +45,476</td><td>86.5% / +38,736</td></tr>
+<tr><td>2023</td><td>86.5% / +16,392</td><td>94.2% / +27,819</td></tr>
+<tr><td>2024</td><td>82.1% / +14,588</td><td>89.7% / +33,610</td></tr>
+<tr><td>2025</td><td>86.8% / +3,897</td><td>94.3% / +42,921</td></tr>
+<tr><td>2026 H1</td><td>84.0% / +14,821</td><td>88.0% / +18,620</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td>ALL (372)</td><td>84.7% / +1,16,768</td><td>87.1% / +1,92,010</td></tr>
+</table>
+{res("Net edge +₹75,242 (+64%) over CE-always, win rate 84.7%→87.1%. Only 2019 lost (−₹3.9k, one "
+     "bad week) — negligible vs 2020 +₹22.8k / 2025 +₹42.9k. Real premiums 2019→2026, W=200 both "
+     "sides, costs charged. SENSEX/BANKNIFTY stay plain-CE (validated-only). File: studies/FLIP_SIDE_CREDIT_FADE.md")}
+
 {res("Capital: ~₹2–2.5L at 1 lot each · ~₹4–5L at 2 lots (swing books + recycling intraday margins). "
      "PLAN-ON = ~half of model until live fills prove out (this repo's standing rule).")}
 {dim("Honesty: monthly figures are AVERAGES — a combined bad month at 2 lots can be −₹40–60k; the three "

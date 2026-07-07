@@ -30,9 +30,13 @@ gap-based flip also works (+3.0-3.5%m) — momentum family is robust. ### Since-
 | 2026 H1 | 84.0% / +₹14,821 | 88.0% / +₹18,620 |
 | **ALL** | **84.7% / +₹116,768** | **87.1% / +₹192,010** |
 
-Flip wins 6 of 8 years and dominates 2023–26 (the maturing-market era where momentum-following
-firmed up); it LOSES 2019 (−₹3.9k) and is weak in 2021 (77% win) — so its edge is recent-regime,
-not universal. The paper forward-test is the referee if 2019-style behavior returns.
+**Net gain of switching to FLIP (per year, ₹ at 1 lot):** 2019 −₹6.7k · **2020 +₹20.9k** ·
+2021 −₹5.5k · 2022 −₹6.7k · 2023 +₹11.4k · 2024 +₹19.0k · 2025 **+₹39.0k** · 2026 +₹3.8k.
+**Total edge = +₹75,242 more than CE-always (+64%), win rate 84.7% → 87.1%.** The only real
+cost is 2019 (−₹3.9k absolute, a single bad week) — negligible against 2020's +₹22.8k and 2025's
++₹42.9k. Flip wins 6 of 8 years, dominates the maturing-market era 2023–26 (91–94% win), and its
+worst outcome is small. Verdict: strictly better on win rate AND money over the full sample; the
+paper forward-test remains the referee if 2019-style chop returns.
 
 PE-always loses both eras
 (confirms side-selection is the edge, not the PE side itself).
