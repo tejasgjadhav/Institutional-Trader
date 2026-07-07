@@ -360,7 +360,9 @@ class EngineRunner:
         self._swing(now)
         self._stock_credit(now)
         self._zero_dte(now)
-        if self.agent.is_market_open() and (time.time() - self._last_scan) >= SCAN_INTERVAL:
+        from engine import config as _cfg
+        if (getattr(_cfg, "SCAN_3FAMILY_ENABLED", True) and self.agent.is_market_open()
+                and (time.time() - self._last_scan) >= SCAN_INTERVAL):
             self._last_scan = time.time()
             try:
                 self._scan(now)

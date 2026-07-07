@@ -81,6 +81,12 @@ NO_NEW_TRADES_AFTER = "13:00"  # No new signals after 1 PM (wider 9:45-1PM windo
 KILL_SWITCH_TIME = "15:10"  # Force close all positions
 MARKET_CLOSE = "15:30"
 
+# 3-FAMILY 5-MIN SCAN (the BUY-side scorer). Disabled 2026-07-07 (user-approved): it fed only
+# the hidden 3-Family paper book and caused options-flow 429 storms. The market snapshot/header
+# (_market) and the 15:10 credit scans + 9:16 0DTE scans are INDEPENDENT and unaffected.
+# Set True to resume the 3-Family paper forward-test.
+SCAN_3FAMILY_ENABLED = False
+
 # === SIGNAL GATES ===
 ALPHA_Z_THRESHOLD = 0.55  # |alpha-z| must be strictly > this (0.55 does NOT trade)
 MIN_FAMILIES_AGREE = 2  # At least 2 of 3 families must align

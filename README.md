@@ -22,6 +22,22 @@ never sends orders.** It is a process for collecting honest evidence, not a prov
 
 ---
 
+## Replicate from a clone
+
+```bash
+git clone https://github.com/tejasgjadhav/Institutional-Trader.git institutional-trader
+cd institutional-trader && ./setup.sh     # venv + deps + .env template + launchd jobs
+# add your UPSTOX_ANALYTICS_TOKEN to .env, then:
+launchctl kickstart -k gui/$(id -u)/com.sayali.institutionaltrader.engine
+.venv/bin/python main.py                  # read-only dashboard
+```
+
+Everything needed is in the repo: the 5 live paper books start empty and populate on their
+schedules (0DTE at 9:16 on expiry days; credit scans 15:10 daily). Runtime data (`data/`,
+`.env`, logs) is gitignored — a clone is a fresh, working instance. The legacy 3-Family 5-min
+scan ships DISABLED (`SCAN_3FAMILY_ENABLED=False` — it fed only its own hidden paper book and
+caused API rate-limit storms; flip to True to resume that forward-test).
+
 ## Current lineup (updated 2026-07-07)
 
 | Book | Cadence | Validated result (real premiums) | Status |
