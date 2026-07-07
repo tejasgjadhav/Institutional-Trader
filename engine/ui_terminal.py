@@ -447,11 +447,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         hdr.setStyleSheet(f"color:#000000; background-color:{CYAN}; padding:8px; border:2px solid {CYAN}; border-radius:4px;")
         v.addWidget(hdr)
         how = QLabel("RULES · trade ONLY when the strip above is GREEN (engine skips hot weeks)\n"
-                     "  9:16   SELL the CE ~0.5% above the LIVE price · BUY the CE 200 pts higher (same-day expiry)\n"
+                     "  the strip tells you the SIDE: FLIP sells PE in up-momentum weeks (5-day ≥+1%), else CE\n"
+                     "  9:16   SELL the chosen leg ~0.5% OTM · BUY the hedge 200 pts further out (same-day expiry)\n"
                      "  order  basket, wing (BUY) first, limit at mid · then NOTHING — no stop, no adjusting\n"
                      "  15:30  settles automatically · wins ~9 weeks in 10 · the rare loss can cost the full margin\n"
-                     "EXAMPLE 4-Jul-24: sold 24500 CE ₹15.20 / bought 24700 CE ₹1.50 → day high 24,401 → both "
-                     "expired ₹0 → +₹756/lot (+5.4%). Full research: STUDIES tab.")
+                     "FLIP edge: 87.1% win / +₹1.92L since 2019 vs 84.7% / +₹1.17L CE-only. Full research: STUDIES tab.")
         how.setWordWrap(True); how.setFont(QFont("Menlo", 11))
         how.setStyleSheet(f"color:{TEXT}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(how)
@@ -716,7 +716,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "2024 −₹13k, weeklies abolished → MONTHLY-only deploy (91%/+11%m, 23 tr); near-DAILY selling "
      "REJECTED (−₹3.4k/333 non-expiry day-trades — the edge is expiry-day theta only).")}
 
-{h("★ NEW — 0DTE INTRADAY (the 5th strategy)  ·  85% win 2019→2026, positive EVERY year")}
+{h("★ 0DTE INTRADAY (the 5th strategy) — NIFTY Tue · SENSEX Thu · BANKNIFTY monthly · LIVE FLIP on NIFTY")}
 {sub("Question (user goal): an INTRADAY strategy — closed the same day — with ≥85% win rate, "
      "positive net returns and >2% per trade on capital, retail-tradeable?")}
 {p("First, what does NOT work (so nobody re-mines it): on 7.5 years of real 5-min data (100 F&O "
@@ -724,10 +724,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "234 variants tested (flushes, RSI/z confluence, gap fades, VWAP targets, trailing stops). A "
    "90%+ win rate IS manufacturable (tiny target / wide stop: 92% win, 7,688 trades) but earns "
    "≈0.00% gross — geometry, not edge. Files: INTRADAY_90PCT_WINRATE.md.")}
-{p("What DOES work — selling expiry-day premium with defined risk: <b>on each NIFTY weekly expiry "
-   "day, at the open, SELL the CE ~0.5% above spot and BUY the CE 200 pts further out; hold both "
-   "to the same-day settlement (no intraday stop).</b> One trade a week, 2 legs, margin ≈ the max "
-   "loss ≈ ₹14k/lot.")}
+{p("What DOES work — selling expiry-day premium with defined risk, and (LIVE 2026-07-07) FLIPPING "
+   "the side by momentum: <b>each NIFTY weekly expiry morning, if the 5-day return ≥ +1% SELL the "
+   "PE spread (0.5% OTM below), else SELL the CE spread (0.5% OTM above); wing 200 pts, hold to "
+   "same-day settlement, no stop.</b> One trade a week, 2 legs, margin ≈ max loss ≈ ₹14k/lot. "
+   "The base CE-only numbers below; the FLIP upgrade table is in the section above.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>REAL premiums, costs charged</td><td>n</td><td>Win</td><td>Avg net (% of margin)</td></tr>
 <tr><td>In-sample — NSE bhavcopy 2019→Sep'24 (config chosen here)</td><td>282</td><td>84.4%</td><td>+3.17%</td></tr>
@@ -740,11 +741,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {res("The honest shape: avg win +9.8%m · avg loss −34.1%m · worst −102%m (one full-width day — "
      "capped, that IS the max loss) · max losing streak 3 · 28/87 months negative · median month "
      "+₹2.1k, worst −₹14.8k (1 lot). ~4.3 trades/mo · avg ₹348/trade · ≈₹1.5k/mo per lot (MODEL).")}
-{dim("Why the CALL side: expiry-day up-moves from the open are structurally more muted than "
-     "down-moves (pinning; call writers defend) + IV crush — held across 8 years INCLUDING the "
-     "2021 bull. Put-side selling FAILS OOS. Risks: short-gamma tail (a violent gap-up rally "
-     "costs the full width), fills at the opening print unproven live — hence PAPER forward-test, "
-     "1 lot, on the INTRADAY DECISIONS tab. Files: INTRADAY_85PCT_0DTE_CE_SPREAD.md + studies/ndte/.")}
+{dim("Why the side matters: CE-selling is the right DEFAULT (expiry-day rallies are usually "
+     "capped by pinning + IV crush), but in an up-MOMENTUM week the danger is above — so the FLIP "
+     "sells PE instead (validated: FLIP 87.1% vs CE-only 84.7% since 2019; PE-ALWAYS loses, so the "
+     "edge is the CONDITIONAL switch, not the put side itself). Risks: short-gamma tail (a violent "
+     "move through the short costs the full width), fills at the opening print unproven live — hence "
+     "PAPER forward-test, 1 lot. Files: INTRADAY_85PCT_0DTE_CE_SPREAD.md + FLIP_SIDE_CREDIT_FADE.md.")}
 
 {h("★★★ THE LEADER — STOCK CREDIT v2 (TP-50)  ·  win ≥79% EVERY year 2019→2026")}
 {sub("Question: can the validated stock fade win >65% in every regime with good profit — and hold OOS?")}
