@@ -245,7 +245,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         self.tab_btns = []
         tabs = [("PM DECISIONS", 0), ("INTRADAY DECISIONS", 6),
-                ("SWING TRADES", 2), ("TRADE LOG", 3), ("STUDIES", 4), ("README", 5)]
+                ("SWING TRADE LOG", 2), ("TRADE LOG", 3), ("STUDIES", 4), ("README", 5)]
         for label, idx in tabs:
             b = QPushButton(label)
             b.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -400,7 +400,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """SWING TRADES — the credit-spread TRADE LOG, split into the two strategies. Each row shows
         exactly what to SELL and what to BUY (strike + premium), expiry, net credit and P&L."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
-        v.addWidget(self._panel_title("SWING TRADES  -  credit-spread trade log (what to SELL & BUY)", CYAN))
+        v.addWidget(self._panel_title("SWING TRADE LOG  -  credit spreads (what to SELL & BUY)", CYAN))
         # ★ STOCK CREDIT v2 — the TP-50 upgrade. Kept FIRST + gold-highlighted: this is the book
         # with the validated 88% OOS / >=79%-every-year win rate — watch it closest.
         v2hdr = QLabel("★ STOCK CREDIT v2 — WIN 86% OF THE TIME, ~17.5%/MONTH (model, ₹1L book) ★   "
