@@ -32,7 +32,6 @@ never sends orders.** It is a process for collecting honest evidence, not a prov
 | 0DTE SENSEX CE spread | Thursdays 9:16 | 88.8% win · +7.6%/margin (89 expiries, 21-mo history) | LIVE paper — first signal 2026-07-09 |
 | 0DTE BANKNIFTY CE spread | Monthly expiry | 79.5%/+7.4%m 2019-24 wk + 91%/+11%m monthlies | LIVE paper — next 2026-07-28 |
 | 3-Family stocks (BUY) | daily scan | direction +0.107%/tr real, but −1.0% net as options | paper only, HIDDEN from UI 2026-07-07 |
-| ORB+VWAP index (BUY) | — | thin/inconsistent | RETIRED |
 
 Notes (2026-07-07): NIFTY 0DTE's first live paper trade settled a WIN (thin-credit week —
 which prompted the ₹5-pt credit sanity floor, user-reviewed). 3-Family stays RUNNING by

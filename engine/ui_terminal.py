@@ -622,9 +622,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("3", "3-Family stocks", "BUY", "50.6% (direction hit)",
              "dir +0.107%/tr · −1.0% net as options", "19,454 · 2019→2026", "daily",
              "—", "~ dir edge, not net", "paper · hidden from UI 07/26", GREEN),
-            ("4", "ORB+VWAP index", "BUY", "~39%",
-             "dir +0.04%/tr · ~0% net", "2,303 · 2019→2026", "—",
-             "—", "~ thin / inconsistent", "RETIRED 2026-07", PURPLE),
         ]
         def vc(v):
             return GREEN if v.startswith("✓") else (RED if v.startswith("✗") else AMBER)
