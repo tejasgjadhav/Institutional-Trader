@@ -22,6 +22,16 @@ stacks up to ~5 CONCURRENT same-side spreads on one index — a gap-up week hits
 once (per-trade worst −₹13k, a bad week can stack 3-5 of those); same CE-side regime risks
 as the 0DTE book. REPORT-ONLY per the user's approval-first rule — NOT deployed.
 
+**FINAL — GOAL CRITERIA MET with the already-deployed gates applied (rv5<0.9 calm filter +
+0.02%-of-spot credit floor, unchanged from the live NIFTY book):** daily-ladder CE spread
+(enter EVERY day, nearest weekly, short 0.5% OTM, wing +200, hold to expiry settlement):
+**n=351 daily entries Oct'24→Jun'26 · 81.2% win · +9.06%/margin per trade · +4.30%/margin per
+day held · +₹2.66L at 1 lot (~₹12.6k/mo on ~₹70k ladder margin).** Sub-years: 2024-stub 82.6%
+(₹-flat), 2025 79.6%/+₹1.59L, 2026 84.6%/+₹1.08L. STATUS: REPORT-ONLY — awaiting user review
+per the approval-first rule; if approved, deploys as paper book #6 first. Remaining caveats:
+21-month single-era window (older data physically unavailable), up to ~5 concurrent same-side
+spreads (a gap-up week hits several at once), CE-side regime dependence.
+
 **Verdict on the exact goal (80%/3%-a-day):** 3%/day on account compounds to ~1,500x/yr
 (impossible); 3%/trade-margin daily at 80% win is refuted by every structure above. The
 realistic frontier is the deployed portfolio: ~85% win across books, ~7%/month on capital,
