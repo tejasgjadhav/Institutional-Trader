@@ -40,7 +40,119 @@ deployed capital + risk/reward optimized**, "use all tech parameters, not restri
 OOS PASSED: CE d=0.50% W=200 no-stop → 86.8% win / +3.28%m OOS; combined 2019-26: 373 trades,
 85.0% win, +3.20%m, positive all 8 years. Documented + reported. Scripts in `studies/ndte/`.
 
-## NOW EXECUTING (user request 20:00): deploy as paper forward-test
+## DONE (20:05): deployed as paper forward-test — commit a06f02a pushed
+engine/zero_dte.py + ZERO_DTE_* config + runner hook; INTRADAY DECISIONS tab (stack idx 6,
+button 2nd; _highlight_tab now maps via stack_idx property); 0DTE row in strategy summary +
+STUDIES section; studies + scripts pushed. Engine+viewer restarted OK. Numbers given to user:
+~4.3 calls/mo, ~₹14k/lot margin on expiry day only, ~₹348/expiry-day/lot model (~₹1.5k/mo).
+Worked example given (2024-07-04 bhav, fully verified: 24500/24700 CE, credit 13.7, net +10.1
+pts). OPEN ITEM: 2026-06-30 OOS row internally inconsistent (implied credit 44.6 vs
+worthless-expiry algebra 17.7 — suspect PARTIAL chain fetch during a 401 burst got RAM-cached in
+ndte4 run, wrong strikes). Loop continuing: offline integrity scan of all 91 OOS rows (implied
+credit = 200 - (rp/lot)/pm*100 sanity), then re-verify suspect rows via API when quota resets
+(it 401-hard-blocked ~20:10 after ~2.3k calls today). If aggregates shift, update study+UI+wiki.
+SCAN DONE (20:20): 13/17 flags = lot-25 era (valid). 4 genuine suspects (2026-03-02/03-30/04-07/
+05-26, implied credits 77-111). OOS excl suspects: 87.4% win +2.75%m — STILL PASSES both bars;
+conclusion robust. Also: Upstox daily CLOSE = last trade (stale for OTM legs) → settlement model
+understates wins like 2026-06-30 (+16 recorded vs +42 true worthless-expiry) — conservative bias.
+Loop next: when API resets, re-pull the 4 suspect days' chains+legs; if numbers move, update
+study/UI; else close loop. (20:35) UI example panel added + pushed (2bcab99); expiry confirmed
+TUESDAY (next 2026-07-07 — first live paper signal tomorrow 9:16). User Q&A ongoing: execution
+mechanics, per-year W/L breakdown (from scratchpad ndte4_oos.json '0.005_200' rows, lot 75).
+
+## (21:00) Calm-regime filter DEPLOYED + pushed (91a6330)
+ndte6_filters.py study: skip week when NIFTY rv5 (5-day realized vol) >= 0.9% → 87.8% win,
++4.0%m, 2025 +1.7k→+23.2k, cost 2019 ~flat. Robust (thresholds 0.7-1.2, sibling d=0.75 config).
+ZERO_DTE_RV5_MAX=0.9 live in engine; UI+study updated. Tomorrow Tue 2026-07-07 rv5=0.48 → TRADES.
+Data note: bhav IS ends 2024-07-04 (NSE killed old bhavcopy format Jul'24); Jul-Sep'24 gap;
+OOS resumes Oct'24. Now answering: 2024 expiry-wise list (bhav Jan-Jul at lot-75 equiv + OOS
+Oct-Dec rescaled 25→75) + year-wise totals.
+
+## (21:30) INTRADAY STOP STUDY DONE — real 1-min expired-option candles EXIST (major data unlock)
+Upstox expired-instruments serves 1minute candles for expired contracts (DATA_AVAILABILITY_LIMITS
+is outdated!). ndte7_stops.py, 91 expiries Oct'24-Jun'26, cache /tmp/ndte_intra (~275 resp).
+Fresh chains + intrinsic settlement (re-verified the 4 suspect rows implicitly). Results:
+- NO-STOP + rv5 filter (deployed config): 90.4% win, +5.85%m, ₹+49.5k, worst -₹11.7k — BEST total.
+- Stops WITHOUT filter help hugely (LEG x2-3: ₹18.4k → ₹36-37k) — they fix what the filter fixes.
+- WITH filter, stops only cut the tail: LEG x3: worst -6.5k but win 82%, total ₹35.8k (-₹14k).
+- Tight stops whipsaw: x1.5 stops 40/91 trades, win 56% (0DTE noise recovers).
+Verdict: filter+no-stop stays deployed; wire ZERO_DTE_STOP_MULT default 0 (off) as user option.
+Next: wire config default-off, study/UI note, commit+push, report menu to user.
+
+## (21:45) Correction: Mon Jul 6 WAS a trading day (NIFTY closed 24,430.35, +0.66%) — the Upstox
+historical-daily endpoint just hadn't published today's bar yet (posts after EOD processing).
+zero_dte._rv5 is unaffected tomorrow (bar will exist by 9:16; even with today's close rv5=0.383%
+→ TRADE). Tomorrow's likely strikes at spot ~24,430: short ~24550 CE / wing ~24750 CE.
+
+## (22:00) NEW GOAL: daily-frequency income ("i want daily money") — iteration 1 DONE
+Expectation reset given to user: no strategy pays daily wages; researching MORE PAYING DAYS/WEEK.
+**SENSEX Thursday 0DTE VALIDATED-ish (ndte8_sensex.py, cache /tmp/ndte_sensex, rows
+ndte8_sensex.json):** same CE-spread structure (short 0.5% OTM, wing ~0.83% of spot ≈600pts,
+lot 20, intrinsic settle): 89 expiries Oct'24→Jul'26 = **88.8% win, +7.57%m, +₹67,248/lot,
+worst −₹8,963.** 2024 Oct-Dec negative (−6.2%m, expiry-day transition era), 2025-26 strong.
+NIFTY rv5 filter does NOT transfer (slightly hurts) — deploy SENSEX UNFILTERED or re-tune.
+Caveats: only 21 months (BSE weeklies young), BSE spreads wider than NIFTY (2.5% cost may be
+light), no 2019-24 depth possible. NEXT (wakeup 22:02 armed): (1) wire SENSEX Thursday book
+into engine (mirror zero_dte.py with BSE_INDEX|SENSEX, no rv5 filter, own book/status files,
+show on INTRADAY DECISIONS tab under NIFTY), study MD + UI + push; (2) test daily 1-6DTE NIFTY
+intraday spreads (entry 9:16 exit 15:25 daily, real daily/1-min expired premiums) for the true
+"daily" leg; (3) combined 2-day/week income table for user.
+(22:05) Loop re-armed with user goal "other expiries + almost daily". Iteration 2 launching:
+ndte9_daily.py = (A) BANKNIFTY 0DTE on its 27 monthly expiries; (B) NIFTY near-daily: every
+trading day sell CE 0.5%-OTM on NEAREST weekly (DTE 0-6), exit same-day close (daily candles;
+wing +200) — reports by DTE bucket. Cache /tmp/ndte_daily. Then report + wire what passes.
+
+## (22:20) ITERATION 2 DONE — "almost daily" ANSWERED (committed, pushed)
+SENSEX Thu 0DTE: 88.8%/+7.6%m/+Rs67k (wire AFTER NIFTY book's first clean live morning Jul 7).
+BANKNIFTY monthlies: 91%/+11%m (23 tr). NEAR-DAILY REJECTED: DTE1-6 daily selling = -Rs3.4k/333
+trades, no structure. Max cadence = Tue+Thu+~1 monthly. NEXT: (1) verify tomorrow 9:16 NIFTY
+signal fires clean (log + tab); (2) wire SENSEX book (mirror zero_dte.py, param'd index/wing/no
+filter, own book+status files, second strip on INTRADAY tab); (3) optionally BANKNIFTY monthly.
+
+## (22:15) SCHEDULED ROUTINE — Tue Jul 7 after market close: INSTALL SENSEX (+BNF if valid)
+User-approved plan for a scheduled session tomorrow ~16:00 IST. Execute in order:
+1. CHECK BNF VALIDATION: /tmp/ndte_bhav_bnf download (bhav_bnf_dl.py in scratchpad
+   /private/tmp/claude-501/-Users-sayali-files/9e3c4735-97f8-4604-915d-79cbc15d4f77/scratchpad,
+   resumable) then ndte10_bnf.py → per-year 2019-24. PASS bar: win >=80% & net>0 most years,
+   no disaster year. (Tonight's wakeup 22:26 may already have written the verdict below — check.)
+2. REFACTOR engine/zero_dte.py minimally: extract the per-index logic so it can run N books
+   (params: index_key NSE_INDEX|Nifty 50 / BSE_INDEX|SENSEX / NSE_INDEX|Nifty Bank, otm 0.005,
+   wing_abs 200 (NIFTY) / wing_pct 0.0083 (SENSEX+BNF, nearest strike step), rv5 filter ON only
+   for NIFTY (0.9), book/status paths zero_dte_*, sensex_dte_*, bnf_dte_*). KEEP behavior of the
+   NIFTY book byte-identical (first live day was Jul 7 — don't disturb its book files).
+3. UI INTRADAY DECISIONS tab: one status strip per book (reuse _refresh_zero_dte_tab pattern),
+   one shared FOCUS banner at top that highlights TODAY's actionable book:
+   Tuesday→NIFTY (green), Thursday→SENSEX (cyan), BNF monthly expiry day→BANKNIFTY (amber),
+   else 'next: <day> <index>'. Tables: one _fill_swing_table per book (3 tables).
+4. Verify: syntax, engine restart (launchctl kickstart -k gui/$(id -u)/com.sayali...engine),
+   viewer restart (kill main.py first), status JSONs appear, tab renders 3 strips.
+5. Study MD short section + commit + push (check no .env staged).
+Stats for banners: NIFTY Tue 90.4%/+5.85%m (rv5-filtered, Rs49.5k/21mo); SENSEX Thu 88.8%/
++7.57%m unfiltered (Rs67.2k/21mo, lot 20, wing ~0.83% spot); BNF per step 1 verdict.
+Data: /tmp/ndte_sensex (89 expiries cached), ndte8_sensex.json + ndte9_daily.py + ndte10_bnf.py
+in scratchpad AND studies/ndte/. SENSEX pre-2023 is UNTESTABLE (market didn't exist) — banner
+must carry '21-month history only' caveat. Near-daily selling REJECTED (-Rs3.4k/333 tr).
+
+## (22:25) BNF VERDICT for tomorrow's routine: QUALIFIED PASS — install as MONTHLY-expiry book
+2019→Sep'24 weeklies (ndte10_bnf.py, 273 expiries, /tmp/ndte_bhav_bnf): 79.5% win, +7.42%m,
++Rs89,616 (lot 30), worst -Rs10.7k. Positive 2019-2023 (5 yrs; 2020 crash +11.8%m), 2024
+partial-year NEGATIVE (-5.9%m, n=25). PLUS Oct'24→Jun'26 monthlies: 91.3%/+10.95%m (23 tr).
+CRITICAL: BNF weeklies NO LONGER EXIST (SEBI Nov'24) — deploy for MONTHLY expiry days only
+(~1/mo). Banner stats: "structure validated on 296 real expiries 2019→2026, ~80% win, +7-11%m;
+2024 weekly-era was its one negative stretch". SENSEX + BNF-monthly both go in tomorrow.
+
+## (22:35) User asked combined monthly P&L across all 5 books (v2, v1, N/S/B 0DTE) at 1-2 lots.
+Answered from existing model numbers (v2 Rs17.5k/mo model / 8-10k practical; v1 ~Rs9k/4.5k;
+0DTE N 2.36k + S 3.2k + B 0.8k per lot per month; capital ~Rs2-2.5L at 1 lot). Nothing new run.
+
+## (22:45) Publishing: BNF 2019-24 verdict + consolidated 5-book monthly P&L -> study MD + UI
+STUDIES html gets a PORTFOLIO P&L table (model vs plan-on, 1/2 lots); study MD gets BNF per-year
++ portfolio section. Commit+push. THEN this session is done; tomorrow: 9:16 signal + 16:00 routine.
+
+## (00:xx Jul 7) UI cleanup pass: INTRADAY tab decluttered (compact banner+rules, example
+shortened), bug-check before first 9:16 live run. TRADE LOG mirror added earlier (e0a4e9b).
+
+## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
    settlement; own book data/zero_dte*.json; ZERO_DTE_* tunables in config.

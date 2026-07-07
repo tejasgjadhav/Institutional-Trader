@@ -438,44 +438,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_status.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
-        hdr = QLabel("★ 0DTE NIFTY — WITH CALM-REGIME FILTER: 87.8% WIN 2019→2026, +4.0% OF MARGIN/TRADE ★   "
-                     "EVERY TUESDAY (NIFTY weekly expiry) AT 9:16 AM — but ONLY when the 5-day realized vol "
-                     "< 0.9% (skips ~1 week in 4): SELL the CE ~0.5% above spot · BUY the CE 200 pts higher · "
-                     "hold to the SAME-DAY 15:30 settlement (no stop) · ~4/month · margin ≈ ₹14k/lot (= max loss)")
+        hdr = QLabel("★ 0DTE NIFTY CE SPREAD — 90% WIN OOS · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
+                     "MARGIN ≈ ₹14k/LOT (= MAX LOSS, defined risk)")
         hdr.setWordWrap(True)
         hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color:#000000; background-color:{CYAN}; padding:8px; border:2px solid {CYAN}; border-radius:4px;")
         v.addWidget(hdr)
-        how = QLabel("How to place it (manually, in Upstox) — at 9:16 AM every TUESDAY (or whichever day is "
-                     "that week's NIFTY expiry, if a holiday shifts it): the row below spells out both legs — "
-                     "BUY the wing CE first (margin benefit), then SELL the short CE, same expiry (today). Do "
-                     "nothing intraday. Both legs expire/settle at 15:30. Wins ~85% of weeks (small credits); "
-                     "the ~15% losers can cost up to the full margin — that is the shape, sized by the wing. "
-                     "Validated on REAL premiums 2019→Jun'26 (373 expiry days, in-sample + out-of-sample); "
-                     "backtest details: STUDIES tab + studies/INTRADAY_85PCT_0DTE_CE_SPREAD.md. "
-                     "PAPER forward-test — live fills at the open are the unproven link; keep 1 lot.")
+        how = QLabel("RULES · trade ONLY when the strip above is GREEN (engine skips hot weeks)\n"
+                     "  9:16   SELL the CE ~0.5% above the LIVE price · BUY the CE 200 pts higher (same-day expiry)\n"
+                     "  order  basket, wing (BUY) first, limit at mid · then NOTHING — no stop, no adjusting\n"
+                     "  15:30  settles automatically · wins ~9 weeks in 10 · the rare loss can cost the full margin\n"
+                     "EXAMPLE 4-Jul-24: sold 24500 CE ₹15.20 / bought 24700 CE ₹1.50 → day high 24,401 → both "
+                     "expired ₹0 → +₹756/lot (+5.4%). Full research: STUDIES tab.")
         how.setWordWrap(True); how.setFont(QFont("Menlo", 11))
-        how.setStyleSheet(f"color:{TEXT_DIM}; padding:6px; background-color:{PANEL}; border:1px solid {BORDER};")
+        how.setStyleSheet(f"color:{TEXT}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(how)
-        ex = QLabel("WORKED EXAMPLE — real expiry, real levels (Thu 4-Jul-2024, from the NSE record):   "
-                    "9:15 NIFTY opens 24,369.95 → strike = 24,370 × 1.005 ≈ 24,492 → nearest 50 = 24500.   "
-                    "9:16 BUY 24700 CE @ ₹1.50, SELL 24500 CE @ ₹15.20 → credit 13.70 pts · margin 186 pts "
-                    "≈ ₹14.0k (lot 75).   Loss only if NIFTY closes above ~24,514 (+0.6% from open).   "
-                    "Day's high: 24,401 — never close. 15:30: NIFTY settles 24,302 → both CEs expire "
-                    "worthless (24500 CE: ₹15.20 → ₹0) → keep the credit.   NET after costs ≈ +10.1 pts = "
-                    "₹756/lot = +5.4% on margin, in one session.   Same script on the last expiry "
-                    "(Tue 30-Jun-2026): open 24,032 → SELL 24150 CE / BUY 24350 CE; day high 24,036, "
-                    "close 23,866 → worthless → WIN.   The losing ~1-in-7: NIFTY rallies through the short "
-                    "strike and settlement charges up to the full width − credit (the capped ₹14k) — you "
-                    "still do nothing intraday; the wing is the insurance.   THE FILTER (added after a "
-                    "loss-forensics study of all 56 losing weeks): losses cluster when the tape is HOT — "
-                    "skip the week when NIFTY's last-5-day realized vol ≥ 0.9%. 2019→2026 with the filter: "
-                    "87.8% win · +4.0%/margin · 2025 goes +₹1.7k → +₹23.2k · cost: 2019 ends ~flat "
-                    "(−₹1.7k, 7 of 8 years positive). Robust across thresholds 0.7–1.2 and on the "
-                    "0.75%-OTM sibling config. The engine checks it automatically at 9:16 and logs a SKIP.")
-        ex.setWordWrap(True); ex.setFont(QFont("Menlo", 11))
-        ex.setStyleSheet(f"color:{TEXT}; padding:6px; background-color:{PANEL}; border:1px solid {CYAN};")
-        v.addWidget(ex)
         self.zdte_stats = self._stats_label()
         v.addWidget(self.zdte_stats)
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
