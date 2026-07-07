@@ -244,7 +244,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         h = QHBoxLayout(w); h.setContentsMargins(8, 0, 8, 0); h.setSpacing(2)
 
         self.tab_btns = []
-        tabs = [("PM DECISIONS", 0), ("INTRADAY DECISIONS", 6), ("WATCHLIST", 1),
+        tabs = [("PM DECISIONS", 0), ("INTRADAY DECISIONS", 6),
                 ("SWING TRADES", 2), ("TRADE LOG", 3), ("STUDIES", 4), ("README", 5)]
         for label, idx in tabs:
             b = QPushButton(label)
@@ -563,7 +563,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_live_btn.clicked.connect(lambda: self._set_log_view("live"))
         self.log_sim_btn.clicked.connect(lambda: self._set_log_view("sim"))
         th.addWidget(self.log_live_btn); th.addWidget(self.log_sim_btn); th.addStretch()
-        v.addWidget(toggle)
+        toggle.setVisible(False)  # 3-Family retired from view 2026-07-07 (user: better books elsewhere)
 
         self.log_stats = QLabel("—")
         self.log_stats.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -574,10 +574,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # Three separate logs, one per strategy.
         # 1) STOCK OPTIONS — the 3-Family intraday buying system (most trades).
         # BUY strategies only here. The credit-spread (SELL) logs live in the SWING TRADES tab.
-        v.addWidget(self._section_label("STOCK OPTIONS  —  3-Family (intraday buy)", GREEN))
-        self.log_stock = self._make_log_table(); v.addWidget(self.log_stock, 2)
-        v.addWidget(self._section_label("ORB+VWAP INDEX  —  NIFTY", PURPLE))
-        self.log_nifty = self._make_log_table(); v.addWidget(self.log_nifty, 1)
+        self.log_stock = self._make_log_table(); self.log_stock.setVisible(False)  # hidden (3-Family)
+        self.log_nifty = self._make_log_table(); self.log_nifty.setVisible(False)  # hidden (ORB retired)
         # INTRADAY 0DTE credit spreads (SELL) — same 2-leg format as SWING TRADES
         v.addWidget(self._section_label("INTRADAY 0DTE  —  NIFTY expiry-day CE spread (SELL, ~1/wk)", CYAN))
         self.log_zdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_zdte, 1)
