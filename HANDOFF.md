@@ -238,6 +238,14 @@ mirrors); (2) status strips always show next-expiry reminder. SENSEX Thu verifie
 ## (Jul 8) Rebuilding _strategy_summary_table with ALL 5 live books in one consistent format;
 mirroring same table to README + study MD.
 
+## (Jul 8) USER BUG: v2 MPHASIS signal used strike 2260 which is not a real chain strike.
+Investigating strike-resolution in stock_credit_v2/_pick_legs vs actual MPHASIS strike grid.
+
+## (Jul 8) MPHASIS 2260 bug ROOT CAUSE: option master strikes unreliable/mutate intra-day (2260
+at 15:10 -> shifted 2258/ending-in-8 grid at 15:34). FIX (user-approved, all credit modules):
+require BOTH legs to have a live two-sided quote (bid>0 AND ask>0) before writing a signal —
+no more fail-open on bogus strikes. Remove bogus MPHASIS paper trade. Applies v1/v2/swing.
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30

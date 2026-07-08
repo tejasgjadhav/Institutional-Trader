@@ -180,8 +180,13 @@ def scan_signals() -> list:
                 continue
             short, long, expiry = legs
             sm, sbid, sask, soi = _quote(short["key"])
-            lm, *_ = _quote(long["key"])
+            lm, lbid, lask, loi = _quote(long["key"])
             if sm is None or lm is None:
+                continue
+            # STRIKE VALIDATION (MPHASIS-2260 bug, 2026-07-08): require both legs to show a live
+            # TWO-SIDED market — rejects stale/non-standard master strikes that aren't real
+            # tradeable contracts. No fail-open on missing quotes.
+            if not (sbid > 0 and sask > 0 and lbid > 0 and lask > 0):
                 continue
             credit = round(sm - lm, 2)
             width_pts = abs(short["strike"] - long["strike"])
@@ -192,10 +197,9 @@ def scan_signals() -> list:
                 continue
             if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
                 continue
-            if sbid > 0 and sask > 0:                              # live liquidity gate
-                spread_pct = (sask - sbid) / sm * 100 if sm else 999
-                if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
-                    continue
+            spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
+            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
+                continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             if lot <= 0:                                            # no lot size -> not tradeable
                 continue
