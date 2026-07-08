@@ -225,6 +225,10 @@ SENSEX daily-LADDER bt finished but INVALID (quota killed 274/350 legs, only 73 
 entries). SENSEX Thursday 0DTE book goes LIVE 2026-07-09 (not yet). Offering to re-run ladder
 now if quota reset.
 
+## (Jul 8) SENSEX ladder full data done (NIFTY wins, both shelved, 3c74894). User asks: SENSEX
+FLIP? NOT yet tested — only NIFTY. Running SENSEX flip (fetch PE legs, ret5>=1->PE, expiry-day
+89 expiries) now.
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
