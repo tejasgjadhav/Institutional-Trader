@@ -246,6 +246,10 @@ at 15:10 -> shifted 2258/ending-in-8 grid at 15:34). FIX (user-approved, all cre
 require BOTH legs to have a live two-sided quote (bid>0 AND ask>0) before writing a signal —
 no more fail-open on bogus strikes. Remove bogus MPHASIS paper trade. Applies v1/v2/swing.
 
+## (Jul 8) USER: v1 and v2 both fired TRENT — dedup so v2 (leader) wins, v1 skips symbols v2
+already holds open. Impl: run v2 scan BEFORE v1 in runner; v1 scan_signals skips any symbol in
+v2 open book. Remove today's duplicate v1 TRENT.
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30

@@ -260,18 +260,20 @@ class EngineRunner:
         after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
         if (self.agent.is_market_open() and after_cutoff and self._stockcr_scan_day != now.date()):
             self._stockcr_scan_day = now.date()
-            try:
-                new = stock_credit.scan_signals()
-                if new:
-                    logger.info(f"stock_credit: opened {len(new)} new spread(s)")
-            except Exception as e:
-                logger.warning(f"stock_credit scan: {e}")
+            # v2 (the leader) scans FIRST so v1 can defer to it — one position per stock across
+            # both books (no doubling-down on the same name). User request 2026-07-08.
             try:
                 new2 = stock_credit_v2.scan_signals()
                 if new2:
                     logger.info(f"stock_credit_v2: opened {len(new2)} new spread(s)")
             except Exception as e:
                 logger.warning(f"stock_credit_v2 scan: {e}")
+            try:
+                new = stock_credit.scan_signals()
+                if new:
+                    logger.info(f"stock_credit: opened {len(new)} new spread(s)")
+            except Exception as e:
+                logger.warning(f"stock_credit scan: {e}")
 
     def _zero_dte(self, now):
         """0DTE INTRADAY (5th strategy) — NIFTY expiry-day CE credit spread. One entry right

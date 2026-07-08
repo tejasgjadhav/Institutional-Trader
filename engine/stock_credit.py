@@ -155,6 +155,17 @@ def scan_signals() -> list:
     book = _load_book()
     today = date.today()
     open_now = [p for p in book if p["status"] == "OPEN"]
+    # DEFER TO v2 (the leader): never open a v1 spread on a stock v2 already holds OPEN — one
+    # position per stock across both books, no doubling-down. v2 scans FIRST in the runner, so
+    # its book is current here. (User request 2026-07-08.)
+    v2_open = set()
+    try:
+        v2_book_path = os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
+        if os.path.exists(v2_book_path):
+            with open(v2_book_path) as _f:
+                v2_open = {p["symbol"] for p in (json.load(_f) or []) if p.get("status") == "OPEN"}
+    except Exception as e:
+        logger.warning(f"stock_credit v2-dedup read: {e}")
     new = []
     for ticker in UNIVERSE:
         if len(open_now) + len(new) >= STOCK_CREDIT_MAX_OPEN:
@@ -163,6 +174,8 @@ def scan_signals() -> list:
             break
         sym = ticker.replace(".NS", "")
         try:
+            if sym in v2_open:                                  # v2 already holds it — defer
+                continue
             if any(p["symbol"] == sym and p["status"] == "OPEN" for p in book):
                 continue
             entries = [p["entry_date"] for p in book if p["symbol"] == sym]
