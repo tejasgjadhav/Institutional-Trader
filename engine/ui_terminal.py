@@ -496,12 +496,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         if not hasattr(self, "zdte_table"):
             return
         try:
-            self._fill_swing_table(self.zdte_table, ZDTE_BOOK, self.zdte_stats)
+            self._fill_swing_table(self.zdte_table, ZDTE_BOOK, self.zdte_stats, open_only=True)
             if hasattr(self, "log_zdte"):
-                self._fill_swing_table(self.log_zdte, ZDTE_BOOK)   # mirror into TRADE LOG tab
+                self._fill_swing_table(self.log_zdte, ZDTE_BOOK)   # full history in TRADE LOG tab
+            if hasattr(self, "log_sdte"):
+                self._fill_swing_table(self.log_sdte, SDTE_BOOK)
+                self._fill_swing_table(self.log_bdte, BDTE_BOOK)
             if hasattr(self, "sdte_table"):
-                self._fill_swing_table(self.sdte_table, SDTE_BOOK, self.sdte_stats)
-                self._fill_swing_table(self.bdte_table, BDTE_BOOK, self.bdte_stats)
+                self._fill_swing_table(self.sdte_table, SDTE_BOOK, self.sdte_stats, open_only=True)
+                self._fill_swing_table(self.bdte_table, BDTE_BOOK, self.bdte_stats, open_only=True)
                 self._fill_dte_status(self.sdte_status, SDTE_STATUS, "SENSEX")
                 self._fill_dte_status(self.bdte_status, BDTE_STATUS, "BANKNIFTY")
         except Exception as e:
@@ -575,8 +578,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_stock = self._make_log_table(); self.log_stock.setVisible(False)  # hidden (3-Family)
         self.log_nifty = self._make_log_table(); self.log_nifty.setVisible(False)  # hidden (ORB retired)
         # INTRADAY 0DTE credit spreads (SELL) — same 2-leg format as SWING TRADES
-        v.addWidget(self._section_label("INTRADAY 0DTE  —  NIFTY expiry-day CE spread (SELL, ~1/wk)", CYAN))
+        v.addWidget(self._section_label("INTRADAY 0DTE  —  NIFTY expiry-day FLIP spread (Tuesdays)", CYAN))
         self.log_zdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_zdte, 1)
+        v.addWidget(self._section_label("INTRADAY 0DTE  —  SENSEX expiry-day CE spread (Thursdays)", AMBER))
+        self.log_sdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_sdte, 1)
+        v.addWidget(self._section_label("INTRADAY 0DTE  —  BANKNIFTY expiry-day CE spread (monthly)", PURPLE))
+        self.log_bdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_bdte, 1)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
         v.addStretch(1)
@@ -1603,16 +1610,22 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         except Exception as e:
             logger.warning(f"swing tab fill: {e}")
 
-    def _fill_swing_table(self, table, book_path, stats_label=None):
+    def _fill_swing_table(self, table, book_path, stats_label=None, open_only=False):
         """One credit-spread trade log: each row spells out the SELL leg and BUY leg (strike +
-        premium), expiry, net credit (total Rs), live/booked cost, P&L and status. Newest first."""
+        premium), expiry, net credit (total Rs), live/booked cost, P&L and status. Newest first.
+        open_only=True → show ONLY still-open or entered-today rows (the INTRADAY 'live' view);
+        settled history then lives in the TRADE LOG tab."""
         import json
+        from datetime import date as _date
         book = []
         try:
             if _os.path.exists(book_path):
                 book = json.load(open(book_path)) or []
         except Exception as e:
             logger.warning(f"swing table load {book_path}: {e}")
+        if open_only:
+            today = _date.today().isoformat()
+            book = [p for p in book if p.get("status") == "OPEN" or p.get("entry_date") == today]
         # ── summary stats (capital deployed, win rate, P&L) ──
         if stats_label is not None:
             def _qty(p): return p.get("qty") or ((p.get("lot", 0) or 0) * int(p.get("num_lots", 1) or 1))

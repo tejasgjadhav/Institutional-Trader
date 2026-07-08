@@ -229,6 +229,12 @@ now if quota reset.
 FLIP? NOT yet tested — only NIFTY. Running SENSEX flip (fetch PE legs, ret5>=1->PE, expiry-day
 89 expiries) now.
 
+## (Jul 8) User: implement SENSEX Thursday. It IS already live (dte_multi.py, plain CE, commit
+36bffe8). Verifying it will fire tomorrow Thu Jul 9; confirming to user.
+
+## (Jul 8) UI: (1) INTRADAY tables -> OPEN/today only, settled move to TRADE LOG (add SENSEX+BNF
+mirrors); (2) status strips always show next-expiry reminder. SENSEX Thu verified live for Jul 9.
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
