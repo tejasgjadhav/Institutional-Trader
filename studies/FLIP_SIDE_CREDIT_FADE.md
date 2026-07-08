@@ -41,6 +41,34 @@ paper forward-test remains the referee if 2019-style chop returns.
 PE-always loses both eras
 (confirms side-selection is the edge, not the PE side itself).
 
+## Loss distribution — wins AND losses (the number that actually decides survivability)
+
+| Book / rule | W / L | avg win | avg loss | worst | total |
+|---|---|---|---|---|---|
+| NIFTY CE-always | 315 / 57 | +₹1,218 | −₹4,685 | −₹14,100 | +₹1.17L |
+| **NIFTY FLIP (live)** | **324 / 48** | +₹1,323 | −₹4,930 | −₹13,855 | **+₹1.92L** |
+| **SENSEX CE-always (live)** | **78 / 10** | +₹1,423 | −₹4,549 | **−₹8,963** | **+₹65,507** |
+| SENSEX FLIP | 76 / 12 | +₹1,402 | −₹4,214 | −₹9,956 | +₹56,019 |
+
+- **NIFTY: the flip converts 9 losing weeks into wins (57 → 48)** at roughly the same average
+  loss — that IS the edge, and it survives the loss-side scrutiny. Keep the flip (deployed).
+- **SENSEX: the flip is worse on the loss side, not just close on totals** — it ADDS 2 losses
+  (10 → 12) and a bigger worst-day (−₹8,963 → −₹9,956) for ~₹9k less money. The ₹56k-vs-₹65k
+  total gap is noise; the loss-count and worst-case are the tiebreak, and they say plain CE.
+  Keep SENSEX CE (deployed).
+
+**Lesson: totals mislead; loss-count and worst-case decide. Both live books are on the rule with
+the better loss profile — FLIP on NIFTY, CE on SENSEX.**
+
+## SENSEX flip test — DOES NOT TRANSFER (2026-07-08): keep SENSEX on plain CE
+
+Same rule on 88 SENSEX expiries (Oct'24→Jun'26, real premiums, both sides fetched):
+CE-always **88.6% win / +7.46%m / +₹65,507** · PE-always 77.3% / −1.40% / −₹11,714 ·
+FLIP 86.4% / +6.31% / +₹56,019. The flip is WORSE than plain CE on SENSEX — SENSEX expiry-day
+rallies stayed capped even in up-momentum weeks, so CE kept winning and switching to PE gave up
+edge. The NIFTY flip is index-specific; SENSEX stays CE-only (as deployed). A gate validated on
+one index must be re-tested per index, not assumed to transfer.
+
 Caveats: expiry-day cadence (~4-5/mo — extendable to the daily ladder pending PE leg data);
 wings W=200 IS vs W=300 OOS (cache constraint — direction consistent across both); 2024-stub
 negative in rupees. **DEPLOYED 2026-07-07 (user-approved) on the live NIFTY Tuesday paper book** —
