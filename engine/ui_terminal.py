@@ -614,26 +614,32 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _strategy_summary_table(self) -> str:
         """Canonical strategy table — leader first (mirrors studies/STRATEGY_SUMMARY.md)."""
         rows = [
-            ("1b", "★ STOCK FADE v2 — TP-50 (LEADER)", "SELL", "85.4% IS · 87.9% OOS",
+            ("1", "★ STOCK FADE v2 — TP-50 (LEADER)", "SELL", "85.4% IS · 87.9% OOS",
              "+24.5% IS · +31.9% OOS (of width)", "273+132 · 2019→Jul26", "4-6",
-             "₹16-17k · ₹8-10k", "✓ VALIDATED + OOS", "LIVE · parallel · 1 lot", AMBER),
-            ("5", "★ 0DTE NIFTY FLIP spread (INTRADAY)", "SELL", "87.1% (flip) vs 84.7% CE",
+             "₹16-17k · ₹8-10k", "✓ VALIDATED + OOS", "LIVE · 1 lot", AMBER),
+            ("2", "0DTE NIFTY FLIP spread (Tue)", "SELL", "87.1% (flip) vs 84.7% CE",
              "+₹1.92L vs +₹1.17L · 2019→26", "372 expiries · real prem", "4-5",
-             "~₹2.2k/mo/lot (model)", "✓ VALIDATED + OOS", "LIVE FLIP 2026-07-07 · 1 lot", CYAN),
-            ("1", "Stock credit spread v1 · fade", "SELL", "54%",
+             "~₹2.2k/mo/lot (model)", "✓ VALIDATED + OOS", "LIVE FLIP 07-07 · 1 lot", CYAN),
+            ("3", "0DTE SENSEX CE spread (Thu)", "SELL", "88.8%",
+             "+7.6% of margin · +₹67k/21mo", "89 exp · Oct24→Jun26", "4-5",
+             "~₹3k/mo/lot (model)", "✓ VALIDATED (21mo)", "LIVE 07-09 · 1 lot", AMBER),
+            ("4", "0DTE BANKNIFTY CE spread (mthly)", "SELL", "91% mthly · 79.5% wk",
+             "+11%m mthly · +7.4%m wk 2019-24", "273 wk + 23 mthly", "~1",
+             "~₹0.8k/mo/lot (model)", "✓ VALIDATED", "LIVE · monthly · 1 lot", PURPLE),
+            ("5", "Stock credit spread v1 · fade", "SELL", "54%",
              "+5.3% of width", "718 · 2019→Sep24", "~10",
-             "not measured (fwd test)", "✓ VALIDATED", "deployed · 1 lot", GREEN),
-            ("2", "Index fade · NIFTY/FINNIFTY", "SELL", "54%",
+             "not measured (fwd test)", "✓ VALIDATED", "LIVE · 1 lot", GREEN),
+            ("—", "Index fade · NIFTY/FINNIFTY", "SELL", "54%",
              "−1.4% of width", "181 · 2019→Sep24", "2-3",
-             "—", "✗ regime-dep · failed OOS", "forward-test", CYAN),
-            ("3", "3-Family stocks", "BUY", "50.6% (direction hit)",
-             "dir +0.107%/tr · −1.0% net as options", "19,454 · 2019→2026", "daily",
-             "—", "~ dir edge, not net", "paper · hidden from UI 07/26", GREEN),
+             "—", "✗ regime-dep · failed OOS", "forward-test only", TEXT_DIM),
+            ("—", "3-Family stocks (BUY)", "BUY", "50.6% (direction)",
+             "dir +0.107%/tr · −1.0% net as opts", "19,454 · 2019→2026", "daily",
+             "—", "~ dir edge, not net", "paper · hidden 07/26", TEXT_DIM),
         ]
         def vc(v):
             return GREEN if v.startswith("✓") else (RED if v.startswith("✗") else AMBER)
         def rowbg(n):
-            return " style='background-color:#2a2410;'" if n == "1b" else ""
+            return " style='background-color:#2a2410;'" if n == "1" else ""
         lt = "".join(
             f"<tr{rowbg(n)}><td>{n}</td>"
             f"<td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td><td>{wr}</td><td>{rt}</td>"
