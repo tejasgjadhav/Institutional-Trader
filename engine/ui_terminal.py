@@ -714,6 +714,33 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "bad week) — negligible vs 2020 +₹22.8k / 2025 +₹42.9k. Real premiums 2019→2026, W=200 both "
      "sides, costs charged. SENSEX/BANKNIFTY stay plain-CE (validated-only). File: studies/FLIP_SIDE_CREDIT_FADE.md")}
 
+{h("★ SENSEX 0DTE — THURSDAY expiry-day CE spread (LIVE 2026-07-09)")}
+{p("Identical structure to NIFTY (sell CE 0.5% OTM at open, wing ~0.83% of spot ≈600 pts, hold "
+   "to same-day 15:30 settlement), on BSE's SENSEX weekly expiry — a SECOND payday each week. "
+   "Runs plain CE: the NIFTY flip was tested on SENSEX and is WORSE here (88.6% CE vs 86.4% flip, "
+   "and the flip adds losing weeks), so SENSEX keeps CE.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>SENSEX CE, real premiums Oct'24→Jun'26</td><td>n</td><td>Win</td><td>Avg %margin</td><td>Total 1 lot</td></tr>
+<tr><td>All expiries</td><td>89</td><td><b>88.8%</b></td><td>+7.57%</td><td>+₹67,248</td></tr>
+<tr><td>2025 · 2026 H1</td><td>51 · 26</td><td>90.2% · 92.3%</td><td>+6.6% · +15.8%</td><td>+₹34.1k · +₹37.3k</td></tr>
+</table>
+{res("Loss profile (88 both-side expiries): 78 W / 10 L · avg win +₹1,423 · avg loss −₹4,549 · "
+     "worst −₹8,963. Margin ≈ ₹11-12k/lot. Caveats: 21-month single-era history only (BSE weeklies "
+     "are young — no 2019-24 depth); Oct-Dec'24 was the expiry-transition era (weak). REPORT + LIVE "
+     "paper from Thu 2026-07-09. Files: INTRADAY_85PCT_0DTE_CE_SPREAD.md, FLIP_SIDE_CREDIT_FADE.md")}
+
+{h("★ BANKNIFTY 0DTE — MONTHLY expiry-day CE spread (LIVE · ~1/mo)")}
+{p("Same structure on BANKNIFTY's MONTHLY expiry (its weeklies were abolished by SEBI Nov'24, so "
+   "only the monthly is tradeable). Fatter returns, lower win rate — BANKNIFTY is wilder.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>BANKNIFTY CE, real premiums</td><td>n</td><td>Win</td><td>Avg %margin</td><td>Total 1 lot</td></tr>
+<tr><td>Weeklies 2019→Sep'24 (structure validation)</td><td>273</td><td>79.5%</td><td>+7.42%</td><td>+₹89,616</td></tr>
+<tr><td><b>Monthlies Oct'24→Jun'26 (deployed cadence)</b></td><td>23</td><td><b>91.3%</b></td><td>+10.95%</td><td>+₹17,214</td></tr>
+</table>
+{res("Weeklies positive 2019-2023 (incl. 2020 crash +11.8%m); 2024-stub negative (−₹13k). Worst "
+     "trade −₹10.7k (wk) / −₹14.3k (monthly). Margin ≈ ₹11-14k/lot. Deploy MONTHLY-only. Caveat: "
+     "monthly sample small (23). File: studies/INTRADAY_85PCT_0DTE_CE_SPREAD.md (BANKNIFTY section)")}
+
 {res("Capital: ~₹2–2.5L at 1 lot each · ~₹4–5L at 2 lots (swing books + recycling intraday margins). "
      "PLAN-ON = ~half of model until live fills prove out (this repo's standing rule).")}
 {dim("Honesty: monthly figures are AVERAGES — a combined bad month at 2 lots can be −₹40–60k; the three "

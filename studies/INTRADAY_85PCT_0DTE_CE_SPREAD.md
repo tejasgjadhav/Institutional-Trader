@@ -180,6 +180,26 @@ while blocking exactly the risk-₹13k-for-₹300 shape of the day-1 trade. Freq
 thin-credit week that motivated the ₹5-pt floor). NIFTY closed ~24,460 → both legs worthless →
 **WIN ~₹300 (1 lot, 65 qty)**. SENSEX book live from 2026-07-09; BANKNIFTY monthly from 2026-07-28.
 
+
+## SENSEX Thursday 0DTE — dedicated (LIVE 2026-07-09)
+
+Same CE-spread structure as NIFTY, on BSE SENSEX weekly expiry (Thursdays) — a second weekly
+payday. **89 expiries Oct'24→Jun'26, real premiums: 88.8% win, +7.57%/margin, +₹67,248 (1 lot).**
+2025: 90.2%/+₹34.1k · 2026 H1: 92.3%/+₹37.3k · Oct-Dec'24 negative (expiry-transition era).
+Loss profile (88 both-side): 78 W / 10 L · avg loss −₹4,549 · worst −₹8,963 · margin ≈ ₹11-12k.
+Runs PLAIN CE: the NIFTY flip is WORSE on SENSEX (88.6% CE vs 86.4% flip, adds losing weeks — see
+FLIP_SIDE_CREDIT_FADE.md). Caveat: 21-month single-era history (BSE weeklies are young). Wired via
+engine/dte_multi.py; scripts studies/ndte/ndte8_sensex.py + sensex_flip.py.
+
+## BANKNIFTY monthly 0DTE — dedicated (LIVE · ~1/mo)
+
+Same structure on BANKNIFTY MONTHLY expiry (weeklies abolished by SEBI Nov'24). **Structure
+validated on 273 weeklies 2019→Sep'24: 79.5% win, +7.42%/margin, +₹89,616** (positive 2019-2023
+incl. the 2020 crash; 2024-stub −₹13k). **Deployed cadence = monthlies Oct'24→Jun'26: 91.3% win,
++10.95%/margin, +₹17,214 (23 trades).** Worst −₹10.7k (wk) / −₹14.3k (monthly); margin ≈ ₹11-14k.
+Fatter returns + lower win rate than NIFTY (BANKNIFTY is wilder). MONTHLY-ONLY deploy; monthly
+sample small (23). Scripts studies/ndte/ndte9_daily.py + ndte10_bnf.py.
+
 ## Reproduce
 Scripts copied to `studies/ndte/`: `bhav_expiry_dl.py` (NSE expiry-day download →
 `/tmp/ndte_bhav/`), `ndte3_bhav_bt.py` (2019-24 grid, per-year PASS bar), `ndte4_oos.py`

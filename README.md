@@ -45,8 +45,8 @@ caused API rate-limit storms; flip to True to resume that forward-test).
 | ★ Stock fade v2 (TP-50) | 4–6/mo, multi-day | 85% IS / 88% OOS win · +24.5/+31.9% of width | LIVE paper · gold on SWING TRADES |
 | Stock credit v1 | ~10/mo, multi-day | 54% win · +5.3% of width (2019–24 clean) | LIVE paper |
 | 0DTE NIFTY **FLIP** spread | Tuesdays 9:16 | **87.1% win / +₹1.92L (2019→26)** vs 84.7%/+₹1.17L CE-only · sells PE in up-momentum weeks, CE else | LIVE FLIP since 2026-07-07 |
-| 0DTE SENSEX CE spread | Thursdays 9:16 | 88.8% win · +7.6%/margin (89 expiries, 21-mo history) | LIVE paper — first signal 2026-07-09 |
-| 0DTE BANKNIFTY CE spread | Monthly expiry | 79.5%/+7.4%m 2019-24 wk + 91%/+11%m monthlies | LIVE paper — next 2026-07-28 |
+| **0DTE SENSEX CE spread** | Thursdays 9:16 | **88.8% win · +7.6%/margin · +₹67k/21mo** (89 exp; flip tested & rejected — CE better) | LIVE paper from 2026-07-09 |
+| **0DTE BANKNIFTY CE spread** | Monthly expiry | **79.5%/+7.4%m (273 wk 2019-24) · 91%/+11%m (23 monthlies)** — monthly-only | LIVE paper — next 2026-07-28 |
 | 3-Family stocks (BUY) | daily scan | direction +0.107%/tr real, but −1.0% net as options | paper only, HIDDEN from UI 2026-07-07 |
 
 Notes (2026-07-07): NIFTY 0DTE's first live paper trade settled a WIN (thin-credit week —
