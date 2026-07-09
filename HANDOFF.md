@@ -250,6 +250,20 @@ no more fail-open on bogus strikes. Remove bogus MPHASIS paper trade. Applies v1
 already holds open. Impl: run v2 scan BEFORE v1 in runner; v1 scan_signals skips any symbol in
 v2 open book. Remove today's duplicate v1 TRENT.
 
+## (Jul 8 eve) NEW GOAL: daily STOCK trades, >=75% win, >=5% net/trade. Landscape: v2 already
+FAR exceeds quality (85/88% win, +24-32% width) but fires 4-6/mo. Path to near-daily: UNION of
+Donchian windows (DC5+10+15+20 all validated in the 96-config grid — 27 pass, whole TP50/stop3
+neighborhood). Testing union frequency+quality on bhav 2019-24 (close-entry, /tmp/bhav_cache_stk)
++ existing stkfade machinery (/tmp/stkfade_grid.py). Report-only per approval rule.
+
+## (Jul 9 am) TRENT go-ahead given live (c/w 0.40 at open, both legs two-sided). Union study
+CRASHED: /tmp/bhav_cache_stk WIPED by tmp cleaner. Re-downloading (resumable) then rerun
+stkfade_union.py (scratchpad). Loop self-pacing ~30min checks.
+
+## (Jul 9) bhav re-download round 1 ended (10-min cap) — checking count, relaunching until ~1359.
+
+## (Jul 9) Union study COMPLETED — reading results, reporting DC10 vs union to user.
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
