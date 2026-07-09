@@ -36,3 +36,9 @@ Thumbs.db
 trade_log.json
 signals.json
 universe_ranking.json
+
+# monthly_fut study: derived bhavcopy caches + panel (rebuild: dl_*.py + build_panel.py)
+studies/monthly_fut/cache_2018/
+studies/monthly_fut/cache_idx/
+studies/monthly_fut/cache_new/
+studies/monthly_fut/panel.csv.gz

@@ -38,7 +38,7 @@ schedules (0DTE at 9:16 on expiry days; credit scans 15:10 daily). Runtime data 
 scan ships DISABLED (`SCAN_3FAMILY_ENABLED=False` — it fed only its own hidden paper book and
 caused API rate-limit storms; flip to True to resume that forward-test).
 
-## Current lineup (updated 2026-07-07)
+## Current lineup (updated 2026-07-10)
 
 **All strategies (live + rejected), one table:**
 
@@ -49,9 +49,19 @@ caused API rate-limit storms; flip to True to resume that forward-test).
 | 3 | 0DTE SENSEX CE spread (Thu) | SELL | 88.8% | +7.6% of margin · +₹67k/21mo | 89 exp · Oct24→Jun26 | 4-5 | ✓ VALIDATED (21mo) | LIVE 07-09 |
 | 4 | 0DTE BANKNIFTY CE spread (mthly) | SELL | 91% mthly · 79.5% wk | +11%m mthly · +7.4%m wk | 273 wk + 23 mthly | ~1 | ✓ VALIDATED | LIVE · monthly |
 | 5 | Stock credit spread v1 · fade | SELL | 54% | +5.3% of width | 718 · 2019→Sep24 | ~10 | ✓ VALIDATED | LIVE · 1 lot |
+| 6 | Monthly futures pullback (REV1-v2) | BUY FUT | 75.1% IS · 75.7% OOS | +1.0%/trade · ~3.9%/mo on margin | 281+70 · 2018→Jul26 | 5/cycle | ✓ VALIDATED+OOS | **PAPER 07-10** · needs ~₹15L |
 | — | Index fade · NIFTY/FINNIFTY | SELL | 54% | −1.4% of width | 181 · 2019→Sep24 | 2-3 | ✗ failed OOS | forward-test |
 | — | 3-Family stocks | BUY | 50.6% (direction) | dir +0.107%/tr · −1.0% net | 19,454 · 2019→2026 | daily | ~ dir edge only | paper · hidden |
 
+
+Note (2026-07-10): **#6 Monthly futures pullback (REV1-v2)** is the one OOS survivor of the
+monthly-FUTURES study (`studies/monthly_fut/`): at each expiry cycle start with NIFTY>200DMA,
+buy front-month futures of the 5 highest-vol names among the 8 worst 1-month losers still above
+their own 200DMA; TP +2% (decays to +1% after day 12) / SL −5% on close. A live-only
+**earnings-skip rule** drops candidates with results before expiry (half of OOS losses were
+1-day news shocks). Paper-only: futures need ~₹15L capital; the study's honest ceiling is
+~3.9%/mo on margin — the requested 10%/mo was shown infeasible (see the study's GOAL
+DISPOSITION banner).
 
 Notes (2026-07-07): NIFTY 0DTE's first live paper trade settled a WIN (thin-credit week —
 which prompted the ₹5-pt credit sanity floor, user-reviewed). 3-Family stays RUNNING by

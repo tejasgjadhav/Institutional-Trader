@@ -31,6 +31,7 @@ LATEST_SCAN = _os.path.join(DATA_DIR, "latest_scan.json")
 MARKET_SNAP = _os.path.join(DATA_DIR, "market_snapshot.json")
 SWING_SNAP = _os.path.join(DATA_DIR, "swing.json")
 SWING_BOOK = _os.path.join(DATA_DIR, "swing_positions.json")
+MONTHLY_SNAP = _os.path.join(DATA_DIR, "monthly_fut.json")
 STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
 STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
@@ -75,6 +76,7 @@ class TerminalApp(QMainWindow):
         self.trade_log = TradeLog()
         self.last_scan_results = []
         self._swing_rows = []
+        self._monthly_rows = []
         self._stockcr_rows = []
         self._stockcr2_rows = []
         self.active_screen = 0
@@ -348,6 +350,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_swing.verticalHeader().setDefaultSectionSize(34)
         self.pm_swing.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_swing, 1)
+
+        # MONTHLY FUTURES PULLBACK — the 5th strategy (monthly cycle · BUY front-month futures).
+        # Signals-only paper test; needs ~Rs 15L to trade for real. Earnings-skip applied live.
+        v.addWidget(self._section_label(
+            "MONTHLY FUTURES PULLBACK — REV1-v2 · WIN 75.7% OOS · ~3.9%/mo on margin · 5/cycle · BUY FUT (paper, needs ~₹15L)", AMBER))
+        self.pm_monthly = QTableWidget(); self.pm_monthly.setColumnCount(len(self.PM_CREDIT_COLS))
+        self.pm_monthly.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
+        self.pm_monthly.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pm_monthly.setAlternatingRowColors(True); self.pm_monthly.verticalHeader().setVisible(False)
+        self.pm_monthly.verticalHeader().setDefaultSectionSize(32)
+        self.pm_monthly.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_monthly, 1)
 
         # 3-Family stock-options section retired from view 2026-07-07 (engine still scans)
         self.pm_stock = self._make_pm_table()
@@ -647,6 +661,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("5", "Stock credit spread v1 · fade", "SELL", "54%",
              "+5.3% of width", "718 · 2019→Sep24", "~10",
              "not measured (fwd test)", "✓ VALIDATED", "LIVE · 1 lot", GREEN),
+            ("6", "Monthly futures pullback (REV1-v2)", "BUY", "75.1% IS · 75.7% OOS",
+             "+1.0%/tr · ~3.9%/mo on margin", "281 IS + 70 OOS · 2018→26", "5/cycle",
+             "needs ~₹15L (paper only)", "✓ VALIDATED OOS", "PAPER 07-10 · earnings-skip", AMBER),
             ("—", "Index fade · NIFTY/FINNIFTY", "SELL", "54%",
              "−1.4% of width", "181 · 2019→Sep24", "2-3",
              "—", "✗ regime-dep · failed OOS", "forward-test only", TEXT_DIM),
@@ -1212,6 +1229,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         except Exception as e:
             logger.warning(f"load swing.json failed: {e}")
         try:
+            if _os.path.exists(MONTHLY_SNAP):
+                s = json.load(open(MONTHLY_SNAP))
+                self._monthly_rows = s.get("rows", []) or []
+        except Exception as e:
+            logger.warning(f"load monthly_fut.json failed: {e}")
+        try:
             if _os.path.exists(STOCKCR_SNAP):
                 s = json.load(open(STOCKCR_SNAP))
                 self._stockcr_rows = s.get("rows", []) or []
@@ -1415,6 +1438,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self._fit_table(self.pm_stock)
         self._refresh_swing()
         self._refresh_stock_credit()
+        self._refresh_monthly()
         self._refresh_orbvwap()
 
     @staticmethod
@@ -1564,6 +1588,41 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self._fill_pm_credit(self.pm_stockcr, list(self._stockcr_rows or []), "stock")
         if hasattr(self, "pm_stockcr2"):
             self._fill_pm_credit(self.pm_stockcr2, list(self._stockcr2_rows or []), "stock")
+
+    def _refresh_monthly(self):
+        """MONTHLY FUTURES PULLBACK on PM DECISIONS — one row per position (single-leg futures).
+        Unlike the credit sections, OPEN positions stay visible all month (the trade IS the
+        month), plus recent closes and the standing-aside marker."""
+        if not hasattr(self, "pm_monthly"):
+            return
+        table = self.pm_monthly
+        rows = list(self._monthly_rows or [])
+        if not rows:
+            table.setRowCount(1)
+            self._set_row(table, 0, ["—", "no cycle yet — enters the first trading day after "
+                          "monthly expiry (NIFTY>200DMA), scan ~15:10", "—", "—", "—", "—", "WATCHING"],
+                          fg=QColor(TEXT_DIM))
+            self._fit_table(table); return
+        table.setRowCount(len(rows))
+        for i, p in enumerate(rows):
+            status = p.get("status", "OPEN")
+            if status in ("REGIME_OFF", "NO_CANDIDATES"):
+                self._set_row(table, i, ["—", p.get("order_label", ""), "—", "—",
+                                          p.get("expiry", "—"), "—", status], fg=QColor(TEXT_DIM))
+                continue
+            pnl = p.get("pnl_pct")
+            pnl_s = f"{pnl:+.2f}%" if pnl is not None else "—"
+            stat_s = status if status == "OPEN" else f"{status} {pnl_s} ({p.get('reason','')})"
+            entry = p.get("entry_px")
+            cur = p.get("cur_px")
+            prem = f"in {entry} now {cur}" if entry and cur else (f"{entry}" if entry else "—")
+            vals = ["BUY FUT", p.get("order_label", p.get("symbol", "—")), "1 lot",
+                    prem, p.get("expiry", "—"),
+                    f"TP {p.get('tp_px','—')} / SL {p.get('sl_px','—')}",
+                    stat_s if status != "OPEN" else f"OPEN {pnl_s} · d{p.get('sessions',0)}"]
+            fg = QColor(GREEN) if status == "WIN" else QColor(RED) if status == "LOSS" else None
+            self._set_row(table, i, vals, fg=fg)
+        self._fit_table(table)
 
     def _fill_pm_credit(self, table, rows, kind):
         """Render a PM credit-spread section as TWO ROWS per trade so it's unmistakable what to do:

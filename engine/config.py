@@ -213,6 +213,24 @@ SWING_RESOLVE_INTERVAL = 900      # mark-to-market open positions every 15 min (
 # lots can exceed the account. Prudent ceiling ≈ 5 even after live confirmation. Per-index override.
 SWING_LOTS             = {"NIFTY": 1, "FINNIFTY": 1}
 
+# === MONTHLY FUTURES PULLBACK (the 5th — REV1-v2, signals-only paper forward-test) ===
+# The one OOS survivor of the 2026-07 monthly-futures study (studies/monthly_fut/): at cycle
+# start (first trading day after the prior monthly expiry), NIFTY>200DMA, buy the front-month
+# futures of the 5 highest-vol names among the 8 worst 1-month losers still above their own
+# 200DMA. Exits on daily closes. 75.7% win OOS, ~3.9%/mo on margin, worst month ~-20%.
+# NEEDS ~Rs 15L capital at 5x Rs 10L notionals — paper-only until the user funds it.
+MONTHLY_FUT_ENABLED    = True
+MONTHLY_FUT_POOL       = 8       # worst-N 1-month losers above their 200DMA (candidate pool)
+MONTHLY_FUT_TOPN       = 5       # of the pool, trade the N highest 20d-vol names
+MONTHLY_FUT_TP         = 0.02    # take-profit +2% on close ...
+MONTHLY_FUT_TP_LATE    = 0.01    # ... decaying to +1% after MONTHLY_FUT_DECAY_DAY sessions
+MONTHLY_FUT_DECAY_DAY  = 12
+MONTHLY_FUT_SL         = 0.05    # stop -5% on close (gaps can exceed it — avg real stop ≈ -6.3%)
+MONTHLY_FUT_MIN_DTE    = 20      # only enter near cycle start (late/mid-cycle entries tested weak)
+MONTHLY_FUT_EARNINGS_SKIP = True # live-only rule: skip names with results before expiry
+MONTHLY_FUT_SCAN_AFTER = "15:10" # entry decision needs ~the close
+MONTHLY_FUT_RESOLVE_INTERVAL = 900
+
 # === STOCK CREDIT SPREAD STRATEGY (the 4th — same fade, on the full stock universe) ===
 # The high-FREQUENCY sibling of the index swing: fade a daily Donchian-10 breakout on single
 # stocks by SELLING a credit spread, but ONLY when richly paid relative to risk. A breakout

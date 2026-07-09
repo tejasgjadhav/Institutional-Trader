@@ -55,6 +55,8 @@ class EngineRunner:
         self._swing_scan_day = None
         self._last_stockcr_resolve = 0.0
         self._stockcr_scan_day = None
+        self._last_monthly_resolve = 0.0
+        self._monthly_scan_day = None
         self._last_zdte_resolve = 0.0
         self._zdte_scan_day = None
 
@@ -230,6 +232,37 @@ class EngineRunner:
             except Exception as e:
                 logger.warning(f"swing scan: {e}")
 
+    def _monthly_fut(self, now):
+        """MONTHLY FUTURES PULLBACK (the 5th strategy) — monthly-horizon, overnight carry.
+        Once/day scan attempt after the cutoff (fires only near cycle start; internal guards)
+        + periodic mark/close of open positions, same pattern as _swing."""
+        try:
+            from engine import config
+            if not getattr(config, "MONTHLY_FUT_ENABLED", False):
+                return
+            from engine import monthly_fut
+        except Exception as e:
+            logger.warning(f"monthly_fut import: {e}")
+            return
+        if (time.time() - self._last_monthly_resolve) >= config.MONTHLY_FUT_RESOLVE_INTERVAL:
+            self._last_monthly_resolve = time.time()
+            try:
+                n = monthly_fut.resolve_monthly_positions()
+                if n:
+                    logger.info(f"monthly_fut: closed {n} position(s)")
+            except Exception as e:
+                logger.warning(f"monthly_fut resolve: {e}")
+        h, m = map(int, config.MONTHLY_FUT_SCAN_AFTER.split(":"))
+        after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
+        if (self.agent.is_market_open() and after_cutoff and self._monthly_scan_day != now.date()):
+            self._monthly_scan_day = now.date()
+            try:
+                new = monthly_fut.scan_monthly_signals()
+                if new:
+                    logger.info(f"monthly_fut: entered {len(new)} pullback long(s)")
+            except Exception as e:
+                logger.warning(f"monthly_fut scan: {e}")
+
     def _stock_credit(self, now):
         """STOCK CREDIT SPREADS (the 4th strategy) — high-frequency fade on the stock universe.
         Once/day scan after the cutoff + periodic mark-to-market, same pattern as _swing."""
@@ -361,6 +394,7 @@ class EngineRunner:
         self._fast_resolve()
         self._swing(now)
         self._stock_credit(now)
+        self._monthly_fut(now)
         self._zero_dte(now)
         from engine import config as _cfg
         if (getattr(_cfg, "SCAN_3FAMILY_ENABLED", True) and self.agent.is_market_open()
