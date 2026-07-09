@@ -17,7 +17,13 @@ one stream, with v2's exact gates+exits, real bhavcopy premiums 2019->Sep'24, en
 c/w>=0.40 gate — which is the validated edge (generic/daily stock selling tested NEGATIVE).
 Portfolio-level the system already signals near-daily across its 5 books.
 
-**Status: REPORT-ONLY.** Union has IS evidence only; DC10 also has OOS (Oct'24->Jun'26 88% win).
-If deploying, run the union through the same OOS validation first. Script:
+**OOS VALIDATION PASSED (2026-07-09, stkfade_oos_union.py, real Upstox premiums the search
+never saw):** UNION Oct'24->Jun'26 = **173 trades (+31% vs DC10's 132), 87% win, +29.5% of
+width** (2024: 93%/+35.4 · 2025: 84%/+30.5 · 2026: 90%/+25.8) — statistically indistinguishable
+from DC10's 88%/+31.9% benchmark. Full evidence: IS 369tr 84.3%/+26.2%w + OOS 173tr 87%/+29.5%w.
+The frequency gain is edge-preserving. **Awaiting user decision to upgrade v2's scanner**
+(engine change = scan all four Donchian windows instead of DC10 only; exits/gates unchanged).
+Caveats: +30% book capital (~Rs1.3L/lot-set), +30% loss frequency (same per-loss size), extra
+trades cluster on the same market moves (bad weeks scale slightly super-linearly). Script:
 studies/ndte/stkfade_union.py; data /tmp/bhav_cache_stk (re-downloadable via bhav_dl_stk.py —
 the tmp cleaner wiped it once 2026-07-09).

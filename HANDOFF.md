@@ -264,6 +264,19 @@ stkfade_union.py (scratchpad). Loop self-pacing ~30min checks.
 
 ## (Jul 9) Union study COMPLETED — reading results, reporting DC10 vs union to user.
 
+## (Jul 9) Union study reported + pushed (63e9b01). Loop closed. Showing full per-year results
+table to user. Open decision: run union OOS before any v2 upgrade.
+
+## (Jul 9 pm) Union OOS run ended — reading verdict vs DC10 benchmark (88%/+31.9%w).
+
+## (Jul 9 ~14:00) User asks: still enter TRENT? Re-checking live gate (credit vs 0.40x width).
+
+## (Jul 9 ~14:00) User asks P(v1/v2 signal today) — replicating 15:10 scan preview live.
+
+## (Jul 9 pm) Continuing union OOS — checking rerun b72h317oh status/checkpoint.
+
+## (Jul 9 pm) Union OOS run completed — reading final verdict.
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30
