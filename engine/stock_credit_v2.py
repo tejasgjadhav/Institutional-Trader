@@ -98,20 +98,26 @@ def _quote(key: str):
     return None, 0.0, 0.0, 0
 
 
+UNION_DCS = (5, 10, 15, 20)   # UNION scanner (user-approved 2026-07-09): all four validated
+                              # Donchian windows. IS 369tr 84.3%/+26.2%w + OOS 173tr 87%/+29.5%w
+                              # — +34% trades at DC10 quality. See UNION_DONCHIAN_FREQUENCY.md.
+
 def _todays_breakout(ticker: str):
-    start = (date.today() - timedelta(days=STOCK_CREDIT_DONCHIAN * 3 + 25)).isoformat()
+    """Returns (direction, dc_window) if ANY union window broke today, else None."""
+    start = (date.today() - timedelta(days=max(UNION_DCS) * 3 + 25)).isoformat()
     df = fetch_upstox_historical(ticker, unit="days", interval=1,
                                  from_date=start, to_date=date.today().isoformat())
-    if df is None or df.empty or len(df) < STOCK_CREDIT_DONCHIAN + 2:
+    if df is None or df.empty or len(df) < max(UNION_DCS) + 2:
         return None
     df = df.sort_index()
-    hi = float(df["High"].rolling(STOCK_CREDIT_DONCHIAN).max().shift(1).iloc[-1])
-    lo = float(df["Low"].rolling(STOCK_CREDIT_DONCHIAN).min().shift(1).iloc[-1])
     c = float(df["Close"].iloc[-1])
-    if c > hi:
-        return "LONG"
-    if c < lo:
-        return "SHORT"
+    for dcw in UNION_DCS:
+        hi = float(df["High"].rolling(dcw).max().shift(1).iloc[-1])
+        lo = float(df["Low"].rolling(dcw).min().shift(1).iloc[-1])
+        if c > hi:
+            return ("LONG", dcw)
+        if c < lo:
+            return ("SHORT", dcw)
     return None
 
 
@@ -176,9 +182,10 @@ def scan_signals() -> list:
             entries = [p["entry_date"] for p in book if p["symbol"] == sym]
             if entries and (today - max(date.fromisoformat(d) for d in entries)).days < STOCK_CREDIT_REENTRY_GAP_DAYS:
                 continue
-            bdir = _todays_breakout(ticker)
-            if not bdir:
+            bk = _todays_breakout(ticker)
+            if not bk:
                 continue
+            bdir, dcw = bk
             spot = _spot(ticker)
             if not spot:
                 continue
@@ -222,7 +229,7 @@ def scan_signals() -> list:
             side = "BEAR_CALL" if opt_type == "CE" else "BULL_PUT"
             verb = "CE" if opt_type == "CE" else "PE"
             pos = {
-                "id": f"{sym}-{today.isoformat()}", "symbol": sym, "breakout_dir": bdir, "side": side,
+                "id": f"{sym}-{today.isoformat()}", "symbol": sym, "breakout_dir": bdir, "dc": dcw, "side": side,
                 "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
                 "short_key": short["key"], "short_strike": int(short["strike"]),
                 "long_key": long["key"], "long_strike": int(long["strike"]),
@@ -233,7 +240,7 @@ def scan_signals() -> list:
                 "max_loss_pts": round(width_pts - credit, 2),
                 "capital": round((width_pts - credit) * qty, 0) if qty else None,
                 "order_label": (f"SELL {sym} {int(short['strike'])} {verb} / BUY {int(long['strike'])} {verb}"
-                                f"  {expiry}  ({'bear-call' if side=='BEAR_CALL' else 'bull-put'}, credit Rs{credit}"
+                                f"  {expiry}  ({'bear-call' if side=='BEAR_CALL' else 'bull-put'} [DC{dcw}], credit Rs{credit}"
                                 f"{f' x{num_lots}' if num_lots != 1 else ''})"),
                 "current_cost": credit, "short_cur": round(sm, 2), "long_cur": round(lm, 2),
                 "pnl_pts": 0.0, "status": "OPEN",

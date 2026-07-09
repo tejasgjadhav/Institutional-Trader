@@ -21,7 +21,7 @@ Portfolio-level the system already signals near-daily across its 5 books.
 never saw):** UNION Oct'24->Jun'26 = **173 trades (+31% vs DC10's 132), 87% win, +29.5% of
 width** (2024: 93%/+35.4 · 2025: 84%/+30.5 · 2026: 90%/+25.8) — statistically indistinguishable
 from DC10's 88%/+31.9% benchmark. Full evidence: IS 369tr 84.3%/+26.2%w + OOS 173tr 87%/+29.5%w.
-The frequency gain is edge-preserving. **Awaiting user decision to upgrade v2's scanner**
+The frequency gain is edge-preserving. **DEPLOYED 2026-07-09 (user-approved): v2's scanner now runs the UNION** with per-trade DC-window tags
 (engine change = scan all four Donchian windows instead of DC10 only; exits/gates unchanged).
 Caveats: +30% book capital (~Rs1.3L/lot-set), +30% loss frequency (same per-loss size), extra
 trades cluster on the same market moves (bad weeks scale slightly super-linearly). Script:

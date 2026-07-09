@@ -304,6 +304,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """PM DECISIONS — all 4 strategies, each section sized to its content inside a scroll area."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
         v.addWidget(self._panel_title("LATEST PM DECISIONS  -  place manually in Upstox", AMBER))
+        wr = QLabel("VALIDATED WIN RATES · v2 UNION 84% IS / 87% OOS (+26-30% width) · v1 54% (+5.3%w) · "
+                    "NIFTY FLIP Tue 87.1% (+₹1.92L 2019-26) · SENSEX Thu 88.8% (+7.6%m) · "
+                    "BANKNIFTY mthly 91% (+11%m) · swing index fwd-test")
+        wr.setWordWrap(True); wr.setFont(QFont("Menlo", 11, QFont.Weight.Bold))
+        wr.setStyleSheet(f"color:{CYAN}; padding:6px; background-color:{PANEL}; border:1px solid {CYAN};")
+        v.addWidget(wr)
 
         # Dynamic "where to look NOW" banner (updated each refresh from the IST clock).
         self.pm_now_hint = QLabel("—"); self.pm_now_hint.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -497,6 +503,24 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             return
         try:
             self._fill_swing_table(self.zdte_table, ZDTE_BOOK, self.zdte_stats, open_only=True)
+            if hasattr(self, "log_stats"):
+                import json as _j
+                W = L = 0; rs = 0.0
+                for bp in (ZDTE_BOOK, SDTE_BOOK, BDTE_BOOK):
+                    try:
+                        for p in (_j.load(open(bp)) if _os.path.exists(bp) else []):
+                            if p.get("status") == "WIN": W += 1
+                            elif p.get("status") == "LOSS": L += 1
+                            if p.get("status") in ("WIN", "LOSS"):
+                                q = p.get("qty") or ((p.get("lot", 0) or 0) * int(p.get("num_lots", 1) or 1))
+                                rs += (p.get("pnl_pts", 0.0) or 0.0) * q
+                    except Exception:
+                        pass
+                wr = W / (W + L) * 100 if (W + L) else 0
+                self.log_stats.setText(f"  INTRADAY 0DTE (all 3 books, live paper): {W} W / {L} L · "
+                                       f"WIN {wr:.0f}% · booked Rs {rs:+,.0f}")
+                self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; "
+                                             f"border:2px solid {CYAN}; font-weight:bold;")
             if hasattr(self, "log_zdte"):
                 self._fill_swing_table(self.log_zdte, ZDTE_BOOK)   # full history in TRADE LOG tab
             if hasattr(self, "log_sdte"):
@@ -614,9 +638,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _strategy_summary_table(self) -> str:
         """Canonical strategy table — leader first (mirrors studies/STRATEGY_SUMMARY.md)."""
         rows = [
-            ("1", "★ STOCK FADE v2 — TP-50 (LEADER)", "SELL", "85.4% IS · 87.9% OOS",
-             "+24.5% IS · +31.9% OOS (of width)", "273+132 · 2019→Jul26", "4-6",
-             "₹16-17k · ₹8-10k", "✓ VALIDATED + OOS", "LIVE · 1 lot", AMBER),
+            ("1", "★ STOCK FADE v2 UNION — TP-50 (LEADER)", "SELL", "84.3% IS · 87% OOS",
+             "+26.2% IS · +29.5% OOS (of width)", "369+173 · 2019→Jun26", "5-6",
+             "₹20-23k · ₹10-12k", "✓ VALIDATED + OOS", "LIVE UNION 07-09 · 1 lot", AMBER),
             ("2", "0DTE NIFTY FLIP spread (Tue)", "SELL", "87.1% (flip) vs 84.7% CE",
              "+₹1.92L vs +₹1.17L · 2019→26", "372 expiries · real prem", "4-5",
              "~₹2.2k/mo/lot (model)", "✓ VALIDATED + OOS", "LIVE FLIP 07-07 · 1 lot", CYAN),
@@ -1877,8 +1901,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 "daily_ret": daily_ret, "period_ret": period_ret, "irr_str": irr_str}
 
     def _refresh_log(self):
-        # credit-spread (SELL) logs now live in the SWING TRADES tab; this tab = BUY strategies only.
-        self.trade_log._load()   # reload from disk — agent + resolver write to it
+        # 2026-07-09: 3-Family/ORB retired from this tab — their tables are hidden and the stats
+        # line is now owned by _refresh_zero_dte_tab (fresh 0DTE W/L across all 3 books, in blue).
+        return
+        self.trade_log._load()   # (unreachable legacy below, kept for reference)
         live = [t for t in self.trade_log.trades if t.get("signal_time")]  # OPEN + closed
         sim = getattr(self, "sim_trades", [])
         # LIVE and SIMULATION are kept STRICTLY separate — never mixed.
