@@ -282,6 +282,9 @@ table to user. Open decision: run union OOS before any v2 upgrade.
 ## (Jul 9 eve) USER GO: (1) v2 scanner -> UNION DC5/10/15/20 with window tag; (2) studies/README
 update; (3) PM DECISIONS all-win-rates strip; (4) TRADE LOG purge ORB remnants + fresh W/L in blue.
 
+## (Jul 9 night) Fixing PM win-rate display: per-strategy section headers (v2/v1/swing), not a
+combined strip (removing it).
+
 ## Superseded plan notes (kept for context)
 1. New engine module (signals-only, mirror stock_credit_v2 pattern): 0DTE CE spread — expiry
    day, short CE 0.5% OTM of spot open (strike step 50), wing +200, no stop, book at 15:30

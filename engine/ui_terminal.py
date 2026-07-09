@@ -304,12 +304,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """PM DECISIONS — all 4 strategies, each section sized to its content inside a scroll area."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
         v.addWidget(self._panel_title("LATEST PM DECISIONS  -  place manually in Upstox", AMBER))
-        wr = QLabel("VALIDATED WIN RATES · v2 UNION 84% IS / 87% OOS (+26-30% width) · v1 54% (+5.3%w) · "
-                    "NIFTY FLIP Tue 87.1% (+₹1.92L 2019-26) · SENSEX Thu 88.8% (+7.6%m) · "
-                    "BANKNIFTY mthly 91% (+11%m) · swing index fwd-test")
-        wr.setWordWrap(True); wr.setFont(QFont("Menlo", 11, QFont.Weight.Bold))
-        wr.setStyleSheet(f"color:{CYAN}; padding:6px; background-color:{PANEL}; border:1px solid {CYAN};")
-        v.addWidget(wr)
 
         # Dynamic "where to look NOW" banner (updated each refresh from the IST clock).
         self.pm_now_hint = QLabel("—"); self.pm_now_hint.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -319,7 +313,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 — WIN 86% OF THE TIME, ~17.5%/MONTH (model, ₹1L book) · signals ~15:10 daily · 4-6/mo · every yr +ve since 2019 ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION — WIN 84% IS / 87% OOS · +26-30% of width/trade · ~5-6/mo · +ve every yr 2019→26 · signals ~15:10 ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -335,7 +329,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS — fade  ·  signals ~15:10 daily  ·  ~16/mo  ·  SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 — fade · WIN 54% · +5.3% of width (718 tr, 2019-24 real) · ~10/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_stockcr.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -346,7 +340,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
         v.addWidget(self._section_label(
-            "SWING CREDIT SPREADS — NIFTY/FINNIFTY  ·  signals ~15:10 daily  ·  ~3/mo  ·  SELL", CYAN))
+            "SWING CREDIT SPREADS — NIFTY/FINNIFTY · WIN 54% · −1.4%w real 2019-24 (regime-dep, FWD-TEST only) · ~3/mo · SELL", CYAN))
         self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_swing.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_swing.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -409,7 +403,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._panel_title("SWING TRADE LOG  -  credit spreads (what to SELL & BUY)", CYAN))
         # ★ STOCK CREDIT v2 — the TP-50 upgrade. Kept FIRST + gold-highlighted: this is the book
         # with the validated 88% OOS / >=79%-every-year win rate — watch it closest.
-        v2hdr = QLabel("★ STOCK CREDIT v2 — WIN 86% OF THE TIME, ~17.5%/MONTH (model, ₹1L book) ★   "
+        v2hdr = QLabel("★ STOCK CREDIT v2 UNION — WIN 84% IS / 87% OOS · +26-30% width/trade · ~₹20-23k/mo model ★   "
                        "sell the breakout spread · book at half credit · stop 3x · +ve EVERY year 2019→2026 (in-sample 85% · OOS 88%)")
         v2hdr.setWordWrap(True)
         v2hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
@@ -421,10 +415,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_stk2 = self._make_log_table(self.SWING_TAB_COLS)
         self.sw_stk2.setStyleSheet(f"QTableWidget {{ border: 2px solid {AMBER}; }}")
         v.addWidget(self.sw_stk2)
-        v.addWidget(self._section_label("INDEX SWING  —  NIFTY / FINNIFTY  (~3/mo)", CYAN))
+        v.addWidget(self._section_label("INDEX SWING — NIFTY/FINNIFTY · WIN 54% · −1.4%w real 2019-24 (fwd-test only) · ~3/mo", CYAN))
         self.sw_idx_stats = self._stats_label(); v.addWidget(self.sw_idx_stats)
         self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx)
-        v.addWidget(self._section_label("STOCK CREDIT SPREADS  (~16/mo)", GREEN))
+        v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · WIN 54% · +5.3% width (2019-24 real) · ~10/mo", GREEN))
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_stk)
         v.addStretch(1)
