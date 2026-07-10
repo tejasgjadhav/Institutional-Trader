@@ -331,7 +331,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 — fade · WIN 54% · +5.3% of width (718 tr, 2019-24 real) · ~10/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 — fade · WIN 73% OOS (TP-75) · +17.9% of width Oct24-Jul26 · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_stockcr.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -658,9 +658,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("4", "0DTE BANKNIFTY CE spread (mthly)", "SELL", "91% mthly · 79.5% wk",
              "+11%m mthly · +7.4%m wk 2019-24", "273 wk + 23 mthly", "~1",
              "~₹0.8k/mo/lot (model)", "✓ VALIDATED", "LIVE · monthly · 1 lot", PURPLE),
-            ("5", "Stock credit spread v1 · fade", "SELL", "54%",
-             "+5.3% of width", "718 · 2019→Sep24", "~10",
-             "not measured (fwd test)", "✓ VALIDATED", "LIVE · 1 lot", GREEN),
+            ("5", "Stock credit spread v1 · fade (TP-75)", "SELL", "54% IS (no TP) · 73% OOS",
+             "+5.3%w IS · +17.9%w OOS", "718 + 346 · 2019→Jul26", "~16",
+             "₹9k model · ₹4-5k plan", "✓ VALIDATED + OOS", "LIVE · 1 lot · control book", GREEN),
             ("6", "Monthly futures pullback (REV1-v2)", "BUY", "75.1% IS · 75.7% OOS",
              "+1.0%/tr · ~3.9%/mo on margin", "281 IS + 70 OOS · 2018→26", "5/cycle",
              "needs ~₹15L (paper only)", "✓ VALIDATED OOS", "PAPER 07-10 · earnings-skip", AMBER),
@@ -767,20 +767,19 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "trades, 87% win, +29.5%w. Win ≥79% EVERY calendar year 2019→2026. Files: "
      "studies/STOCK_FADE_TP50_UPGRADE.md, UNION_DONCHIAN_FREQUENCY.md")}
 
-{h("WHY DOES v1 (54% WIN) STILL RUN NEXT TO v2 UNION (85%+)? — it is NOT the number of calls")}
-{p("<b>Same signal, same gate, different EXIT GEOMETRY.</b> v1 sells 1-OTM/width-3 and waits for 75% "
-   "of max profit with a tight 2×-credit stop: it holds winners much longer (often to expiry) and gets "
-   "stopped more often → fewer, bigger wins = <b>54% win rate</b> but still +5.3% of width/trade. "
-   "v2 sells 2-OTM/width-4, books the win at just 50% of the credit (an easy target the IV-crush hits "
-   "within days) and gives losers 3× room to recover → many quick wins = <b>85–88% win rate</b>. "
-   "A closer take-profit + wider stop mechanically RAISES win rate; v2 happens to win on expectancy too "
-   "(+24-30%w vs +5.3%w), which is why it is the leader.")}
-{p("<b>So why keep v1 at all?</b> (1) It is the longest-validated baseline — 718 real-premium trades "
-   "2019→Sep'24, the book every new idea is measured against. (2) At ~10 signals/mo (vs v2's 5–6) it "
-   "accumulates LIVE-FILL evidence twice as fast — the unproven link in this repo is always live fills, "
-   "not backtests. (3) It is the control in a live A/B test: if v2's TP-50 advantage shrinks on real "
-   "fills, v1's numbers tell us whether the fault is the geometry or the market. Frequency does not "
-   "explain the win-rate gap — v1 would be ~54% at any trade count.")}
+{h("WHY DOES v1 SHOW 54% NEXT TO v2 UNION's 85%+? — it is NOT the number of calls")}
+{p("<b>Same signal, same gate, different EXIT GEOMETRY — and the 54% is the OLD hold-to-expiry test.</b> "
+   "The 54%/+5.3%w figure (718 bhavcopy trades 2019→Sep'24) predates v1's deployed TP-75 book-early "
+   "exit. Re-tested 2026-07-10 with the DEPLOYED config (TP at 75% of the credit, stop 2×) on the same "
+   "Upstox OOS window v2 used (Oct'24→Jul'26): <b>346 trades · 73.4% win · +17.9% of width · positive "
+   "every year incl. the 2026 correction</b> (2024 +29.7 / 2025 +17.0 / 2026 +15.0). Booking the win "
+   "early is what lifts the rate — the same mechanism as v2's TP-50, just less aggressive.")}
+{p("<b>Apples-to-apples on the identical window/script:</b> v2 UNION 87–88% win · +29.5–31.9%w · ~8/mo "
+   "vs v1 73.4% · +17.9%w · ~16/mo. v2 stays the LEADER on both win rate and expectancy (deeper 2-OTM "
+   "strikes, wider wings, faster profit-taking, 3× stop room). <b>Why keep v1:</b> (1) longest-validated "
+   "baseline (718 + 346 real-premium trades); (2) ~2× the signals → live-fill evidence twice as fast; "
+   "(3) the control in the live A/B — if v2's edge shrinks on real fills, v1 shows whether the fault is "
+   "geometry or market. Files: studies/STOCK_V1_OOS.md")}
 
 {h("★ FLIP UPGRADE — NIFTY Tuesday book (DEPLOYED 2026-07-07)")}
 {p("Each expiry morning the book reads NIFTY's 5-day return: <b>≥ +1% → SELL the PE spread</b> "

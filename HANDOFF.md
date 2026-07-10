@@ -40,11 +40,13 @@ live parallel book) — see repo CLAUDE.md + `studies/STOCK_FADE_TP50_UPGRADE.md
   names are the BEST bucket); half of OOS losses = 1-day news shocks → earnings-skip.
 
 ## Next steps
-1. (current ask) STUDIES tab in `engine/ui_terminal.py`: consolidated portfolio table → include
-   ALL live books (add monthly futures row, own ₹15L pool); add a worked-example section for one
-   live strategy (use the HAVELLS walk-through from studies/STOCK_FADE_TP50_UPGRADE.md); explain
-   v1-at-54% vs v2-UNION-at-85% (exit geometry + frequency, v1 = baseline/control book).
-   Commit + push + viewer restart after.
+1. (running) v1 OOS test: `/tmp/stkfade_oos_v1.py` (v1 geometry DC10/s1/w3/TP0.75/stop2.0 on
+   Upstox expired premiums Oct'24→Jul'26; results accrue to `/tmp/stkfade_oos_v1.json`).
+   v1's honest record so far: 65% was the pre-real-data estimate; real IS = 54%/+5.3%w
+   (718 tr); OOS never run before this. When done: report verdict to user, add v1 OOS
+   numbers to STUDIES tab (v1-vs-v2 explainer + strategy tables), commit + push.
+   If v1 OOS comes back much weaker → recommend retiring v1; if ~54%/+5%w → keep as control.
+   (STUDIES tab consolidated-table/worked-example/v1-explainer edits are DONE, commit b14584d.)
 2. Then: watch the monthly_fut paper book; first entries fire when NIFTY reclaims its 200DMA.
 
 ## Key files

@@ -48,7 +48,7 @@ caused API rate-limit storms; flip to True to resume that forward-test).
 | 2 | 0DTE NIFTY FLIP spread (Tue) | SELL | 87.1% (flip) vs 84.7% CE | +₹1.92L vs +₹1.17L · 2019→26 | 372 expiries · real prem | 4-5 | ✓ VALIDATED+OOS | LIVE FLIP 07-07 |
 | 3 | 0DTE SENSEX CE spread (Thu) | SELL | 88.8% | +7.6% of margin · +₹67k/21mo | 89 exp · Oct24→Jun26 | 4-5 | ✓ VALIDATED (21mo) | LIVE 07-09 |
 | 4 | 0DTE BANKNIFTY CE spread (mthly) | SELL | 91% mthly · 79.5% wk | +11%m mthly · +7.4%m wk | 273 wk + 23 mthly | ~1 | ✓ VALIDATED | LIVE · monthly |
-| 5 | Stock credit spread v1 · fade | SELL | 54% | +5.3% of width | 718 · 2019→Sep24 | ~10 | ✓ VALIDATED | LIVE · 1 lot |
+| 5 | Stock credit spread v1 · fade (TP-75) | SELL | 54% IS (no TP) · **73% OOS** | +5.3%w IS · **+17.9%w OOS** | 718 + 346 · 2019→Jul26 | ~16 | ✓ VALIDATED + OOS | LIVE · 1 lot · control book |
 | 6 | Monthly futures pullback (REV1-v2) | BUY FUT | 75.1% IS · 75.7% OOS | +1.0%/trade · ~3.9%/mo on margin | 281+70 · 2018→Jul26 | 5/cycle | ✓ VALIDATED+OOS | **PAPER 07-10** · needs ~₹15L |
 | — | Index fade · NIFTY/FINNIFTY | SELL | 54% | −1.4% of width | 181 · 2019→Sep24 | 2-3 | ✗ failed OOS | forward-test |
 | — | 3-Family stocks | BUY | 50.6% (direction) | dir +0.107%/tr · −1.0% net | 19,454 · 2019→2026 | daily | ~ dir edge only | paper · hidden |
