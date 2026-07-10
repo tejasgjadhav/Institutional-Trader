@@ -40,10 +40,11 @@ live parallel book) — see repo CLAUDE.md + `studies/STOCK_FADE_TP50_UPGRADE.md
   names are the BEST bucket); half of OOS losses = 1-day news shocks → earnings-skip.
 
 ## Next steps
-1. (current ask) Update the IN-APP docs to match the 6-strategy lineup: the README tab HTML and
-   STUDIES tab HTML inside `engine/ui_terminal.py` (strategy table row 6 already added; check
-   the capital/P&L table ~line 715, the leader section ~line 809, and any strategy counts like
-   "four books"/"5 live paper books" that are now stale). Commit + push after.
+1. (current ask) STUDIES tab in `engine/ui_terminal.py`: consolidated portfolio table → include
+   ALL live books (add monthly futures row, own ₹15L pool); add a worked-example section for one
+   live strategy (use the HAVELLS walk-through from studies/STOCK_FADE_TP50_UPGRADE.md); explain
+   v1-at-54% vs v2-UNION-at-85% (exit geometry + frequency, v1 = baseline/control book).
+   Commit + push + viewer restart after.
 2. Then: watch the monthly_fut paper book; first entries fire when NIFTY reclaims its 200DMA.
 
 ## Key files

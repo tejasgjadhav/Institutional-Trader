@@ -725,18 +725,63 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("THE LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
 
-{h("CONSOLIDATED PORTFOLIO — EXPECTED MONTHLY P&L (all 5 books)")}
+{h("CONSOLIDATED PORTFOLIO — EXPECTED MONTHLY P&L (ALL LIVE BOOKS)")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON</td><td>2 lots MODEL</td><td>2 lots PLAN-ON</td></tr>
-<tr><td>Stock fade v2 (swing)</td><td>4–6</td><td>₹17,500</td><td>₹8–10k</td><td>₹35,000</td><td>₹16–20k</td></tr>
+<tr><td>★ Stock fade v2 UNION (swing)</td><td>5–6</td><td>₹20–23k</td><td>₹10–12k</td><td>₹40–46k</td><td>₹20–24k</td></tr>
 <tr><td>Stock credit v1 (swing)</td><td>~10</td><td>₹9,000</td><td>₹4–5k</td><td>₹18,000</td><td>₹8–10k</td></tr>
-<tr><td>NIFTY Tue 0DTE</td><td>~3.5</td><td>₹2,360</td><td>₹1.2k</td><td>₹4,700</td><td>₹2.4k</td></tr>
+<tr><td>NIFTY Tue 0DTE (FLIP)</td><td>~3.5</td><td>₹2,360</td><td>₹1.2k</td><td>₹4,700</td><td>₹2.4k</td></tr>
 <tr><td>SENSEX Thu 0DTE</td><td>~4.2</td><td>₹3,200</td><td>₹1.5k</td><td>₹6,400</td><td>₹3k</td></tr>
 <tr><td>BANKNIFTY monthly 0DTE</td><td>~1</td><td>₹820</td><td>₹0.4k</td><td>₹1,600</td><td>₹0.8k</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td>TOTAL</td><td>~23</td><td>~₹33k</td><td>~₹15–18k</td><td>~₹66k</td><td>~₹30–36k</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td>OPTIONS TOTAL (~₹2–2.5L capital)</td><td>~24</td><td>~₹36k</td><td>~₹17–20k</td><td>~₹72k</td><td>~₹34–40k</td></tr>
+<tr><td style="color:{AMBER};">Monthly futures pullback (PAPER — own ₹15L pool)</td><td>5/cycle</td><td>~₹43k on ₹11L margin (~3.9%/mo)</td><td>~₹25–30k</td><td colspan="2">scale by notional, not lots — NOT in options total</td></tr>
 </table>
-{dim("Not in the options total: the MONTHLY FUTURES PULLBACK book (paper-only) — model ~₹43k/mo on its "
-     "own ₹11L margin (~3.9%/mo), a separate ~₹15L capital pool; see its section below.")}
+{dim("The futures book is regime-gated (in cash when NIFTY&lt;200DMA — standing aside since Mar'26) and "
+     "long-delta — the one diversifier against the five short-premium options books. It stays PAPER "
+     "until ~₹15L capital exists; its months average +3.9% on margin but range +11% to −20%.")}
+{h("★ WORKED EXAMPLE — STOCK FADE v2 UNION, one trade start to finish (the LEADER)")}
+{sub("The idea in one line: after a stock breaks out, its call options get expensive on hope — "
+     "breakouts usually stall — so we SELL that hope with a capped-loss spread and buy it back "
+     "cheaper days later.")}
+{p("<b>3:10 PM — the signal.</b> HAVELLS closes at <b>₹1,520</b>, breaking above its 10-day high "
+   "(₹1,505). Crowd buys calls → IV spikes → premiums get rich. The gate checks we're being paid "
+   "enough to fade it. The two rows PM DECISIONS would show:")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Row</td><td>Order (1 lot = 500)</td><td>Why this strike</td><td>Premium</td></tr>
+<tr><td style="color:{GREEN};">SELL</td><td>SELL HAVELLS 1540 CE</td><td>2 strikes OTM — breathing room</td><td>receive ₹55/sh</td></tr>
+<tr><td style="color:{RED};">BUY</td><td>BUY HAVELLS 1580 CE</td><td>4 strikes further — the safety net</td><td>pay ₹36/sh</td></tr>
+</table>
+{p("<b>Credit banked now:</b> (55−36) = ₹19/sh × 500 = <b>₹9,500</b>. <b>Gate:</b> credit/width "
+   "19/40 = 0.475 ≥ 0.40 ✓ · short prem ₹55 ≥ ₹50 ✓. <b>Margin blocked = absolute worst case:</b> "
+   "(40−19)×500 = <b>₹10,500</b> — the bought 1580 CE caps every outcome, no gap can exceed it.")}
+{p("<b>Then, checked once a day:</b> ~86% of the time HAVELLS stalls/dips, the spread deflates, and "
+   "when closing costs ≤ ₹9.5 (HALF the credit) the engine books the WIN — <b>+₹4,750-ish in a few "
+   "days</b>, no waiting for expiry. ~14% of the time the stock keeps charging: exit at the 3×-credit "
+   "stop, avg loss −₹7,922, hard-capped at the ₹10,500 already blocked. Expectancy ≈ (86%×₹6,048) − "
+   "(14%×₹7,922) = <b>+₹4,069/trade</b>, 5–6 trades/mo.")}
+{res("TESTING BEHIND IT: 96-config grid (Donchian × strike × width × TP × stop) on REAL NSE bhavcopy "
+     "premiums 2019→Sep'24 with entry+exit slippage — winner not a lone cell (27/96 configs pass; the "
+     "whole TP-50 neighbourhood works). IS: 273 trades, 85.35% win, only 4 negative months in 60, worst "
+     "loss-streak 4. Then re-run on data the search NEVER saw (Upstox expired options Oct'24→Jul'26): "
+     "87.88% win, +31.9% of width. UNION upgrade (DC 5+10+15+20 windows) OOS-validated separately: 173 "
+     "trades, 87% win, +29.5%w. Win ≥79% EVERY calendar year 2019→2026. Files: "
+     "studies/STOCK_FADE_TP50_UPGRADE.md, UNION_DONCHIAN_FREQUENCY.md")}
+
+{h("WHY DOES v1 (54% WIN) STILL RUN NEXT TO v2 UNION (85%+)? — it is NOT the number of calls")}
+{p("<b>Same signal, same gate, different EXIT GEOMETRY.</b> v1 sells 1-OTM/width-3 and waits for 75% "
+   "of max profit with a tight 2×-credit stop: it holds winners much longer (often to expiry) and gets "
+   "stopped more often → fewer, bigger wins = <b>54% win rate</b> but still +5.3% of width/trade. "
+   "v2 sells 2-OTM/width-4, books the win at just 50% of the credit (an easy target the IV-crush hits "
+   "within days) and gives losers 3× room to recover → many quick wins = <b>85–88% win rate</b>. "
+   "A closer take-profit + wider stop mechanically RAISES win rate; v2 happens to win on expectancy too "
+   "(+24-30%w vs +5.3%w), which is why it is the leader.")}
+{p("<b>So why keep v1 at all?</b> (1) It is the longest-validated baseline — 718 real-premium trades "
+   "2019→Sep'24, the book every new idea is measured against. (2) At ~10 signals/mo (vs v2's 5–6) it "
+   "accumulates LIVE-FILL evidence twice as fast — the unproven link in this repo is always live fills, "
+   "not backtests. (3) It is the control in a live A/B test: if v2's TP-50 advantage shrinks on real "
+   "fills, v1's numbers tell us whether the fault is the geometry or the market. Frequency does not "
+   "explain the win-rate gap — v1 would be ~54% at any trade count.")}
+
 {h("★ FLIP UPGRADE — NIFTY Tuesday book (DEPLOYED 2026-07-07)")}
 {p("Each expiry morning the book reads NIFTY's 5-day return: <b>≥ +1% → SELL the PE spread</b> "
    "(ride the up-momentum), <b>otherwise SELL the CE spread</b>. Same wing, same margin, same "
