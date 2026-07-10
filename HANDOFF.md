@@ -31,23 +31,20 @@ live parallel book) — see repo CLAUDE.md + `studies/STOCK_FADE_TP50_UPGRADE.md
   day 12, SL −5%): OOS 75.7% win, 3.91%/mo on margin, DD −20.1%, 73% positive months
   (`trades_rev1v2_oos.csv`). Study doc carries a final GOAL DISPOSITION banner: 10%/mo leg
   infeasible; ~3.9%/mo is the ceiling. User asked to clear/revise the /goal.
-- **In progress (user approved 2026-07-09 late):** wiring REV1-v2 + live earnings-skip rule
-  into the engine as signals-only paper forward-test: new `engine/monthly_fut.py`, PM DECISIONS
-  section in `engine/ui_terminal.py`, `MONTHLY_FUT_*` in `engine/config.py`, hook into
-  `engine_runner.py` EOD block; update `studies/STRATEGY_SUMMARY.md` (+README) and commit to
-  git (gitignore the bhav caches + panel.csv.gz — commit scripts/docs/trade lists only).
-  Factor pass done: NO removable loser factor exists (gap-prone names are the BEST bucket);
-  safety = diversification / earnings-skip (live-only) / options for defined risk.
+- **Done (deployed 2026-07-10, commit 1a70fef, pushed):** REV1-v2 + live earnings-skip wired
+  in as the 5th signals-only paper book — `engine/monthly_fut.py`, PM DECISIONS section +
+  STUDIES row in `engine/ui_terminal.py`, `MONTHLY_FUT_*` in `engine/config.py`, `_monthly_fut`
+  hook in `engine_runner.py`; README + `studies/STRATEGY_SUMMARY.md` rows added; bhav caches
+  gitignored. Engine restarted clean. NIFTY < 200DMA → first scans will mark REGIME_OFF
+  (standing aside) until the regime flips. Factor pass: NO removable loser factor (gap-prone
+  names are the BEST bucket); half of OOS losses = 1-day news shocks → earnings-skip.
 
 ## Next steps
-1. Regenerate IS trades with entry-time features attached (import from `bt.py`: `load`,
-   `near_month`, `build_features`, `run_trades`; join feature values asof entry date).
-2. Winner-vs-loser comparison on IS ONLY (2018→Sep'24). Look for structural, explainable
-   asymmetries. Constraint: no filters that drop trades — only exit-rule changes (SL level,
-   time-stop for losers, TP laddering) and additive sleeves.
-3. Test refined exits IS by year; require improvement in every-year consistency, not just mean.
-4. ONE OOS look (entries ≥2024-10-01) on the final refined config. Report honestly even if worse.
-5. Update `MONTHLY_FUTURES.md` + present to user. Do NOT deploy anything without user sign-off.
+1. (current ask) Update the IN-APP docs to match the 6-strategy lineup: the README tab HTML and
+   STUDIES tab HTML inside `engine/ui_terminal.py` (strategy table row 6 already added; check
+   the capital/P&L table ~line 715, the leader section ~line 809, and any strategy counts like
+   "four books"/"5 live paper books" that are now stale). Commit + push after.
+2. Then: watch the monthly_fut paper book; first entries fire when NIFTY reclaims its 200DMA.
 
 ## Key files
 | File | Why it matters |

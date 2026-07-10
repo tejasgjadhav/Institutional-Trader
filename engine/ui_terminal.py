@@ -303,7 +303,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return l
 
     def _screen_pm(self) -> QWidget:
-        """PM DECISIONS — all 4 strategies, each section sized to its content inside a scroll area."""
+        """PM DECISIONS — every strategy book, each section sized to its content inside a scroll area."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
         v.addWidget(self._panel_title("LATEST PM DECISIONS  -  place manually in Upstox", AMBER))
 
@@ -735,6 +735,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>BANKNIFTY monthly 0DTE</td><td>~1</td><td>₹820</td><td>₹0.4k</td><td>₹1,600</td><td>₹0.8k</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td>TOTAL</td><td>~23</td><td>~₹33k</td><td>~₹15–18k</td><td>~₹66k</td><td>~₹30–36k</td></tr>
 </table>
+{dim("Not in the options total: the MONTHLY FUTURES PULLBACK book (paper-only) — model ~₹43k/mo on its "
+     "own ₹11L margin (~3.9%/mo), a separate ~₹15L capital pool; see its section below.")}
 {h("★ FLIP UPGRADE — NIFTY Tuesday book (DEPLOYED 2026-07-07)")}
 {p("Each expiry morning the book reads NIFTY's 5-day return: <b>≥ +1% → SELL the PE spread</b> "
    "(ride the up-momentum), <b>otherwise SELL the CE spread</b>. Same wing, same margin, same "
@@ -785,11 +787,35 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {res("Capital: ~₹2–2.5L at 1 lot each · ~₹4–5L at 2 lots (swing books + recycling intraday margins). "
      "PLAN-ON = ~half of model until live fills prove out (this repo's standing rule).")}
 {dim("Honesty: monthly figures are AVERAGES — a combined bad month at 2 lots can be −₹40–60k; the three "
-     "0DTE books' LIVE history starts 2026-07-07; all five books are correlated short-premium in a crash — "
-     "size on the worst month, not the average. Frequency extension verdicts: SENSEX Thu 88.8%/+7.6%m "
+     "0DTE books' LIVE history starts 2026-07-07; the five OPTIONS books are correlated short-premium in a "
+     "crash — size on the worst month, not the average (the monthly-futures book is long-delta and regime-"
+     "gated, the one diversifier — but it is paper-only). Frequency extension verdicts: SENSEX Thu 88.8%/+7.6%m "
      "(89 exp, 21-mo history only); BANKNIFTY 2019→24 weeklies 79.5%/+7.4%m +₹89.6k, positive 2019–23, "
      "2024 −₹13k, weeklies abolished → MONTHLY-only deploy (91%/+11%m, 23 tr); near-DAILY selling "
      "REJECTED (−₹3.4k/333 non-expiry day-trades — the edge is expiry-day theta only).")}
+
+{h("★ MONTHLY FUTURES PULLBACK — REV1-v2 (the 6th book · PAPER 2026-07-10 · needs ~₹15L)")}
+{sub("Question (user goal): monthly trades in FUTURES only, ≥75% win rate, ≥10%/month net?")}
+{p("Tested on REAL NSE bhavcopy futures 2018→Jul'26 (FUTSTK 100-stock universe + FUTIDX): a 90-config "
+   "grid across 8 families (momentum L/S, pullback, index trend/dip, Donchian-fade shorts, hedged, "
+   "low-vol) × TP/SL exits, strict IS (2018→Sep'24) / OOS (Oct'24→Jul'26) split, selection on IS only. "
+   "<b>The rule:</b> at each expiry-cycle start with NIFTY&gt;200DMA, take the 8 worst 1-month losers "
+   "still above their OWN 200DMA, keep the 5 highest-vol, BUY the front-month future; exit on close "
+   "crossing TP +2% (decaying to +1% after day 12) or SL −5%; else expiry settle.")}
+{res("REV1-v2: 75.1% win IS (281 tr) · 75.7% OOS (70 tr) · ~3.9%/mo on margin capital · worst month "
+     "−20% · 8/11 OOS months positive. The momentum runner-up FAILED OOS (bull artifact) — pullback is "
+     "the survivor. VERDICT on the 10%/mo ask: INFEASIBLE — needs +2.2%/trade net, best honest edge is "
+     "+0.85%; every config printing near 10%/mo in-sample collapsed OOS. Calendar spreads ≈0 net since "
+     "2021; capital recycling DILUTES the edge (mid-month candidates are weak).")}
+{p("<b>Loser anatomy:</b> across 8 entry factors (pullback depth, vol, trend distance, gap-proneness, "
+   "52w-high distance, beta, OI, regime) winners and losers are IDENTICAL at entry — losses are not "
+   "predictable, they are the price of the 75% wins. Half of OOS losses were 1-day news shocks → the "
+   "live-only <b>EARNINGS-SKIP</b> rule drops candidates with results before expiry (NSE event calendar, "
+   "fails open). Counter-intuitive: the most gap-prone names are the BEST bucket (80.7% win) — do NOT "
+   "filter them out.")}
+{dim("Paper-only: 5 × ₹10L notional needs ₹11L margin + buffer ≈ ₹15L capital. Regime-gated: stands "
+     "aside when NIFTY &lt; 200DMA (in cash Mar→Jul 2026). Files: studies/monthly_fut/MONTHLY_FUTURES.md "
+     "(+ bt.py, grid_results.json, trade lists — full reproducible trail).")}
 
 {h("★ 0DTE INTRADAY (the 5th strategy) — NIFTY Tue · SENSEX Thu · BANKNIFTY monthly · LIVE FLIP on NIFTY")}
 {sub("Question (user goal): an INTRADAY strategy — closed the same day — with ≥85% win rate, "
@@ -1119,10 +1145,13 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
      "fires signals and records them daily; YOU place every order manually in Upstox. It never auto-trades.")}
 
 {h("1 — WHAT IT IS (in one breath)")}
-{p(f"A paper-trading engine for NSE options running <b>4 parallel strategies</b> on ~{len(C.UNIVERSE)} "
-   "stocks + NIFTY/BANKNIFTY/FINNIFTY. It scans, scores, and surfaces BUY/SELL signals on a dashboard; "
-   "you place the orders. One intraday BUY strategy (3-Family stocks; ORB+VWAP RETIRED 2026-07) and THREE multi-day "
-   "SELL strategies (stock &amp; index credit spreads). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
+{p(f"A paper-trading engine for NSE options + futures running <b>6 parallel strategy books</b> on "
+   f"~{len(C.UNIVERSE)} stocks + NIFTY/BANKNIFTY/FINNIFTY/SENSEX. It scans, scores, and surfaces "
+   "BUY/SELL signals on a dashboard; you place the orders. The books: <b>stock fade v2 UNION</b> (the "
+   "leader) + stock fade v1 (SELL credit spreads), THREE <b>0DTE expiry-day spreads</b> (NIFTY Tue flip · "
+   "SENSEX Thu · BANKNIFTY monthly), the index-fade forward-test, the <b>monthly FUTURES pullback</b> "
+   "(REV1-v2, BUY front-month futures — paper, needs ~₹15L), and the intraday 3-Family scanner "
+   "(hidden; data heartbeat). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
 
 {h("2 — SETUP (from a fresh Mac)")}
 {p("<b>1.</b> <b>git clone</b> the repo &amp; <b>cd</b> in. "
@@ -1149,7 +1178,9 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    "section per strategy, each labelled with its signal window. <b>Credit spreads show as two rows</b> — a "
    "SELL row (the leg you sell + premium received) and a BUY row (the hedge + premium paid) — with LOT and "
    "total MARGIN. The option type (CE/PE) is in the ACTION column so it's never hidden by a long name. "
-   "Shows only <b>today's</b> credit-spread signals; ongoing ones live in SWING TRADES.")}
+   "Shows only <b>today's</b> credit-spread signals; ongoing ones live in SWING TRADES. The <b>MONTHLY "
+   "FUTURES PULLBACK</b> section is the exception: its 5 BUY-FUT positions stay visible all month "
+   "(the trade IS the month) with live P&amp;L, TP/SL levels and day count.")}
 {sub("WATCHLIST — the funnel (stocks)")}
 {p("Every stock that cleared Gate 1 (alpha), progressing through the remaining gates toward PM DECISIONS. "
    "Sorted closest-to-firing on top (e.g. '3/4 next: ORB'). This is where you watch a 3-Family setup build.")}
@@ -1170,13 +1201,18 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {p(f"<b>Stock options (3-Family):</b> {C.MARKET_OPEN}–{C.MARKET_CLOSE}, most active 10:30–11:00 · "
    f"<b>ORB+VWAP index:</b> before {C.ORB_VWAP_ENTRY_CUTOFF} · "
    f"<b>Stock &amp; Swing credit spreads:</b> once/day, ~{C.STOCK_CREDIT_SCAN_AFTER} (a daily breakout needs "
-   "the near-close). Signals are selective — many days few or none; that's the point, not a fault.")}
+   f"the near-close) · <b>Monthly futures pullback:</b> once per expiry cycle, ~{C.MONTHLY_FUT_SCAN_AFTER} "
+   "on the first trading day after the monthly expiry — only when NIFTY &gt; its 200DMA (stands aside "
+   "otherwise, and says so). Signals are selective — many days few or none; that's the point, not a fault.")}
 
 {h("6 — HOW TO PLACE AN ORDER")}
 {p("<b>BUY strategies:</b> the PM row gives the exact BUY — e.g. 'BUY RELIANCE 1400 CE @ Rs X'. Place it in "
    "Upstox; exit at the shown target/stop. <b>Credit spreads (SELL):</b> place <b>both legs together</b> — "
    "the SELL row first (you receive the credit), the BUY row as the hedge (caps the loss). Read the strikes, "
-   "type and premiums straight off the two rows. Hold to expiry unless the stop (2× credit) triggers.")}
+   "type and premiums straight off the two rows. Hold to expiry unless the stop (2× credit) triggers. "
+   "<b>Monthly futures (BUY FUT):</b> buy 1 lot of the front-month future named in the row; exit "
+   "market-on-close the day the close crosses the TP or SL shown in the AMOUNT column, else hold to "
+   "expiry. PAPER-ONLY at current capital — the book needs ~₹15L to trade for real.")}
 
 {h("7 — RISK CONTROLS")}
 {p(f"Halt after <b>{C.CONSECUTIVE_LOSS_HALT}</b> stop-outs in a row · intraday trades force-closed by "
