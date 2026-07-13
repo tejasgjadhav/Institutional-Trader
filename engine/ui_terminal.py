@@ -315,7 +315,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION — WIN 84% IS / 87% OOS · +26-30% of width/trade · ~5-6/mo · +ve every yr 2019→26 · signals ~15:10 ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 (UNION) — WIN 84% IN-SAMPLE / 87% OUT-OF-SAMPLE · ~5-6 signals/mo backtest avg (fewer in low-IV regimes) · +26-30% of width/trade · +ve every yr 2019→26 ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -331,7 +331,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 — fade · WIN 73% OOS (TP-75) · +17.9% of width Oct24-Jul26 · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 — fade · WIN 54% IS (hold-exp) / 73% OOS (TP-75) · +17.9% of width Oct24-Jul26 · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_stockcr.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -354,7 +354,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # MONTHLY FUTURES PULLBACK — the 5th strategy (monthly cycle · BUY front-month futures).
         # Signals-only paper test; needs ~Rs 15L to trade for real. Earnings-skip applied live.
         v.addWidget(self._section_label(
-            "MONTHLY FUTURES PULLBACK — REV1-v2 · WIN 75.7% OOS · ~3.9%/mo on margin · 5/cycle · BUY FUT (paper, needs ~₹15L)", AMBER))
+            "MONTHLY FUTURES PULLBACK — REV1-v2 · WIN 77.8% IS / 75.7% OOS · ~3.9%/mo on margin · 5/cycle · BUY FUT (paper, needs ~₹15L)", AMBER))
         self.pm_monthly = QTableWidget(); self.pm_monthly.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_monthly.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self.pm_monthly.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -415,10 +415,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         exactly what to SELL and what to BUY (strike + premium), expiry, net credit and P&L."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("SWING TRADE LOG  -  credit spreads (what to SELL & BUY)", CYAN))
-        # ★ STOCK CREDIT v2 — the TP-50 upgrade. Kept FIRST + gold-highlighted: this is the book
-        # with the validated 88% OOS / >=79%-every-year win rate — watch it closest.
-        v2hdr = QLabel("★ STOCK CREDIT v2 UNION — WIN 84% IS / 87% OOS · +26-30% width/trade · ~₹20-23k/mo model ★   "
-                       "sell the breakout spread · book at half credit · stop 3x · +ve EVERY year 2019→2026 (in-sample 85% · OOS 88%)")
+        # ★ STOCK CREDIT v2 — the TP-50 upgrade. Kept FIRST + gold-highlighted: the leader book,
+        # watch it closest. Backtest stats live on PM DECISIONS / STUDIES; this log shows LIVE only.
+        v2hdr = QLabel("★ STOCK CREDIT v2 UNION ★   sell the breakout spread · book at half credit · stop 3×")
         v2hdr.setWordWrap(True)
         v2hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         v2hdr.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -429,10 +428,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_stk2 = self._make_log_table(self.SWING_TAB_COLS)
         self.sw_stk2.setStyleSheet(f"QTableWidget {{ border: 2px solid {AMBER}; }}")
         v.addWidget(self.sw_stk2)
-        v.addWidget(self._section_label("INDEX SWING — NIFTY/FINNIFTY · WIN 54% · −1.4%w real 2019-24 (fwd-test only) · ~3/mo", CYAN))
+        v.addWidget(self._section_label("INDEX SWING — NIFTY/FINNIFTY · fade the breakout · hold to expiry (fwd-test only) · ~3/mo", CYAN))
         self.sw_idx_stats = self._stats_label(); v.addWidget(self.sw_idx_stats)
         self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx)
-        v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · WIN 54% · +5.3% width (2019-24 real) · ~10/mo", GREEN))
+        v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~10/mo · SELL", GREEN))
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_stk)
         v.addStretch(1)
@@ -766,6 +765,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "87.88% win, +31.9% of width. UNION upgrade (DC 5+10+15+20 windows) OOS-validated separately: 173 "
      "trades, 87% win, +29.5%w. Win ≥79% EVERY calendar year 2019→2026. Files: "
      "studies/STOCK_FADE_TP50_UPGRADE.md, UNION_DONCHIAN_FREQUENCY.md")}
+{res("UNION vs D10 — DECISION (2026-07-13): KEEP UNION. UNION already IS 'both' (= D10+D5+D15+D20, a "
+     "superset of D10), so +34% more signals at the SAME win rate/expectancy — no 'run both' mode. But "
+     "the scanner is NOT the bottleneck: Jul 1-13 D10 alone threw 105 breakouts, only 1 cleared; the "
+     "credit/width>=0.40 gate is the wall (thin-IV regime), not the Donchian window. Do NOT loosen the "
+     "gate (strip it -> +26%w becomes -1.1%). Frequency comes from the v1 book (~10-16/mo), not a looser "
+     "v2. File: studies/STOCK_FADE_V2_UNION_VS_D10.md")}
 
 {h("WHY DOES v1 SHOW 54% NEXT TO v2 UNION's 85%+? — it is NOT the number of calls")}
 {p("<b>Same signal, same gate, different EXIT GEOMETRY — and the 54% is the OLD hold-to-expiry test.</b> "
