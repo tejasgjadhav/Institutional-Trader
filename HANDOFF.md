@@ -1,13 +1,22 @@
 # Handoff — institutional-trader
-_Updated: 2026-07-10 ~15:05 IST by Claude Code_
+_Updated: 2026-07-13 by Claude Code_
 
-## Goal
-Ongoing research goal-loops on the paper-trading algo system: (1) should the deployed NIFTY
-0DTE credit spread enter later than 09:16 (9:45–10:00)? (2) find any intraday NON-fade
-(non-short-premium) strategy meeting the bar ≥85% win + positive net + margin intact;
-(3) day-to-day: answer live signal questions on the stock fade v2 UNION scanner.
-Standing rule: **approval-first** — never deploy/change config without the user seeing the
-backtest and confirming. Nothing was deployed this session.
+## ACTIVE TASK (2026-07-13) — MAX-trades / MAX-return monthly OPTIONS on ₹2L
+User RESOLVED the monthly-futures frontier: 10%/mo @ 75% win proven impossible (studies/monthly_fut/
+MONTHLY_FUTURES.md + the win-rate/payoff-ratio math). User's decision: **₹2L capital, OPTIONS route
+(higher return-on-capital), 67% win is ACCEPTABLE, wants MAX trades + MAX return.** So drop the win-rate
+constraint and optimize the REV1-v2-signal-as-CALLS book for total return on a fixed ₹2L.
+- Base options result (opt_bt2.py/opt_oos.py): REV1-v2 signal, 5 picks/cycle, ATM call, early-exit
+  (+2%/−5% on underlying) → OOS Oct'24→Jul'26 67% win, +6-7%/mo on capital, −51% worst mo.
+- MAX-trades levers to test: expand picks/cycle (5→8→all qualifying pullbacks), cheaper structures
+  (call debit spread) to fit MORE positions per ₹2L, measure TOTAL return on fixed ₹2L + DD + win.
+- Data: bhav stock-option closes 2019→Sep'24 (IS, /tmp/bhav_cache_stk), Upstox expired (OOS Oct'24→).
+- Keep data/ gitignored (already is); commit scripts+study only. approval-first before any live deploy.
+
+## Prior goal (RESOLVED/paused)
+Monthly-futures 10%/mo goal-loop — concluded empirically+mathematically infeasible; all real
+deliverables committed (REV1-v2 futures paper book, options expression, ≥80%-win Tier A grouping,
+live_tracker.py). Standing rule: **approval-first**. Nothing deployed live this session.
 
 ## Current state
 - **Done (verified, this session):** 0DTE entry-time sweep on real 1-min premiums, 92 expiries
