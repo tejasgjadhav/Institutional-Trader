@@ -724,20 +724,26 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {h("THE LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
 
-{h("CONSOLIDATED PORTFOLIO — EXPECTED MONTHLY P&L (ALL LIVE BOOKS)")}
+{h("CONSOLIDATED PORTFOLIO — organised by WIN-RATE TIER (user request 2026-07-10)")}
+{sub("TIER A — the ≥80%-win books (the priority group, all defined-risk, all fit ~₹2L). "
+     "TIER B — the monthly-futures pair, kept SEPARATE: lower win rate, different capital base, "
+     "the long-delta diversifier / higher-return-on-capital experiment.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON</td><td>2 lots MODEL</td><td>2 lots PLAN-ON</td></tr>
-<tr><td>★ Stock fade v2 UNION (swing)</td><td>5–6</td><td>₹20–23k</td><td>₹10–12k</td><td>₹40–46k</td><td>₹20–24k</td></tr>
-<tr><td>Stock credit v1 (swing)</td><td>~10</td><td>₹9,000</td><td>₹4–5k</td><td>₹18,000</td><td>₹8–10k</td></tr>
-<tr><td>NIFTY Tue 0DTE (FLIP)</td><td>~3.5</td><td>₹2,360</td><td>₹1.2k</td><td>₹4,700</td><td>₹2.4k</td></tr>
-<tr><td>SENSEX Thu 0DTE</td><td>~4.2</td><td>₹3,200</td><td>₹1.5k</td><td>₹6,400</td><td>₹3k</td></tr>
-<tr><td>BANKNIFTY monthly 0DTE</td><td>~1</td><td>₹820</td><td>₹0.4k</td><td>₹1,600</td><td>₹0.8k</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td>OPTIONS TOTAL (~₹2–2.5L capital)</td><td>~24</td><td>~₹36k</td><td>~₹17–20k</td><td>~₹72k</td><td>~₹34–40k</td></tr>
-<tr><td style="color:{AMBER};">Monthly futures pullback (PAPER — own ₹15L pool)</td><td>5/cycle</td><td>~₹43k on ₹11L margin (~3.9%/mo)</td><td>~₹25–30k</td><td colspan="2">scale by notional, not lots — NOT in options total</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>TIER A · ≥80% WIN</td><td>Win (IS / OOS)</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON</td></tr>
+<tr><td>★ Stock fade v2 UNION (swing)</td><td>85% / <b>88%</b></td><td>5–6</td><td>₹20–23k</td><td>₹10–12k</td></tr>
+<tr><td>NIFTY Tue 0DTE (FLIP)</td><td>85.8% / <b>91.0%</b></td><td>~3.5</td><td>₹2,360</td><td>₹1.2k</td></tr>
+<tr><td>SENSEX Thu 0DTE (CE)</td><td>— / <b>88.8%</b></td><td>~4.2</td><td>₹3,200</td><td>₹1.5k</td></tr>
+<tr><td>BANKNIFTY monthly 0DTE</td><td>— / <b>91.3%</b></td><td>~1</td><td>₹820</td><td>₹0.4k</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td>TIER A TOTAL (~₹2–2.5L capital)</td><td><b>≈85–88% blended</b></td><td>~14</td><td>~₹27–30k</td><td>~₹13–15k</td></tr>
+<tr><td colspan="5" style="color:{BORDER};">———————————————————————————————————</td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td>TIER B · monthly futures pair (SEPARATE)</td><td>Win</td><td>Freq</td><td>Return on capital</td><td>Capital</td></tr>
+<tr><td style="color:{AMBER};">1 · Monthly futures pullback (REV1-v2, FUT)</td><td>75.7% OOS</td><td>5/cycle</td><td>~3.9%/mo · worst −20%</td><td>~₹15L margin</td></tr>
+<tr><td style="color:{AMBER};">2 · Same signal as monthly CALL (early-exit)</td><td>67% OOS</td><td>5/cycle</td><td>~6–7%/mo · worst −51%</td><td>~₹2L premium</td></tr>
 </table>
-{dim("The futures book is regime-gated (in cash when NIFTY&lt;200DMA — standing aside since Mar'26) and "
-     "long-delta — the one diversifier against the five short-premium options books. It stays PAPER "
-     "until ~₹15L capital exists; its months average +3.9% on margin but range +11% to −20%.")}
+{dim("Stock credit v1 (73% OOS) sits between the tiers — kept as the ~16/mo live-fill control book, "
+     "not counted in Tier A. Tier B stays PAPER; it is the long-delta diversifier and the "
+     "return-on-capital experiment, deliberately apart from the ≥80%-win group per the user's ask. "
+     "10%/mo AT ≥75% win was shown empirically unreachable — see studies/monthly_fut.")}
 {h("★ WORKED EXAMPLE — STOCK FADE v2 UNION, one trade start to finish (the LEADER)")}
 {sub("The idea in one line: after a stock breaks out, its call options get expensive on hope — "
      "breakouts usually stall — so we SELL that hope with a capped-loss spread and buy it back "
