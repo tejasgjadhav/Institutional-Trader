@@ -36,21 +36,26 @@ TWILIO_TO    = os.getenv("TWILIO_TO")
 # ── individual channels ───────────────────────────────────────────────────────
 
 def send_telegram(text: str) -> bool:
-    """Free, reliable. Needs TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID."""
+    """Free, reliable. Needs TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID.
+    TELEGRAM_CHAT_ID may be a COMMA-SEPARATED list — fans out to every recipient
+    (each person must have messaged the bot once). Returns True if ≥1 delivery succeeded."""
     if not (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID):
         return False
-    try:
-        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
-        r = requests.post(url, data={
-            "chat_id": TELEGRAM_CHAT_ID, "text": text, "parse_mode": "HTML"
-        }, timeout=10)
-        ok = r.status_code == 200
-        if not ok:
-            logger.warning(f"Telegram failed: {r.status_code} {r.text[:120]}")
-        return ok
-    except Exception as e:
-        logger.warning(f"Telegram error: {e}")
-        return False
+    ids = [c.strip() for c in str(TELEGRAM_CHAT_ID).split(",") if c.strip()]
+    url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+    any_ok = False
+    for cid in ids:
+        try:
+            r = requests.post(url, data={
+                "chat_id": cid, "text": text, "parse_mode": "HTML"
+            }, timeout=10)
+            if r.status_code == 200:
+                any_ok = True
+            else:
+                logger.warning(f"Telegram failed for {cid}: {r.status_code} {r.text[:120]}")
+        except Exception as e:
+            logger.warning(f"Telegram error for {cid}: {e}")
+    return any_ok
 
 
 def send_whatsapp(text: str) -> bool:

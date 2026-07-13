@@ -496,14 +496,23 @@ old; events ≤1 hour old.
 
 ---
 
-## Signal Notifications (optional, free-first)
+## Signal Notifications — Telegram is LIVE
 
-Every trade-ready signal can alert you on multiple channels (`engine/notifications.py`).
-Each fires only if its keys are set in `.env`:
+Every book's newly-opened signal is pushed to Telegram (`engine/notifications.py`,
+fanned out from `engine/engine_runner.py::_tg`). **All eight signal sources are wired:**
+3-Family stocks, Stock Credit v1, Stock Credit v2 UNION, Swing Credit, Monthly Futures,
+Monthly Long-Call, 0DTE NIFTY, and SENSEX/BANKNIFTY 0DTE. A book notifies once, on the
+daily scan that opens the position (no repeats); a notify failure can never disturb trading.
+Alerts only fire when a book actually clears its gates and opens — a quiet channel means
+nothing qualified that day, not a fault.
 
-- **Telegram** — free, reliable (Bot API).
-- **WhatsApp** — free (CallMeBot).
-- **Phone call** — CallMeBot free TTS (best-effort) or Twilio (paid, reliable).
+Setup (live config in `.env`, which is gitignored — never commit it):
+- **Telegram** — free, reliable (Bot API). Set `TELEGRAM_BOT_TOKEN` + `TELEGRAM_CHAT_ID`.
+  `TELEGRAM_CHAT_ID` may be a **comma-separated list** (multiple chats) or a single **channel
+  id** (e.g. `-100…`) so everyone who joins the channel gets alerts with no per-person setup.
+  Create the bot via @BotFather, create a private channel, add the bot as an admin, and use
+  the channel's chat id.
+- **WhatsApp** — free (CallMeBot), per-number opt-in. **Phone call** — CallMeBot TTS or Twilio.
 - *(WhatsApp voice calls are not possible — no third-party API.)*
 
 Run `python -m engine.notifications` for the one-time setup steps.
