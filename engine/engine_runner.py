@@ -57,6 +57,8 @@ class EngineRunner:
         self._stockcr_scan_day = None
         self._last_monthly_resolve = 0.0
         self._monthly_scan_day = None
+        self._last_monthly_call_resolve = 0.0
+        self._monthly_call_scan_day = None
         self._last_zdte_resolve = 0.0
         self._zdte_scan_day = None
 
@@ -198,6 +200,38 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"fast resolve: {e}")
 
+    def _tg(self, book, signals):
+        """Fan out newly-opened signals from any book to Telegram. `signals` is the list a scan
+        returns (only NEW opens, once/day — so no extra dedup needed) or an int count for
+        count-only books. Best-effort: never let a notify failure disturb the engine."""
+        if not signals:
+            return
+        try:
+            from engine.notifications import send_telegram
+            items = signals if isinstance(signals, list) else []
+            if not items:
+                send_telegram(f"🔔 <b>{book}</b> · {signals} new signal(s) — see dashboard, place manually in Upstox")
+                return
+            for s in items:
+                if not isinstance(s, dict):
+                    send_telegram(f"🔔 <b>{book}</b> · new signal — see dashboard"); continue
+                sym = s.get("symbol") or s.get("index") or s.get("underlying") or s.get("name") or ""
+                side = s.get("side") or s.get("order_label") or s.get("breakout_dir") or ""
+                ss, ls = s.get("short_strike"), s.get("long_strike")
+                exp = s.get("expiry") or s.get("expiry_date") or ""
+                credit = s.get("credit"); cw = s.get("cw") or s.get("credit_width")
+                lines = [f"🔔 <b>{book}</b>"]
+                head = " · ".join(str(x) for x in (sym, side) if x)
+                if head: lines.append(head)
+                if ss and ls:
+                    lines.append(f"Sell {ss} / Buy {ls}" + (f" · exp {exp}" if exp else ""))
+                if credit is not None:
+                    lines.append(f"credit {credit}" + (f" · c/w {cw}" if cw else ""))
+                lines.append("place manually in Upstox")
+                send_telegram("\n".join(lines))
+        except Exception as e:
+            logger.warning(f"telegram notify ({book}): {e}")
+
     def _swing(self, now):
         """SWING CREDIT SPREADS (the 3rd strategy) — multi-day, overnight carry, decoupled from
         the intraday loop. Scans ONCE/day after the cutoff (a daily Donchian breakout needs ~the
@@ -229,6 +263,7 @@ class EngineRunner:
                 new = swing_credit.scan_swing_signals()
                 if new:
                     logger.info(f"swing: opened {len(new)} new spread(s)")
+                    self._tg("SWING CREDIT (NIFTY/FINNIFTY)", new)
             except Exception as e:
                 logger.warning(f"swing scan: {e}")
 
@@ -260,8 +295,41 @@ class EngineRunner:
                 new = monthly_fut.scan_monthly_signals()
                 if new:
                     logger.info(f"monthly_fut: entered {len(new)} pullback long(s)")
+                    self._tg("MONTHLY FUTURES PULLBACK", new)
             except Exception as e:
                 logger.warning(f"monthly_fut scan: {e}")
+
+    def _monthly_call(self, now):
+        """MONTHLY LONG-CALL PULLBACK (the 6th strategy) — same signal as _monthly_fut, expressed
+        as a bought ATM call. Once/day scan attempt after the cutoff (fires near cycle start) +
+        periodic mark/close of open calls (trigger on underlying, P&L on premium)."""
+        try:
+            from engine import config
+            if not getattr(config, "MONTHLY_CALL_ENABLED", False):
+                return
+            from engine import monthly_call
+        except Exception as e:
+            logger.warning(f"monthly_call import: {e}")
+            return
+        if (time.time() - self._last_monthly_call_resolve) >= config.MONTHLY_CALL_RESOLVE_INTERVAL:
+            self._last_monthly_call_resolve = time.time()
+            try:
+                n = monthly_call.resolve_call_positions()
+                if n:
+                    logger.info(f"monthly_call: closed {n} call(s)")
+            except Exception as e:
+                logger.warning(f"monthly_call resolve: {e}")
+        h, m = map(int, config.MONTHLY_FUT_SCAN_AFTER.split(":"))
+        after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
+        if (self.agent.is_market_open() and after_cutoff and self._monthly_call_scan_day != now.date()):
+            self._monthly_call_scan_day = now.date()
+            try:
+                new = monthly_call.scan_call_signals()
+                if new:
+                    logger.info(f"monthly_call: bought {len(new)} pullback call(s)")
+                    self._tg("MONTHLY LONG-CALL PULLBACK", new)
+            except Exception as e:
+                logger.warning(f"monthly_call scan: {e}")
 
     def _stock_credit(self, now):
         """STOCK CREDIT SPREADS (the 4th strategy) — high-frequency fade on the stock universe.
@@ -299,12 +367,14 @@ class EngineRunner:
                 new2 = stock_credit_v2.scan_signals()
                 if new2:
                     logger.info(f"stock_credit_v2: opened {len(new2)} new spread(s)")
+                    self._tg("STOCK CREDIT v2 UNION", new2)
             except Exception as e:
                 logger.warning(f"stock_credit_v2 scan: {e}")
             try:
                 new = stock_credit.scan_signals()
                 if new:
                     logger.info(f"stock_credit: opened {len(new)} new spread(s)")
+                    self._tg("STOCK CREDIT v1", new)
             except Exception as e:
                 logger.warning(f"stock_credit scan: {e}")
 
@@ -354,6 +424,7 @@ class EngineRunner:
                 new = zero_dte.scan_signal()
                 if new:
                     logger.info(f"zero_dte: opened {new[0]['order_label']}")
+                    self._tg("0DTE NIFTY", new)
             except Exception as e:
                 logger.warning(f"zero_dte scan: {e}")
             try:
@@ -361,6 +432,7 @@ class EngineRunner:
                 n = dte_multi.scan_signals()
                 if n:
                     logger.info(f"dte_multi: opened {n} spread(s)")
+                    self._tg("SENSEX / BANKNIFTY 0DTE", n)
             except Exception as e:
                 logger.warning(f"dte_multi scan: {e}")
 
@@ -395,6 +467,7 @@ class EngineRunner:
         self._swing(now)
         self._stock_credit(now)
         self._monthly_fut(now)
+        self._monthly_call(now)
         self._zero_dte(now)
         from engine import config as _cfg
         if (getattr(_cfg, "SCAN_3FAMILY_ENABLED", True) and self.agent.is_market_open()

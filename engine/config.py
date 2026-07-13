@@ -231,6 +231,16 @@ MONTHLY_FUT_EARNINGS_SKIP = True # live-only rule: skip names with results befor
 MONTHLY_FUT_SCAN_AFTER = "15:10" # entry decision needs ~the close
 MONTHLY_FUT_RESOLVE_INTERVAL = 900
 
+# === MONTHLY LONG-CALL PULLBACK (the 6th — SAME signal as the futures book, expressed as a
+# bought ATM CALL instead of the future). OOS-validated: 5-pick simple config = 67% win,
+# +6-7%/mo on premium OOS Oct'24→Jul'26. HIGH VARIANCE: -51% crash months are real (a bought
+# call can lose ~100% of premium in a selloff). 8-pick + gates FAILED OOS (curve-fit) — kept at
+# 5-pick, no extra gates. See studies/monthly_fut/MAX_TRADES_OPTIONS.md. Signals-only paper.
+MONTHLY_CALL_ENABLED   = True
+MONTHLY_CALL_LOTS      = 1        # lots of the ATM call per pick (paper sizing)
+# reuses MONTHLY_FUT_POOL/TOPN/TP/TP_LATE/DECAY_DAY/SL/MIN_DTE/EARNINGS_SKIP (identical signal)
+MONTHLY_CALL_RESOLVE_INTERVAL = 900
+
 # === STOCK CREDIT SPREAD STRATEGY (the 4th — same fade, on the full stock universe) ===
 # The high-FREQUENCY sibling of the index swing: fade a daily Donchian-10 breakout on single
 # stocks by SELLING a credit spread, but ONLY when richly paid relative to risk. A breakout

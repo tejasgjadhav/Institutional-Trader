@@ -32,6 +32,7 @@ MARKET_SNAP = _os.path.join(DATA_DIR, "market_snapshot.json")
 SWING_SNAP = _os.path.join(DATA_DIR, "swing.json")
 SWING_BOOK = _os.path.join(DATA_DIR, "swing_positions.json")
 MONTHLY_SNAP = _os.path.join(DATA_DIR, "monthly_fut.json")
+MONTHLY_CALL_SNAP = _os.path.join(DATA_DIR, "monthly_call.json")
 STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
 STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
@@ -77,6 +78,7 @@ class TerminalApp(QMainWindow):
         self.last_scan_results = []
         self._swing_rows = []
         self._monthly_rows = []
+        self._monthly_call_rows = []
         self._stockcr_rows = []
         self._stockcr2_rows = []
         self.active_screen = 0
@@ -362,6 +364,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_monthly.verticalHeader().setDefaultSectionSize(32)
         self.pm_monthly.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_monthly, 1)
+
+        # MONTHLY LONG-CALL PULLBACK — the 6th strategy (same signal, BUY ATM call · fits ₹2L).
+        v.addWidget(self._section_label(
+            "MONTHLY LONG-CALL PULLBACK — same signal, BUY ATM CALL · WIN 70% IS / 67% OOS · +6-7%/mo on premium · 5/cycle · HIGH VARIANCE (−51% crash mo)", AMBER))
+        self.pm_monthly_call = QTableWidget(); self.pm_monthly_call.setColumnCount(len(self.PM_CREDIT_COLS))
+        self.pm_monthly_call.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
+        self.pm_monthly_call.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pm_monthly_call.setAlternatingRowColors(True); self.pm_monthly_call.verticalHeader().setVisible(False)
+        self.pm_monthly_call.verticalHeader().setDefaultSectionSize(32)
+        self.pm_monthly_call.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_monthly_call, 1)
 
         # 3-Family stock-options section retired from view 2026-07-07 (engine still scans)
         self.pm_stock = self._make_pm_table()
@@ -872,6 +885,27 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "aside when NIFTY &lt; 200DMA (in cash Mar→Jul 2026). Files: studies/monthly_fut/MONTHLY_FUTURES.md "
      "(+ bt.py, grid_results.json, trade lists — full reproducible trail).")}
 
+{h("★ MONTHLY LONG-CALL PULLBACK (the 6th book · PAPER 2026-07-13 · fits ₹2L)")}
+{sub("Same signal as the futures book, but BUY an ATM CALL instead of the future — premium ≪ "
+     "margin, so it fits ₹2L and the same +2% move is a bigger % of capital. Validated on REAL "
+     "option premiums (bhav 2019→Sep'24 IS, Upstox Oct'24→Jul'26 OOS).")}
+{p("<b>What FAILED validation (so nobody re-mines it):</b> holding calls to expiry LOSES on theta "
+   "(28–39% win). More picks (8 vs 5) DILUTED the edge OOS (+6-7%→+0.3%/mo). 'Loss-minimizing' "
+   "gates (momentum filter + −3% stop) looked great in-sample (6.4%/mo) but LOST money OOS "
+   "(−2.7%/mo, 55% win) — a classic curve-fit, caught before deploy. Win-rate levers (lower TP, "
+   "deeper ITM) do NOT lift the ~70% ceiling: win rate = the signal's hit rate, not the option.")}
+{res("DEPLOYED CONFIG (the ONLY one that survives OOS — the simple 5-pick, no extra gates): "
+     "5 picks · BUY ~ATM call at the cycle expiry · exit on SPOT crossing TP +2% (decay +1% after "
+     "d12) / SL −5% · early-exit. IS 70% win / +5.5%/mo · OOS 67% win / +6-7%/mo on premium. "
+     "~5 trades/mo. HIGH VARIANCE: a bought call can lose ~100% of premium in a selloff, so worst "
+     "month ≈ −51% — size it as risk capital. Risk-adjusted it is WORSE than the future (at −20% "
+     "worst-month it makes only 1.5%/mo vs the future's 3.9%); its higher headline return is "
+     "leverage, not extra edge.")}
+{dim("Signals-only paper: the engine surfaces the CALL to BUY on PM DECISIONS; you place it "
+     "manually. Regime-gated (NIFTY&gt;200DMA). Files: studies/monthly_fut/MAX_TRADES_OPTIONS.md "
+     "(+ opt_bt.py/opt_bt2.py/opt_oos.py/opt_maxtrades.py/opt_gates*.py/opt_winrate_*.py — full "
+     "IS+OOS trail incl. the failed variants).")}
+
 {h("★ 0DTE INTRADAY (the 5th strategy) — NIFTY Tue · SENSEX Thu · BANKNIFTY monthly · LIVE FLIP on NIFTY")}
 {sub("Question (user goal): an INTRADAY strategy — closed the same day — with ≥85% win rate, "
      "positive net returns and >2% per trade on capital, retail-tradeable?")}
@@ -1323,6 +1357,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             if _os.path.exists(MONTHLY_SNAP):
                 s = json.load(open(MONTHLY_SNAP))
                 self._monthly_rows = s.get("rows", []) or []
+            if _os.path.exists(MONTHLY_CALL_SNAP):
+                sc = json.load(open(MONTHLY_CALL_SNAP))
+                self._monthly_call_rows = sc.get("rows", []) or []
         except Exception as e:
             logger.warning(f"load monthly_fut.json failed: {e}")
         try:
@@ -1530,6 +1567,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self._refresh_swing()
         self._refresh_stock_credit()
         self._refresh_monthly()
+        self._refresh_monthly_call()
         self._refresh_orbvwap()
 
     @staticmethod
@@ -1711,6 +1749,39 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     prem, p.get("expiry", "—"),
                     f"TP {p.get('tp_px','—')} / SL {p.get('sl_px','—')}",
                     stat_s if status != "OPEN" else f"OPEN {pnl_s} · d{p.get('sessions',0)}"]
+            fg = QColor(GREEN) if status == "WIN" else QColor(RED) if status == "LOSS" else None
+            self._set_row(table, i, vals, fg=fg)
+        self._fit_table(table)
+
+    def _refresh_monthly_call(self):
+        """MONTHLY LONG-CALL PULLBACK on PM DECISIONS — one row per bought call. Same layout as
+        the futures book; shows the CALL to BUY, entry/now premium, and P&L on the premium."""
+        if not hasattr(self, "pm_monthly_call"):
+            return
+        table = self.pm_monthly_call
+        rows = list(self._monthly_call_rows or [])
+        if not rows:
+            table.setRowCount(1)
+            self._set_row(table, 0, ["—", "no cycle yet — enters the first trading day after "
+                          "monthly expiry (NIFTY>200DMA), scan ~15:10", "—", "—", "—", "—", "WATCHING"],
+                          fg=QColor(TEXT_DIM))
+            self._fit_table(table); return
+        table.setRowCount(len(rows))
+        for i, p in enumerate(rows):
+            status = p.get("status", "OPEN")
+            if status in ("REGIME_OFF", "NO_CANDIDATES"):
+                self._set_row(table, i, ["—", p.get("order_label", ""), "—", "—",
+                                          p.get("expiry", "—"), "—", status], fg=QColor(TEXT_DIM))
+                continue
+            pnl = p.get("pnl_pct")
+            pnl_s = f"{pnl:+.1f}%" if pnl is not None else "—"
+            ep, cp = p.get("entry_prem"), p.get("cur_prem")
+            prem = f"in ₹{ep} now ₹{cp}" if ep and cp else (f"₹{ep}" if ep else "—")
+            vals = ["BUY CALL", p.get("order_label", p.get("symbol", "—")),
+                    f"{p.get('strike','')} CE", prem, p.get("opt_expiry", p.get("expiry", "—")),
+                    f"spot TP {p.get('tp_px','—')} / SL {p.get('sl_px','—')}",
+                    f"{status} {pnl_s} ({p.get('reason','')})" if status != "OPEN"
+                    else f"OPEN {pnl_s} · d{p.get('sessions',0)}"]
             fg = QColor(GREEN) if status == "WIN" else QColor(RED) if status == "LOSS" else None
             self._set_row(table, i, vals, fg=fg)
         self._fit_table(table)
