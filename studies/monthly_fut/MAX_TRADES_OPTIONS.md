@@ -66,6 +66,26 @@ winners from losers — confirmed earlier). Tested on the 8-pick book, `opt_gate
   at entry then crashes mid-cycle. IS-tuned; **OOS validation (Upstox Oct'24→Jul'26) required
   before any live wiring.** For worst-month ≤ −20%, add the cash buffer (deploy ~55%) → ~3.5%/mo.
 
+## ⚠ OOS VALIDATION — the gates and the 8-pick FAILED (2026-07-13, `opt_oos_gated.py`)
+
+Ran the IS-winning configs on real Upstox premiums Oct'24→Jul'26 (the window the search never saw):
+
+| Config | IS win / mo | **OOS win / mo** | OOS worst mo / DD |
+|---|---|---|---|
+| 5-pick, −5%, no gates (the SIMPLE base) | 70% / 5.5% | **67% / +6–7%** | −51% / — |
+| 8-pick, −5%, no gates | 68% / 3.7% | **62% / +0.3%** | −62% / −73% |
+| 8-pick + momentum gate + −3% stop ("improved") | 67% / 6.4% | **55% / −2.7% (LOSES)** | −64% / −83% |
+
+**Every "improvement" made it WORSE OOS.** 5→8 picks killed the edge (+6-7%→+0.3%: picks 6-8 are
+weaker names, dilution not diversification). The gates were overfit (+0.3%→−2.7%: the −3% stop
+whipsaws in the choppy 2025-26 regime; the momentum gate was tuned to 2019-23). The gated 8-pick
+that showed 6.4%/mo IS **lost money OOS**. Classic curve-fit — caught by validation before deploy.
+
+**CONCLUSION: do NOT use 8 picks or the gates.** The ONLY long-call config that survives OOS is the
+simple **5-pick, −5% early-exit, regime gate only** (+6-7%/mo, 67% win, −51% worst month). Entry
+gates do NOT minimize the −51% tail without curve-fitting. Real loss-reducers are structural:
+fewer picks (5), less capital deployed (cash buffer), or defined-risk credit spreads (capped loss).
+
 ## Honest recommendation
 
 - **If "max return" truly means accept ruin risk:** 5 picks/cycle long call = ~5.5%/mo IS
