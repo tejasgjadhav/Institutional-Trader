@@ -131,6 +131,13 @@ at 67% win**, weaker than the in-sample hoped but still ~2× the futures' 3.9%/m
 wider → live < backtest); 60 OOS trades is still thin; the −51% month is real gap/whipsaw risk.
 Not deployed — approval-first stands.
 
+**Exit-variant test (does the convex payoff let us push return higher? — NO, IS 2019-23):**
+base (+2%/−5%) 70% win +5%/mo · wideTP+4% 59%/+1%/−96%mo · noSL 71%/+4% · hold-to-expiry
+32%/−12% · trail 39%/+5%. The +2% early-exit is ALREADY optimal — letting winners run loses to
+theta (extra holding days decay more than the extra underlying gain is worth). No convex free
+lunch. This closes the search: **~6–7%/mo at 67% win is the options ceiling; 3.9%/mo at 75% is
+the futures ceiling; 10%/mo AT 75% win is empirically unreachable on this signal.**
+
 ## Appendix — calendar spreads (the last futures-only structure)
 
 Tested selling the 5 richest front/back basis spreads per cycle (short back, long front, hold
