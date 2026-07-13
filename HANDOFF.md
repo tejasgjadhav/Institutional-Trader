@@ -1,81 +1,102 @@
-# Handoff — institutional-trader / monthly futures study
-_Updated: 2026-07-09 ~21:30 by Claude Code_
+# Handoff — institutional-trader
+_Updated: 2026-07-10 ~15:05 IST by Claude Code_
 
 ## Goal
-User wanted monthly NSE futures trades ≥75% win / ≥10%/mo net. Concluded: infeasible; best is
-**REV1-v2: 75.7% win OOS, ~3.9%/mo on margin** (full study `studies/monthly_fut/`). Loser
-anatomy done: half of OOS losses are single-day news shocks — technical params can't predict
-them. Futures need ~₹15L capital; user has **₹2L max**, so pivoted (2026-07-09 evening):
-**options strategies on ₹2L capital targeting ~₹50-60k net profit** (period ambiguous —
-monthly ≈25-30%/mo is infeasible; yearly ≈2-2.5%/mo is near the validated stock fade v2
-range). Existing validated options edge: stock fade v2 credit spreads (85%/88% win IS/OOS,
-live parallel book) — see repo CLAUDE.md + `studies/STOCK_FADE_TP50_UPGRADE.md`.
+Ongoing research goal-loops on the paper-trading algo system: (1) should the deployed NIFTY
+0DTE credit spread enter later than 09:16 (9:45–10:00)? (2) find any intraday NON-fade
+(non-short-premium) strategy meeting the bar ≥85% win + positive net + margin intact;
+(3) day-to-day: answer live signal questions on the stock fade v2 UNION scanner.
+Standing rule: **approval-first** — never deploy/change config without the user seeing the
+backtest and confirming. Nothing was deployed this session.
 
 ## Current state
-- **Done (all in `studies/monthly_fut/`):**
-  - Data: real NSE futures bhavcopy 2018-01→2026-07 merged to `panel.csv.gz` by
-    `build_panel.py`. Caches: `cache_2018/`, `cache_idx/` (FUTIDX 2019→Jun'24), `cache_new/`
-    (UDiFF Jul'24→Jul'26), plus `/tmp/bhav_cache_stk` (FUTSTK 2019→Jun'24 — tmp, may vanish;
-    re-download with `studies/ndte/bhav_dl_stk.py` if wiped).
-  - Grid backtest `bt.py` (90 configs, 8 families), results `grid_results.json`.
-  - Winner: REV1_L — each expiry-to-expiry cycle, NIFTY>200DMA, buy front-month futures of the
-    5 worst 1-month losers still above their own 200DMA; exit MOC on close crossing +2% TP /
-    −5% SL, else expiry settle. IS 75.1% win / +4.6%/mo; OOS (Oct'24→Jul'26) 74.3% / +3.9%/mo.
-    Trades: `trades_REV1_L_top5.csv`. Study doc: `MONTHLY_FUTURES.md`.
-  - Negative results (do NOT retry): MOM3/MOM6 momentum failed OOS; calendar spreads ≈0 net
-    after 4-leg costs since 2021; capital recycling (`recycle_bt.py`, `trades_recycled.csv`)
-    DILUTES the edge (0.2%/mo OOS) — mid-month refill candidates are weak.
-- **Done (loser-analysis pass, same day):** anatomy in `is_trades_features.csv` — losses
-  unpredictable at entry; soft stops / rank shifts / index sleeve / recycling all worse.
-  Final spec **REV1-v2** (worst-8 pullbacks → top-5 by vol20, TP +2% decaying to +1% after
-  day 12, SL −5%): OOS 75.7% win, 3.91%/mo on margin, DD −20.1%, 73% positive months
-  (`trades_rev1v2_oos.csv`). Study doc carries a final GOAL DISPOSITION banner: 10%/mo leg
-  infeasible; ~3.9%/mo is the ceiling. User asked to clear/revise the /goal.
-- **Done (deployed 2026-07-10, commit 1a70fef, pushed):** REV1-v2 + live earnings-skip wired
-  in as the 5th signals-only paper book — `engine/monthly_fut.py`, PM DECISIONS section +
-  STUDIES row in `engine/ui_terminal.py`, `MONTHLY_FUT_*` in `engine/config.py`, `_monthly_fut`
-  hook in `engine_runner.py`; README + `studies/STRATEGY_SUMMARY.md` rows added; bhav caches
-  gitignored. Engine restarted clean. NIFTY < 200DMA → first scans will mark REGIME_OFF
-  (standing aside) until the regime flips. Factor pass: NO removable loser factor (gap-prone
-  names are the BEST bucket); half of OOS losses = 1-day news shocks → earnings-skip.
+- **Done (verified, this session):** 0DTE entry-time sweep on real 1-min premiums, 92 expiries
+  Oct'24→Jul'26. Verdict: keep 09:16 entry — later entry (9:45/10:00) adds +3-4pp win rate
+  (noise, n=73) but costs 35-45% of profit, no tail reduction. Study
+  `studies/ZERO_DTE_ENTRY_TIME.md`, script `studies/ndte/ndte11_entrytime.py`, grid
+  `/tmp/ndte11_results.json`. 09:16 row reproduces ndte7 exactly (90.4% / +5.85%m / ₹49,527).
+  User decision: keep in studies, do NOT extend `ZERO_DTE_ENTRY_CUTOFF` ("i don't think we
+  will miss").
+- **Done (verified, this session):** non-fade intraday search — long gamma falsified. ATM
+  straddle @open, gap-follow and trend-follow debit verticals all NET NEGATIVE on bhav
+  2019→Sep'24 (282 exp) AND 1-min era Oct'24→Jul'26 (92 exp). Hot-week (rv5≥0.9) long-gamma
+  complement hypothesis REJECTED (IS −23.2%/trade, n=77). Study
+  `studies/NONFADE_INTRADAY_SEARCH.md` (includes the full falsified-families ledger), script
+  `studies/ndte/ndte12_longgamma.py`. Conclusion: no retail-accessible non-fade intraday edge
+  in testable data; remaining directions are multi-day/overnight (needs user risk sign-off).
+- **Done (live check, 2026-07-10 close):** stock fade v2 UNION read-only gate replica — 9 D5
+  breakouts (8 down: AXISBANK/HDFCLIFE/NTPC/ADANIGREEN/POLYCAB/MARUTI/M&M/DRREDDY; 1 up:
+  SUNPHARMA), ALL blocked by credit/width ≥0.40 (best ADANIGREEN 0.36, M&M 0.32). No v2 entry
+  today; TCS bull-put booked TP-75 at 09:24; TRENT (entered 07-08) still open.
+- **Still true (prior session, 2026-07-10 am):** monthly futures book REV1-v2 deployed as the
+  5th signals-only paper book (commit 1a70fef): `engine/monthly_fut.py`, `MONTHLY_FUT_*` in
+  config. NIFTY < 200DMA → scans mark REGIME_OFF until regime flips. Full details in
+  `studies/monthly_fut/MONTHLY_FUTURES.md`; do NOT retry MOM3/MOM6, calendar spreads,
+  capital recycling (all failed).
+  TIMING (answered to user 2026-07-10): the 5 signals fire ONCE per monthly cycle, on the first
+  trading day AFTER the prior monthly expiry (≈ last Fri of each month; front-month expiry then
+  ≥ MONTHLY_FUT_MIN_DTE=20 days out), scanned after 15:10, held to that expiry. Next windows
+  ~2026-07-31, ~2026-08-28, ~2026-09-25 — but ONLY on the first where NIFTY>200DMA. Cycle
+  2026-07-30 already recorded REGIME_OFF, so 0 signals now and every cycle until NIFTY reclaims
+  its 200DMA. The PM DECISIONS row shows that stand-aside state, not blank.
+- **Done (UI, 2026-07-13):** (a) PM DECISIONS headers now show IS alongside OOS — v1
+  "54% IS (hold-exp) / 73% OOS (TP-75)", monthly "77.8% IS / 75.7% OOS", v2 already had both;
+  (b) SWING TRADE LOG headers had backtested win rates REMOVED per user (that tab shows the LIVE
+  book; backtest stats live on PM DECISIONS / STUDIES). Both in `engine/ui_terminal.py`, viewer
+  restarted. IS numbers sourced from studies (STOCK_V1_OOS.md, STOCK_FADE_TP50_UPGRADE.md,
+  monthly_fut/MONTHLY_FUTURES.md:75-76).
+- **Running (background):** `studies/ndte/stkfade_v2_side_decay.py` — v2 UNION CE-vs-PE side
+  split + holding-period decay curve (answers "any chance of v2 CALL / is it front-loaded").
+  Slow (uncached option histories). Output `/tmp/v2side_run.log`, json `/tmp/stkfade_v2_side.json`.
+  NOT yet reported to user.
+- **Live check 2026-07-13 13:26 IST (market open):** v2 UNION read-only scan = 7 breakouts,
+  ALL blocked by credit/width<0.40 (best OFSS D5 bear-call 0.35). No signal cleared gates
+  pre-15:10 scan. Replica pattern in the inline python (import `_todays_breakout`/`_pick_legs`/
+  `_quote` from `engine.stock_credit_v2`; NEVER call `scan_signals()` — it writes).
+- **Not started:** SENSEX/BANKNIFTY 0DTE entry-time confirmation sweep (same mechanism
+  expected); multi-day/overnight goal-loop (awaiting user opt-in).
 
 ## Next steps
-1. (running) v1 OOS test: `/tmp/stkfade_oos_v1.py` (v1 geometry DC10/s1/w3/TP0.75/stop2.0 on
-   Upstox expired premiums Oct'24→Jul'26; results accrue to `/tmp/stkfade_oos_v1.json`).
-   v1's honest record so far: 65% was the pre-real-data estimate; real IS = 54%/+5.3%w
-   (718 tr); OOS never run before this. When done: report verdict to user, add v1 OOS
-   numbers to STUDIES tab (v1-vs-v2 explainer + strategy tables), commit + push.
-   If v1 OOS comes back much weaker → recommend retiring v1; if ~54%/+5%w → keep as control.
-   (STUDIES tab consolidated-table/worked-example/v1-explainer edits are DONE, commit b14584d.)
-2. Then: watch the monthly_fut paper book; first entries fire when NIFTY reclaims its 200DMA.
+1. Nothing pending without user input. If user opts into overnight/multi-day: start from the
+   shelved daily-ladder result in `studies/DAILY_HIGHWIN_SEARCH.md` (81.2% win, +9.06%m,
+   REPORT-ONLY, correlated-stacking risk) and the swing fade book.
+2. If asked to commit: `studies/ZERO_DTE_ENTRY_TIME.md`, `studies/NONFADE_INTRADAY_SEARCH.md`,
+   `studies/ndte/ndte11_entrytime.py`, `studies/ndte/ndte12_longgamma.py` are untracked.
+   NEVER commit `.env` (verify `git diff --cached --name-only | grep -q "\.env$"` is empty).
 
 ## Key files
 | File | Why it matters |
 |---|---|
-| `studies/monthly_fut/bt.py` | core backtest: data load, cycles, features, strategies, exits |
-| `studies/monthly_fut/panel.csv.gz` | merged futures panel 2018→2026 (rebuild: `build_panel.py`) |
-| `studies/monthly_fut/trades_REV1_L_top5.csv` | validated strategy's full trade list |
-| `studies/monthly_fut/MONTHLY_FUTURES.md` | study write-up + honesty caveats |
-| `studies/monthly_fut/grid_results.json` | all 90 IS configs incl. per-year blocks |
-| `CLAUDE.md` (repo root) | project rules: honesty-over-optimism, backtest-before-deploy |
+| `CLAUDE.md` | canonical repo context — read first; strategy status + honesty rules |
+| `studies/ZERO_DTE_ENTRY_TIME.md` | new: entry-time sweep verdict (keep 09:16) |
+| `studies/NONFADE_INTRADAY_SEARCH.md` | new: long-gamma falsification + intraday search ledger |
+| `studies/ndte/ndte11_entrytime.py` | entry-time harness (pooled cached fetchers `intra`, `spot5m`) |
+| `studies/ndte/ndte12_longgamma.py` | straddle/gap/trend debit backtests, both eras |
+| `engine/stock_credit_v2.py` | UNION_DCS=(5,10,15,20) scanner; gate sequence ~lines 154-232 |
+| `engine/config.py` lines 246-282 | STOCK_CREDIT_* and ZERO_DTE_* tunables (unchanged) |
+| `/tmp/ndte_intra/`, `/tmp/ndte_spot5m/`, `/tmp/ndte_bhav/`, `/tmp/ndte_cache/` | data caches (1-min option, 5-min spot, bhavcopy, daily spot); /tmp may be wiped — scripts refetch |
 
 ## Decisions & gotchas
-- IS/OOS split: entries before 2024-10-01 = IS. OOS was already looked at ONCE for REV1_L and
-  MOM3 (MOM3 failed). Every additional OOS peek burns validity — batch all refinements, look once.
-- Close-based (MOC) exits are the executable policy; TP exits average +2.97% (overshoot), SL
-  −6.3% (gaps). Only futures CLOSE exists for stocks 2019→Jun'24 (no OHLC).
-- 22% stock margin / 11% index margin assumed; "mo_cap" = monthly return with capital = margin
-  only (no buffer). Prudent real-world figure ≈ 0.7× that.
-- No free point-in-time fundamentals exist — fundamental screens would be lookahead; study is
-  technical+regime only.
-- Costs 0.10% notional round-trip. The 100-stock universe is `engine.config.UNIVERSE`.
-- Prior project lesson (twice confirmed): in-sample winner + salvage gates fail OOS. Don't
-  sell a curve-fit; user's approval-first memory applies to any deploy.
-- The previous HANDOFF.md (intraday 90% win-rate loop, 2026-07-06) was superseded; its studies
-  live in `studies/INTRADAY_90PCT_WINRATE.md` + `studies/intraday90_bt.py`.
+- Entry-time sweep is single-regime evidence: 1-min premiums exist only Oct'24→; 2019-24 bhav
+  has OPEN prints only, so later-entry variants cannot be validated pre-Oct'24.
+- `ndte11_entrytime.intra()` caches EMPTY candle results too (ndte7's version didn't — far
+  wings that never traded caused ~90s retry stalls; ndte7-style runs crawl without this).
+- Upstox v3 `historical-candle/{key}/minutes/5/…` serves NIFTY INDEX 5-min back past Oct'24 —
+  this unlocked spot-at-entry-time strike selection.
+- Long-gamma IS cells can show positive avg% with negative total ₹ (small-debit trades win big
+  %) — judge on total ₹ + OOS, not avg%.
+- Do NOT re-mine (all falsified): intraday underlying direction, high-win exit geometry,
+  pairs, non-expiry same-day selling, expiry-day long gamma. Ledger in
+  `studies/NONFADE_INTRADAY_SEARCH.md`.
+- v2 UNION gate check can be replicated read-only by importing `_todays_breakout`, `_pick_legs`,
+  `_quote` from `engine.stock_credit_v2` — never call `scan_signals()` outside the engine (it
+  WRITES the paper book). `_quote` returns a 4-tuple (mid, bid, ask, oi).
+- Engine + viewer run via launchd. Restart engine after engine-code changes:
+  `launchctl kickstart -k gui/$(id -u)/com.sayali.institutionaltrader.engine`.
 
 ## How to resume
-Read `studies/monthly_fut/MONTHLY_FUTURES.md`, then `bt.py`, then continue with step 1 above.
-Run scripts with the project venv: `cd ~/files/institutional-trader && .venv/bin/python
-studies/monthly_fut/bt.py`. Rebuild panel first if caches changed: `.venv/bin/python
-studies/monthly_fut/build_panel.py`.
+Read `CLAUDE.md`, then the two new studies above. No unfinished code work; the loops concluded
+with report-only verdicts. Health: `pgrep -f engine.engine_runner`;
+`.venv/bin/python -c "from engine import store; print(store.stats())"`. Backtests:
+`.venv/bin/python studies/ndte/ndte11_entrytime.py` (or `ndte12_longgamma.py`) — needs
+`UPSTOX_ANALYTICS_TOKEN` in `.env`; /tmp caches rebuild automatically.

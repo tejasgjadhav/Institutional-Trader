@@ -82,6 +82,55 @@ Anatomy of the 281 IS trades (`is_trades_features.csv`):
 own 200DMA take the 8 worst 1-month losers, keep the 5 with highest 20-day vol; buy front-month
 futures at close; exit MOC on close ≥ +2% (+1% after day 12) or ≤ −5%; else expiry settle.
 
+## Appendix — the OPTIONS expression: the one lever that raises return-on-CAPITAL (2026-07-10)
+
+The 10%/mo goal is unreachable on futures MARGIN (confirmed 3×). The remaining honest lever:
+run the SAME validated REV1-v2 signal but BUY a monthly CALL instead of the future — premium
+outlay ≪ futures margin, so the same +2% move is a far larger % of capital deployed. Tested on
+REAL NSE stock-option premiums (bhavcopy closes 2019→Sep'24), `opt_bt.py` / `opt_bt2.py`.
+
+**Hold-to-expiry calls FAIL** (theta wall): 28–39% win, net −3 to −12%/trade. This is the
+project's known option-buying-decay result — do not buy-and-hold.
+
+**Early-exit calls (exit the call the day the underlying hits +2%/−5%, matching the futures
+rule) — the fair test, and it works:**
+
+| | trades | win | avg on capital/trade | monthly mean | worst month | +ve months |
+|---|---|---|---|---|---|---|
+| ATM, IS 2019-23 | 211 | 70% | +5% | +5% | −59% | — |
+| ATM, OOS 2024 (thin) | 26 | 81% | +17% | +17% | +3% | — |
+| Both, all 48 months | — | — | — | — | — | 67% |
+
+Per year: 2019 −8% / 2020 −1% / 2021 +20% / 2022 −4% / 2023 +11% / 2024 +17%. Median entry
+premium ≈ ₹29/share; losing trades average −62% of premium (early −5% SL caps most of the tail).
+
+**What this means for the goal & the ₹2L constraint:** return is on PREMIUM deployed, not ₹15L
+margin — 5 calls at ~₹25–40k premium each ≈ ₹1.5–2L total. Historical mean +5%/mo (IS) to
++17%/mo (OOS) on that ~₹2L = ~₹10–34k/month at 70–81% win. This is the first structure that
+plausibly approaches the ~10%/mo-on-capital target and fits ₹2L.
+
+**DECISIVE OOS — real Upstox premiums Oct'24→Jul'26 (`opt_oos.py`, the window futures/v2 used):**
+
+| | trades | win | avg on capital/trade | monthly mean | worst month | +ve months |
+|---|---|---|---|---|---|---|
+| ATM early-exit call, OOS | 60 | 67% | +6% | +7% | −51% | 60% |
+
+Per year OOS: 2024 +22% (n=5) / 2025 +5% (n=45) / 2026 +4% (n=10). The strong 2024-only slice
+(+17%) did NOT fully hold on the full window — the honest OOS figure is **~+6–7%/mo on capital
+at 67% win**, weaker than the in-sample hoped but still ~2× the futures' 3.9%/mo.
+
+**Verdict on the goal — the frontier, stated honestly:**
+- Futures (margin): ~3.9%/mo on capital, **75% win**, −20% worst month.
+- Options early-exit call (premium): **~6–7%/mo on capital**, **67% win**, −51% worst month.
+- The options expression roughly DOUBLES return-on-capital (closes ~⅔ of the gap to 10%) and
+  fits ₹2L (premium-funded, not ₹15L margin) — BUT it drops below the 75% win bar and triples
+  the drawdown. **You cannot have 75% win AND ~10%/mo simultaneously on this signal; it is a
+  trade-off frontier, not a free lunch.** 10%/mo at 75% win remains not achievable on real data.
+
+**Caveats:** costs = spread-fraction model on premium, not live fills (mid-cap call spreads are
+wider → live < backtest); 60 OOS trades is still thin; the −51% month is real gap/whipsaw risk.
+Not deployed — approval-first stands.
+
 ## Appendix — calendar spreads (the last futures-only structure)
 
 Tested selling the 5 richest front/back basis spreads per cycle (short back, long front, hold
