@@ -1,6 +1,20 @@
 # Handoff — institutional-trader
 _Updated: 2026-07-13 by Claude Code_
 
+## Q (2026-07-13) — user wants trade-by-trade last-6-mo long-call example, 1 lot each, running P&L
+Building from OOS trade data (opt_oos_trades.csv had returns but not strikes/lots/₹ — need a
+script that emits per-trade: date, sym, strike, entry prem, exit prem, lot size, ₹ P&L, cumulative).
+Live book has 0 real trades yet (fires next cycle), so this is the BACKTEST trades = the honest
+"what it would have done." Script: studies/monthly_fut/opt_trade_ledger.py (to build).
+
+## DONE (2026-07-13) — MONTHLY LONG-CALL book DEPLOYED as 6th paper book (user-approved)
+Wired engine/monthly_call.py: same REV1-v2 pullback signal, BUY ATM call, trigger on underlying
++2%/-5%, P&L on premium. Simple 5-pick (OOS-validated 67% win /+6-7%/mo); 8-pick+gates NOT used
+(failed OOS). Config MONTHLY_CALL_ENABLED, runner _monthly_call hook, PM DECISIONS section +
+STUDIES writeup in ui_terminal.py. Engine+viewer restarted, committed+pushed. First signals fire
+next cycle where NIFTY>200DMA (this cycle already <20DTE + REGIME_OFF). HIGH VARIANCE (-51% crash
+mo). Profit expectation: ~6-7%/mo on premium deployed, ~5 trades/mo, but highly variable.
+
 ## LATEST (2026-07-13 cont.) — gated 8-pick options FAILED OOS; user asking what's already live
 OOS validation (opt_oos_gated.py) KILLED the gated 8-pick long-call config: 6.4%/mo IS →
 55% win / −2.7%/mo (LOSES) OOS. Isolation: 5→8 picks killed edge (+6-7%→+0.3%); gates overfit.
