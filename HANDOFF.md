@@ -1,6 +1,15 @@
 # Handoff — institutional-trader
 _Updated: 2026-07-13 by Claude Code_
 
+## DONE (2026-07-13 latest) — SHELVED the monthly long-call book as UNRELIABLE
+12-mo ledger exposed it: +Rs63,815/65% win BUT one POLYCAB trade (+Rs47k from a real +8.2% ONE-DAY
+GAP, not a +2% edge) = 3/4 of the profit; ex-POLYCAB = +Rs16.5k/40 trades ≈ noise. The "+2% TP"
+doesn't cap wins — it rides gap-throughs to the day's close, so profit is luck/gap-dependent.
+User: "remove the 5 option for now, document in studies UI + github." → MONTHLY_CALL_ENABLED=False,
+PM DECISIONS section hidden when disabled, STUDIES writeup marked SHELVED w/ the gap finding,
+MAX_TRADES_OPTIONS.md updated. Code kept (engine/monthly_call.py) but dormant. Ledger scripts +
+call_ledger_6mo/12mo.csv committed. Reliable core stays the defined-risk spreads (86% win).
+
 ## Q (2026-07-13) — user wants trade-by-trade last-6-mo long-call example, 1 lot each, running P&L
 Building from OOS trade data (opt_oos_trades.csv had returns but not strikes/lots/₹ — need a
 script that emits per-trade: date, sym, strike, entry prem, exit prem, lot size, ₹ P&L, cumulative).

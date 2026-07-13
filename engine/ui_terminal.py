@@ -365,16 +365,19 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_monthly.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_monthly, 1)
 
-        # MONTHLY LONG-CALL PULLBACK — the 6th strategy (same signal, BUY ATM call · fits ₹2L).
-        v.addWidget(self._section_label(
-            "MONTHLY LONG-CALL PULLBACK — same signal, BUY ATM CALL · WIN 70% IS / 67% OOS · +6-7%/mo on premium · 5/cycle · HIGH VARIANCE (−51% crash mo)", AMBER))
-        self.pm_monthly_call = QTableWidget(); self.pm_monthly_call.setColumnCount(len(self.PM_CREDIT_COLS))
-        self.pm_monthly_call.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
-        self.pm_monthly_call.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.pm_monthly_call.setAlternatingRowColors(True); self.pm_monthly_call.verticalHeader().setVisible(False)
-        self.pm_monthly_call.verticalHeader().setDefaultSectionSize(32)
-        self.pm_monthly_call.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        v.addWidget(self.pm_monthly_call, 1)
+        # MONTHLY LONG-CALL PULLBACK — the 6th strategy. SHELVED 2026-07-13 (unreliable — see
+        # STUDIES). Section only rendered while MONTHLY_CALL_ENABLED; hidden when shelved.
+        from engine import config as _cfg
+        if getattr(_cfg, "MONTHLY_CALL_ENABLED", False):
+            v.addWidget(self._section_label(
+                "MONTHLY LONG-CALL PULLBACK — same signal, BUY ATM CALL · WIN 70% IS / 67% OOS · +6-7%/mo on premium · 5/cycle · HIGH VARIANCE (−51% crash mo)", AMBER))
+            self.pm_monthly_call = QTableWidget(); self.pm_monthly_call.setColumnCount(len(self.PM_CREDIT_COLS))
+            self.pm_monthly_call.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
+            self.pm_monthly_call.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self.pm_monthly_call.setAlternatingRowColors(True); self.pm_monthly_call.verticalHeader().setVisible(False)
+            self.pm_monthly_call.verticalHeader().setDefaultSectionSize(32)
+            self.pm_monthly_call.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            v.addWidget(self.pm_monthly_call, 1)
 
         # 3-Family stock-options section retired from view 2026-07-07 (engine still scans)
         self.pm_stock = self._make_pm_table()
@@ -885,26 +888,26 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "aside when NIFTY &lt; 200DMA (in cash Mar→Jul 2026). Files: studies/monthly_fut/MONTHLY_FUTURES.md "
      "(+ bt.py, grid_results.json, trade lists — full reproducible trail).")}
 
-{h("★ MONTHLY LONG-CALL PULLBACK (the 6th book · PAPER 2026-07-13 · fits ₹2L)")}
-{sub("Same signal as the futures book, but BUY an ATM CALL instead of the future — premium ≪ "
-     "margin, so it fits ₹2L and the same +2% move is a bigger % of capital. Validated on REAL "
-     "option premiums (bhav 2019→Sep'24 IS, Upstox Oct'24→Jul'26 OOS).")}
-{p("<b>What FAILED validation (so nobody re-mines it):</b> holding calls to expiry LOSES on theta "
-   "(28–39% win). More picks (8 vs 5) DILUTED the edge OOS (+6-7%→+0.3%/mo). 'Loss-minimizing' "
-   "gates (momentum filter + −3% stop) looked great in-sample (6.4%/mo) but LOST money OOS "
-   "(−2.7%/mo, 55% win) — a classic curve-fit, caught before deploy. Win-rate levers (lower TP, "
-   "deeper ITM) do NOT lift the ~70% ceiling: win rate = the signal's hit rate, not the option.")}
-{res("DEPLOYED CONFIG (the ONLY one that survives OOS — the simple 5-pick, no extra gates): "
-     "5 picks · BUY ~ATM call at the cycle expiry · exit on SPOT crossing TP +2% (decay +1% after "
-     "d12) / SL −5% · early-exit. IS 70% win / +5.5%/mo · OOS 67% win / +6-7%/mo on premium. "
-     "~5 trades/mo. HIGH VARIANCE: a bought call can lose ~100% of premium in a selloff, so worst "
-     "month ≈ −51% — size it as risk capital. Risk-adjusted it is WORSE than the future (at −20% "
-     "worst-month it makes only 1.5%/mo vs the future's 3.9%); its higher headline return is "
-     "leverage, not extra edge.")}
-{dim("Signals-only paper: the engine surfaces the CALL to BUY on PM DECISIONS; you place it "
-     "manually. Regime-gated (NIFTY&gt;200DMA). Files: studies/monthly_fut/MAX_TRADES_OPTIONS.md "
-     "(+ opt_bt.py/opt_bt2.py/opt_oos.py/opt_maxtrades.py/opt_gates*.py/opt_winrate_*.py — full "
-     "IS+OOS trail incl. the failed variants).")}
+{h("✗ MONTHLY LONG-CALL PULLBACK — SHELVED 2026-07-13 (unreliable, gap/luck-dependent)")}
+{sub("Same signal as the futures book, but BUY an ATM CALL. Built + deployed 2026-07-13, then "
+     "SHELVED the SAME DAY after the trade-by-trade ledger exposed it. Kept dormant "
+     "(MONTHLY_CALL_ENABLED=False); documented here so nobody re-deploys it thinking it works.")}
+{res("WHY SHELVED — the 12-month ledger (1 lot each, real premiums): +₹63,815 net, 65% win LOOKS "
+     "fine, but ONE trade — POLYCAB +₹47,353 — was ¾ of it. Ex-POLYCAB the whole year is +₹16.5k "
+     "across 40 trades ≈ noise. And POLYCAB's win was a real +8.2% ONE-DAY GAP (28-Jan→03-Feb), "
+     "NOT a +2% edge: the '+2% take-profit' does not cap wins — it rides gap-throughs to that "
+     "day's close. So the profit depends on rarely catching a big favourable gap (luck), while "
+     "cycle P&L swings −₹58k (Mar) to +₹71k (Feb). A luck/gap-dependent profile — NOT a durable edge.")}
+{p("<b>Also failed in the build (so nobody re-mines it):</b> holding calls to expiry LOSES on theta "
+   "(28–39% win); 8 picks DILUTED the edge OOS (+6-7%→+0.3%/mo); 'loss-minimizing' gates "
+   "(momentum + −3% stop) looked great IS (6.4%/mo) but LOST money OOS (−2.7%/mo) — curve-fit; "
+   "win-rate levers (lower TP, deeper ITM) can't beat the ~70% ceiling (win rate = the signal's "
+   "hit rate). Even the surviving simple 5-pick is risk-adjusted WORSE than the future (1.5%/mo "
+   "vs 3.9% at −20% worst-month) — its higher headline return is leverage, not edge.")}
+{dim("Verdict: buying calls tops out ~67-70% win and leans on lucky gaps; SELLING defined-risk "
+     "credit spreads wins ~86% without needing a gap. The spreads are the reliable core; this book "
+     "stays shelved. Files: studies/monthly_fut/MAX_TRADES_OPTIONS.md + opt_*.py + "
+     "call_ledger_6mo/12mo.csv (full IS+OOS + trade ledgers).")}
 
 {h("★ 0DTE INTRADAY (the 5th strategy) — NIFTY Tue · SENSEX Thu · BANKNIFTY monthly · LIVE FLIP on NIFTY")}
 {sub("Question (user goal): an INTRADAY strategy — closed the same day — with ≥85% win rate, "

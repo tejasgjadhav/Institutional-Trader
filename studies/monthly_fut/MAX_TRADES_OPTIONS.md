@@ -1,5 +1,17 @@
 # Max-trades / max-return monthly OPTIONS on ₹2L (2026-07-13)
 
+> ## ✗ SHELVED 2026-07-13 — UNRELIABLE (gap/luck-dependent), MONTHLY_CALL_ENABLED=False
+> Deployed as the 6th paper book, then shelved the same day after the trade-by-trade ledger
+> exposed it. **12-month ledger (1 lot each, real premiums): +₹63,815 net / 65% win — but ONE
+> trade (POLYCAB +₹47,353) was ¾ of the profit.** Ex-POLYCAB the year is +₹16.5k over 40 trades
+> (≈ noise). POLYCAB's win came from a REAL +8.2% ONE-DAY GAP (28-Jan→03-Feb), not a +2% edge:
+> the "+2% take-profit" does NOT cap wins — the MOC exit rides gap-throughs to that day's close.
+> Cycle P&L swings −₹58k (Mar) to +₹71k (Feb); 4 of 12 cycles were regime-off (no trade). The
+> profit is luck/gap-dependent, not a durable edge. Code kept dormant; the reliable core is the
+> SELL-side defined-risk credit spreads (~86% win, positive every year, no gap needed). Ledgers:
+> `call_ledger_6mo.csv` / `call_ledger_12mo.csv` (scripts `opt_trade_ledger*.py`).
+
+
 **User directive:** ₹2L capital, options route, 67% win acceptable, want MAX trades + MAX return.
 So the win-rate constraint is dropped; optimize the REV1-v2-signal-as-long-calls for total return
 on a fixed ₹2L. Script `opt_maxtrades.py`. IS = real bhav stock-option premiums 2019→Sep'24.

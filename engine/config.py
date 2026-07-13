@@ -236,7 +236,11 @@ MONTHLY_FUT_RESOLVE_INTERVAL = 900
 # +6-7%/mo on premium OOS Oct'24→Jul'26. HIGH VARIANCE: -51% crash months are real (a bought
 # call can lose ~100% of premium in a selloff). 8-pick + gates FAILED OOS (curve-fit) — kept at
 # 5-pick, no extra gates. See studies/monthly_fut/MAX_TRADES_OPTIONS.md. Signals-only paper.
-MONTHLY_CALL_ENABLED   = True
+# SHELVED 2026-07-13 as UNRELIABLE: the 12-mo ledger showed +Rs63.8k/65% win was carried almost
+# entirely by ONE trade (POLYCAB +Rs47k from a real +8.2% one-day GAP — the "+2% TP" rides
+# gap-throughs, it doesn't cap wins); ex-POLYCAB the year was +Rs16.5k ≈ noise. Profit is
+# luck/gap-dependent, not a steady edge. Code kept but dormant. See MAX_TRADES_OPTIONS.md.
+MONTHLY_CALL_ENABLED   = False
 MONTHLY_CALL_LOTS      = 1        # lots of the ATM call per pick (paper sizing)
 # reuses MONTHLY_FUT_POOL/TOPN/TP/TP_LATE/DECAY_DAY/SL/MIN_DTE/EARNINGS_SKIP (identical signal)
 MONTHLY_CALL_RESOLVE_INTERVAL = 900
