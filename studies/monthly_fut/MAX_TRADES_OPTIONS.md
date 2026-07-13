@@ -97,3 +97,25 @@ fewer picks (5), less capital deployed (cash buffer), or defined-risk credit spr
   per-trade loss is capped by construction, OR the futures pullback itself (3.9%/mo, −20%).
 - Not deployed. approval-first: need the user's explicit pick (5 vs 8 picks; buffer %) before any
   live wiring, given the ruin exposure.
+
+## Win-rate lever sweep — IS AND OOS (2026-07-13, opt_winrate_is.py / opt_winrate_oos.py)
+
+User: "test 5 long calls + add gates to improve WIN rate, use IS AND OOS." Tested TP {2/1.5/1%}
+× strike {ATM/ITM-2%/ITM-4%}, −5% stop:
+
+| 5-pick config | IS win | OOS win |
+|---|---|---|
+| ATM TP 2% (base) | 70% | 66% |
+| ATM TP 1.5% | 70% | 68% |
+| ATM TP 1% | 69% | 66% |
+| ITM −2% TP 2% | 63% | (worse IS) |
+| ITM −4% TP 2% | 53% | (worse IS) |
+
+**Nothing lifts win rate above ~70% IS / ~68% OOS.** Deeper ITM LOWERS it (bigger premium → same
++2% move is smaller % gain, cost eats marginal wins); lower TP is flat. Reason: the win rate =
+the SIGNAL's hit rate (how often the stock rises 2% before falling 5% in the month) — the option
+strike/TP can't change that. Market-level gates (momentum/regime/vol) already failed OOS for
+return; stock-level features don't separate winners (earlier pass). **No gate robustly raises the
+long-call win rate.** The structurally higher-win-rate instrument is the DEFINED-RISK CREDIT SPREAD
+(sell premium: profits from theta, wins without needing a directional move) — 85-88% win, already
+live. Conclusion: long-call win rate is capped ~67-70%; to win more, change the STRUCTURE, not gates.

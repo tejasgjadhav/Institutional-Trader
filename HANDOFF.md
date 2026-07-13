@@ -1,6 +1,14 @@
 # Handoff — institutional-trader
 _Updated: 2026-07-13 by Claude Code_
 
+## LATEST (2026-07-13 cont.) — gated 8-pick options FAILED OOS; user asking what's already live
+OOS validation (opt_oos_gated.py) KILLED the gated 8-pick long-call config: 6.4%/mo IS →
+55% win / −2.7%/mo (LOSES) OOS. Isolation: 5→8 picks killed edge (+6-7%→+0.3%); gates overfit.
+ONLY simple 5-pick −5% early-exit survives OOS (+6-7%/mo, 67%, −51% worst mo). Committed. User's
+current Q: "are we already deploying defined-risk credit spreads?" → YES, several are live paper
+books (check config *_ENABLED flags: SWING_CREDIT, STOCK_CREDIT v1, stock_credit_v2, the 0DTE
+books). Pending user pick: wire 5-pick calls as paper, or stay with the spread books.
+
 ## ACTIVE TASK (2026-07-13) — MAX-trades / MAX-return monthly OPTIONS on ₹2L
 User RESOLVED the monthly-futures frontier: 10%/mo @ 75% win proven impossible (studies/monthly_fut/
 MONTHLY_FUTURES.md + the win-rate/payoff-ratio math). User's decision: **₹2L capital, OPTIONS route
