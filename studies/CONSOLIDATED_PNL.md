@@ -33,9 +33,17 @@ frequency × typical margin/width. Treat as a rough anchor, not a precise figure
 
 | | 1 lot | 2 lots |
 |---|---|---|
-| **Model** (backtest) | ~₹39,000/mo | ~₹78,000/mo |
-| **Plan-on (~half — repo rule)** | **~₹18–20k/mo** | **~₹36–40k/mo** |
+| **Model** (backtest, NET of charged slippage + brokerage) | ~₹39,000/mo | ~₹78,000/mo |
+| **Plan-on (80% of net)** | **~₹31,000/mo** | **~₹62,000/mo** |
 | Capital required | ~₹2–2.5L | ~₹4–5L |
+
+**Why 80% of net, not the old blanket half:** these books (v2 UNION, v1, all three 0DTE) are
+backtested on **REAL premiums** with entry+exit slippage (~2.5% of credit) **and** ₹20×4
+brokerage already charged, and the actual win/loss rate is baked into the net. So the only
+remaining real-world gap is live *fill quality* (and missed manual entries) — a ~20% haircut,
+not 50%. The blanket-half rule stays for anything validated on *estimated* costs or proxies;
+it does not apply where the premiums and costs are already real. (2-lot note below still holds:
+the second lot fills worse, so treat the 2-lot 80% as the optimistic end.)
 
 Caveats that matter more than the point estimate:
 - **Model ≠ live.** No book has enough live fills yet to confirm; the drought means a realistic

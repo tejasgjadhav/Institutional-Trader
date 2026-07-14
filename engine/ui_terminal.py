@@ -734,8 +734,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return f"""
 <div style="color:{TEXT};">
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">CONSOLIDATED MONTHLY P&amp;L — model, all live books (1 lot vs 2 lots)</p>
-{dim("Backtest MODEL figures, NOT live. Plan on ~half until live fills prove out. All books are correlated "
-     "short-premium — a crash month hits several at once. Full detail: studies/CONSOLIDATED_PNL.md")}
+{dim("MODEL figures on REAL premiums, NET of charged slippage + brokerage, win/loss rate already baked in. "
+     "Plan on ~80% of net (a 20% haircut for live fill quality — fair for these real-premium books, vs a "
+     "blanket half). All correlated short-premium — a crash month hits several at once. studies/CONSOLIDATED_PNL.md")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win OOS</b></td><td><b>~₹/mo · 1 lot</b></td><td><b>~₹/mo · 2 lots</b></td></tr>
 <tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td></tr>
@@ -744,7 +745,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>0DTE SENSEX (Thu)</td><td>89%</td><td>~₹3,200</td><td>~₹6,400</td></tr>
 <tr><td>0DTE BANKNIFTY (monthly)</td><td>91%</td><td>~₹1,500*</td><td>~₹3,000</td></tr>
 <tr style="color:{GREEN};"><td><b>CONSOLIDATED</b></td><td><b>—</b></td><td><b>≈ ₹39,000</b></td><td><b>≈ ₹78,000</b></td></tr>
-<tr style="color:{AMBER};"><td><b>Plan-on (~half)</b></td><td><b>—</b></td><td><b>≈ ₹18–20k</b></td><td><b>≈ ₹36–40k</b></td></tr>
+<tr style="color:{AMBER};"><td><b>Plan-on (80% of net)</b></td><td><b>—</b></td><td><b>≈ ₹31,000</b></td><td><b>≈ ₹62,000</b></td></tr>
 </table>
 {dim("*v1 &amp; BANKNIFTY ₹ are estimates (per-lot ₹ not separately published). Capital ~₹2–2.5L (1 lot) / "
      "~₹4–5L (2 lots). Monthly Futures excluded (needs ₹15L, regime-off). NOT live — in the current drought a "
