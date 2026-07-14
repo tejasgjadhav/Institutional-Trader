@@ -1250,14 +1250,19 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
    "(REV1-v2, BUY front-month futures — paper, needs ~₹15L), and the intraday 3-Family scanner "
    "(hidden; data heartbeat). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
 
-{h("2 — SETUP (from a fresh Mac)")}
-{p("<b>1.</b> <b>git clone</b> the repo &amp; <b>cd</b> in. "
-   "<b>2.</b> Run <b>./setup.sh</b> — makes the venv, installs deps, writes the "
-   ".env template, and installs the two launchd jobs (engine + viewer). "
-   "<b>3.</b> Edit <b>.env</b> and add your free Upstox <b>Analytics</b> token (read-only data feed — no "
-   "trading token needed). <b>4.</b> Kickstart the engine; the viewer auto-launches 09:00 on weekdays.")}
-{dim("SECURITY: .env holds your token — it is gitignored and must NEVER be committed. Requires macOS "
-     "(Apple Silicon), Python 3.9+, and an internet connection during market hours.")}
+{h("2 — SETUP (Mac and Windows)")}
+{p("<b>macOS:</b> <b>1.</b> git clone the repo &amp; cd in. <b>2.</b> Run <b>./setup.sh</b> — makes the venv, "
+   "installs deps, writes the .env template, and installs the two launchd jobs (engine + viewer, auto-start). "
+   "<b>3.</b> Edit <b>.env</b> and add your free Upstox <b>Analytics</b> token (read-only feed, no trading "
+   "token). <b>4.</b> Kickstart the engine; the viewer auto-launches 09:00 on weekdays.")}
+{p("<b>Windows:</b> <b>1.</b> Install Python 3.9+ (tick 'Add to PATH'). <b>2.</b> git clone &amp; cd in. "
+   "<b>3.</b> Run <b>setup.bat</b> — venv + deps + .env template. <b>4.</b> Edit <b>.env</b>, add your token. "
+   "<b>5.</b> Start <b>run_engine.bat</b> (keep it minimised) and <b>run_viewer.bat</b> (the dashboard). "
+   "Windows has no launchd, so you start those two yourself; drop a shortcut to run_engine.bat in "
+   "shell:startup to auto-start at login.")}
+{dim("SECURITY: .env holds your token — it is gitignored and must NEVER be committed. Needs Python 3.9+ and "
+     "internet during market hours. Built/run daily on macOS; the Python engine + PySide6 dashboard are "
+     "cross-platform (the two Mac-only bits — auto-start and keep-awake — simply no-op on Windows).")}
 
 {h("3 — HOW IT RUNS (engine vs viewer — two processes)")}
 {p(f"<b style='color:{GREEN}'>ENGINE</b> (headless, launchd job, always on): does ALL the work — scans "
