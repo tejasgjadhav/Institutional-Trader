@@ -736,6 +736,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+{res("CONSOLIDATED MONTHLY P&amp;L — MODEL, all live options books (2026-07-14): v2 UNION ~₹20k + "
+     "Stock v1 ~₹12k(est) + 0DTE NIFTY ~₹2.5k + SENSEX ~₹3.2k + BANKNIFTY ~₹1.5k(est) = ≈₹39,000/mo at "
+     "1 lot · ≈₹78,000/mo at 2 lots (~₹2–2.5L / ~₹4–5L capital). PLAN-ON ~HALF (≈₹18–20k / ≈₹38k) until "
+     "live fills prove out. NOT live — the drought means a realistic THIS month is near ₹0; all books are "
+     "correlated short-premium (a crash hits several at once); 2 lots = 2× P&amp;L AND 2× drawdown. Monthly "
+     "futures excluded (needs ₹15L, regime-off). File: studies/CONSOLIDATED_PNL.md")}
 
 {h("THE LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
