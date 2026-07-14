@@ -55,7 +55,6 @@ class EngineRunner:
         self._swing_scan_day = None
         self._last_stockcr_resolve = 0.0
         self._stockcr_scan_day = None
-        self._last_watchlist = 0.0
         self._watchlist_tg_day = None
         self._last_monthly_resolve = 0.0
         self._monthly_scan_day = None
@@ -345,25 +344,20 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"stock_credit import: {e}")
             return
-        # UNION watchlist heartbeat — refresh every 15 min in market hours (read-only, guarded,
-        # never touches the book). Lets the UI always show breakouts + gate tick-bar = engine ran.
-        if self.agent.is_market_open() and (time.time() - self._last_watchlist) >= 900:
-            self._last_watchlist = time.time()
-            try:
-                w = stock_credit_v2.build_watchlist()
-                if w:
-                    logger.info(f"union watchlist: {w.get('breakouts',0)} breakouts, {w.get('passed',0)} passed")
-            except Exception as e:
-                logger.warning(f"watchlist: {e}")
-        # 15:05 daily — push the near-miss watchlist to Telegram (DO NOT TRADE), before the 15:10 scan.
+        # 15:05 daily — build the UNION watchlist ONCE (breakouts are close-based, so intraday
+        # sweeps are noisy and add latency) and push the near-miss list to Telegram (DO NOT TRADE),
+        # just before the 15:10 scan. notify_nearmiss() calls build_watchlist(), so this single
+        # call both writes union_watchlist.json (for the UI) and sends the digest. Guarded — a
+        # notify failure never disturbs the engine; engine-liveness is shown separately by the
+        # market-snapshot heartbeat, so this doesn't need to run all day.
         if (self.agent.is_market_open() and (now.hour * 60 + now.minute) >= 15 * 60 + 5
                 and self._watchlist_tg_day != now.date()):
             self._watchlist_tg_day = now.date()
             try:
                 nc = stock_credit_v2.notify_nearmiss()
-                logger.info(f"watchlist Telegram sent: {nc} near-miss candidate(s)")
+                logger.info(f"union watchlist built + Telegram sent: {nc} near-miss candidate(s)")
             except Exception as e:
-                logger.warning(f"watchlist Telegram: {e}")
+                logger.warning(f"watchlist 15:05: {e}")
         if (time.time() - self._last_stockcr_resolve) >= config.STOCK_CREDIT_RESOLVE_INTERVAL:
             self._last_stockcr_resolve = time.time()
             try:

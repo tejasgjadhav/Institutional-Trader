@@ -1580,7 +1580,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         try:
             path = _os.path.join(DATA_DIR, "union_watchlist.json")
             if not _os.path.exists(path):
-                self.pm_watch_hdr.setText("UNION WATCHLIST — no scan yet (engine writes it every ~15 min in market hours)")
+                self.pm_watch_hdr.setText("UNION WATCHLIST — no scan yet today (engine builds it at 3:05 PM, near the close)")
                 self.pm_watch.setRowCount(0); return
             d = _json.load(open(path)); rows = d.get("rows", []); ts = d.get("ts", "")
             hhmm = ts[11:16] if len(ts) >= 16 else "—"
