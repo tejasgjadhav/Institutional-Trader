@@ -20,6 +20,24 @@ so size on the worst month, not the average.
 *(est) = the per-lot ₹ isn't separately published for this book; derived from its % return ×
 frequency × typical margin/width. Treat as a rough anchor, not a precise figure.*
 
+## How each ₹/mo is built — expectancy (the loss leg IS subtracted)
+
+Expectancy per trade = **win% × avg win − loss% × avg loss**, net of charged slippage + brokerage.
+This is the direct answer to "did you count losses" — every net/trade below already subtracts the
+loss leg.
+
+| Book | Win | Avg win | Avg loss | Net / trade | ×/mo | ≈ ₹/mo |
+|---|---|---|---|---|---|---|
+| v2 UNION | 86% | +₹6,048 | −₹7,922 | .86×6,048 − .14×7,922 = **+₹4,069** | ~5 | ~₹20,000 |
+| Stock v1 | 73% | +41.0% width | −51.5% width | .73×41 − .27×51.5 = **≈+16%w** (OOS +17.9%w) | ~16 | ~₹12,000* |
+| 0DTE NIFTY | 90% | +9.8% margin | −34.1% margin | .90×9.8 − .10×34.1 = **≈+5.6%m** ≈ ₹807 | ~3.4 | ~₹2,700 |
+| 0DTE SENSEX | 89% | — | — | **+7.6% margin** net (+₹67k / 21 mo) | ~4.5 | ~₹3,200 |
+| 0DTE BANKNIFTY | 91% | — | −₹4,549 | **+7–11% margin** net (documented) | ~1 | ~₹1,500* |
+
+Units differ (v2/BNF ₹, v1 % of width, 0DTE % of margin). **v1 & BANKNIFTY ₹/mo remain estimates** —
+their avg-win isn't separately published, so ₹ = % × freq × typical margin, not a clean expectancy.
+Sources: `STOCK_FADE_TP50_UPGRADE.md`, `STOCK_V1_OOS.md`, `INTRADAY_85PCT_0DTE_CE_SPREAD.md`.
+
 ## Not in the total (why)
 
 | Book | Why excluded |

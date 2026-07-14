@@ -751,6 +751,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "~₹4–5L (2 lots). Monthly Futures excluded (needs ₹15L, regime-off). NOT live — in the current drought a "
      "realistic this-month is near ₹0; 2 lots doubles P&amp;L AND drawdown.")}
 
+<p style="color:{CYAN};font-size:16px;font-weight:bold;">How each ₹/mo is built — expectancy = win% × avg win − loss% × avg loss (the loss leg IS subtracted)</p>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>Avg win</b></td><td><b>Avg loss</b></td><td><b>Net / trade (win×W − loss×L)</b></td><td><b>×/mo</b></td><td><b>≈ ₹/mo</b></td></tr>
+<tr><td>v2 UNION</td><td>86%</td><td>+₹6,048</td><td>−₹7,922</td><td>.86×6,048 − .14×7,922 = <b>+₹4,069</b></td><td>~5</td><td>~₹20,000</td></tr>
+<tr><td>Stock v1</td><td>73%</td><td>+41.0% width</td><td>−51.5% width</td><td>.73×41 − .27×51.5 = <b>≈+16%w</b> (OOS +17.9%w)</td><td>~16</td><td>~₹12,000*</td></tr>
+<tr><td>0DTE NIFTY</td><td>90%</td><td>+9.8% margin</td><td>−34.1% margin</td><td>.90×9.8 − .10×34.1 = <b>≈+5.6%m</b> ≈ ₹807</td><td>~3.4</td><td>~₹2,700</td></tr>
+<tr><td>0DTE SENSEX</td><td>89%</td><td>—</td><td>—</td><td><b>+7.6% margin</b> net (documented, +₹67k/21mo)</td><td>~4.5</td><td>~₹3,200</td></tr>
+<tr><td>0DTE BANKNIFTY</td><td>91%</td><td>—</td><td>−₹4,549</td><td><b>+7–11% margin</b> net (documented)</td><td>~1</td><td>~₹1,500*</td></tr>
+</table>
+{dim("Every 'net/trade' already subtracts the loss leg — that is the answer to 'did you count losses'. Units "
+     "differ: v2/BNF in ₹, v1 in % of width, 0DTE in % of margin. *v1 &amp; BANKNIFTY ₹/mo stay ESTIMATES "
+     "(their avg-win is not separately published, so ₹ is % × freq × typical margin, not a clean expectancy). "
+     "Sources: STOCK_FADE_TP50_UPGRADE.md, STOCK_V1_OOS.md, INTRADAY_85PCT_0DTE_CE_SPREAD.md.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
