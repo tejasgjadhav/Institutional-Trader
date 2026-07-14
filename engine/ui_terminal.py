@@ -733,15 +733,26 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         return f"""
 <div style="color:{TEXT};">
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">CONSOLIDATED MONTHLY P&amp;L — model, all live books (1 lot vs 2 lots)</p>
+{dim("Backtest MODEL figures, NOT live. Plan on ~half until live fills prove out. All books are correlated "
+     "short-premium — a crash month hits several at once. Full detail: studies/CONSOLIDATED_PNL.md")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win OOS</b></td><td><b>~₹/mo · 1 lot</b></td><td><b>~₹/mo · 2 lots</b></td></tr>
+<tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td></tr>
+<tr><td>Stock fade v1 (control)</td><td>73%</td><td>~₹12,000*</td><td>~₹24,000</td></tr>
+<tr><td>0DTE NIFTY (Tue)</td><td>87%</td><td>~₹2,500</td><td>~₹5,000</td></tr>
+<tr><td>0DTE SENSEX (Thu)</td><td>89%</td><td>~₹3,200</td><td>~₹6,400</td></tr>
+<tr><td>0DTE BANKNIFTY (monthly)</td><td>91%</td><td>~₹1,500*</td><td>~₹3,000</td></tr>
+<tr style="color:{GREEN};"><td><b>CONSOLIDATED</b></td><td><b>—</b></td><td><b>≈ ₹39,000</b></td><td><b>≈ ₹78,000</b></td></tr>
+<tr style="color:{AMBER};"><td><b>Plan-on (~half)</b></td><td><b>—</b></td><td><b>≈ ₹18–20k</b></td><td><b>≈ ₹36–40k</b></td></tr>
+</table>
+{dim("*v1 &amp; BANKNIFTY ₹ are estimates (per-lot ₹ not separately published). Capital ~₹2–2.5L (1 lot) / "
+     "~₹4–5L (2 lots). Monthly Futures excluded (needs ₹15L, regime-off). NOT live — in the current drought a "
+     "realistic this-month is near ₹0; 2 lots doubles P&amp;L AND drawdown.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
-{res("CONSOLIDATED MONTHLY P&amp;L — MODEL, all live options books (2026-07-14): v2 UNION ~₹20k + "
-     "Stock v1 ~₹12k(est) + 0DTE NIFTY ~₹2.5k + SENSEX ~₹3.2k + BANKNIFTY ~₹1.5k(est) = ≈₹39,000/mo at "
-     "1 lot · ≈₹78,000/mo at 2 lots (~₹2–2.5L / ~₹4–5L capital). PLAN-ON ~HALF (≈₹18–20k / ≈₹38k) until "
-     "live fills prove out. NOT live — the drought means a realistic THIS month is near ₹0; all books are "
-     "correlated short-premium (a crash hits several at once); 2 lots = 2× P&amp;L AND 2× drawdown. Monthly "
-     "futures excluded (needs ₹15L, regime-off). File: studies/CONSOLIDATED_PNL.md")}
 
 {h("THE LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
