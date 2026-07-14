@@ -2240,6 +2240,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         try:
             if _os.path.exists(MARKET_SNAP):
                 d = json.load(open(MARKET_SNAP))
+                self._market_ts = d.get("ts")   # engine heartbeat — written every cycle
                 if d.get("nifty") and d.get("banknifty") and d.get("vix"):
                     self._on_market_data(d)
         except Exception as e:
@@ -2297,11 +2298,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         # Keep the AUTO badge in sync when idle (scanning sets it to LIVE·scanning)
         # freshness of the engine's last scan (read-only viewer)
         fresh = "no engine data yet"
-        ts = getattr(self, "_latest_scan_ts", None)
+        # Liveness = the market-snapshot ts (written EVERY engine cycle). latest_scan.json is
+        # written only by the DISABLED 3-Family scan, so it goes stale even while the engine is
+        # healthy — never use it as the alive indicator.
+        ts = getattr(self, "_market_ts", None) or getattr(self, "_latest_scan_ts", None)
         if ts:
             try:
                 age = (now - datetime.fromisoformat(ts)).total_seconds()
-                fresh = f"engine scan {int(age//60)}m ago" if age >= 60 else "engine scan just now"
+                fresh = f"engine active {int(age//60)}m ago" if age >= 60 else "engine active just now"
             except Exception:
                 pass
         if hasattr(self, "auto_lbl"):
