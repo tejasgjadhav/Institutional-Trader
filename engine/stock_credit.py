@@ -223,15 +223,15 @@ def scan_signals() -> list:
             pos = {
                 "id": f"{sym}-{today.isoformat()}", "symbol": sym, "breakout_dir": bdir, "side": side,
                 "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
-                "short_key": short["key"], "short_strike": int(short["strike"]),
-                "long_key": long["key"], "long_strike": int(long["strike"]),
+                "short_key": short["key"], "short_strike": short["strike"],
+                "long_key": long["key"], "long_strike": long["strike"],
                 "width_pts": int(width_pts), "lot": lot, "num_lots": num_lots, "qty": qty,
                 "expiry": expiry, "short_prem": round(sm, 2), "long_prem": round(lm, 2),
                 "credit": credit, "credit_width": round(credit / width_pts, 2),
                 "stop_cost": round(credit * STOCK_CREDIT_STOP_MULT, 2),
                 "max_loss_pts": round(width_pts - credit, 2),
                 "capital": round((width_pts - credit) * qty, 0) if qty else None,
-                "order_label": (f"SELL {sym} {int(short['strike'])} {verb} / BUY {int(long['strike'])} {verb}"
+                "order_label": (f"SELL {sym} {short['strike']:g} {verb} / BUY {long['strike']:g} {verb}"
                                 f"  {expiry}  ({'bear-call' if side=='BEAR_CALL' else 'bull-put'}, credit Rs{credit}"
                                 f"{f' x{num_lots}' if num_lots != 1 else ''})"),
                 "current_cost": credit, "short_cur": round(sm, 2), "long_cur": round(lm, 2),
