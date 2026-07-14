@@ -55,6 +55,7 @@ class EngineRunner:
         self._swing_scan_day = None
         self._last_stockcr_resolve = 0.0
         self._stockcr_scan_day = None
+        self._last_watchlist = 0.0
         self._last_monthly_resolve = 0.0
         self._monthly_scan_day = None
         self._last_monthly_call_resolve = 0.0
@@ -343,6 +344,16 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"stock_credit import: {e}")
             return
+        # UNION watchlist heartbeat — refresh every 15 min in market hours (read-only, guarded,
+        # never touches the book). Lets the UI always show breakouts + gate tick-bar = engine ran.
+        if self.agent.is_market_open() and (time.time() - self._last_watchlist) >= 900:
+            self._last_watchlist = time.time()
+            try:
+                w = stock_credit_v2.build_watchlist()
+                if w:
+                    logger.info(f"union watchlist: {w.get('breakouts',0)} breakouts, {w.get('passed',0)} passed")
+            except Exception as e:
+                logger.warning(f"watchlist: {e}")
         if (time.time() - self._last_stockcr_resolve) >= config.STOCK_CREDIT_RESOLVE_INTERVAL:
             self._last_stockcr_resolve = time.time()
             try:

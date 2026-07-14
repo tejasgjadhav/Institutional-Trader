@@ -140,3 +140,30 @@ with report-only verdicts. Health: `pgrep -f engine.engine_runner`;
 `.venv/bin/python -c "from engine import store; print(store.stats())"`. Backtests:
 `.venv/bin/python studies/ndte/ndte11_entrytime.py` (or `ndte12_longgamma.py`) — needs
 `UPSTOX_ANALYTICS_TOKEN` in `.env`; /tmp caches rebuild automatically.
+
+## NEXT FEATURE TO BUILD (user-requested 2026-07-14, deferred to a fresh session — live-engine
+surgery, not safe at the deep context where it was asked). UNION WATCHLIST on PM DECISIONS:
+
+Goal: an always-on watchlist proving the engine ran, showing every strategy breakout stepping
+through the UNION gates with a tick-bar — so a quiet day is visibly "engine ran, 0 passed," not
+a dead screen.
+
+ENGINE (`engine/stock_credit_v2.py::scan_signals`): as it walks UNIVERSE, append EVERY breakout
+(before the `continue`s) to a list: `{symbol, dir, dc, side, cw, prem, spread, oi,
+gate: "BREAKOUT"|"G1_CW"|"G2_PREM"|"G3_LIQ"|"PASS"}` where `gate` = the first gate it FAILED
+(or PASS). At the end write `data/union_watchlist.json` = `{ts: now, scanned: N, passed: M,
+rows: [...]}` EVERY scan, even when empty. IMPORTANT: additive only — do NOT alter the existing
+signal-writing/gate logic; just record alongside it. The write itself is the engine-ran proof.
+Guard the whole thing in try/except so a watchlist error can never disturb the scan.
+
+UI (`engine/ui_terminal.py::_screen_pm` + a refresh hook): a new always-visible panel at the TOP
+of PM DECISIONS titled "UNION WATCHLIST — engine heartbeat". Header line: "last scan HH:MM · N
+breakouts · M passed" (read ts from the json; if ts>20min old during market hours, colour it RED
+= engine may be stuck). One row per breakout with a tick-bar across columns:
+Breakout ✓ | Credit/Width (✓ if cw>=0.40 else ✗ show cw) | Premium (✓ if>=50 else ✗) |
+Liquidity (✓/✗) | → SIGNAL/blocked-at. Empty state: "engine ran HH:MM — 0 breakouts today".
+Sort blocked-closest-first (highest cw on top). This REPLACES the old dead 3-Family WATCHLIST
+concept (that tab was removed; _screen_watchlist still exists but isn't in the tab list).
+After edits: restart engine (`launchctl kickstart -k gui/$(id -u)/com.sayali.institutionaltrader.engine`)
+AND viewer (kill main.py + kickstart). VERIFY by launching the viewer (ast.parse is NOT enough —
+it missed a NameError crash this session; only a real launch + stable-PID check confirms render).

@@ -33,6 +33,7 @@ logger = logging.getLogger(__name__)
 
 BOOK_PATH = os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
 SNAP_PATH = os.path.join(DATA_DIR, "stock_credit_v2.json")
+WATCHLIST_PATH = os.path.join(DATA_DIR, "union_watchlist.json")
 
 # ── V2 OVERRIDES (the TP-50 upgrade; see studies/STOCK_FADE_TP50_UPGRADE.md) ──
 STOCK_CREDIT_SHORT_OFFSET = 2
@@ -151,6 +152,59 @@ def _pick_legs(ticker: str, spot: float, opt_type: str):
 
 
 # ── the work ─────────────────────────────────────────────────────────────────
+def build_watchlist() -> dict:
+    """READ-ONLY heartbeat: today's UNION breakouts stepping through the gates. Writes
+    data/union_watchlist.json every call so the UI can always show 'engine ran HH:MM · N
+    breakouts · M passed' with a per-stock gate tick-bar. NEVER writes the book; fully guarded
+    so a watchlist error can never disturb the scan/resolve path. Only breakout stocks appear."""
+    try:
+        rows = []
+        for tk in UNIVERSE:
+            try:
+                bk = _todays_breakout(tk)
+            except Exception:
+                bk = None
+            if not bk:
+                continue
+            bdir, dcw = bk
+            sym = tk.replace(".NS", "")
+            opt = "CE" if bdir == "LONG" else "PE"
+            side = "BEAR_CALL" if opt == "CE" else "BULL_PUT"
+            row = {"sym": sym, "dir": bdir, "dc": dcw, "side": side,
+                   "cw": None, "prem": None, "spread": None, "oi": None, "gate": "BREAKOUT"}
+            spot = _spot(tk)
+            legs = _pick_legs(tk, spot, opt) if spot else None
+            if not legs:
+                row["gate"] = "NO_STRIKE"; rows.append(row); continue
+            s, l, exp = legs
+            sm, sb, sa, soi = _quote(s["key"]); lm, lb, la, loi = _quote(l["key"])
+            if sm is None or lm is None or not (sb > 0 and sa > 0 and lb > 0 and la > 0):
+                row["gate"] = "NO_QUOTE"; rows.append(row); continue
+            credit = round(sm - lm, 2); w = abs(s["strike"] - l["strike"])
+            cw = round(credit / w, 2) if w else 0.0
+            spr = round((sa - sb) / sm * 100, 1) if sm else 999.0
+            row.update(cw=cw, prem=round(sm, 1), spread=spr, oi=int(soi),
+                       short_strike=s["strike"], long_strike=l["strike"], expiry=exp)
+            if cw < STOCK_CREDIT_MIN_CW:
+                row["gate"] = "G1_CW"
+            elif sm < STOCK_CREDIT_MIN_PREM:
+                row["gate"] = "G2_PREM"
+            elif spr > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
+                row["gate"] = "G3_LIQ"
+            else:
+                row["gate"] = "PASS"
+            rows.append(row)
+        rows.sort(key=lambda r: (r["gate"] != "PASS", -(r["cw"] or 0)))
+        out = {"ts": datetime.now(IST).isoformat(), "breakouts": len(rows),
+               "passed": sum(1 for r in rows if r["gate"] == "PASS"), "rows": rows}
+        with open(WATCHLIST_PATH, "w") as f:
+            json.dump(out, f)
+        return out
+    except Exception as e:
+        logger.warning(f"build_watchlist: {e}")
+        return {}
+
+
 def scan_signals() -> list:
     """Once/day: open fade credit spreads on stocks that broke out today AND clear all gates
     (credit/width, premium, liquidity), respecting per-day and total-open caps. Returns new ones."""

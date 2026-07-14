@@ -290,6 +290,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                     "EXIT RULE", "STOP -20%", "CURRENT", "LOT", "STATUS"]
     # Credit spreads on PM DECISIONS are shown TWO ROWS per trade (a SELL row + a BUY row).
     PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "LOT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
+    WATCH_COLS = ["STOCK", "DIR", "DC", "SIDE", "BREAKOUT", "C/W ≥.40", "PREM ≥₹50", "LIQ", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -314,6 +315,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_now_hint.setWordWrap(True)
         self.pm_now_hint.setStyleSheet(f"color:{AMBER}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         v.addWidget(self.pm_now_hint)
+
+        # UNION WATCHLIST — always-on engine heartbeat. Today's breakout stocks stepping through the
+        # gates with a tick-bar; proves the engine ran even on a 0-signal day. Reads union_watchlist.json.
+        self.pm_watch_hdr = QLabel("UNION WATCHLIST — waiting for first scan…")
+        self.pm_watch_hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold)); self.pm_watch_hdr.setWordWrap(True)
+        self.pm_watch_hdr.setStyleSheet(f"color:{CYAN}; padding:6px; background-color:{PANEL}; border:1px solid {BORDER};")
+        v.addWidget(self.pm_watch_hdr)
+        self.pm_watch = QTableWidget(); self.pm_watch.setColumnCount(len(self.WATCH_COLS))
+        self.pm_watch.setHorizontalHeaderLabels(self.WATCH_COLS)
+        self.pm_watch.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.pm_watch.setAlternatingRowColors(True); self.pm_watch.verticalHeader().setVisible(False)
+        self.pm_watch.verticalHeader().setDefaultSectionSize(28); self.pm_watch.setMaximumHeight(260)
+        self.pm_watch.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        v.addWidget(self.pm_watch)
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
@@ -1558,8 +1573,42 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self.pm_now_hint.setText("  " + txt)
         self.pm_now_hint.setStyleSheet(f"color:{col}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
 
+    def _refresh_union_watch(self):
+        """Populate the always-on UNION WATCHLIST panel from data/union_watchlist.json (breakout
+        stocks only, each with a per-gate tick-bar). Read-only; failures never disturb the UI."""
+        import json as _json
+        try:
+            path = _os.path.join(DATA_DIR, "union_watchlist.json")
+            if not _os.path.exists(path):
+                self.pm_watch_hdr.setText("UNION WATCHLIST — no scan yet (engine writes it every ~15 min in market hours)")
+                self.pm_watch.setRowCount(0); return
+            d = _json.load(open(path)); rows = d.get("rows", []); ts = d.get("ts", "")
+            hhmm = ts[11:16] if len(ts) >= 16 else "—"
+            self.pm_watch_hdr.setText(f"UNION WATCHLIST · today's breakout stocks only — last scan {hhmm} · "
+                                      f"{d.get('breakouts',0)} breakouts · {d.get('passed',0)} passed")
+            self.pm_watch.setRowCount(len(rows))
+            for i, row in enumerate(rows):
+                g = row.get("gate", ""); evaluable = g not in ("NO_STRIKE", "NO_QUOTE")
+                cw_ok = g in ("G2_PREM", "G3_LIQ", "PASS"); prem_ok = g in ("G3_LIQ", "PASS"); liq_ok = g == "PASS"
+                cw = row.get("cw"); prem = row.get("prem")
+                cwcell = premcell = liqcell = "—"
+                if evaluable:
+                    cwcell = "✓" if cw_ok else f"✗ {cw}"
+                    if cw_ok:
+                        premcell = "✓" if prem_ok else f"✗ ₹{prem}"
+                    if prem_ok:
+                        liqcell = "✓" if liq_ok else "✗"
+                result = "★ SIGNAL" if g == "PASS" else (f"blocked @ {g}" if evaluable else g.replace("_", " ").lower())
+                vals = [row.get("sym", "—"), row.get("dir", "—"), f"D{row.get('dc','')}", row.get("side", "—"),
+                        "✓", cwcell, premcell, liqcell, result]
+                self._set_row(self.pm_watch, i, vals)
+                self._color_cell(self.pm_watch, i, 8, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+        except Exception as e:
+            logger.warning(f"union watch refresh: {e}")
+
     def _refresh_pm(self):
         self._update_pm_now_hint()
+        self._refresh_union_watch()
         self._ensure_fired_today()
         from engine.options import build_live_option_order
         from engine.data_fetcher import get_cached_ltp, fetch_upstox_ltp
