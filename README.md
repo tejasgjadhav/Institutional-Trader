@@ -1,24 +1,32 @@
-# Institutional Trader — STOCK CREDIT v2 fade (the winner) · NSE Options
+# Institutional Trader — multi-strategy paper-trading system · NSE Options
 
-**Start here — the winner:** ★ **STOCK CREDIT v2 (TP-50)** — sell a defined-risk credit spread
-against a stock breakout, book the win at half the credit. **86% win rate, ~17.5%/month (model,
-₹1L book), positive every year 2019→2026, validated in-sample AND out-of-sample.** Everything
-else in this repo is either its supporting cast (v1 base book, index-fade forward-test, the
-3-Family intraday scanner it grew out of) or the honest research trail that found it.
+A disciplined **paper-trading** system for NSE (Indian market) options and futures. It runs a
+**portfolio of independent, individually-validated strategy books in parallel** — stock credit
+fades, index expiry-day (0DTE) spreads, and a monthly futures pullback — surfaces every signal on
+a dashboard, and pushes it to Telegram. **Signals only: you place every order yourself in Upstox;
+the software never sends orders.** It is a process for collecting honest evidence, not a proven
+money-maker — live fills remain the unproven link, so plan on **~half of model**.
 
-A disciplined **paper-trading** system for NSE options. Four books run in parallel — the
-flagship is the **STOCK CREDIT v2 (TP-50) fade**: sell a defined-risk credit spread against a
-stock breakout, book the win at half the credit. **85.35% win in-sample (2019→Sep'24) ·
-87.88% out-of-sample (Oct'24→Jul'26) · positive every year · MODEL ~₹17.5k/mo on a ₹1L book.**
-Alongside it: the v1 stock fade, an index-fade forward-test, and the intraday 3-Family
-buy-option scanner. Signals only — **you place every order yourself in Upstox; the software
-never sends orders.** It is a process for collecting honest evidence, not a proven money-maker
-(live fills remain the unproven link — practical planning ≈ half of model).
+**The live books** (all signals-only paper, ~₹2–2.5L capital at 1 lot):
 
-> Full plain-language walkthrough is on the **README tab** inside the dashboard. The
-> **current** research + backtests live in **`studies/`** (and the in-app **STUDIES tab**).
-> `How_We_Built_The_Strategy.pdf` / `BACKTEST_RESULTS.md` are the earlier build journey
-> (historical — superseded by `studies/`).
+| Book | What it does | Win (OOS) | Cadence |
+|---|---|---|---|
+| ★ Stock fade **v2 UNION** (leader) | sell a credit spread against a stock breakout, book at half credit | 87% | ~5–6/mo |
+| Stock fade **v1** (control) | same fade, higher-frequency geometry | 73% | ~16/mo |
+| **0DTE NIFTY** (Tue) | expiry-day index credit spread, flips side on momentum | 87% | ~4–5/mo |
+| **0DTE SENSEX** (Thu) | expiry-day index credit spread | 89% | ~4–5/mo |
+| **0DTE BANKNIFTY** (monthly) | expiry-day index credit spread | 91% | ~1/mo |
+| **Monthly Futures** pullback | buy oversold front-month futures (needs ~₹15L; regime-gated) | 76% | 5/cycle |
+
+No single book *is* the system — it's the **portfolio** that matters, each validated in-sample
+**and** out-of-sample and run as a parallel paper forward-test. Consolidated model P&L (1 lot /
+2 lots), capital, and the plan-on figure: **`studies/CONSOLIDATED_PNL.md`**. One-line status of
+every book (live + rejected) with the full evidence trail: **`studies/LIVE_STRATEGIES.md`**,
+mirrored on the in-app **STUDIES tab**.
+
+> **New here? Jump to the [User Guide](#user-guide) below** — install (Mac + Windows), first run,
+> and how to use each dashboard tab. Detailed research + backtests live in **`studies/`**;
+> `How_We_Built_The_Strategy.pdf` / `BACKTEST_RESULTS.md` are the earlier build journey (historical).
 
 ---
 

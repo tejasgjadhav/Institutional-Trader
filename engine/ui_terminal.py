@@ -1522,8 +1522,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         elif m < 9 * 60 + 15:
             txt, col = "Pre-open — scanning starts 09:15; intraday signals from ~09:30.", AMBER
         elif m < 15 * 60 + 10:
-            txt, col = ("● NOW: 3-Family intraday window (09:45-13:00, peak 10:30-11:00). "
-                        "The CREDIT books — ★v2 + v1 + index swing — all scan at ~15:10.", GREEN)
+            txt, col = ("● Market open. On expiry days the 0DTE spread posts right after the 09:16 open; "
+                        "the CREDIT books — ★v2 + v1 + index swing — all scan at ~15:10.", GREEN)
         elif m <= 15 * 60 + 35:
             txt, col = ("● NOW: ~15:10 CREDIT SCAN — check ★ STOCK CREDIT v2 (gold) first, then v1 + INDEX SWING. "
                         "New spreads appear here to place before the close.", CYAN)
