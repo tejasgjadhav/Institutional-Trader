@@ -22,21 +22,120 @@ never sends orders.** It is a process for collecting honest evidence, not a prov
 
 ---
 
-## Replicate from a clone
+# User Guide
 
+## 1. What you get
+
+Two programs that run side by side:
+
+- **The engine** — a headless background process. It scans the market on a schedule, decides
+  which signals qualify, records them, resolves paper trades, and (if configured) pushes each
+  new signal to Telegram. **This is where all the work happens.** It never places orders.
+- **The dashboard** — a read-only window. It only *displays* what the engine wrote (tabs for
+  PM DECISIONS, INTRADAY, SWING TRADE LOG, TRADE LOG, STUDIES, README). Open or close it anytime;
+  it can't affect trading.
+
+**You place every order yourself in Upstox.** The software is a signal + record-keeping system,
+not an auto-trader. Mode is PAPER throughout.
+
+## 2. Before you install
+
+- **Python 3.9 or newer.**
+  - macOS: `python3 --version` (comes with Xcode command-line tools, or install from python.org).
+  - Windows: install from [python.org](https://python.org) and **tick "Add python.exe to PATH"**.
+- **An Upstox Analytics token** (free, read-only market data — no trading permission needed).
+  You paste it into `.env` after install.
+- **Git** (to clone), or download the repo as a ZIP from GitHub and unzip it.
+
+## 3. Install
+
+### macOS
 ```bash
-git clone https://github.com/tejasgjadhav/Institutional-Trader.git institutional-trader
-cd institutional-trader && ./setup.sh     # venv + deps + .env template + launchd jobs
-# add your UPSTOX_ANALYTICS_TOKEN to .env, then:
-launchctl kickstart -k gui/$(id -u)/com.sayali.institutionaltrader.engine
-.venv/bin/python main.py                  # read-only dashboard
+git clone https://github.com/tejasgjadhav/Institutional-Trader.git
+cd Institutional-Trader
+./setup.sh          # venv + deps + .env template + auto-start (launchd) jobs
 ```
+`setup.sh` also installs the launchd jobs so the engine runs always-on and the dashboard
+auto-opens at 9:00 on weekdays.
 
-Everything needed is in the repo: the 5 live paper books start empty and populate on their
-schedules (0DTE at 9:16 on expiry days; credit scans 15:10 daily). Runtime data (`data/`,
-`.env`, logs) is gitignored — a clone is a fresh, working instance. The legacy 3-Family 5-min
-scan ships DISABLED (`SCAN_3FAMILY_ENABLED=False` — it fed only its own hidden paper book and
-caused API rate-limit storms; flip to True to resume that forward-test).
+### Windows
+```bat
+git clone https://github.com/tejasgjadhav/Institutional-Trader.git
+cd Institutional-Trader
+setup.bat           :: venv + deps + .env template + data/ + logs/
+```
+Windows has no launchd, so you start the two processes yourself (double-click or run):
+`run_engine.bat` (leave it minimised) and `run_viewer.bat` (the dashboard). To auto-start the
+engine at login, put a shortcut to `run_engine.bat` in your Startup folder
+(`Win+R` → `shell:startup`).
+
+> Windows note: the app was built and is run daily on macOS; the Python engine and PySide6
+> dashboard are cross-platform, and the two macOS-only touches (auto-start and the
+> keep-awake "wakelock") simply no-op on Windows. Treat Windows as fully functional but
+> community-tested.
+
+## 4. First run (both platforms)
+
+1. Open **`.env`** in a text editor and add your token:
+   ```
+   UPSTOX_ANALYTICS_TOKEN=your_token_here
+   ```
+   Optional — phone alerts (see §6): `TELEGRAM_BOT_TOKEN` and `TELEGRAM_CHAT_ID`.
+2. Restart the engine so it picks up the token:
+   - macOS: `launchctl kickstart -k gui/$(id -u)/com.sayali.institutionaltrader.engine`
+   - Windows: close and re-run `run_engine.bat`.
+3. Open the dashboard: macOS `.venv/bin/python main.py` · Windows `run_viewer.bat`.
+
+The paper books start **empty** and fill on their schedules — 0DTE at 9:16 on expiry days,
+the credit-spread scans at 15:10 daily. A blank book isn't a bug; it means nothing has fired yet.
+
+## 5. Using the dashboard
+
+| Tab | What it shows | What to do |
+|---|---|---|
+| **PM DECISIONS** | Today's SELL/BUY signals from every daily book (stock credit v1/v2, swing, monthly) | Place the listed spread manually in Upstox |
+| **INTRADAY** | The 0DTE expiry-day spreads (NIFTY / SENSEX / BANKNIFTY) | Place at the open on expiry days |
+| **SWING TRADE LOG** | Live open/closed multi-day credit spreads | Track your open positions |
+| **TRADE LOG** | Every paper trade + running win rate / P&L | Review performance |
+| **STUDIES** | The research and backtests behind each book | Understand *why* a book exists |
+| **README** | This guide, in plain language | Reference |
+
+Signals say exactly what to sell/buy (strikes, expiry, credit). The dashboard re-reads the
+engine's files every ~15 s, so it stays current on its own.
+
+## 6. Phone alerts (Telegram — optional but recommended)
+
+Every new signal can be pushed to a Telegram channel so you don't have to watch the screen.
+Setup: create a bot via **@BotFather**, create a **private channel**, add the bot as an admin,
+then put the bot token and channel id in `.env`:
+```
+TELEGRAM_BOT_TOKEN=123456:ABC...
+TELEGRAM_CHAT_ID=-1001234567890
+```
+`TELEGRAM_CHAT_ID` accepts a single channel id (everyone who joins gets alerts) or a
+comma-separated list of chat ids. Run `python -m engine.notifications` for the guided steps.
+
+## 7. Daily routine
+
+- The **engine runs on its own** — you don't touch it day to day (on macOS it's always on; on
+  Windows keep `run_engine.bat` running).
+- Around **15:10** the daily credit scans fire; on **expiry mornings** the 0DTE decision posts
+  right after the 9:16 open. Watch the dashboard or your Telegram channel.
+- When a signal appears, **place it manually in Upstox**. The engine tracks the paper outcome.
+
+## 8. Troubleshooting
+
+- **Dashboard is blank / stale** → the engine isn't running. macOS: `pgrep -f engine.engine_runner`
+  (restart with the `kickstart` command above); Windows: re-run `run_engine.bat`.
+- **"telegram configured: False"** → the two `TELEGRAM_*` lines aren't in `.env`, or the engine
+  wasn't restarted after adding them.
+- **No signals for days** → normal in a low-volatility regime; the credit gate rejects thin
+  premium by design. A quiet channel means nothing qualified, not a fault.
+- **Install fails on Windows** → make sure `python` is on PATH (`python --version` in a new
+  terminal); re-run `setup.bat`.
+
+Runtime data (`data/`, `.env`, logs) is gitignored, so a fresh clone is always a clean, working
+instance. The legacy 3-Family 5-min scan ships DISABLED (`SCAN_3FAMILY_ENABLED=False`).
 
 ## Current lineup (updated 2026-07-10)
 
