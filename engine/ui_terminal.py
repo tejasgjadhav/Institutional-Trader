@@ -1589,16 +1589,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self.pm_watch.setRowCount(len(rows))
             for i, row in enumerate(rows):
                 g = row.get("gate", ""); evaluable = g not in ("NO_STRIKE", "NO_QUOTE")
-                cw_ok = g in ("G2_PREM", "G3_LIQ", "PASS"); prem_ok = g in ("G3_LIQ", "PASS"); liq_ok = g == "PASS"
-                cw = row.get("cw"); prem = row.get("prem")
+                cw = row.get("cw"); prem = row.get("prem"); oi = row.get("oi")
                 cwcell = premcell = liqcell = "—"
                 if evaluable:
-                    cwcell = "✓" if cw_ok else f"✗ {cw}"
-                    if cw_ok:
-                        premcell = "✓" if prem_ok else f"✗ ₹{prem}"
-                    if prem_ok:
-                        liqcell = "✓" if liq_ok else "✗"
-                result = "★ SIGNAL" if g == "PASS" else (f"blocked @ {g}" if evaluable else g.replace("_", " ").lower())
+                    # all three gates evaluated independently — show each regardless of the others
+                    cwcell = "✓" if row.get("cw_ok") else f"✗ {cw}"
+                    premcell = "✓" if row.get("prem_ok") else f"✗ ₹{prem}"
+                    liqcell = "✓" if row.get("liq_ok") else f"✗ OI{oi}"
+                result = "★ SIGNAL" if g == "PASS" else ("blocked" if evaluable else g.replace("_", " ").lower())
                 vals = [row.get("sym", "—"), row.get("dir", "—"), f"D{row.get('dc','')}", row.get("side", "—"),
                         "✓", cwcell, premcell, liqcell, result]
                 self._set_row(self.pm_watch, i, vals)

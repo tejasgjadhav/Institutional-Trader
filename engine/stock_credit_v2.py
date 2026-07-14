@@ -183,16 +183,15 @@ def build_watchlist() -> dict:
             credit = round(sm - lm, 2); w = abs(s["strike"] - l["strike"])
             cw = round(credit / w, 2) if w else 0.0
             spr = round((sa - sb) / sm * 100, 1) if sm else 999.0
+            # Evaluate ALL three gates independently (no short-circuit) so the watchlist shows
+            # premium + liquidity status even when credit/width fails.
+            cw_ok = cw >= STOCK_CREDIT_MIN_CW
+            prem_ok = sm >= STOCK_CREDIT_MIN_PREM
+            liq_ok = (spr <= STOCK_CREDIT_MAX_SPREAD_PCT) and (soi >= STOCK_CREDIT_MIN_OI)
             row.update(cw=cw, prem=round(sm, 1), spread=spr, oi=int(soi),
-                       short_strike=s["strike"], long_strike=l["strike"], expiry=exp)
-            if cw < STOCK_CREDIT_MIN_CW:
-                row["gate"] = "G1_CW"
-            elif sm < STOCK_CREDIT_MIN_PREM:
-                row["gate"] = "G2_PREM"
-            elif spr > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
-                row["gate"] = "G3_LIQ"
-            else:
-                row["gate"] = "PASS"
+                       short_strike=s["strike"], long_strike=l["strike"], expiry=exp,
+                       cw_ok=cw_ok, prem_ok=prem_ok, liq_ok=liq_ok)
+            row["gate"] = "PASS" if (cw_ok and prem_ok and liq_ok) else "BLOCKED"
             rows.append(row)
         rows.sort(key=lambda r: (r["gate"] != "PASS", -(r["cw"] or 0)))
         out = {"ts": datetime.now(IST).isoformat(), "breakouts": len(rows),
