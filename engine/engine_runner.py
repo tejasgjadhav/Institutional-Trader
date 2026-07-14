@@ -56,6 +56,7 @@ class EngineRunner:
         self._last_stockcr_resolve = 0.0
         self._stockcr_scan_day = None
         self._last_watchlist = 0.0
+        self._watchlist_tg_day = None
         self._last_monthly_resolve = 0.0
         self._monthly_scan_day = None
         self._last_monthly_call_resolve = 0.0
@@ -354,6 +355,15 @@ class EngineRunner:
                     logger.info(f"union watchlist: {w.get('breakouts',0)} breakouts, {w.get('passed',0)} passed")
             except Exception as e:
                 logger.warning(f"watchlist: {e}")
+        # 15:05 daily — push the near-miss watchlist to Telegram (DO NOT TRADE), before the 15:10 scan.
+        if (self.agent.is_market_open() and (now.hour * 60 + now.minute) >= 15 * 60 + 5
+                and self._watchlist_tg_day != now.date()):
+            self._watchlist_tg_day = now.date()
+            try:
+                nc = stock_credit_v2.notify_nearmiss()
+                logger.info(f"watchlist Telegram sent: {nc} near-miss candidate(s)")
+            except Exception as e:
+                logger.warning(f"watchlist Telegram: {e}")
         if (time.time() - self._last_stockcr_resolve) >= config.STOCK_CREDIT_RESOLVE_INTERVAL:
             self._last_stockcr_resolve = time.time()
             try:

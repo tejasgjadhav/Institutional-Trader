@@ -204,6 +204,36 @@ def build_watchlist() -> dict:
         return {}
 
 
+def notify_nearmiss() -> int:
+    """Push the near-miss watchlist to Telegram (DO NOT TRADE) — breakouts that pass premium +
+    liquidity but FAIL credit/width. Called once/day ~15:05, before the 15:10 scan. Guarded."""
+    try:
+        from engine.notifications import send_telegram
+        d = build_watchlist()
+        cand = [r for r in d.get("rows", []) if r.get("prem_ok") and r.get("liq_ok") and not r.get("cw_ok")]
+        ts = d.get("ts", "")[:16].replace("T", " ")
+        if not cand:
+            send_telegram(f"📋 <b>WATCHLIST</b> — {ts}\nNo near-miss candidates today "
+                          f"(nothing cleared premium + liquidity). Nothing to place.")
+            return 0
+        lines = [f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE</b> ({ts})",
+                 "These pass premium + liquidity but FAIL the credit/width gate, so they are NOT "
+                 "signals. Watch only — the engine will not fire them:", ""]
+        for r in cand:
+            verb = "CE" if r["side"] == "BEAR_CALL" else "PE"
+            ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
+            ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
+            lines.append(f"<b>{r['sym']}</b> {r['side']} · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']}")
+            lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
+        lines.append("")
+        lines.append("⛔ <b>DO NOT TRADE</b> — credit/width below 0.40 means no edge; the engine skips them.")
+        send_telegram("\n".join(lines))
+        return len(cand)
+    except Exception as e:
+        logger.warning(f"notify_nearmiss: {e}")
+        return 0
+
+
 def scan_signals() -> list:
     """Once/day: open fade credit spreads on stocks that broke out today AND clear all gates
     (credit/width, premium, liquidity), respecting per-day and total-open caps. Returns new ones."""
