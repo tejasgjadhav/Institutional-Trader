@@ -180,6 +180,7 @@ def build_watchlist() -> dict:
             sm, sb, sa, soi = _quote(s["key"]); lm, lb, la, loi = _quote(l["key"])
             if sm is None or lm is None or not (sb > 0 and sa > 0 and lb > 0 and la > 0):
                 row["gate"] = "NO_QUOTE"; rows.append(row); continue
+            soi = soi if isinstance(soi, (int, float)) else 0   # OI can be None — guard the >= compare
             credit = round(sm - lm, 2); w = abs(s["strike"] - l["strike"])
             cw = round(credit / w, 2) if w else 0.0
             spr = round((sa - sb) / sm * 100, 1) if sm else 999.0
@@ -196,8 +197,10 @@ def build_watchlist() -> dict:
         rows.sort(key=lambda r: (r["gate"] != "PASS", -(r["cw"] or 0)))
         out = {"ts": datetime.now(IST).isoformat(), "breakouts": len(rows),
                "passed": sum(1 for r in rows if r["gate"] == "PASS"), "rows": rows}
-        with open(WATCHLIST_PATH, "w") as f:
+        tmp = WATCHLIST_PATH + ".tmp"
+        with open(tmp, "w") as f:
             json.dump(out, f)
+        os.replace(tmp, WATCHLIST_PATH)   # atomic — the UI never reads a half-written file
         return out
     except Exception as e:
         logger.warning(f"build_watchlist: {e}")
@@ -223,9 +226,11 @@ def notify_nearmiss() -> int:
             verb = "CE" if r["side"] == "BEAR_CALL" else "PE"
             ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
             ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
-            lines.append(f"<b>{r['sym']}</b> {r['side']} · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']}")
+            close = "🔥 " if (r.get("cw") or 0) >= 0.35 else ""   # within 0.05 of the 0.40 gate
+            lines.append(f"{close}<b>{r['sym']}</b> {r['side']} · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']}")
             lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
         lines.append("")
+        lines.append("🔥 = c/w ≥ 0.35, within 0.05 of firing (the closest — worth watching next day).")
         lines.append("⛔ <b>DO NOT TRADE</b> — credit/width below 0.40 means no edge; the engine skips them.")
         send_telegram("\n".join(lines))
         return len(cand)
