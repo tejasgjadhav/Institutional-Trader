@@ -1235,11 +1235,11 @@ All studies reproducible from /studies on GitHub. Gross of costs. For educationa
 {dim("How this system is installed, how it runs, and how to use every tab. For WHAT the strategies are "
      "and how they were validated, see the STUDIES tab. Mode: PAPER, signals-only — the headless engine "
      "fires signals and records them daily; YOU place every order manually in Upstox. It never auto-trades.")}
-{res("TELEGRAM ALERTS — LIVE (2026-07-13): every book's new signal is pushed to the Telegram channel the "
-     "moment the engine opens the position — all 8 sources wired (3-Family, Stock Credit v1 + v2 UNION, "
-     "Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX/BANKNIFTY 0DTE). One post per signal, "
-     "no repeats; place the order manually in Upstox as usual. A quiet channel = nothing cleared the gates "
-     "that day. Config in .env (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID; a channel id fans out to all joiners).")}
+{p("<b>TELEGRAM ALERTS — LIVE (2026-07-13):</b> every book's new signal is pushed to the Telegram channel the "
+   "moment the engine opens the position — all 8 sources wired (3-Family, Stock Credit v1 + v2 UNION, "
+   "Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX/BANKNIFTY 0DTE). One post per signal, "
+   "no repeats; place the order manually in Upstox as usual. A quiet channel = nothing cleared the gates "
+   "that day. Config in .env (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID; a channel id fans out to all joiners).")}
 
 {h("1 — WHAT IT IS (in one breath)")}
 {p(f"A paper-trading engine for NSE options + futures running <b>6 parallel strategy books</b> on "
