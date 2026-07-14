@@ -1583,6 +1583,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 self.pm_watch_hdr.setText("UNION WATCHLIST — no scan yet today (engine builds it at 3:05 PM, near the close)")
                 self.pm_watch.setRowCount(0); return
             d = _json.load(open(path)); rows = d.get("rows", []); ts = d.get("ts", "")
+            # clear a stale (prior-day) watchlist — only ever show TODAY's scan
+            if not ts.startswith(datetime.now(IST).date().isoformat()):
+                self.pm_watch_hdr.setText("UNION WATCHLIST — no scan yet today (engine builds it at 3:05 PM, near the close)")
+                self.pm_watch.setRowCount(0); return
             hhmm = ts[11:16] if len(ts) >= 16 else "—"
             self.pm_watch_hdr.setText(f"UNION WATCHLIST · today's breakout stocks only — last scan {hhmm} · "
                                       f"{d.get('breakouts',0)} breakouts · {d.get('passed',0)} passed")
