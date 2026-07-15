@@ -783,6 +783,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+{res("CREDIT/WIDTH BUCKETS (2026-07-15): net is a GRADIENT below the 0.40 gate — win rate barely drops "
+     "(87→82→76%) but the money collapses. ≥0.40 = +31.7%w (deployed core, 87% win) · 0.35-0.40 = +9.2%w "
+     "(REAL but ⅓ the edge, 82% win, +ve all 3 yrs, brutal −65% avg loss) · 0.30-0.35 = +1.1%w (breakeven "
+     "— skip). 629 trades Oct24-Jul26 real premiums. Win rate is a MIRAGE below 0.40 (breakeven WR ≈76%). "
+     "SINGLE REGIME — NOT validated 2019-24; 0.35-0.40 is promising, not proven → if used, a SEPARATE "
+     "1-lot secondary tier, never merged into the core book. File: studies/CW_BUCKET_ANALYSIS.md")}
 
 {h("THE LIVE STRATEGIES — SUMMARY")}
 {self._strategy_summary_table()}
