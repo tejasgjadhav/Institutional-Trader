@@ -203,9 +203,11 @@ class EngineRunner:
 
     # Backtested win rates shown on every signal (honest labels — source: studies/).
     _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "73% OOS",
-               "0DTE NIFTY": "90% (calm-filtered)", "SWING CREDIT (NIFTY/FINNIFTY)": "fwd-test, unproven",
+               "0DTE NIFTY": "90% (calm-filtered)", "0DTE SENSEX": "89%",
+               "0DTE BANKNIFTY": "79.5% wk / 91% mthly",
+               "SWING CREDIT (NIFTY/FINNIFTY)": "fwd-test, unproven",
                "MONTHLY FUTURES PULLBACK": "76% OOS", "MONTHLY LONG-CALL PULLBACK": "fwd-test"}
-    _TG_WIN_SYM = {"SENSEX": "89%", "BANKNIFTY": "79.5% wk / 91% mthly"}   # dte_multi per index
+    _TG_WIN_SYM = {"SENSEX": "89%", "BANKNIFTY": "79.5% wk / 91% mthly"}   # legacy per-symbol map
 
     def _tg(self, book, signals):
         """Fan out newly-opened signals from any book to Telegram in the STANDARD format:
@@ -467,7 +469,9 @@ class EngineRunner:
                 n = dte_multi.scan_signals()
                 if n:
                     logger.info(f"dte_multi: opened {len(n)} spread(s)")
-                    self._tg("SENSEX / BANKNIFTY 0DTE", n)
+                    # each index gets its OWN clearly-labelled message (user: never combined)
+                    self._tg("0DTE SENSEX", [p for p in n if p.get("symbol") == "SENSEX"])
+                    self._tg("0DTE BANKNIFTY", [p for p in n if p.get("symbol") == "BANKNIFTY"])
             except Exception as e:
                 logger.warning(f"dte_multi scan: {e}")
 
