@@ -251,14 +251,16 @@ def _write_status(bk):
     _save_json(bk["status"], st)
 
 
-def scan_signals() -> int:
-    n = 0
+def scan_signals() -> list:
+    """Returns the NEW position dicts (was a bare count — the Telegram formatter needs the
+    legs/premiums). Truthiness unchanged for the single engine_runner caller."""
+    new = []
     for bk in BOOKS:
         try:
-            n += len(_scan_book(bk))
+            new.extend(_scan_book(bk) or [])
         except Exception as e:
             logger.warning(f"dte_multi scan {bk['name']}: {e}")
-    return n
+    return new
 
 
 def resolve_positions(past_settle: bool) -> int:

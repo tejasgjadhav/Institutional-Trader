@@ -201,34 +201,54 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"fast resolve: {e}")
 
+    # Backtested win rates shown on every signal (honest labels — source: studies/).
+    _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "73% OOS",
+               "0DTE NIFTY": "90% (calm-filtered)", "SWING CREDIT (NIFTY/FINNIFTY)": "fwd-test, unproven",
+               "MONTHLY FUTURES PULLBACK": "76% OOS", "MONTHLY LONG-CALL PULLBACK": "fwd-test"}
+    _TG_WIN_SYM = {"SENSEX": "89%", "BANKNIFTY": "79.5% wk / 91% mthly"}   # dte_multi per index
+
     def _tg(self, book, signals):
-        """Fan out newly-opened signals from any book to Telegram. `signals` is the list a scan
-        returns (only NEW opens, once/day — so no extra dedup needed) or an int count for
-        count-only books. Best-effort: never let a notify failure disturb the engine."""
+        """Fan out newly-opened signals from any book to Telegram in the STANDARD format:
+        both legs with premiums, backtested win%, max profit/loss per lot, 'execute with your
+        broker'. `signals` is the list of new position dicts (all books share the schema).
+        Best-effort: never let a notify failure disturb the engine."""
         if not signals:
             return
         try:
             from engine.notifications import send_telegram
             items = signals if isinstance(signals, list) else []
             if not items:
-                send_telegram(f"🔔 <b>{book}</b> · {signals} new signal(s) — see dashboard, place manually in Upstox")
+                send_telegram(f"🔔 <b>{book}</b> · {signals} new signal(s) — details on the dashboard. "
+                              f"Execute with your broker.")
                 return
             for s in items:
                 if not isinstance(s, dict):
-                    send_telegram(f"🔔 <b>{book}</b> · new signal — see dashboard"); continue
-                sym = s.get("symbol") or s.get("index") or s.get("underlying") or s.get("name") or ""
-                side = s.get("side") or s.get("order_label") or s.get("breakout_dir") or ""
-                ss, ls = s.get("short_strike"), s.get("long_strike")
-                exp = s.get("expiry") or s.get("expiry_date") or ""
-                credit = s.get("credit"); cw = s.get("cw") or s.get("credit_width")
-                lines = [f"🔔 <b>{book}</b>"]
-                head = " · ".join(str(x) for x in (sym, side) if x)
-                if head: lines.append(head)
+                    send_telegram(f"🔔 <b>{book}</b> · new signal — details on the dashboard. "
+                                  f"Execute with your broker."); continue
+                sym = s.get("symbol") or s.get("index") or s.get("name") or ""
+                side = s.get("side") or s.get("breakout_dir") or ""
+                verb = "CE" if "CALL" in str(side) else ("PE" if "PUT" in str(side) else "")
+                win = self._TG_WIN_SYM.get(sym) if book.startswith("SENSEX") else self._TG_WIN.get(book)
+                g = lambda x: ("%g" % x) if isinstance(x, (int, float)) else None
+                ss, ls = g(s.get("short_strike")), g(s.get("long_strike"))
+                sp, lp = s.get("short_prem"), s.get("long_prem")
+                credit, w, lot = s.get("credit"), s.get("width_pts"), s.get("lot")
+                lines = [f"🔔 <b>{book}</b>" + (f" · win ~{win} (backtest)" if win else "")]
+                lines.append(" · ".join(str(x) for x in (sym, side) if x))
                 if ss and ls:
-                    lines.append(f"Sell {ss} / Buy {ls}" + (f" · exp {exp}" if exp else ""))
-                if credit is not None:
-                    lines.append(f"credit {credit}" + (f" · c/w {cw}" if cw else ""))
-                lines.append("place manually in Upstox")
+                    leg1 = f"SELL {ss} {verb}".rstrip() + (f" @ ₹{sp}" if sp is not None else "")
+                    leg2 = f"BUY {ls} {verb}".rstrip() + (f" @ ₹{lp}" if lp is not None else "")
+                    lines.append(f"{leg1}  /  {leg2}")
+                    exp = s.get("expiry") or ""
+                    extra = " · ".join(x for x in ((f"exp {exp}" if exp else ""),
+                                                   (f"credit ₹{credit}" if credit is not None else ""),
+                                                   (f"lot {lot}" if lot else "")) if x)
+                    if extra: lines.append(extra)
+                    if isinstance(credit, (int, float)) and isinstance(w, (int, float)) and lot:
+                        lines.append(f"Max profit/lot ₹{credit*lot:,.0f} · Max loss/lot ₹{(w-credit)*lot:,.0f}")
+                elif s.get("order_label"):
+                    lines.append(str(s["order_label"]))
+                lines.append("Execute with your broker.")
                 send_telegram("\n".join(lines))
         except Exception as e:
             logger.warning(f"telegram notify ({book}): {e}")
@@ -446,7 +466,7 @@ class EngineRunner:
                 from engine import dte_multi
                 n = dte_multi.scan_signals()
                 if n:
-                    logger.info(f"dte_multi: opened {n} spread(s)")
+                    logger.info(f"dte_multi: opened {len(n)} spread(s)")
                     self._tg("SENSEX / BANKNIFTY 0DTE", n)
             except Exception as e:
                 logger.warning(f"dte_multi scan: {e}")
@@ -473,12 +493,82 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"wakelock manage failed: {e}")
 
+    # Books watched for WIN/LOSS outcome Telegram messages (label -> positions file).
+    _OUTCOME_BOOKS = [
+        ("STOCK CREDIT v2 UNION", "stock_credit_v2_positions.json"),
+        ("STOCK CREDIT v1", "stock_credit_positions.json"),
+        ("SWING CREDIT", "swing_positions.json"),
+        ("0DTE NIFTY", "zero_dte_positions.json"),
+        ("SENSEX 0DTE", "sensex_dte_positions.json"),
+        ("BANKNIFTY 0DTE", "bnf_dte_positions.json"),
+    ]
+
+    def _outcomes(self):
+        """Telegram every trade RESULT: when a paper position's status turns WIN/LOSS, send the
+        P&L quoting the entry-date call. Read-only on the books; notified ids persisted in
+        data/outcome_notified.json (seeded silently on first run so history doesn't flood).
+        Throttled to ~60s; fully guarded — can never disturb trading."""
+        if (time.time() - getattr(self, "_last_outcomes", 0)) < 60:
+            return
+        self._last_outcomes = time.time()
+        try:
+            from engine.notifications import send_telegram
+            state_path = os.path.join(DATA_DIR, "outcome_notified.json")
+            first_run = not os.path.exists(state_path)
+            try:
+                seen = set(json.load(open(state_path))) if not first_run else set()
+            except Exception:
+                seen = set(); first_run = True
+            changed = False
+            for label, fname in self._OUTCOME_BOOKS:
+                path = os.path.join(DATA_DIR, fname)
+                if not os.path.exists(path):
+                    continue
+                try:
+                    book = json.load(open(path)) or []
+                except Exception:
+                    continue
+                for p in book:
+                    if p.get("status") not in ("WIN", "LOSS"):
+                        continue
+                    pid = p.get("id") or f"{fname}:{p.get('entry_date')}:{p.get('symbol')}"
+                    if pid in seen:
+                        continue
+                    seen.add(pid); changed = True
+                    if first_run:
+                        continue          # seed silently — only NEW outcomes notify
+                    try:
+                        sym = p.get("symbol") or p.get("index") or ""
+                        side = p.get("side") or ""
+                        won = p.get("status") == "WIN"
+                        qty = p.get("qty") or p.get("lot") or 0
+                        pnl_pts = p.get("pnl_pts")
+                        rs = f" ₹{pnl_pts*qty:+,.0f}" if isinstance(pnl_pts, (int, float)) and qty else ""
+                        g = lambda x: ("%g" % x) if isinstance(x, (int, float)) else "?"
+                        verb = "CE" if "CALL" in side else ("PE" if "PUT" in side else "")
+                        send_telegram(
+                            f"📊 <b>RESULT — {label}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}\n"
+                            f"This is the result of the <b>{p.get('entry_date','?')}</b> call: "
+                            f"SELL {g(p.get('short_strike'))} {verb} / BUY {g(p.get('long_strike'))} {verb} "
+                            f"(exp {p.get('expiry','?')})\n"
+                            f"pts {pnl_pts:+.1f} × qty {qty} · closed {p.get('closed_date','?')}"
+                            if isinstance(pnl_pts, (int, float)) else
+                            f"📊 <b>RESULT — {label}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}\n"
+                            f"This is the result of the {p.get('entry_date','?')} call · closed {p.get('closed_date','?')}")
+                    except Exception as e:
+                        logger.warning(f"outcome notify {label}: {e}")
+            if changed:
+                self._write_json(state_path, sorted(seen))
+        except Exception as e:
+            logger.warning(f"outcomes: {e}")
+
     def cycle(self):
         now = datetime.now(IST)
         self._market(now)
         self._manage_wakelock()
         self._maybe_eod(now)
         self._fast_resolve()
+        self._outcomes()
         self._swing(now)
         self._stock_credit(now)
         self._monthly_fut(now)
