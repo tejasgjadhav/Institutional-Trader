@@ -572,12 +572,13 @@ class EngineRunner:
         self._manage_wakelock()
         self._maybe_eod(now)
         self._fast_resolve()
-        self._outcomes()
         self._swing(now)
         self._stock_credit(now)
         self._monthly_fut(now)
         self._monthly_call(now)
         self._zero_dte(now)
+        self._outcomes()   # AFTER the book hooks: the cycle that settles ~15:35 notifies in the
+                           # same pass (was before -> results lagged one idle cycle to ~15:40)
         from engine import config as _cfg
         if (getattr(_cfg, "SCAN_3FAMILY_ENABLED", True) and self.agent.is_market_open()
                 and (time.time() - self._last_scan) >= SCAN_INTERVAL):
