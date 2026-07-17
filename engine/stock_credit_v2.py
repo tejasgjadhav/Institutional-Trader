@@ -194,7 +194,11 @@ def build_watchlist() -> dict:
                        cw_ok=cw_ok, prem_ok=prem_ok, liq_ok=liq_ok)
             row["gate"] = "PASS" if (cw_ok and prem_ok and liq_ok) else "BLOCKED"
             rows.append(row)
-        rows.sort(key=lambda r: (r["gate"] != "PASS", -(r["cw"] or 0)))
+        # Order: full PASS first, then MOST GATES CLEARED (closest to firing), then richest c/w —
+        # so a prem+liq-clean near-miss (only credit short) outranks a fat-c/w row failing premium.
+        rows.sort(key=lambda r: (r["gate"] != "PASS",
+                                 -((r.get("cw_ok") or 0) + (r.get("prem_ok") or 0) + (r.get("liq_ok") or 0)),
+                                 -(r["cw"] or 0)))
         out = {"ts": datetime.now(IST).isoformat(), "breakouts": len(rows),
                "passed": sum(1 for r in rows if r["gate"] == "PASS"), "rows": rows}
         tmp = WATCHLIST_PATH + ".tmp"
