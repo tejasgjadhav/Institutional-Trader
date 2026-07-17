@@ -330,8 +330,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # stretch columns absorb exactly the remaining viewport width, so the table can never be
         # wider than the screen (ResizeToContents inflated the minimum width and caused panning).
         _wh = self.pm_watch.horizontalHeader()
-        _wh.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)            # STOCK/SIDE/legs/RESULT
-        for _c, _px in ((1, 64), (4, 72), (5, 80), (6, 88)):                # DIR, C/W, PREM, LIQ
+        _wh.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)            # STOCK/legs/RESULT
+        for _c, _px in ((1, 64), (2, 96), (4, 72), (5, 116), (6, 88)):      # DIR, SIDE, C/W, PREM, LIQ
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
             _wh.resizeSection(_c, _px)
         self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
