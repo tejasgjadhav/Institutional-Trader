@@ -330,6 +330,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         _wh.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)   # compact gate/DIR cols
         _wh.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)         # SELL/BUY gets the width
         _wh.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)         # RESULT breathes too
+        self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
         self.pm_watch.setAlternatingRowColors(True); self.pm_watch.verticalHeader().setVisible(False)
         self.pm_watch.verticalHeader().setDefaultSectionSize(28); self.pm_watch.setMaximumHeight(260)
         self.pm_watch.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -1616,11 +1617,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 fmtk = lambda x: ("%g" % x) if isinstance(x, (int, float)) else None
                 ss, ls = fmtk(row.get("short_strike")), fmtk(row.get("long_strike"))
                 verb = "CE" if "CALL" in str(row.get("side", "")) else "PE"
-                legs = f"S {ss} / B {ls} {verb}" if ss and ls else "—"
+                legs = f"SELL {ss} / BUY {ls} {verb}" if ss and ls else "—"
                 vals = [row.get("sym", "—"), row.get("dir", "—"), row.get("side", "—"),
                         legs, cwcell, premcell, liqcell, result]
                 self._set_row(self.pm_watch, i, vals)
                 self._color_cell(self.pm_watch, i, 7, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+                for c in (4, 5, 6, 7):          # centre the gate + RESULT cells (was ragged-left)
+                    it = self.pm_watch.item(i, c)
+                    if it: it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
             logger.warning(f"union watch refresh: {e}")
 
