@@ -307,6 +307,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         l.setStyleSheet(f"color:{color}; padding:8px 4px 2px 4px;")
         return l
 
+    def _credit_cols(self, t):
+        """Fixed widths for the 7 PM_CREDIT_COLS (ACTION/INSTRUMENT/LOT/PREMIUM/EXPIRY/AMOUNT/
+        P&L·STATUS) summing ~1026px — same total as the watchlist. Stretch mode ballooned the
+        table past the window and clipped the last column; fixed widths keep it single-screen."""
+        h = t.horizontalHeader()
+        for _c, _px in enumerate((100, 300, 88, 128, 120, 150, 140)):
+            h.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
+            h.resizeSection(_c, _px)
+        t.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
     def _screen_pm(self) -> QWidget:
         """PM DECISIONS — every strategy book, each section sized to its content inside a scroll area."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
@@ -351,7 +361,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(pmv2)
         self.pm_stockcr2 = QTableWidget(); self.pm_stockcr2.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr2.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
-        self.pm_stockcr2.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self._credit_cols(self.pm_stockcr2)
         self.pm_stockcr2.setAlternatingRowColors(True); self.pm_stockcr2.verticalHeader().setVisible(False)
         self.pm_stockcr2.verticalHeader().setDefaultSectionSize(32)
         self.pm_stockcr2.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -363,7 +373,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             "STOCK CREDIT SPREADS v1 — fade · WIN 73% OOS (TP-75, deployed) · +17.9% of width Oct24-Jul26 · ~16/mo · SELL  (IS not measured for TP-75; 54% was the old hold-to-expiry exit)", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
-        self.pm_stockcr.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self._credit_cols(self.pm_stockcr)
         self.pm_stockcr.setAlternatingRowColors(True); self.pm_stockcr.verticalHeader().setVisible(False)
         self.pm_stockcr.verticalHeader().setDefaultSectionSize(32)
         self.pm_stockcr.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -374,7 +384,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             "SWING CREDIT SPREADS — NIFTY/FINNIFTY · WIN 54% · −1.4%w real 2019-24 (regime-dep, FWD-TEST only) · ~3/mo · SELL", CYAN))
         self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_swing.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
-        self.pm_swing.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self._credit_cols(self.pm_swing)
         self.pm_swing.setAlternatingRowColors(True); self.pm_swing.verticalHeader().setVisible(False)
         self.pm_swing.verticalHeader().setDefaultSectionSize(34)
         self.pm_swing.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -386,7 +396,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             "MONTHLY FUTURES PULLBACK — REV1-v2 · WIN 77.8% IS / 75.7% OOS · ~3.9%/mo on margin · 5/cycle · BUY FUT (paper, needs ~₹15L)", AMBER))
         self.pm_monthly = QTableWidget(); self.pm_monthly.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_monthly.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
-        self.pm_monthly.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self._credit_cols(self.pm_monthly)
         self.pm_monthly.setAlternatingRowColors(True); self.pm_monthly.verticalHeader().setVisible(False)
         self.pm_monthly.verticalHeader().setDefaultSectionSize(32)
         self.pm_monthly.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
@@ -400,7 +410,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                 "MONTHLY LONG-CALL PULLBACK — same signal, BUY ATM CALL · WIN 70% IS / 67% OOS · +6-7%/mo on premium · 5/cycle · HIGH VARIANCE (−51% crash mo)", AMBER))
             self.pm_monthly_call = QTableWidget(); self.pm_monthly_call.setColumnCount(len(self.PM_CREDIT_COLS))
             self.pm_monthly_call.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
-            self.pm_monthly_call.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+            self._credit_cols(self.pm_monthly_call)
             self.pm_monthly_call.setAlternatingRowColors(True); self.pm_monthly_call.verticalHeader().setVisible(False)
             self.pm_monthly_call.verticalHeader().setDefaultSectionSize(32)
             self.pm_monthly_call.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
