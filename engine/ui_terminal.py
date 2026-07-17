@@ -292,7 +292,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "LOT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
     # No DC column: the union's D5 band is the least restrictive, so every union breakout is
     # by definition a D5 break — the column could only ever show "D5".
-    WATCH_COLS = ["STOCK", "DIR", "SIDE", "SELL / BUY", "C/W ≥.40", "PREM ≥₹50", "LIQ", "RESULT"]
+    WATCH_COLS = ["STOCK", "DIR", "SIDE", "SELL / BUY", "C/W", "PREM", "LIQ", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -326,7 +326,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.pm_watch_hdr)
         self.pm_watch = QTableWidget(); self.pm_watch.setColumnCount(len(self.WATCH_COLS))
         self.pm_watch.setHorizontalHeaderLabels(self.WATCH_COLS)
-        self.pm_watch.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        _wh = self.pm_watch.horizontalHeader()
+        _wh.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)   # compact gate/DIR cols
+        _wh.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)         # SELL/BUY gets the width
+        _wh.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)         # RESULT breathes too
         self.pm_watch.setAlternatingRowColors(True); self.pm_watch.verticalHeader().setVisible(False)
         self.pm_watch.verticalHeader().setDefaultSectionSize(28); self.pm_watch.setMaximumHeight(260)
         self.pm_watch.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
