@@ -1,5 +1,12 @@
 # Institutional Trader — multi-strategy paper-trading system · NSE Options
 
+> **Copyright © 2026 Tejas Jadhav · [PolyForm Noncommercial 1.0.0](LICENSE).**
+> Free to use, study, and modify for personal, noncommercial purposes. Commercial use
+> (resale, paid services, paid signals) requires written permission. For education only —
+> not investment advice; no proven live track record. This public repository is the frozen
+> **book edition** of the system; live development continues privately.
+
+
 A disciplined **paper-trading** system for NSE (Indian market) options and futures. It runs a
 **portfolio of independent, individually-validated strategy books in parallel** — stock credit
 fades, index expiry-day (0DTE) spreads, and a monthly futures pullback — surfaces every signal on
