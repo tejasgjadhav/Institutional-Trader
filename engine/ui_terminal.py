@@ -290,7 +290,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                     "EXIT RULE", "STOP -20%", "CURRENT", "LOT", "STATUS"]
     # Credit spreads on PM DECISIONS are shown TWO ROWS per trade (a SELL row + a BUY row).
     PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "LOT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
-    WATCH_COLS = ["STOCK", "DIR", "DC", "SIDE", "BREAKOUT", "C/W ≥.40", "PREM ≥₹50", "LIQ", "RESULT"]
+    WATCH_COLS = ["STOCK", "DIR", "DC", "SIDE", "SELL / BUY", "C/W ≥.40", "PREM ≥₹50", "LIQ", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -1607,8 +1607,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     premcell = "✓" if row.get("prem_ok") else f"✗ ₹{prem}"
                     liqcell = "✓" if row.get("liq_ok") else f"✗ OI{oi}"
                 result = "★ SIGNAL" if g == "PASS" else ("blocked" if evaluable else g.replace("_", " ").lower())
+                # legs instead of a redundant breakout tick (every row IS a breakout)
+                fmtk = lambda x: ("%g" % x) if isinstance(x, (int, float)) else None
+                ss, ls = fmtk(row.get("short_strike")), fmtk(row.get("long_strike"))
+                verb = "CE" if "CALL" in str(row.get("side", "")) else "PE"
+                legs = f"S {ss} / B {ls} {verb}" if ss and ls else "—"
                 vals = [row.get("sym", "—"), row.get("dir", "—"), f"D{row.get('dc','')}", row.get("side", "—"),
-                        "✓", cwcell, premcell, liqcell, result]
+                        legs, cwcell, premcell, liqcell, result]
                 self._set_row(self.pm_watch, i, vals)
                 self._color_cell(self.pm_watch, i, 8, GREEN if g == "PASS" else (AMBER if evaluable else RED))
         except Exception as e:
