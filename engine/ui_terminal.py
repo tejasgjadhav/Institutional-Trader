@@ -326,10 +326,14 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.pm_watch_hdr)
         self.pm_watch = QTableWidget(); self.pm_watch.setColumnCount(len(self.WATCH_COLS))
         self.pm_watch.setHorizontalHeaderLabels(self.WATCH_COLS)
+        # Single-screen guarantee: FIXED px for the compact columns, Stretch for the text ones —
+        # stretch columns absorb exactly the remaining viewport width, so the table can never be
+        # wider than the screen (ResizeToContents inflated the minimum width and caused panning).
         _wh = self.pm_watch.horizontalHeader()
-        _wh.setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)   # compact gate/DIR cols
-        _wh.setSectionResizeMode(3, QHeaderView.ResizeMode.Stretch)         # SELL/BUY gets the width
-        _wh.setSectionResizeMode(7, QHeaderView.ResizeMode.Stretch)         # RESULT breathes too
+        _wh.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)            # STOCK/SIDE/legs/RESULT
+        for _c, _px in ((1, 64), (4, 72), (5, 80), (6, 88)):                # DIR, C/W, PREM, LIQ
+            _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
+            _wh.resizeSection(_c, _px)
         self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
         self.pm_watch.setAlternatingRowColors(True); self.pm_watch.verticalHeader().setVisible(False)
         self.pm_watch.verticalHeader().setDefaultSectionSize(28); self.pm_watch.setMaximumHeight(260)
