@@ -330,9 +330,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # stretch columns absorb exactly the remaining viewport width, so the table can never be
         # wider than the screen (ResizeToContents inflated the minimum width and caused panning).
         _wh = self.pm_watch.horizontalHeader()
-        _wh.setSectionResizeMode(QHeaderView.ResizeMode.Stretch)            # STOCK/legs/RESULT
-        for _c, _px in ((1, 64), (2, 96), (4, 72), (5, 116), (6, 88)):      # DIR, SIDE, C/W, PREM, LIQ
-            _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
+        # ALL columns FIXED (no Stretch): the outer scroll widget is wider than the window
+        # (the credit tables below force it), so a Stretch column balloons and pushes the last
+        # columns off-screen. Fixed widths summing ~1030px keep the whole row on one screen.
+        for _c, _px in ((0, 100), (1, 70), (2, 66), (3, 300), (4, 104), (5, 128), (6, 118), (7, 140)):
+            _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
         self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
         self.pm_watch.setAlternatingRowColors(True); self.pm_watch.verticalHeader().setVisible(False)
@@ -1622,7 +1624,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 ss, ls = fmtk(row.get("short_strike")), fmtk(row.get("long_strike"))
                 verb = "CE" if "CALL" in str(row.get("side", "")) else "PE"
                 legs = f"SELL {ss} / BUY {ls} {verb}" if ss and ls else "—"
-                vals = [row.get("sym", "—"), row.get("dir", "—"), row.get("side", "—"),
+                sd = row.get("side", "")
+                side_s = "BEAR" if "CALL" in sd else ("BULL" if "PUT" in sd else (sd or "—"))
+                vals = [row.get("sym", "—"), row.get("dir", "—"), side_s,
                         legs, cwcell, premcell, liqcell, result]
                 self._set_row(self.pm_watch, i, vals)
                 self._color_cell(self.pm_watch, i, 7, GREEN if g == "PASS" else (AMBER if evaluable else RED))
