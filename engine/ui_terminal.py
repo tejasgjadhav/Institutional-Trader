@@ -304,6 +304,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     def _section_label(self, text, color) -> QLabel:
         l = QLabel(text); l.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
+        l.setWordWrap(True)   # never let a long header run off the panel
         l.setStyleSheet(f"color:{color}; padding:8px 4px 2px 4px;")
         return l
 
@@ -354,7 +355,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 (UNION) — WIN 84% IN-SAMPLE / 87% OUT-OF-SAMPLE · ~5-6 signals/mo backtest avg (fewer in low-IV regimes) · +26-30% of width/trade · +ve every yr 2019→26 ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell the breakout spread, book at half credit · 87% win OOS · ~5–6/mo · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -370,7 +371,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 — fade · WIN 73% OOS (TP-75, deployed) · +17.9% of width Oct24-Jul26 · ~16/mo · SELL  (IS not measured for TP-75; 54% was the old hold-to-expiry exit)", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · 73% win OOS (TP-75) · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -381,7 +382,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
         v.addWidget(self._section_label(
-            "SWING CREDIT SPREADS — NIFTY/FINNIFTY · WIN 54% · −1.4%w real 2019-24 (regime-dep, FWD-TEST only) · ~3/mo · SELL", CYAN))
+            "SWING CREDIT · NIFTY/FINNIFTY · fade · forward-test only · ~3/mo · SELL", CYAN))
         self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_swing.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_swing)
@@ -393,7 +394,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # MONTHLY FUTURES PULLBACK — the 5th strategy (monthly cycle · BUY front-month futures).
         # Signals-only paper test; needs ~Rs 15L to trade for real. Earnings-skip applied live.
         v.addWidget(self._section_label(
-            "MONTHLY FUTURES PULLBACK — REV1-v2 · WIN 77.8% IS / 75.7% OOS · ~3.9%/mo on margin · 5/cycle · BUY FUT (paper, needs ~₹15L)", AMBER))
+            "MONTHLY FUTURES PULLBACK · REV1-v2 · 76% win OOS · 5/cycle · BUY FUT (paper, ~₹15L)", AMBER))
         self.pm_monthly = QTableWidget(); self.pm_monthly.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_monthly.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_monthly)
@@ -407,7 +408,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         from engine import config as _cfg
         if getattr(_cfg, "MONTHLY_CALL_ENABLED", False):
             v.addWidget(self._section_label(
-                "MONTHLY LONG-CALL PULLBACK — same signal, BUY ATM CALL · WIN 70% IS / 67% OOS · +6-7%/mo on premium · 5/cycle · HIGH VARIANCE (−51% crash mo)", AMBER))
+                "MONTHLY LONG-CALL PULLBACK · SHELVED (high variance) · 5/cycle · BUY CALL", AMBER))
             self.pm_monthly_call = QTableWidget(); self.pm_monthly_call.setColumnCount(len(self.PM_CREDIT_COLS))
             self.pm_monthly_call.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
             self._credit_cols(self.pm_monthly_call)
