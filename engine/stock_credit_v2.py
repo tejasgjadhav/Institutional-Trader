@@ -112,14 +112,20 @@ def _todays_breakout(ticker: str):
         return None
     df = df.sort_index()
     c = float(df["Close"].iloc[-1])
-    for dcw in UNION_DCS:
+    # Return the STRONGEST window that broke, not the first. Longer Donchian highs/lows are
+    # supersets of shorter ones, so break the largest consecutive window (D5→D10→D15→D20) and
+    # report it — informational only, direction/signal logic is unchanged (any break fires).
+    best = None
+    for dcw in UNION_DCS:            # ascending 5,10,15,20
         hi = float(df["High"].rolling(dcw).max().shift(1).iloc[-1])
         lo = float(df["Low"].rolling(dcw).min().shift(1).iloc[-1])
         if c > hi:
-            return ("LONG", dcw)
-        if c < lo:
-            return ("SHORT", dcw)
-    return None
+            best = ("LONG", dcw)
+        elif c < lo:
+            best = ("SHORT", dcw)
+        else:
+            break                    # this window didn't break → no larger one will either
+    return best
 
 
 def _pick_legs(ticker: str, spot: float, opt_type: str):
