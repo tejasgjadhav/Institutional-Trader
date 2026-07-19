@@ -869,6 +869,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "credit/width>=0.40 gate is the wall (thin-IV regime), not the Donchian window. Do NOT loosen the "
      "gate (strip it -> +26%w becomes -1.1%). Frequency comes from the v1 book (~10-16/mo), not a looser "
      "v2. File: studies/STOCK_FADE_V2_UNION_VS_D10.md")}
+{res("DONCHIAN 5/10/15/20 — FULL-HISTORY VALIDATION (2026-07-19): is a longer window more DURABLE "
+     "than D5? Ran each window STANDALONE (not the union) over 2019→date, two eras stitched — NSE "
+     "bhavcopy 2019→Sep'24 (569/415/343/296 trades) + Upstox premiums Oct'24→date. NO. "
+     "D5(=UNION) 85.4% win / +29.1%w / 6.3/mo · D10 86.3% / +29.0%w / 4.6/mo · D15 85.4% / +27.2%w / "
+     "3.8/mo · D20 83.4% / +26.2%w / 3.3/mo. Win rate PEAKS at D10 then FALLS (D20 worst); "
+     "net-per-trade DECLINES monotonically past D10. Total edge/mo (freq×net) = D5 1.83 > D10 1.33 > "
+     "D15 1.03 > D20 0.86 width-units — D5's frequency wins, longer windows sacrifice throughput for a "
+     "win bump only D10 even delivers (+0.9pp, no net gain). All four +ve EVERY year 2019-26 — the "
+     "c/w≥0.40 GATE is the durable edge, not the window. Cross-checks: bhav D10 273/85.3% ≡ documented "
+     "273/85.35%; Oct'24 D5 200/87.5% ≡ known 203/87.2%. REPORT-ONLY, engine unchanged. "
+     "File: studies/DONCHIAN_5_10_15_20.md")}
 
 {h("WHY DOES v1 SHOW 54% NEXT TO v2 UNION's 85%+? — it is NOT the number of calls")}
 {p("<b>Same signal, same gate, different EXIT GEOMETRY — and the 54% is the OLD hold-to-expiry test.</b> "
