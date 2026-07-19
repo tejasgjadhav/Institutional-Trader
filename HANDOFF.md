@@ -1,5 +1,23 @@
 # Handoff — institutional-trader
-_Updated: 2026-07-13 by Claude Code_
+_Updated: 2026-07-19 by Claude Code_
+
+## DONE (2026-07-19) — D5/D10/D15/D20 standalone Donchian validation, 2019→date (commit c423ac8, pushed origin+private)
+Question: is a stricter/longer Donchian window (D10/15/20) more DURABLE than the deployed UNION (≡D5)?
+Ran each window STANDALONE (own breakout stream + own re-entry gap, NOT the union), deployed v2 config
+(short 2-OTM, w4, TP-50, stop-3x, c/w>=0.40, prem>=50, min-DTE10, reentry3d), two eras stitched:
+- 2019→Sep'24 NSE bhavcopy (re-downloaded /tmp/bhav_cache_stk via NEW studies/ndte/bhav_dl_stk_opt.py,
+  1359 days, OHLC+OI). Backtest studies/ndte/stkfade_d5_10_15_20_bhav.py.
+- Oct'24→date real Upstox premiums. studies/ndte/stkfade_d5_10_15_20_oct24.py (stkfade_d5_vs_d10 engine, 4 configs).
+VERDICT = **NO, longer is NOT more durable.** Combined: D5 85.4%/+29.1%w/6.3mo · D10 86.3%/+29.0%w/4.6mo ·
+D15 85.4%/+27.2%w/3.8mo · D20 83.4%/+26.2%w/3.3mo. Win PEAKS at D10 then falls; net/trade declines past
+D10; total edge/mo (freq×net) D5 1.83 > D10 1.33 > D15 1.03 > D20 0.86 — D5's frequency wins. All four +ve
+every year 2019-26; the c/w>=0.40 GATE is the durable edge, not the window. REPORT-ONLY, engine unchanged.
+GOTCHA I hit: first bhav pass used a daily-OHLC-low TP proxy (short.LOW-long.HIGH) → inflated win to 97-98%,
+contradicted documented 85.35%. FIXED to close-only detection (matches documented v2 pipeline + Oct'24 era);
+D10 bhav then reproduced documented 273/85.3% exactly. Use close-only for cross-era comparability.
+Cross-checks passed: Oct'24 D5 200/87.5% ≡ known 203/87.2%; bhav D10 273/85.3% ≡ documented 273/85.35%.
+Deliverables (all committed+pushed BOTH remotes): studies/DONCHIAN_5_10_15_20.md, the 3 scripts above,
+STUDIES-tab res() card in engine/ui_terminal.py (viewer relaunched, PID stable — verified no crash).
 
 ## DONE (2026-07-13 latest) — SHELVED the monthly long-call book as UNRELIABLE
 12-mo ledger exposed it: +Rs63,815/65% win BUT one POLYCAB trade (+Rs47k from a real +8.2% ONE-DAY
@@ -167,3 +185,43 @@ concept (that tab was removed; _screen_watchlist still exists but isn't in the t
 After edits: restart engine (`launchctl kickstart -k gui/$(id -u)/com.sayali.institutionaltrader.engine`)
 AND viewer (kill main.py + kickstart). VERIFY by launching the viewer (ast.parse is NOT enough —
 it missed a NameError crash this session; only a real launch + stable-PID check confirms render).
+
+## NEXT: v2 UNION TWO-TIER SPLIT (0.35-0.40 secondary + ≥0.40 core) — user-requested 2026-07-15,
+DEFERRED (live deployment; do fresh, not at 600k+ tokens). Basis: studies/CW_BUCKET_ANALYSIS.md —
+0.35-0.40 nets +9.2%w (82% win, +ve all 3 yrs) vs ≥0.40 +31.7%w; 0.30-0.35 is breakeven (skip).
+
+**CRITICAL CAVEAT before deploying:** SINGLE REGIME (Oct'24→now only). NOT validated 2019-24
+(bhavcopy purged). Repo's index-fade failure = single-regime edge that died OOS. So: (a) ideally
+run the 2019-24 bhavcopy c/w-bucket backtest FIRST (needs re-download via studies/ndte/bhav_dl_stk.py
++ a new bhav bucket script); (b) if user still wants it live, deploy 0.35-0.40 as a SEPARATE tier,
+1 lot, tracked apart — NEVER merge into the ≥0.40 book's stats.
+
+ENGINE (`engine/stock_credit_v2.py`): add `STOCK_CREDIT_MIN_CW_SECONDARY=0.35` to config. In
+scan_signals, a breakout with 0.35≤c/w<0.40 (+ all other gates) opens a SECONDARY position tagged
+`tier:"0.35-0.40"` into a SEPARATE book file (e.g. stock_credit_v2b_positions.json) so core stats
+stay clean; ≥0.40 stays the primary book unchanged. Telegram _tg for secondary must say "SECONDARY
+tier — unvalidated OOS, 1 lot".
+
+UI (`engine/ui_terminal.py::_screen_pm`): the STOCK CREDIT v2 UNION section becomes TWO labelled
+sub-sections in the existing PM_CREDIT_COLS table format: "★ v2 UNION ≥0.40 (CORE)" and
+"v2 UNION 0.35-0.40 (SECONDARY · 1 lot · unproven)". The watchlist 🔥 flag already marks c/w≥0.35.
+
+User intent: will manually take 1 lot in the 0.35-0.40 range. Recommendation given: promising not
+proven, keep tiers separate, validate 2019-24 first, 1 lot is right sizing.
+
+## TELEGRAM v2 (2026-07-16, commit c765839) — SHIPPED
+- Standard signal format (`engine_runner._tg`): both legs WITH premiums, backtested win% per
+  book (`_TG_WIN` map), max profit/lot + max loss/lot, footer "Execute with your broker" (group
+  members are not all on Upstox — never say "place in Upstox" in Telegram).
+- `dte_multi.scan_signals()` now returns position dicts (was a count) so SENSEX/BANKNIFTY 0DTE
+  alerts carry full legs; call site uses len().
+- `engine_runner._outcomes()`: every ~60s, watches the 6 book files for status→WIN/LOSS and
+  Telegrams the result quoting the ENTRY-DATE call + P&L (pnl_pts × qty). Notified ids persist
+  in data/outcome_notified.json — SEEDED SILENTLY on first run (9 ids) so history never floods.
+- 3-Family is DISABLED (SCAN_3FAMILY_ENABLED=False) and rejected — its Telegram path is dormant
+  dead wiring; optional cleanup only.
+- Watchlist json is written ONLY by the 15:05 engine build; ad-hoc "check now" runs must NOT
+  overwrite data/union_watchlist.json (user wants the UI to reflect the official 15:05 scan only).
+- Watchlist sort (2026-07-17, aa3c5bd): PASS first → most gates cleared → richest c/w. A
+  prem+liq-clean near-miss outranks a fatter c/w that fails premium. Results Telegram fires
+  same-cycle as settlement (~15:35, a1251c3); 0DTE signals are per-index labels (75bffcf).
