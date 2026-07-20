@@ -122,6 +122,26 @@ can only dodge scheduled events, and the genuinely violent surprises are exactly
 - Entry uses the daily OPEN rather than a 1-min fill, so absolute levels run mildly optimistic.
   This does not affect the verdict — event and non-event days use identical methodology, so the
   *comparison* is valid even if the levels are not exact.
+- **Does MONTHLY expiry deserve a higher win rate? TESTED 2026-07-19 — NO.** Reasonable hypothesis
+  with a real mechanism (monthly contracts carry far larger OI, and OI concentration produces strike
+  *pinning* that holds the index near a big strike into settlement — exactly what an OTM seller
+  wants). Tested cleanly **within Era A**, same years / same pipeline, only expiry type differing
+  (`ndte19_bnf_monthly.py`, 281 BANKNIFTY expiry days):
+
+  | Expiry type | n | Win % | Avg %margin | Total ₹ | Median c/W |
+  |---|---|---|---|---|---|
+  | **MONTHLY** | 67 | **76.1%** | **−1.55%** | −₹364 | 0.190 |
+  | **WEEKLY** | 214 | **80.4%** | **+8.51%** | +₹71,221 | 0.170 |
+
+  Monthly was **worse, not better** (−4.3pp win, −10.07%m), and monthly beat weekly in only 2 of 6
+  years. A 2-proportion z-test gives **z = −0.75 — not significant**, so the honest statement is:
+  *monthly expiry confers no win-rate advantage; the observed difference is noise that if anything
+  points the wrong way.* Monthly isn't even collecting richer premium (median c/W 0.190 vs 0.170).
+
+  This also explains Era B's 88.9% better: **every book improved in Era B** (NIFTY 86.5%→93.2%), so
+  BANKNIFTY's 75.8%→88.9% is regime lift on **n=18** (16 wins, 2 losses — a binomial CI of roughly
+  65-99%), not a structural gain from the expiry change.
+
 - **BANKNIFTY era comparison is CONFOUNDED — do not read it as a finding (corrected 2026-07-19).**
   An earlier draft flagged that BANKNIFTY monthly looks weaker on the full history (Era A 75.8% win /
   −1.64%m on 66 trades vs Era B 88.9% / +8.60%m on 18). **That comparison is not apples-to-apples.**
