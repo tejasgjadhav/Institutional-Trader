@@ -197,9 +197,16 @@ def scan_signal() -> list:
     # ELECTION BLACKOUT (structural, 2026-07-19): scheduled inside-window binary — short premium is
     # the wrong trade against a bimodal outcome. Never triggered in 448 backtested expiries, so the
     # measured cost is Rs0; this is insurance against the ruin mode, not an edge. See config.
-    if today.isoformat() in (ZERO_DTE_ELECTION_BLACKOUT or []):
+    _bl = ZERO_DTE_ELECTION_BLACKOUT or []
+    if today.isoformat() in _bl:
         logger.info(f"zero_dte: SKIP — election blackout ({today.isoformat()}): scheduled binary event")
         return []
+    # The blackout is a HAND-MAINTAINED list — there is no news feed behind it. If every entry is in
+    # the past the filter is dead code and cannot protect anything, so say so loudly rather than
+    # letting a non-functional safety feature look deployed.
+    if not any(d > today.isoformat() for d in _bl):
+        logger.warning("zero_dte: election blackout has NO FUTURE DATES — filter cannot fire. "
+                       "Add ECI counting days + exit-poll sessions to ZERO_DTE_ELECTION_BLACKOUT.")
     rv = _rv5()
     if ZERO_DTE_RV5_MAX and rv is not None and rv >= ZERO_DTE_RV5_MAX:
         logger.info(f"zero_dte: SKIP — calm-regime filter (rv5 {rv:.2f}% >= {ZERO_DTE_RV5_MAX}%)")

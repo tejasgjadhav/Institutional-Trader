@@ -24,6 +24,18 @@ Two things *were* deployed, both **risk exclusions rather than edges**: the elec
 (₹0 measured cost, never triggered) and a minimum credit/width of 0.04 on SENSEX/BANKNIFTY. Plus
 BANKNIFTY itself was rejected.
 
+> **⚠ CORRECTION (2026-07-21) — the election blackout is currently INERT.** It is a hand-maintained
+> date list and **there is no news engine behind it**. Nothing in the repo fetches election or policy
+> dates at runtime: `engine/events.py` scrapes NSE *corporate* announcements for stock scoring only and
+> never touches the index books, and `studies/ndte/event_calendar.json` is research data the engine
+> never reads. All four entries are in the past, so **the filter cannot fire today**. It was described
+> as "deployed protection"; accurately it is a *mechanism* that is deployed and a *date list* that is
+> empty going forward. The engine now logs a WARNING on every scan while no future dates exist, so this
+> is visible rather than silent. Nothing to add right now — the next Lok Sabha is due 2029 and the ECI
+> has not published dates — but it must be filled in when they are announced, or the protection is
+> theoretical. This does not affect any backtest result: the blackout never triggered in 448 expiries,
+> which is exactly why its measured cost was ₹0.
+
 **The mechanism behind all the rejections:** this is a short-volatility book. It is *paid for visible
 fear*. Filters that key on ex-ante-visible stress remove exactly the trades where the market overpays.
 

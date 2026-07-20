@@ -319,6 +319,18 @@ ZERO_DTE_FLIP_RET5 = 1.0     # FLIP rule (user-approved 2026-07-07): if NIFTY 5-
 # dodged by calendar luck, not design) — so its measured historical cost is exactly Rs0. It is
 # zero-premium insurance against the book's known ruin mode, NOT a tested edge. Maintain by hand;
 # national counting days + exit-poll sessions only. If this list starts growing, re-review it.
+#
+# *** THIS IS A HAND-MAINTAINED LIST. THERE IS NO NEWS ENGINE BEHIND IT. ***
+# Nothing in this repo fetches election or policy dates at runtime. engine/events.py scrapes NSE
+# CORPORATE announcements but feeds STOCK scoring only — it never touches the index 0DTE books.
+# studies/ndte/event_calendar.json is research data and is NEVER read by the engine.
+# So this filter can only ever fire on a date a human typed in below.
+#
+# MAINTENANCE: national election counting days are announced by the ECI weeks ahead. When one is
+# announced, add BOTH the counting day AND the first session after exit polls. The engine logs a
+# WARNING every scan while this list has no future dates, so a dead list is visible rather than
+# silent. Next Lok Sabha is due 2029; dates are not yet published, which is why there is currently
+# nothing to add and the filter cannot fire.
 ZERO_DTE_ELECTION_BLACKOUT = [
     "2019-05-20", "2019-05-23",   # exit-poll session + Lok Sabha counting
     "2024-06-03", "2024-06-04",   # exit-poll session + Lok Sabha counting (NIFTY −5.9%)

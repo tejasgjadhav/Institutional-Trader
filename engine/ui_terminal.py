@@ -831,6 +831,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     <td>A 20% haircut on numbers that may themselves be 2–3× high is not conservative.
         <b>~50% (≈₹18.5k) is more defensible</b> until ① lands.</td>
     <td style="color:{TEXT_DIM};">flagged only — needs your sign-off</td></tr>
+<tr style="color:{AMBER};"><td><b>⚠</b></td><td><b>Election blackout is INERT — no news engine</b></td><td>It is a HAND-MAINTAINED date list; nothing fetches election/policy dates at runtime. (events.py scrapes NSE <i>corporate</i> news for STOCK scoring only; event_calendar.json is research data the engine never reads.) <b>All 4 entries are in the past → it cannot fire.</b> Engine now WARNs every scan while no future dates exist. Next Lok Sabha due 2029, ECI has not published dates, so nothing to add yet — but it must be filled in when announced.</td><td style="color:{AMBER};">mechanism live · list empty</td></tr>
 <tr><td><b>③</b></td><td>Do NOT resize / add books / add filters</td>
     <td>Nothing in the evidence supports it. Keep lots at 1.</td>
     <td style="color:{GREEN};">holding</td></tr>
