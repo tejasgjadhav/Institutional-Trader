@@ -122,10 +122,17 @@ can only dodge scheduled events, and the genuinely violent surprises are exactly
 - Entry uses the daily OPEN rather than a 1-min fill, so absolute levels run mildly optimistic.
   This does not affect the verdict — event and non-event days use identical methodology, so the
   *comparison* is valid even if the levels are not exact.
-- **Side-finding worth its own study:** BANKNIFTY monthly on the full history is much weaker than
-  its recent slice (Era A 75.8% win / **−1.64%m** on 66 trades, vs Era B 88.9% / +8.60%m on 18).
-  The book's documented "91% win" rests on a small recent sample. Not this study's question, but
-  it should be looked at before that book is sized up.
+- **BANKNIFTY era comparison is CONFOUNDED — do not read it as a finding (corrected 2026-07-19).**
+  An earlier draft flagged that BANKNIFTY monthly looks weaker on the full history (Era A 75.8% win /
+  −1.64%m on 66 trades vs Era B 88.9% / +8.60%m on 18). **That comparison is not apples-to-apples.**
+  Pre-Nov'24 BANKNIFTY had **weekly** expiries; SEBI's weekly-expiry rationalisation left it
+  **monthly-only** afterwards. The monthly contract now absorbs the flow (and the pinning/liquidity
+  behaviour) that used to be spread across four weeklies, so the instrument itself changed between
+  the eras. The Era A "monthly" slice is the last weekly of each month in a weekly-driven market —
+  structurally a different product from today's monthly-only contract. Any real verdict on the
+  BANKNIFTY book needs a design that controls for that structural break; this study cannot supply
+  one and makes no claim. (It also does not affect the event verdict, which is measured *within*
+  each era.)
 
 ## Disposition
 

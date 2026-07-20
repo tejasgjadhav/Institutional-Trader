@@ -1,6 +1,22 @@
 # Handoff — institutional-trader
 _Updated: 2026-07-19 by Claude Code_
 
+## ACTIVE GOAL (2026-07-19 cont.) — EXPAND event taxonomy: earnings + geopolitical, avoidable vs not
+User correction ACCEPTED: the BANKNIFTY side-finding is CONFOUNDED, not an edge — BANKNIFTY had WEEKLY
+expiries pre-Nov'24 and monthly-only after (SEBI weekly rationalisation). The monthly contract now
+absorbs flow that used to spread across weeklies, so Era A monthly-slice vs Era B monthly is NOT
+apples-to-apples. Must SOFTEN that claim in ZERO_DTE_EVENT_DAYS.md (done) — do not present as a finding.
+NEW ASK: go beyond RBI/Budget/FOMC. Test PRE-9:15-KNOWABLE factors: heavyweight EARNINGS (RIL, HDFCBANK,
+ICICIBANK, SBIN, INFY, TCS — index-weight movers) + geopolitical/news parameters. Use FABLE 5 to reason
+about what was knowable before 9:15 on each day (standing pref: Fable plans, Opus executes). Analyze
+historically, then test avoidable vs unavoidable.
+KEY DESIGN CONSTRAINT: earnings dates ARE knowable ex-ante (board-meeting intimation filed with the
+exchange ~1-2wk ahead) → genuinely avoidable. Most geopolitical shocks are NOT (surprise) → they belong
+in the UNAVOIDABLE bucket like the COVID off-cycle RBI. Keep that split rigid or the study self-deceives.
+DATA PROBLEM TO SOLVE: need historical results dates 2019→2026 for the heavyweights from a real source
+(NSE corporate announcements / board-meeting filings). Do NOT infer earnings days from price moves —
+that is hindsight and circular.
+
 ## DONE (2026-07-19, EXTENDED) — 0DTE EVENT AVOIDANCE now tested on FULL HISTORY 2019→date: STILL NO
 User asked to push the study back to "2016 or 2019 whichever". 2019 is the FLOOR and it's a data fact,
 not a choice: NIFTY weekly options launched Feb 2019 (only monthlies before → no 0DTE weekly book);
