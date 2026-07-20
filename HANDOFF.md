@@ -23,6 +23,23 @@ FRAMEWORK (from Fable 5 design pass, folded into the study):
     one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
     prefer HALF-SIZING over full skip if any effect is ever found.
 
+## ACTIVE (2026-07-19) — STALE UI NUMBERS FOUND + layman explainer requested
+User asked to explain the 0DTE strategy in plain English and CORRECT STALE VALUES / update monthly
+profit calcs. Measured from the 448-expiry dataset (1 lot, net of costs, months = distinct YYYY-MM):
+| book | full history | recent era (Oct'24→date) | UI CLAIMED |
+| NIFTY 0DTE | 88.3% win · ₹1,771/mo (n=273, 86mo) | 93.2% · ₹2,290/mo | 87% · ₹2,500 |
+| SENSEX 0DTE | (Era-B only) 89.0% · ₹3,153/mo (n=91) | same | 89% · ₹3,200 ✓accurate |
+| BANKNIFTY 0DTE | **78.6% win · ₹141/mo** (n=84, 84mo) | 88.9% · ₹696/mo | **91% · ₹1,500 ✗STALE** |
+BANKNIFTY is the big one: claimed 91%/₹1,500 vs measured 78.6%/₹141 full-history (even the generous
+recent-era read is ₹696 = under half the claim). Era A alone was −₹711 total (−₹11/mo). CAVEAT that
+must ride with it: weekly→monthly expiry break confounds the era comparison, so this is "the claim is
+unsupported", NOT "the book is proven bad".
+DEPLOYED c/W>=0.04 FLOOR IS ~NEUTRAL on recent data (SENSEX +₹77/mo, BANKNIFTY unchanged — no sub-0.04
+trades in Era B). That is EXPECTED and fine: Fable deployed it for TAIL protection, not profit. Do not
+re-sell it as a profit booster.
+DO NOT TOUCH the stock-book rows (v2 UNION ₹20k, v1 ₹12k) — not re-measured this session, no new
+evidence; only correct what was actually measured.
+
 ## DONE (2026-07-19 FINAL, ddf70db) — SERIES CLOSED. Opus tested, FABLE decided, 2 exclusions DEPLOYED
 Workflow used (user instruction): "test all with opus, fable be decider, implement with opus."
 LAST OPEN ITEM TESTED — India VIX (ndte17_vix_final.py, prior-close so no lookahead): ALL variants

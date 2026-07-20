@@ -772,23 +772,62 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         return f"""
 <div style="color:{TEXT};">
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">IN PLAIN ENGLISH — what these strategies actually do</p>
+{p("<b>Every book here SELLS insurance instead of buying lottery tickets.</b> That one sentence covers all of them. "
+   "An option buyer pays a small premium hoping for a big move. We are on the other side: we take the premium, and "
+   "we keep it as long as the big move does NOT happen. Most of the time, it does not happen.")}
+{p("<b>The 0DTE index books (NIFTY / SENSEX / BANKNIFTY) — a one-day bet that the market won&#39;t sprint.</b> "
+   "On the morning an index option expires, we look at where the index opened — say NIFTY at 25,000. We then sell "
+   "someone the right to buy NIFTY at 25,125 (0.5% higher) before the day ends. They pay us for that right. "
+   "We are betting NIFTY will NOT climb 0.5% today. If it doesn&#39;t, the right expires worthless and we keep the "
+   "whole payment. That happens roughly <b>9 times out of 10</b>.")}
+{p("<b>The safety net (this is the important part).</b> If NIFTY did rocket upward, selling that right alone could "
+   "cost us an unlimited amount. So at the same time we BUY the right to buy at 25,325 (further out). That second "
+   "option is our insurance: no matter how violently the market moves, our maximum loss is capped and known before "
+   "we enter. That pair — sell one, buy one further away — is what &#39;credit spread&#39; means. We collect the "
+   "difference, and the gap between the two strikes is the worst case.")}
+{p("<b>So the trade-off is: win small, often — lose bigger, rarely.</b> We might collect ₹9,500 when we win and "
+   "lose ₹10,500 when we don&#39;t. That is why the win rate has to stay high to make money. At ~89% wins it works; "
+   "at ~76% it would break even; below that it bleeds. Everything else in this tab is us checking, honestly, "
+   "whether the win rate is real and whether it holds up in bad years.")}
+{p("<b>The stock fade books do the same thing over days instead of hours.</b> When a stock jumps to a new high, "
+   "crowds rush to buy its call options and those options get expensive on hope. Breakouts usually stall. So we sell "
+   "that expensive hope with the same capped-risk structure, and buy it back cheaper a few days later.")}
+{res("THE ONE COUNTER-INTUITIVE LESSON (proved across 448 trades, 2019→2026): <b>scary days are GOOD days for us.</b> "
+     "It feels obvious that we should stand aside on RBI policy day, on a war headline, on a big results day. We "
+     "tested all of it — and every single &#39;avoid the scary day&#39; rule LOST money. The reason: when everyone is "
+     "frightened, insurance gets expensive, and we are the ones SELLING insurance. Fear is what we are paid for. "
+     "The 7 expiry days that landed on a real geopolitical shock won 7 out of 7. What actually hurts us is not "
+     "drama — it is being paid too little, which is why the only filter we added refuses trades where the premium "
+     "is too thin to be worth the risk.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">CONSOLIDATED MONTHLY P&amp;L — model, all live books (1 lot vs 2 lots)</p>
 {dim("MODEL figures on REAL premiums, NET of charged slippage + brokerage, win/loss rate already baked in. "
      "Plan on ~80% of net (a 20% haircut for live fill quality — fair for these real-premium books, vs a "
      "blanket half). All correlated short-premium — a crash month hits several at once. studies/CONSOLIDATED_PNL.md")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win OOS</b></td><td><b>~₹/mo · 1 lot</b></td><td><b>~₹/mo · 2 lots</b></td></tr>
-<tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td></tr>
-<tr><td>Stock fade v1 (control)</td><td>73%</td><td>~₹12,000*</td><td>~₹24,000</td></tr>
-<tr><td>0DTE NIFTY (Tue)</td><td>87%</td><td>~₹2,500</td><td>~₹5,000</td></tr>
-<tr><td>0DTE SENSEX (Thu)</td><td>89%</td><td>~₹3,200</td><td>~₹6,400</td></tr>
-<tr><td>0DTE BANKNIFTY (monthly)</td><td>91%</td><td>~₹1,500*</td><td>~₹3,000</td></tr>
-<tr style="color:{GREEN};"><td><b>CONSOLIDATED</b></td><td><b>—</b></td><td><b>≈ ₹39,000</b></td><td><b>≈ ₹78,000</b></td></tr>
-<tr style="color:{AMBER};"><td><b>Plan-on (80% of net)</b></td><td><b>—</b></td><td><b>≈ ₹31,000</b></td><td><b>≈ ₹62,000</b></td></tr>
+<tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>~₹/mo · 1 lot</b></td><td><b>~₹/mo · 2 lots</b></td><td><b>basis</b></td></tr>
+<tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>Stock fade v1 (control)</td><td>73%</td><td>~₹12,000*</td><td>~₹24,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>0DTE NIFTY</td><td>88.3%</td><td>~₹1,771</td><td>~₹3,542</td><td style="color:{GREEN};">MEASURED 273 tr · 86 mo</td></tr>
+<tr><td>0DTE SENSEX</td><td>89.0%</td><td>~₹3,153</td><td>~₹6,306</td><td style="color:{GREEN};">MEASURED 91 tr · 22 mo</td></tr>
+<tr><td>0DTE BANKNIFTY (monthly)</td><td style="color:{RED};">78.6%</td><td style="color:{RED};">~₹141</td><td style="color:{RED};">~₹282</td><td style="color:{GREEN};">MEASURED 84 tr · 84 mo</td></tr>
+<tr style="color:{GREEN};"><td><b>CONSOLIDATED (full history)</b></td><td><b>—</b></td><td><b>≈ ₹37,065</b></td><td><b>≈ ₹74,130</b></td><td></td></tr>
+<tr style="color:{AMBER};"><td><b>Plan-on (80% of net)</b></td><td><b>—</b></td><td><b>≈ ₹29,650</b></td><td><b>≈ ₹59,300</b></td><td></td></tr>
 </table>
-{dim("*v1 &amp; BANKNIFTY ₹ are estimates (per-lot ₹ not separately published). Capital ~₹2–2.5L (1 lot) / "
-     "~₹4–5L (2 lots). Monthly Futures excluded (needs ₹15L, regime-off). NOT live — in the current drought a "
-     "realistic this-month is near ₹0; 2 lots doubles P&amp;L AND drawdown.")}
+{dim("<b>CORRECTED 2026-07-19</b> — the three 0DTE rows are now MEASURED from the 448-expiry dataset "
+     "(1 lot, net of costs, ₹/mo = total ÷ distinct calendar months), replacing older estimates. What changed: "
+     "NIFTY ₹2,500→₹1,771 · SENSEX ₹3,200→₹3,153 (confirmed) · <b>BANKNIFTY 91%/₹1,500 → 78.6%/₹141</b>. "
+     "The BANKNIFTY claim was the badly stale one. On the RECENT era only (Oct&#39;24→date) the 0DTE books read "
+     "NIFTY 93.2%/₹2,290 · SENSEX 89.0%/₹3,153 · BANKNIFTY 88.9%/₹696 (consolidated ≈₹38,139) — that recent "
+     "slice is what the old numbers were built on. Full history is the honest planning number.")}
+{dim("<b>BANKNIFTY caveat:</b> its era gap is CONFOUNDED — it had WEEKLY expiries pre-Nov&#39;24 and monthly-only "
+     "after (SEBI rationalisation), so Era A (−₹711 total) and Era B (+₹12,534) are not the same product. Read "
+     "this as &#39;the 91%/₹1,500 claim is unsupported&#39;, NOT as &#39;the book is proven bad&#39;. "
+     "*v1 ₹ remains an estimate (per-lot ₹ not separately published). Stock-book rows are carried from prior "
+     "studies and were NOT re-measured this session. Capital ~₹2–2.5L (1 lot) / ~₹4–5L (2 lots). Monthly Futures "
+     "excluded (needs ₹15L, regime-off). NOT live — in the current drought a realistic this-month is near ₹0; "
+     "2 lots doubles P&amp;L AND drawdown.")}
 
 <p style="color:{CYAN};font-size:16px;font-weight:bold;">How each ₹/mo is built — expectancy = win% × avg win − loss% × avg loss (the loss leg IS subtracted)</p>
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
