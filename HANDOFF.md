@@ -23,6 +23,31 @@ FRAMEWORK (from Fable 5 design pass, folded into the study):
     one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
     prefer HALF-SIZING over full skip if any effect is ever found.
 
+## DONE (2026-07-19) — RETURN ON CAPITAL per lot + holding period added to strategy table
+User: "add net returns considering loss rate per trade... return on capital which is max loss amount...
+mention holding period" then "this is per lot".
+CAPITAL = margin blocked = (width − credit) × lot = MAX LOSS. Returns below are ALREADY net of the
+loss rate (mean taken across ALL trades incl. losers).
+**PER LOT, MEASURED:**
+| book | lot | capital/trade | credit | net/trade | RoC | avg WIN | avg LOSS | worst |
+| NIFTY 0DTE | 75 | ₹13,577 | ₹1,423 | +₹558 | +4.11% | +₹1,168 | −₹4,038 | −₹12,975 |
+| SENSEX 0DTE | 20 | ₹11,519 | ₹1,755 | +₹762 | +6.62% | +₹1,418 | −₹4,549 | −₹8,963 |
+| BANKNIFTY (rejected) | 30 | ₹8,308 | ₹1,871 | +₹141 | +1.69% | +₹1,635 | −₹5,336 | −₹14,298 |
+Cross-check OK: NIFTY ₹558×3.2/mo=₹1,786≈₹1,771 · SENSEX ₹762×4.1=₹3,124≈₹3,153.
+KEY SHAPE: a LOSS costs 3–7× what a WIN pays (NIFTY −₹4,038 vs +₹1,168) — that is WHY ~88% win is
+required and why BANKNIFTY at 78.6% could not carry itself.
+**BUG CAUGHT — do not repeat:** naive mean-of-ratios gave v2 UNION **+302%/trade**, impossible for a
+credit spread (max gain = the credit). Cause: **16 of 569 trades print c/W>0.95** → margin collapses to
+~0.5 pts and the ratio explodes; those are stale/illiquid prints (a spread paying 99.5% of width is
+free money). FIX: exclude c/W>0.90 AND report CAPITAL-WEIGHTED sum(net)/sum(margin), never mean-of-
+ratios. Clean v2 (n=545): **capital-wtd +52.3%**, median +56.6%, win 84.8%, avgW +101.7%, avgL −101.8%.
+(v2 ₹ per lot NOT derivable from d5 jsons — no per-stock lot size; UI keeps prior study's ~₹10,500
+margin / +₹4,069 expectancy and marks it as carried-forward.)
+HOLDING PERIOD: 0DTE = SAME DAY (09:16→15:30, ~6h, zero overnight gap risk) — certain, no measurement
+needed. v2 = measured by re-simulating the bhav era recording actual exit dates (ndte21_roc_holding.py)
+— SLOW (reloads 1,359 bhav files + refetches underlyings). Script prints are UNBUFFERED-less, so add
+flush=True if re-running.
+
 ## DONE (2026-07-19) — UI restructure: STRATEGY TABLE to top w/ per-CALENDAR-YEAR win rates, then P&L
 User: "clean the table, win rate IS and OOS and calendar year, structured, keep it top then pnl."
 MEASURED per-calendar-year win rates (all from real per-trade data, NOT estimates):
