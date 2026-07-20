@@ -15,7 +15,8 @@ import json
 import logging
 from datetime import datetime, date
 
-from engine.config import IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW
+from engine.config import (IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW,
+                           DTE_MULTI_BANKNIFTY_ENABLED)
 from engine.data_fetcher import SESSION, UPSTOX_BASE, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
 from engine.instruments import to_instrument_key, encode_key
 
@@ -269,6 +270,11 @@ def scan_signals() -> list:
     legs/premiums). Truthiness unchanged for the single engine_runner caller."""
     new = []
     for bk in BOOKS:
+        # BANKNIFTY REJECTED 2026-07-19 — edge indistinguishable from zero (t=+0.10), entire profit
+        # was 3 trades, worst day = ~102 months of profit. See studies/BANKNIFTY_0DTE_REJECTION.md.
+        # Resolution still runs below so any already-open position settles normally.
+        if bk["name"] == "BANKNIFTY" and not DTE_MULTI_BANKNIFTY_ENABLED:
+            continue
         try:
             new.extend(_scan_book(bk) or [])
         except Exception as e:

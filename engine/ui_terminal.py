@@ -811,9 +811,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Stock fade v1 (control)</td><td>73%</td><td>~₹12,000*</td><td>~₹24,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
 <tr><td>0DTE NIFTY</td><td>88.3%</td><td>~₹1,771</td><td>~₹3,542</td><td style="color:{GREEN};">MEASURED 273 tr · 86 mo</td></tr>
 <tr><td>0DTE SENSEX</td><td>89.0%</td><td>~₹3,153</td><td>~₹6,306</td><td style="color:{GREEN};">MEASURED 91 tr · 22 mo</td></tr>
-<tr><td>0DTE BANKNIFTY (monthly)</td><td style="color:{RED};">78.6%</td><td style="color:{RED};">~₹141</td><td style="color:{RED};">~₹282</td><td style="color:{GREEN};">MEASURED 84 tr · 84 mo</td></tr>
-<tr style="color:{GREEN};"><td><b>CONSOLIDATED (full history)</b></td><td><b>—</b></td><td><b>≈ ₹37,065</b></td><td><b>≈ ₹74,130</b></td><td></td></tr>
-<tr style="color:{AMBER};"><td><b>Plan-on (80% of net)</b></td><td><b>—</b></td><td><b>≈ ₹29,650</b></td><td><b>≈ ₹59,300</b></td><td></td></tr>
+<tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY (monthly)</s> <span style="color:{RED};font-weight:bold;">REJECTED 07-19</span></td><td><s>78.6%</s></td><td><s>~₹141</s></td><td><s>~₹282</s></td><td>edge ≈ 0 · see rejection note</td></tr>
+<tr style="color:{GREEN};"><td><b>CONSOLIDATED (full history, ex-BANKNIFTY)</b></td><td><b>—</b></td><td><b>≈ ₹36,924</b></td><td><b>≈ ₹73,848</b></td><td></td></tr>
+<tr style="color:{AMBER};"><td><b>Plan-on (80% of net)</b></td><td><b>—</b></td><td><b>≈ ₹29,540</b></td><td><b>≈ ₹59,080</b></td><td></td></tr>
 </table>
 {dim("<b>CORRECTED 2026-07-19</b> — the three 0DTE rows are now MEASURED from the 448-expiry dataset "
      "(1 lot, net of costs, ₹/mo = total ÷ distinct calendar months), replacing older estimates. What changed: "
@@ -821,6 +821,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "The BANKNIFTY claim was the badly stale one. On the RECENT era only (Oct&#39;24→date) the 0DTE books read "
      "NIFTY 93.2%/₹2,290 · SENSEX 89.0%/₹3,153 · BANKNIFTY 88.9%/₹696 (consolidated ≈₹38,139) — that recent "
      "slice is what the old numbers were built on. Full history is the honest planning number.")}
+{res("<b>★ BANKNIFTY 0DTE — REJECTED &amp; DISABLED 2026-07-19</b> (DTE_MULTI_BANKNIFTY_ENABLED=False; open "
+     "positions still settle, only new entries stop). NOT because it loses — the MEDIAN trade is +14.1% of "
+     "margin — but because its edge is <b>indistinguishable from zero</b> and the tail swamps it: avg +0.55%m, "
+     "<b>t = +0.10</b>, 95% CI [−9.98%, +11.09%], bootstrap p(mean≤0) = 0.33. <b>The entire profit is 3 trades</b> "
+     "— drop the 3 best and 7.5 years comes to <b>−₹8</b>. It made +₹141/month while its worst single day cost "
+     "−₹14,298 = <b>~102 months of profit in one session</b>. The &#39;91% / ₹1,500-a-month&#39; number it was "
+     "carried on was never supported (measured: 78.6% / ₹141). Two rescues were tested and BOTH failed: the "
+     "monthly-pinning hypothesis (monthly 76.1% vs weekly 80.4% within the same era) and &#39;the recent era "
+     "proves it&#39; (n=18, and EVERY book rose in Era B). An adversarial audit found no bug that flips the sign; "
+     "the one gap it did find (no liquidity floor on the long wing) would FLATTER the book, so rejecting is the "
+     "conservative side of that error. NOT claiming it is proven unprofitable — the CI spans zero, so the verdict "
+     "is UNPROVEN. At ~12 trades/yr it can never accumulate evidence fast enough to prove itself, which is itself "
+     "the argument. Reversal bar: ≥30 new monthly expiries with a 95% CI excluding zero. "
+     "File: studies/BANKNIFTY_0DTE_REJECTION.md")}
 {dim("<b>BANKNIFTY — &#39;but monthly expiry should win more, surely?&#39; TESTED 2026-07-19, answer NO.</b> "
      "Real mechanism to expect it (monthly = huge OI = strike PINNING holds the index still, which is what an OTM "
      "seller wants), so it was worth testing. Tested WITHIN Era A — same years, same pipeline, only expiry type "

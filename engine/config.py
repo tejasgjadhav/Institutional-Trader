@@ -334,6 +334,21 @@ ZERO_DTE_ELECTION_BLACKOUT = [
 # max-loss risk for zero compensation, not to harvest the Rs1,878.
 ZERO_DTE_MULTI_MIN_CW = 0.04
 
+# BANKNIFTY 0DTE — REJECTED and DISABLED 2026-07-19 (user decision, after an adversarial audit).
+# 84 monthly expiries 2019→Jun'26, 1 lot, net of costs. It is not that the book "loses" — the MEDIAN
+# trade is +14.1% of margin. It is that the edge is indistinguishable from zero and the tail swamps it:
+#   * avg +0.55% of margin, t = +0.10, 95% CI [-9.98%, +11.09%]  -> NOT distinguishable from zero
+#   * bootstrap p(mean <= 0) = 0.33
+#   * the ENTIRE profit is 3 trades: drop the 3 best and the book is -Rs8 over 7.5 years
+#   * +Rs141/month at 1 lot, while the worst single day was -Rs14,298 = ~102 months of profit
+#   * the "91% win / ~Rs1,500 per month" figure it was carried on was never supported
+# The monthly-expiry-should-win-more hypothesis was tested and rejected (ndte19): within Era A,
+# MONTHLY 76.1% win / -1.55%m vs WEEKLY 80.4% / +8.51%m, z = -0.75.
+# Audit (ndte20) found no bug that flips the sign; the one bias it did find (no CONTRACTS floor on the
+# long wing) would FLATTER the book, so rejecting is the conservative side of that error.
+# Set back to True only with fresh evidence — see studies/BANKNIFTY_0DTE_REJECTION.md.
+DTE_MULTI_BANKNIFTY_ENABLED = False
+
 ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
 ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day
 ZERO_DTE_SETTLE_AFTER = "15:30"  # book at expiry settlement (intrinsic vs spot)
