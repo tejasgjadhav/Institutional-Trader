@@ -23,6 +23,23 @@ FRAMEWORK (from Fable 5 design pass, folded into the study):
     one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
     prefer HALF-SIZING over full skip if any effect is ever found.
 
+## DONE (2026-07-19, 1e05f1f) — BANKNIFTY 0DTE **REJECTED & DISABLED** (user decision)
+`DTE_MULTI_BANKNIFTY_ENABLED=False` in config; dte_multi.scan_signals skips it. Open positions STILL
+RESOLVE (only new entries stop). Fully reversible.
+NOT because it loses — MEDIAN trade is +14.1%m. Because edge ≈ zero and tail swamps it (84 monthly
+expiries 2019-01→2026-06, 1 lot, net): avg +0.55%m · **t=+0.10** · 95% CI [−9.98%,+11.09%] · bootstrap
+p(mean≤0)=0.33 · **ENTIRE profit is 3 trades — drop 3 best → −₹8** · +₹141/mo vs worst day −₹14,298
+(≈102 months of profit in one session) · the "91%/₹1,500" it was carried on was NEVER supported.
+Both rescues tested & failed: monthly-pinning (ndte19: monthly 76.1% vs weekly 80.4% WITHIN Era A,
+z=−0.75) and "recent era proves it" (n=18; EVERY book rose in Era B, NIFTY 86.5%→93.2%).
+ADVERSARIAL AUDIT `ndte20_bnf_audit.py` written to FALSIFY the rejection: clean on bad prints, monthly
+tagging, lot-size artifact, survivorship. **One real gap: CONTRACTS>=100 floor was applied to the SHORT
+leg only, not the long wing — a dead wing would FLATTER the book, so the bias runs AGAINST rejecting
+= conservative.** No bug flips the sign.
+NOT claiming proven-unprofitable (CI spans 0 → UNPROVEN). At ~12 trades/yr it can never accumulate
+evidence fast enough. REVERSAL BAR: ≥30 new monthly expiries with 95% CI excluding zero.
+Draft rationale: studies/BANKNIFTY_0DTE_REJECTION.md.
+
 ## ACTIVE (2026-07-19) — STALE UI NUMBERS FOUND + layman explainer requested
 User asked to explain the 0DTE strategy in plain English and CORRECT STALE VALUES / update monthly
 profit calcs. Measured from the 448-expiry dataset (1 lot, net of costs, months = distinct YYYY-MM):

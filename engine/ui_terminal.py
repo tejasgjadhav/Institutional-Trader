@@ -709,9 +709,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("3", "0DTE SENSEX CE spread (Thu)", "SELL", "88.8%",
              "+7.6% of margin · +₹67k/21mo", "89 exp · Oct24→Jun26", "4-5",
              "~₹3k/mo/lot (model)", "✓ VALIDATED (21mo)", "LIVE 07-09 · 1 lot", AMBER),
-            ("4", "0DTE BANKNIFTY CE spread (mthly)", "SELL", "91% mthly · 79.5% wk",
-             "+11%m mthly · +7.4%m wk 2019-24", "273 wk + 23 mthly", "~1",
-             "~₹0.8k/mo/lot (model)", "✓ VALIDATED", "LIVE · monthly · 1 lot", PURPLE),
+            ("—", "0DTE BANKNIFTY CE spread (mthly)", "SELL", "78.6% MEASURED (not 91%)",
+             "+0.55%m · t=+0.10 · CI spans 0", "84 mthly · 2019→Jun26", "~1",
+             "₹141/mo (was claimed ₹1,500)", "✗ REJECTED · edge ≈ 0", "DISABLED 07-19", TEXT_DIM),
             ("5", "Stock credit spread v1 · fade (TP-75)", "SELL", "54% IS (no TP) · 73% OOS",
              "+5.3%w IS · +17.9%w OOS", "718 + 346 · 2019→Jul26", "~16",
              "₹9k model · ₹4-5k plan", "✓ VALIDATED + OOS", "LIVE · 1 lot · control book", GREEN),
@@ -850,14 +850,34 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "excluded (needs ₹15L, regime-off). NOT live — in the current drought a realistic this-month is near ₹0; "
      "2 lots doubles P&amp;L AND drawdown.")}
 
+<p style="color:{CYAN};font-size:16px;font-weight:bold;">→ WHAT THE BOOK EARNS PER MONTH TODAY (post-rejection · 1 lot)</p>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Live book</td><td>Status</td><td>Win</td><td>₹/mo · 1 lot</td><td>Evidence</td></tr>
+<tr><td>★ Stock fade v2 UNION</td><td style="color:{GREEN};">LIVE</td><td>87%</td><td>~₹20,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>Stock fade v1 (control)</td><td style="color:{GREEN};">LIVE</td><td>73%</td><td>~₹12,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>0DTE SENSEX</td><td style="color:{GREEN};">LIVE</td><td>89.0%</td><td>~₹3,153</td><td style="color:{GREEN};">MEASURED · 91 trades</td></tr>
+<tr><td>0DTE NIFTY</td><td style="color:{GREEN};">LIVE</td><td>88.3%</td><td>~₹1,771</td><td style="color:{GREEN};">MEASURED · 273 trades</td></tr>
+<tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY</s></td><td style="color:{RED};font-weight:bold;">REJECTED 07-19</td><td>78.6%</td><td>₹0 <s>(was ₹141)</s></td><td>edge ≈ 0 · t = +0.10</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Index swing fade (NIFTY/FINNIFTY)</td><td>paper</td><td>54%</td><td>~₹0</td><td>regime-dep · failed OOS</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Monthly futures (REV1-v2)</td><td>REGIME-OFF</td><td>75.7%</td><td>₹0 now</td><td>needs ~₹15L · NIFTY &lt; 200DMA</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL · 1 lot</b></td><td></td><td><b>—</b></td><td><b>≈ ₹36,924</b></td><td>was ₹39,000 pre-correction</td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>PLAN ON · 80% of net</b></td><td></td><td><b>—</b></td><td><b>≈ ₹29,540</b></td><td>live-fill haircut</td></tr>
+<tr style="color:{AMBER};"><td>TOTAL · 2 lots</td><td></td><td>—</td><td>≈ ₹73,848</td><td>plan-on ≈ ₹59,080</td></tr>
+</table>
+{dim("<b>Read this honestly:</b> ₹36,924 is a MODEL on real premiums with costs charged and the loss leg already "
+     "subtracted — not a forecast. <b>₹32,000 of it (87%) is the two STOCK books, which were NOT re-measured this "
+     "session</b> and still rest on their prior studies; only the ₹4,924 of 0DTE is measured here. In the current "
+     "signal drought a realistic this-month is near ₹0. Every book is correlated short-premium — a crash month "
+     "hits them together, so treat the total as ONE position, not five independent ones.")}
+
 <p style="color:{CYAN};font-size:16px;font-weight:bold;">How each ₹/mo is built — expectancy = win% × avg win − loss% × avg loss (the loss leg IS subtracted)</p>
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>Avg win</b></td><td><b>Avg loss</b></td><td><b>Net / trade (win×W − loss×L)</b></td><td><b>×/mo</b></td><td><b>≈ ₹/mo</b></td></tr>
 <tr><td>v2 UNION</td><td>86%</td><td>+₹6,048</td><td>−₹7,922</td><td>.86×6,048 − .14×7,922 = <b>+₹4,069</b></td><td>~5</td><td>~₹20,000</td></tr>
 <tr><td>Stock v1</td><td>73%</td><td>+41.0% width</td><td>−51.5% width</td><td>.73×41 − .27×51.5 = <b>≈+16%w</b> (OOS +17.9%w)</td><td>~16</td><td>~₹12,000*</td></tr>
-<tr><td>0DTE NIFTY</td><td>90%</td><td>+9.8% margin</td><td>−34.1% margin</td><td>.90×9.8 − .10×34.1 = <b>≈+5.6%m</b> ≈ ₹807</td><td>~3.4</td><td>~₹2,700</td></tr>
-<tr><td>0DTE SENSEX</td><td>89%</td><td>—</td><td>—</td><td><b>+7.6% margin</b> net (documented, +₹67k/21mo)</td><td>~4.5</td><td>~₹3,200</td></tr>
-<tr><td>0DTE BANKNIFTY</td><td>91%</td><td>—</td><td>−₹4,549</td><td><b>+7–11% margin</b> net (documented)</td><td>~1</td><td>~₹1,500*</td></tr>
+<tr><td>0DTE NIFTY</td><td><b>88.3%</b></td><td>—</td><td>—</td><td><b>+4.69% of margin</b> MEASURED, 273 tr / 86 mo</td><td>~3.2</td><td>~₹1,771</td></tr>
+<tr><td>0DTE SENSEX</td><td><b>89.0%</b></td><td>—</td><td>—</td><td><b>+7.62% of margin</b> MEASURED, 91 tr / 22 mo</td><td>~4.1</td><td>~₹3,153</td></tr>
+<tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY</s></td><td><s>91%</s> → 78.6%</td><td>—</td><td>−₹14,298 worst</td><td>+0.55%m · <b>t=+0.10, CI spans 0</b> · profit was 3 trades</td><td>~1</td><td style="color:{RED};">REJECTED</td></tr>
 </table>
 {dim("Every 'net/trade' already subtracts the loss leg — that is the answer to 'did you count losses'. Units "
      "differ: v2/BNF in ₹, v1 in % of width, 0DTE in % of margin. *v1 &amp; BANKNIFTY ₹/mo stay ESTIMATES "
@@ -945,10 +965,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>TIER A · ≥80% WIN</td><td>Win (IS / OOS)</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON</td></tr>
 <tr><td>★ Stock fade v2 UNION (swing)</td><td>85% / <b>88%</b></td><td>5–6</td><td>₹20–23k</td><td>₹10–12k</td></tr>
-<tr><td>NIFTY Tue 0DTE (FLIP)</td><td>85.8% / <b>91.0%</b></td><td>~3.5</td><td>₹2,360</td><td>₹1.2k</td></tr>
-<tr><td>SENSEX Thu 0DTE (CE)</td><td>— / <b>88.8%</b></td><td>~4.2</td><td>₹3,200</td><td>₹1.5k</td></tr>
-<tr><td>BANKNIFTY monthly 0DTE</td><td>— / <b>91.3%</b></td><td>~1</td><td>₹820</td><td>₹0.4k</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td>TIER A TOTAL (~₹2–2.5L capital)</td><td><b>≈85–88% blended</b></td><td>~14</td><td>~₹27–30k</td><td>~₹13–15k</td></tr>
+<tr><td>NIFTY 0DTE (FLIP)</td><td><b>88.3%</b> measured</td><td>~3.2</td><td>₹1,771</td><td>₹0.9k</td></tr>
+<tr><td>SENSEX 0DTE (CE)</td><td><b>89.0%</b> measured</td><td>~4.1</td><td>₹3,153</td><td>₹1.6k</td></tr>
+<tr style="color:{TEXT_DIM};"><td><s>BANKNIFTY monthly 0DTE</s> <span style="color:{RED};">REJECTED 07-19</span></td><td><s>91.3%</s> → 78.6%</td><td>~1</td><td><s>₹820</s> → ₹141</td><td>₹0</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td>TIER A TOTAL (~₹2–2.5L capital)</td><td><b>≈88% blended</b></td><td>~13</td><td>~₹25k</td><td>~₹12.5k</td></tr>
 <tr><td colspan="5" style="color:{BORDER};">———————————————————————————————————</td></tr>
 <tr style="color:{AMBER};font-weight:bold;"><td>TIER B · monthly futures pair (SEPARATE)</td><td>Win</td><td>Freq</td><td>Return on capital</td><td>Capital</td></tr>
 <tr><td style="color:{AMBER};">1 · Monthly futures pullback (REV1-v2, FUT)</td><td>75.7% OOS</td><td>5/cycle</td><td>~3.9%/mo · worst −20%</td><td>~₹15L margin</td></tr>
