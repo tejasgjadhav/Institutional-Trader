@@ -707,11 +707,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             # name, B/S, IS, OOS, per-yr, worst yr, capital/lot, net/trade RoC, avgW/avgL, hold, sig/mo, Rs/mo, colour
             ("★ Stock fade v2 UNION (TP-50)", "SELL", "84.3%", "87%",
              "19:96 20:88 21:85 22:90 23:79 24:81 25:85 26:89", "79%",
-             "~₹10,500", "<b>+52.3%</b> (~₹4,069)", "+101.7% / −101.8%", "days–weeks*",
+             "~₹10,500", "<b>+52.3%</b> (~₹4,069)", "+101.7% / −101.8%", "<b>12.1d</b> avg<br/>med 9 · p90 27",
              "5–6", "₹20–23k · ₹10–12k", AMBER),
             ("Stock credit v1 · fade (TP-75)", "SELL", "54%", "73%",
              "<span style='color:#888;'>no per-trade file</span>", "—",
-             "~₹9,000", "+17.9%w OOS", "—", "days–weeks*",
+             "~₹9,000", "+17.9%w OOS", "—", "days–weeks",
              "~16", "₹9k · ₹4–5k", GREEN),
             ("0DTE SENSEX CE spread", "SELL", "—", "89.0%",
              "24:75 25:90 26:93", "75%",
@@ -764,9 +764,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             f"rate — it is the mean across ALL trades including losers, so the loss leg is subtracted, not added "
             f"afterwards. <b>Note the asymmetry:</b> a loss costs 3–7× what a win pays (NIFTY −₹4,038 vs "
             f"+₹1,168). That is precisely why ~88% win rate is required, and why BANKNIFTY at 78.6% could not "
-            f"carry itself. *v2/v1 holding is days-to-weeks by design (entry ≥10 DTE, TP-50 books early, else "
-            f"hold to expiry) — the exact measured distribution is being computed; 0DTE holding is certain "
-            f"(09:16→15:30, ~6h, zero overnight gap risk). <b>v2 RoC excludes 24 trades printing c/W&gt;0.90</b> "
+            f"carry itself.</p>"
+            f"<p style='color:{TEXT_DIM};font-size:11px;'><b>HOLDING — measured, not assumed.</b> v2 over 369 "
+            f"bhav-era trades: avg <b>12.1 calendar days</b>, median 9, p90 27, max 38 — and <b>3 of 4 exits are "
+            f"the early TP-50</b> (279 trades, 75.6%, median just 6 days), not a wait to expiry (18.2%, median "
+            f"24d); stops are rare (6.2%) but slow (median 20d). 0DTE holding is certain: 09:16→15:30, ~6h, "
+            f"<b>zero overnight gap risk</b>.<br/><b>Per DAY of capital — this reverses the ranking:</b> v2 "
+            f"+52.3%/12.1d = <b>+4.3%/day</b> · NIFTY 0DTE <b>+4.7%/day</b> · SENSEX <b>+7.6%/day</b>. Per day "
+            f"committed, the 0DTE books MATCH OR BEAT the leader. v2 wins on ₹/month only because its capital is "
+            f"continuously deployed (~5.5 signals/mo × 12.1d ≈ 2.2 concurrent positions) while 0DTE capital sits "
+            f"<b>idle ~90% of the month</b>. So do not read +52% as '10× better than 4.7%' — that is a holding-"
+            f"period illusion.<br/><b>Reality check on v2:</b> those figures imply ≈97%/month on deployed capital "
+            f"(~₹22.4k profit on ~₹23.1k average tied up). That is NOT credible live, and independently "
+            f"corroborates the standing warning that the v2 backtest is OPTIMISTIC — <b>keep lots at 1</b>.</p>"
+            f"<p style='color:{TEXT_DIM};font-size:11px;'><b>v2 RoC excludes 24 trades printing c/W&gt;0.90</b> "
             f"(stale illiquid prints that collapse margin toward zero); it is capital-weighted, not a mean of "
             f"ratios, which would otherwise read an impossible +302%.</p>"
             f"<p style='color:{AMBER};font-weight:bold;margin:10px 0 2px 0;'>Rejected · paper · regime-off — where the edge is NOT</p>"

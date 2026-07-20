@@ -43,10 +43,20 @@ free money). FIX: exclude c/W>0.90 AND report CAPITAL-WEIGHTED sum(net)/sum(marg
 ratios. Clean v2 (n=545): **capital-wtd +52.3%**, median +56.6%, win 84.8%, avgW +101.7%, avgL −101.8%.
 (v2 ₹ per lot NOT derivable from d5 jsons — no per-stock lot size; UI keeps prior study's ~₹10,500
 margin / +₹4,069 expectancy and marks it as carried-forward.)
-HOLDING PERIOD: 0DTE = SAME DAY (09:16→15:30, ~6h, zero overnight gap risk) — certain, no measurement
-needed. v2 = measured by re-simulating the bhav era recording actual exit dates (ndte21_roc_holding.py)
-— SLOW (reloads 1,359 bhav files + refetches underlyings). Script prints are UNBUFFERED-less, so add
-flush=True if re-running.
+HOLDING PERIOD — **MEASURED** (ndte21_roc_holding.py; SLOW ~25min, reloads 1,359 bhav files + refetches
+underlyings; add flush=True if re-running, prints are buffered):
+  0DTE NIFTY/SENSEX : SAME DAY (09:16→15:30, ~6h, ZERO overnight gap risk) — certain
+  v2 UNION (369 bhav-era trades): **avg 12.1 cal days · median 9 · p90 27 · max 38**
+      TP     279 (75.6%) avg  8.9d median  6d   ← 3 of 4 exits are early TP-50, not expiry
+      STOP    23 ( 6.2%) avg 17.9d median 20d
+      EXPIRY  67 (18.2%) avg 23.6d median 24d
+**DERIVED — RoC PER DAY OF CAPITAL (makes books comparable):** v2 +52.3%/12.1d = **+4.3%/day** ·
+NIFTY 0DTE +4.69%/1d = **+4.7%/day** · SENSEX +7.62%/1d = **+7.6%/day**. So per DAY of capital the
+0DTE books MATCH OR BEAT v2 — v2 only wins on ₹/month because its capital is continuously deployed
+(~5.5 sig/mo × 12.1d ≈ 2.2 concurrent positions) while 0DTE sits IDLE ~90% of the month.
+**HONESTY FLAG:** v2's numbers imply ≈97%/month on deployed capital (₹22.4k profit on ~₹23.1k avg
+tied up). That is NOT credible for a live strategy and independently corroborates the repo's standing
+warning that the v2 backtest is OPTIMISTIC — KEEP LOTS AT 1. Do not present +52%/trade without this.
 
 ## DONE (2026-07-19) — UI restructure: STRATEGY TABLE to top w/ per-CALENDAR-YEAR win rates, then P&L
 User: "clean the table, win rate IS and OOS and calendar year, structured, keep it top then pnl."
