@@ -23,7 +23,20 @@ FRAMEWORK (from Fable 5 design pass, folded into the study):
     one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
     prefer HALF-SIZING over full skip if any effect is ever found.
 
-## RECOMMENDATION (2026-07-19) — NO strategy change. Validate, don't modify. See studies/NEXT_ACTIONS.md
+## DONE (2026-07-19) — STOCK AUDIT PASSED + NIFTY KEPT + studies/README.md index added
+STOCK AUDIT (ndte22): BOTH books PASS decisively. v2 t=+13.78 CI[+60.6,+80.7] 8/8 yrs, drop 10 best
+-> 83% survives. v1 t=+7.09 CI[+19.8,+34.9] 3/3 yrs, 69% survives. Worst trade = 8 and 12 TRADES of
+profit (BANKNIFTY was 102 MONTHS). The Rs32,000 is NOT fabricated.
+BUT MAGNITUDE still optimistic: v2 implies ~97%/mo on deployed capital; 24/569 trades print c/W>0.95
+(stale marks). KEEP THE BOOKS, DISTRUST THE NUMBER. Plan-on ~50% vs 80% still recommended, NOT changed.
+NIFTY 0DTE: **DO NOT REMOVE** — 2nd-strongest book. n=273/8yrs, +ve 7/8, t=+4.43, CI[+2.62,+6.77]
+excludes 0, p=0.0002, drop 5 best -> 87% survives. Small Rs/mo is a SIZE question not a VALIDITY one;
+per day of capital it is +4.7%/day vs v2 +4.3%/day. Opposite of BANKNIFTY (t=+0.10, p=0.33).
+OPEN GAPS: v1 in-sample era (718 trades) still has NO per-trade file — only its 346-trade OOS era was
+audited. v2 capital rests on approximated per-stock lot sizes.
+Added studies/README.md — index of all 40 studies + current book state + the 6 house rules.
+
+## (superseded) RECOMMENDATION — validate, do not modify. See studies/NEXT_ACTIONS.md
 Asked "any change in strategy?" Honest answer: **the evidence supports NO geometry/gate change.** Every
 modification tested this session was rejected on data (events, gap, VIX, earnings, shocks, Donchian
 window, rv5-extension). The two things deployed were RISK exclusions, not edges.
