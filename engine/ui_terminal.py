@@ -807,6 +807,19 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+{res("0DTE EVENT-DAY AVOIDANCE — TESTED AND REJECTED (2026-07-19): 'skip expiries that land on RBI "
+     "policy / Budget / FOMC' COSTS money on every definition. Pooled 182 expiries Oct'24→Jul'26 "
+     "(NIFTY+SENSEX+BANKNIFTY, deployed geometry): trade-everything 90.7% win / +7.28%m / +₹1.32L vs "
+     "avoid-all-core-events 90.2% / +6.79%m / +₹1.14L (−₹18.6k). REASON: the event subset is the BEST "
+     "subset (94.4% win, +11.8%m) — 16 of 18 were FOMC-SPILLOVER days (Fed lands 23:30 IST, so the NEXT "
+     "Indian session gets the post-event IV CRUSH, exactly what short premium is paid to capture; those "
+     "went 16/16, +15.0%m). And the filter buys NO tail protection: the worst trade of the whole sample "
+     "(−₹14,298 BANKNIFTY) was an ORDINARY day, so EX-EVENT worst is identical to baseline. RBI is the "
+     "only true intraday risk (10:00 IST announcement) and owns the worst event trade (2025-10-01 SENSEX "
+     "−47%m) — but only 2 of 182 expiries EVER hit an MPC day, so the '+₹4.4k from avoiding RBI' is one "
+     "bad trade, not an edge. Budget: ZERO overlap (both fell on weekend special sessions). Single regime; "
+     "CPI dates inferred + reported separately. REPORT-ONLY, no engine change. File: studies/ZERO_DTE_EVENT_DAYS.md")}
+
 {res("CREDIT/WIDTH BUCKETS (2026-07-15): net is a GRADIENT below the 0.40 gate — win rate barely drops "
      "(87→82→76%) but the money collapses. ≥0.40 = +31.7%w (deployed core, 87% win) · 0.35-0.40 = +9.2%w "
      "(REAL but ⅓ the edge, 82% win, +ve all 3 yrs, brutal −65% avg loss) · 0.30-0.35 = +1.1%w (breakeven "

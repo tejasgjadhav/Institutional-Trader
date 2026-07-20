@@ -1,6 +1,23 @@
 # Handoff — institutional-trader
 _Updated: 2026-07-19 by Claude Code_
 
+## DONE (2026-07-19) — 0DTE EVENT-DAY AVOIDANCE: TESTED AND REJECTED (studies/ZERO_DTE_EVENT_DAYS.md)
+Q: skip 0DTE expiries landing on RBI MPC / Budget / FOMC? A: **NO — avoiding COSTS money.**
+Pooled 182 expiries Oct'24→Jul'26 (NIFTY+SENSEX+BNF at deployed geometry): trade-all 90.7%/+7.28%m/
++₹1.32L vs avoid-all-core 90.2%/+6.79%m/+₹1.14L (−₹18.6k). Event subset is the BEST subset (94.4%,
++11.8%m): 16/18 were FOMC-SPILLOVER (Fed 23:30 IST → next session gets post-event IV CRUSH = exactly
+what short premium wants; 16/16 win, +15.0%m). Filter buys NO tail protection — worst trade of sample
+(−₹14,298 BNF) was an ORDINARY day, EX-EVENT worst identical to baseline. RBI = only true intraday risk
++ owns worst event trade (2025-10-01 SENSEX −47%m) BUT only 2/182 expiries ever hit an MPC day → the
+"+₹4.4k from avoiding RBI" is ONE bad trade, not an edge. Budget = ZERO overlap (both weekend sessions).
+Scripts: ndte13_events.py (collector; results persisted IN-REPO as ndte13_trades.json since /tmp purges),
+build_event_calendar.py (verified calendar + next-trading-day spillover mapping), ndte13_report.py.
+Cross-checks: SENSEX 89.0%/+7.62%m ≡ documented 88.8%/+7.6%m; NIFTY filtered n=73 ≡ documented.
+GOTCHAS: Aug'25 MPC was RESCHEDULED (decision 08-06 not 08-07); FOMC+CPI release AFTER 15:30 close so
+they map to the NEXT trading day (same-day tagging would be wrong); CPI dates mostly INFERRED from
+MOSPI's "12th or next working day" rule → kept separate, never in the headline. Single regime only.
+REPORT-ONLY, engine untouched. UI STUDIES card added, viewer verified stable PID.
+
 ## DONE (2026-07-19) — D5/D10/D15/D20 standalone Donchian validation, 2019→date (commit c423ac8, pushed origin+private)
 Question: is a stricter/longer Donchian window (D10/15/20) more DURABLE than the deployed UNION (≡D5)?
 Ran each window STANDALONE (own breakout stream + own re-entry gap, NOT the union), deployed v2 config
