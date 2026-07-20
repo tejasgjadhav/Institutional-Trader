@@ -94,16 +94,71 @@ filter could never help with anyway — never cost us anything in this sample.
 - Results coverage is the 12 largest constituents. A mid-cap result cannot move an index enough to
   matter, so this is the right universe, but it is not exhaustive.
 
+## CLOSING FINDING — this book is paid for visible fear
+
+Written verbatim from the decider's ruling, because it is the durable output of the whole series and
+should stop the next "avoid the scary day" proposal before it consumes another test budget:
+
+> A fixed-%-OTM credit spread sold on a scary morning collects inflated premium against a strike that
+> hasn't moved; **observable risk is compensation, not danger.** Every avoidance filter that keys on
+> ex-ante-visible stress (gap, VIX, spikes, shocks — 7/7 wins) removes exactly the trades where the
+> market overpays. The only threats to this book are (a) *intraday surprises*, which occurred zero
+> times in 448 expiries and cannot be filtered ex ante, and (b) true crisis regimes (VIX≥25), which
+> are too rare to test.
+
+The mirror image of that finding is the one thing that did survive: if rich premium is where the edge
+lives, **cheap premium is where it dies.** Pooled c/W buckets show a monotone gradient in which win
+rate is an *inverse* mirage — the cheapest bucket has the highest win rate and still loses money:
+
+| c/W bucket | n | Win % | Avg %margin | Total ₹ |
+|---|---|---|---|---|
+| 0.00-0.04 | 60 | **91.7%** | **−0.49%** | **−₹1,878** |
+| 0.04-0.08 | 103 | 87.4% | −0.30% | +₹5,689 |
+| 0.08-0.12 | 104 | 89.4% | +6.02% | +₹82,258 |
+| 0.12-0.18 | 88 | 84.1% | +5.95% | +₹57,823 |
+| 0.18+ | 93 | **81.7%** | **+10.03%** | +₹89,555 |
+
+Same shape as the stock book's validated c/w≥0.40 gate (`CW_BUCKET_ANALYSIS.md`). This was *predicted
+in advance* by the closing finding, so it is a confirmed hypothesis rather than a dredge.
+
+## Also tested and rejected: India VIX (the last open item)
+
+`ndte17_vix_final.py`, prior-close VIX so no lookahead. Every variant fails, most in the *opposite*
+direction to the prior: skip `vix_spike≥+10%` costs ₹17,227 and the flagged days were **92.9% win,
++13.32%m**. `vix_level≥15/18/20` cost ₹123,708 / ₹74,473 / ₹37,171, failing in *both* eras.
+`vix_level≥25` is the sole positive sign (Era A +₹10,603, n=11) but Era B has n=1 — untestable, not
+proven, and effectively a description of COVID. **Logged as a revisit condition only:** if Era B ever
+accrues ≥10 expiries with prior-close VIX≥25, rerun that one test. Half-sizing never rescued any
+rule; ex-worst-day removal never changed a sign.
+
 ## Disposition
 
-**REPORT-ONLY — no engine change.** Do not add an earnings filter and do not add a geopolitical
-filter to any 0DTE book.
+Do not add an earnings filter, a geopolitical filter, a gap filter, a VIX filter, or any swept
+credit threshold. **TWO structural exclusions were DEPLOYED** (2026-07-19), both on structural
+grounds rather than as statistical edges — neither makes a regime claim, so the both-eras rule does
+not govern them:
 
-This closes the event-avoidance series. Across all three studies — scheduled calendar events,
-pre-open magnitude signals, and now earnings and shocks — **nothing tested earns its keep.** The
-consistent mechanism is that this is a *short-volatility* book: elevated pre-open uncertainty raises
-the premium collected, and across 448 expiries that compensation has matched or exceeded the added
-risk. **Trade the full calendar.**
+1. **Election blackout** (`ZERO_DTE_ELECTION_BLACKOUT`, all three books) — national counting days +
+   the exit-poll reaction session. Scheduled *inside-window* binary; short premium is structurally
+   the wrong trade against a bimodal outcome. **Never triggered in 448 expiries**, so measured cost
+   is exactly ₹0 — 2024-06-04 (NIFTY −5.9%) was dodged by calendar luck, not design. Zero-premium
+   insurance against the book's known ruin mode.
+2. **Minimum credit/width ≥ 0.04** (`ZERO_DTE_MULTI_MIN_CW`, **SENSEX + BANKNIFTY only**) — NIFTY is
+   untouched, already carrying the same principle via `ZERO_DTE_MIN_CREDIT_PCT`. 0.04 is the
+   *structural boundary of the negative-EV bucket*, deliberately **not** the sweep's argmax: the
+   0.06-0.12 cutoffs scored better and were **explicitly rejected** as in-sample optima on small
+   skip-counts (BANKNIFTY skipped n=9). Purpose is to stop selling near-zero credit against a full
+   settlement tail — negative EV by arithmetic, not by regime.
+
+Everything else in the series is dead. The consistent mechanism is that this is a *short-volatility*
+book: elevated pre-open uncertainty raises the premium collected, and across 448 expiries that
+compensation matched or exceeded the added risk. **Trade the full calendar**, minus the two
+structural exclusions above.
+
+Standing constraint recorded: **SENSEX is permanently outside the era-split framework** (single-era
+book — BSE weeklies launched 2023), so it may only ever receive structural rules, never swept ones.
+Script fix applied: an era with zero observations now returns *single-era only*, never a silent pass
+— the earlier version would have green-lit single-era artifacts.
 
 Scripts: `studies/ndte/ndte16_earnings.py`. Data: `studies/ndte/nse_results_dates.py` (367 rows with
 intimation lead times), `studies/ndte/india_market_shocks.py` (50 classified events).

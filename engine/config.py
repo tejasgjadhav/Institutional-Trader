@@ -308,6 +308,32 @@ ZERO_DTE_FLIP_RET5 = 1.0     # FLIP rule (user-approved 2026-07-07): if NIFTY 5-
                              # W=200 both sides): FLIP 87.1% win / +Rs192k vs CE-always 84.7% /
                              # +Rs117k; OOS-era 91-94% win. Flip's weak years: 2019 (-Rs3.9k),
                              # 2021 (77% win). 0 = disabled (CE always). studies/FLIP_SIDE_CREDIT_FADE.md
+# === 0DTE STRUCTURAL EXCLUSIONS (2026-07-19) ===
+# Both added on STRUCTURAL grounds after the event-avoidance series (studies/ZERO_DTE_*.md).
+# Neither is a statistical edge; both are risk exclusions. Set to [] / 0 to disable.
+#
+# ELECTION BLACKOUT — national election counting days + the exit-poll reaction session.
+# Rationale: these are scheduled INSIDE-window binaries. IV widens, but the outcome distribution is
+# bimodal, not fat-normal, and short premium is structurally the wrong trade against a binary.
+# In 448 backtested expiries 2019→Jul'26 this NEVER ONCE triggered (2024-06-04, NIFTY −5.9%, was
+# dodged by calendar luck, not design) — so its measured historical cost is exactly Rs0. It is
+# zero-premium insurance against the book's known ruin mode, NOT a tested edge. Maintain by hand;
+# national counting days + exit-poll sessions only. If this list starts growing, re-review it.
+ZERO_DTE_ELECTION_BLACKOUT = [
+    "2019-05-20", "2019-05-23",   # exit-poll session + Lok Sabha counting
+    "2024-06-03", "2024-06-04",   # exit-poll session + Lok Sabha counting (NIFTY −5.9%)
+]
+# MINIMUM CREDIT/WIDTH — applies to the SENSEX + BANKNIFTY books only (dte_multi).
+# NIFTY already embodies this principle via ZERO_DTE_MIN_CREDIT_PCT above and is left UNCHANGED.
+# Rationale: pooled 448 expiries show a monotone c/W gradient where win rate is an inverse mirage —
+# the CHEAPEST bucket (c/W<0.04) had the HIGHEST win rate (91.7%) and still LOST money (−0.49% of
+# margin, −Rs1,878 over 60 trades). Selling near-zero credit against a full settlement tail is
+# negative-EV by arithmetic, not by regime. 0.04 is deliberately the STRUCTURAL boundary of that
+# dead bucket, NOT the P&L-maximising cutoff — the sweep's best numbers sat at 0.06-0.12 and were
+# explicitly REJECTED as in-sample argmaxes on small skip-counts. Purpose is to stop carrying
+# max-loss risk for zero compensation, not to harvest the Rs1,878.
+ZERO_DTE_MULTI_MIN_CW = 0.04
+
 ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
 ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day
 ZERO_DTE_SETTLE_AFTER = "15:30"  # book at expiry settlement (intrinsic vs spot)

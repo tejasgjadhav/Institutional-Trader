@@ -15,7 +15,7 @@ import json
 import logging
 from datetime import datetime, date
 
-from engine.config import IST, DATA_DIR
+from engine.config import IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW
 from engine.data_fetcher import SESSION, UPSTOX_BASE, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
 from engine.instruments import to_instrument_key, encode_key
 
@@ -149,6 +149,11 @@ def _scan_book(bk):
     book = _load_json(bk["book"], [])
     if any(p["entry_date"] == today.isoformat() for p in book):
         return []
+    # ELECTION BLACKOUT (structural, 2026-07-19) — see config. Scheduled inside-window binary;
+    # short premium is the wrong trade against a bimodal outcome. Rs0 measured historical cost.
+    if today.isoformat() in (ZERO_DTE_ELECTION_BLACKOUT or []):
+        logger.info(f"dte_multi[{bk['name']}]: SKIP — election blackout ({today.isoformat()})")
+        return []
     chain = _chain_today(bk)
     if not chain:
         return []
@@ -168,6 +173,14 @@ def _scan_book(bk):
         return []
     credit = round(sm - lm, 2)
     if credit <= 0:
+        return []
+    # MINIMUM CREDIT/WIDTH (structural, 2026-07-19) — SENSEX/BANKNIFTY only; NIFTY unchanged.
+    # Below this the spread is negative-EV by arithmetic: near-zero credit against a full
+    # settlement tail. The c/W<0.04 bucket had the HIGHEST win rate (91.7%) and still LOST money.
+    # 0.04 is the structural boundary of that dead bucket, NOT the sweep's argmax. See config.
+    if ZERO_DTE_MULTI_MIN_CW and credit / width < ZERO_DTE_MULTI_MIN_CW:
+        logger.info(f"dte_multi[{bk['name']}]: SKIP — credit/width {credit/width:.3f} < "
+                    f"{ZERO_DTE_MULTI_MIN_CW} (uncompensated tail risk)")
         return []
     lot = int(short.get("lot") or 0)
     if lot <= 0:

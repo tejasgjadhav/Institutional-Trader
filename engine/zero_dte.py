@@ -23,7 +23,7 @@ from datetime import datetime, date
 from engine.config import (
     IST, DATA_DIR, ZERO_DTE_ENABLED, ZERO_DTE_INDEX, ZERO_DTE_OTM_PCT, ZERO_DTE_WIDTH_PTS,
     ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX, ZERO_DTE_STOP_MULT,
-    ZERO_DTE_MIN_CREDIT_PCT, ZERO_DTE_FLIP_RET5,
+    ZERO_DTE_MIN_CREDIT_PCT, ZERO_DTE_FLIP_RET5, ZERO_DTE_ELECTION_BLACKOUT,
 )
 from engine.data_fetcher import fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp, fetch_upstox_historical
 from engine.instruments import to_instrument_key
@@ -193,6 +193,12 @@ def scan_signal() -> list:
         return []
     chain = _todays_ce_chain()
     if not chain:            # not a weekly-expiry day
+        return []
+    # ELECTION BLACKOUT (structural, 2026-07-19): scheduled inside-window binary — short premium is
+    # the wrong trade against a bimodal outcome. Never triggered in 448 backtested expiries, so the
+    # measured cost is Rs0; this is insurance against the ruin mode, not an edge. See config.
+    if today.isoformat() in (ZERO_DTE_ELECTION_BLACKOUT or []):
+        logger.info(f"zero_dte: SKIP — election blackout ({today.isoformat()}): scheduled binary event")
         return []
     rv = _rv5()
     if ZERO_DTE_RV5_MAX and rv is not None and rv >= ZERO_DTE_RV5_MAX:
