@@ -807,70 +807,66 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
-{res("★ DEPLOYED 2026-07-19 — TWO STRUCTURAL 0DTE EXCLUSIONS (Opus tested · Fable decided · now LIVE). "
-     "Both are RISK exclusions, NOT statistical edges — neither makes a regime claim, so the "
-     "both-eras rule doesn't govern them. Both config-flagged (set []/0 to revert). "
-     "<b>(1) ELECTION BLACKOUT</b> (ZERO_DTE_ELECTION_BLACKOUT — all 3 books): national counting days + "
-     "the exit-poll session. Scheduled INSIDE-window BINARY, and short premium is structurally the wrong "
-     "trade against a bimodal outcome. It NEVER triggered in 448 backtested expiries → measured cost is "
-     "EXACTLY ₹0. 2024-06-04 (NIFTY −5.9%) was dodged by CALENDAR LUCK, not design — this buys that "
-     "protection for zero premium. <b>(2) MIN CREDIT/WIDTH ≥ 0.04</b> (ZERO_DTE_MULTI_MIN_CW — SENSEX + "
-     "BANKNIFTY ONLY; NIFTY untouched, it already carries the principle via ZERO_DTE_MIN_CREDIT_PCT). "
-     "The c/W gradient shows win rate is an INVERSE MIRAGE: cheapest bucket c/W&lt;0.04 had the HIGHEST "
-     "win rate (91.7%) and still LOST money (−0.49%m, −₹1,878 over 60 trades); richest 0.18+ had the "
-     "LOWEST win (81.7%) and made the most (+10.03%m) — the same shape as the stock book's validated "
-     "c/w≥0.40 gate. 0.04 is the STRUCTURAL boundary of the negative-EV bucket and deliberately NOT the "
-     "sweep's argmax: the better-scoring 0.06-0.12 cutoffs were EXPLICITLY REJECTED as in-sample optima "
-     "on small skip-counts. Purpose is to stop selling near-zero credit against a full settlement tail "
-     "(negative EV by arithmetic, not by regime) — not to harvest the ₹1,878.")}
+{h("0DTE EVENT AVOIDANCE — SERIES CLOSED (2026-07-19)  ·  Opus tested · Fable decided")}
+{sub("Q: should we stand aside when we already KNOW something is happening today? "
+     "A: NO — every statistical filter tested costs money. Two STRUCTURAL exclusions are now live; "
+     "they are risk limits, not edges. Baseline 448 expiries 2019→Jul&#39;26: 86.6% win · +4.51%m · +₹2.33L.")}
 
-{res("0DTE INDIA VIX — TESTED AND REJECTED (2026-07-19, the last open item): every variant fails, most "
-     "in the OPPOSITE direction to the prior. Prior-close VIX so no lookahead. skip vix_spike≥+10% COSTS "
-     "−₹17,227 and those flagged days were 92.9% win / +13.32%m — among the BEST days in the book. "
-     "vix_level≥15/18/20 cost −₹123.7k / −₹74.5k / −₹37.2k, failing in BOTH eras. vix_level≥25 is the "
-     "ONLY positive sign (Era A +₹10,603, n=11) but Era B has n=1 → UNTESTABLE rather than proven, and "
-     "effectively a description of COVID. Logged as a REVISIT CONDITION only: if Era B ever accrues ≥10 "
-     "expiries with prior-close VIX≥25, rerun that one test. Half-sizing never rescued a rule; "
-     "ex-worst-day removal never changed a sign. File: studies/ZERO_DTE_EARNINGS_SHOCKS.md")}
+<p style="color:{GREEN};font-weight:bold;margin:8px 0 2px 0;">★ NOW LIVE — two structural exclusions (config-flagged · set []/0 to revert)</p>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:4px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Rule</td><td>Scope</td><td>Skips when</td><td>Measured cost</td><td>Why (structural, not statistical)</td></tr>
+<tr><td style="color:{GREEN};">Election blackout</td><td>all 3 books</td><td>counting day / exit-poll session</td>
+    <td><b>₹0</b> — never fired in 448</td><td>scheduled INSIDE-window BINARY; short premium is the wrong trade vs a bimodal outcome</td></tr>
+<tr><td style="color:{GREEN};">Min credit/width ≥ 0.04</td><td>SENSEX + BANKNIFTY<br/><span style="color:{TEXT_DIM};">NIFTY untouched</span></td><td>c/W &lt; 0.04 at entry</td>
+    <td>removes 60 dead trades</td><td>near-zero credit vs a full settlement tail = negative EV by ARITHMETIC, not regime</td></tr>
+</table>
+{dim("2024-06-04 (NIFTY −5.9%) was dodged by CALENDAR LUCK, not design — the blackout buys that for zero premium. "
+     "0.04 is the structural boundary of the negative-EV bucket and deliberately NOT the sweep&#39;s argmax: the "
+     "better-scoring 0.06-0.12 cutoffs were EXPLICITLY REJECTED as in-sample optima on small skip-counts. "
+     "NIFTY already carries the principle via ZERO_DTE_MIN_CREDIT_PCT.")}
 
-{res("0DTE EVENT AVOIDANCE — SERIES CLOSED, NOTHING EARNS ITS KEEP (2026-07-19). Three studies, 448 "
-     "expiries 2019→Jul'26, all REPORT-ONLY: (1) CALENDAR events (RBI/Budget/FOMC) — avoiding costs "
-     "−₹33.1k, both eras agree. (2) PRE-OPEN SIGNALS (overnight GAP as the instrument — it is the "
-     "market's own summary of ALL overnight news, no feed needed, and entry at 09:16 is AFTER the 09:15 "
-     "open so there's no lookahead) — every candidate FAILS the era split; the signed-gap asymmetry "
-     "INVERTS (down-gaps worst in Era A −12.5%m, BEST in Era B +19.7%m) = regime read, not edge. "
-     "(3) HEAVYWEIGHT EARNINGS + SHOCKS — NIFTY/SENSEX avoidance costs money every variant (top weights "
-     "9-13%, so a 4% single-stock move is only ~0.4% of index = below a 0.5%-OTM spread's pain "
-     "threshold); intraday-results days were GOOD (89.5% win, +13.6%m). BANKNIFTY: banks are ~half the "
-     "index BUT ZERO of 84 expiries hit an intraday bank result (month-END expiry vs mid-month results; "
-     "HDFCB/ICICIB report SATURDAYS). Only 51 of 367 result releases land inside the 09:16-15:30 window "
-     "at all. MARKET SHOCKS (descriptive only — a list compiled today is selected for having moved the "
-     "market, so it can't be a rule): the 7 expiries hitting a pre-open-observable shock went 7/7, "
-     "+21.4%m — Iran missile barrage +30.9%m, Hindenburg +14.1%m. The scariest days were the BEST days. "
-     "WHY IT ALL FAILS: release-window logic — events landing OUTSIDE the hold window (FOMC 23:30, India "
-     "CPI 17:30) aren't events for this book; those landing just BEFORE it mean we sell the exhale into "
-     "the richest premium. Short-vol books are PAID for uncertainty. VERDICT: trade the full calendar. "
-     "Files: ZERO_DTE_EVENT_DAYS.md · ZERO_DTE_PREOPEN_SIGNALS.md · ZERO_DTE_EARNINGS_SHOCKS.md")}
+<p style="color:{AMBER};font-weight:bold;margin:10px 0 2px 0;">Everything tested — and why each failed</p>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:4px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Candidate</td><td>Δ vs trade-all</td><td>What the skipped days actually did</td><td>Verdict</td></tr>
+<tr><td>Calendar events (RBI/Budget/FOMC)</td><td style="color:{RED};">−₹33.1k</td><td>event subset BEAT baseline: 85.3% win, +5.14%m</td><td style="color:{RED};">✗ both eras</td></tr>
+<tr><td>Overnight GAP (any threshold)</td><td style="color:{RED};">fails</td><td>sign INVERTS by era: down-gaps −12.5%m in A, <b>+19.7%m in B</b></td><td style="color:{RED};">✗ regime artifact</td></tr>
+<tr><td>India VIX level ≥15 / ≥18 / ≥20</td><td style="color:{RED};">−₹123.7k / −₹74.5k / −₹37.2k</td><td>high-VIX days were fine</td><td style="color:{RED};">✗ both eras</td></tr>
+<tr><td>India VIX spike ≥ +10%</td><td style="color:{RED};">−₹17.2k</td><td>flagged days were <b>92.9% win, +13.3%m</b> — the BEST days</td><td style="color:{RED};">✗ backwards</td></tr>
+<tr><td>India VIX level ≥ 25</td><td>+₹10.6k (Era A)</td><td>Era B has n=1 — a description of COVID</td><td style="color:{AMBER};">~ untestable · revisit if Era B n≥10</td></tr>
+<tr><td>Heavyweight earnings (NIFTY/SENSEX)</td><td style="color:{RED};">−₹14.1k / −₹7.0k</td><td>intraday-result days: 89.5% win, +13.6%m</td><td style="color:{RED};">✗ weight arithmetic</td></tr>
+<tr><td>Bank results (BANKNIFTY)</td><td>—</td><td><b>ZERO of 84 expiries</b> hit an intraday bank result</td><td style="color:{TEXT_DIM};">no observations</td></tr>
+<tr><td>Geopolitical shocks</td><td style="color:{RED};">would skip winners</td><td>7 shock expiries went <b>7/7, +21.4%m</b></td><td style="color:{RED};">✗ + list is hindsight</td></tr>
+<tr><td>Realized vol (rv5) on SENSEX/BNF</td><td style="color:{RED};">fails</td><td>helps Era A +₹47.6k, costs Era B −₹18.0k</td><td style="color:{RED};">✗ regime artifact</td></tr>
+</table>
+{dim("Half-sizing instead of skipping never rescued any rule; removing the single worst day never changed a sign. "
+     "Only 51 of 367 heavyweight result releases land inside the 09:16-15:30 window at all — HDFCBANK/ICICIBANK "
+     "report on SATURDAYS. Elections never coincided with an expiry in 7.5 years.")}
 
-{res("0DTE EVENT-DAY AVOIDANCE — TESTED AND REJECTED, FULL HISTORY 2019→date (2026-07-19): 'skip "
-     "expiries landing on RBI policy / Budget / FOMC' COSTS money on every definition, and BOTH ERAS "
-     "AGREE INDEPENDENTLY. Pooled 448 expiries 2019→Jul'26 (NIFTY+SENSEX+BANKNIFTY, deployed geometry): "
-     "trade-everything 86.6% win / +4.51%m / +₹2.33L vs avoid-all-core-events 86.8% / +4.40%m / +₹2.00L "
-     "(−₹33.1k). Win rate moves ±0.2pp — statistical NOTHING — while 68 trades of profit are given up. "
-     "ERA SPLIT (kills the single-regime worry): bhavcopy 2019→Jul'24 n=266 −₹14.5k · Upstox Oct'24→date "
-     "n=182 −₹18.6k — same answer in two independent regimes incl. COVID. REASON: the event subset BEATS "
-     "baseline (85.3% win, +5.14%m); FOMC-spillover days (Fed lands 23:30 IST → NEXT Indian session gets "
-     "the post-event IV CRUSH, exactly what short premium is paid to capture) ran +5.74%m vs +4.51%. And "
-     "the filter buys NO tail protection: 10 of the 12 WORST trades 2019→date were ORDINARY days, incl. "
-     "the worst (−₹14,298). RBI = only true intraday risk (10:00 IST) but just 9 of 448 expiries ever hit "
-     "an MPC day and those were still net +ve (+₹814) — the earlier '+₹4.4k from avoiding RBI' was 2 "
-     "trades and dissolves on full history. Budget: ZERO overlap either era. Off-cycle COVID RBI/emergency "
-     "Fed announcements held in a separate UNAVOIDABLE bucket (never 'avoided' — that would be hindsight "
-     "cheating); none coincided with an expiry. Cross-checks: NIFTY 88.3%/+4.69%m ≡ documented 87.8%/+4.0%m; "
-     "SENSEX 89.0%/+7.62%m ≡ documented 88.8%/+7.6%m. QUESTION CLOSED. REPORT-ONLY, no engine change. "
-     "SIDE-FINDING: BANKNIFTY monthly is far weaker on full history (2019→Jul'24 75.8% win / −1.64%m, n=66) "
-     "than its recent slice (88.9%/+8.60%m, n=18) — its documented '91%' rests on a small recent sample; "
-     "worth its own study before that book is sized up. File: studies/ZERO_DTE_EVENT_DAYS.md")}
+<p style="color:{AMBER};font-weight:bold;margin:10px 0 2px 0;">The one positive finding — cheap premium is uncompensated tail risk (win rate is an INVERSE mirage)</p>
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:4px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>credit/width at entry</td><td>n</td><td>Win %</td><td>Avg % of margin</td><td>Total ₹</td></tr>
+<tr><td>0.00 – 0.04  <span style="color:{RED};">(now skipped)</span></td><td>60</td><td style="color:{GREEN};"><b>91.7%</b></td><td style="color:{RED};"><b>−0.49%</b></td><td style="color:{RED};">−₹1,878</td></tr>
+<tr><td>0.04 – 0.08</td><td>103</td><td>87.4%</td><td style="color:{RED};">−0.30%</td><td>+₹5,689</td></tr>
+<tr><td>0.08 – 0.12</td><td>104</td><td>89.4%</td><td>+6.02%</td><td>+₹82,258</td></tr>
+<tr><td>0.12 – 0.18</td><td>88</td><td>84.1%</td><td>+5.95%</td><td>+₹57,823</td></tr>
+<tr><td>0.18 +</td><td>93</td><td style="color:{AMBER};"><b>81.7%</b></td><td style="color:{GREEN};"><b>+10.03%</b></td><td style="color:{GREEN};">+₹89,555</td></tr>
+</table>
+{dim("The CHEAPEST bucket has the HIGHEST win rate and still LOSES money; the richest has the LOWEST win rate and "
+     "makes the most. Same shape as the stock book&#39;s validated c/w≥0.40 gate — and it was PREDICTED in advance by "
+     "the closing finding below, so it is a confirmed hypothesis, not a data-dredge.")}
+
+{res("CLOSING FINDING — this book is PAID FOR VISIBLE FEAR. A fixed-%-OTM spread sold on a scary morning collects "
+     "inflated premium against a strike that hasn&#39;t moved, so observable risk is COMPENSATION, not danger. Every "
+     "filter keying on ex-ante-visible stress removes exactly the trades where the market OVERPAYS. The only real "
+     "threats are (a) INTRADAY surprises — which occurred ZERO times in 448 expiries and cannot be filtered ex ante, "
+     "and (b) true crisis regimes (VIX≥25) — too rare to test. The mirror image is the only thing that survived: "
+     "cheap premium is uncompensated tail risk. Cross-checks: NIFTY 88.3%/+4.69%m ≡ documented 87.8%/+4.0%m; SENSEX "
+     "89.0%/+7.62%m ≡ documented 88.8%/+7.6%m. Files: ZERO_DTE_EVENT_DAYS.md · ZERO_DTE_PREOPEN_SIGNALS.md · "
+     "ZERO_DTE_EARNINGS_SHOCKS.md")}
+{dim("CAVEATS: BANKNIFTY rows are structurally confounded (weekly→monthly expiry break, SEBI rationalisation) and "
+     "carry less weight. SENSEX is a SINGLE-ERA book (BSE weeklies launched 2023) so it can never pass an era split "
+     "— it may only ever receive structural rules, never swept ones. Era A = bhavcopy 2019→Jul&#39;24 (incl. COVID), "
+     "Era B = Upstox Oct&#39;24→date; gap Jul-Sep&#39;24 where NSE retired the legacy bhavcopy format.")}
 
 {res("CREDIT/WIDTH BUCKETS (2026-07-15): net is a GRADIENT below the 0.40 gate — win rate barely drops "
      "(87→82→76%) but the money collapses. ≥0.40 = +31.7%w (deployed core, 87% win) · 0.35-0.40 = +9.2%w "
