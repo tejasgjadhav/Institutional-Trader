@@ -1649,8 +1649,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 legs = f"SELL {ss} / BUY {ls} {verb}" if ss and ls else "—"
                 sd = row.get("side", "")
                 side_s = "BEAR" if "CALL" in sd else ("BULL" if "PUT" in sd else (sd or "—"))
+                _e = str(row.get("expiry", "") or "")     # 2026-07-28 -> "28-Jul" (fits the column)
+                _MON = ("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
+                try:
+                    exp_s = f"{_e[8:10]}-{_MON[int(_e[5:7]) - 1]}" if len(_e) >= 10 else (_e or "—")
+                except Exception:
+                    exp_s = _e or "—"
                 vals = [row.get("sym", "—"), row.get("dir", "—"), side_s, f"D{row.get('dc','')}",
-                        legs, row.get("expiry", "—"), cwcell, premcell, liqcell, result]
+                        legs, exp_s, cwcell, premcell, liqcell, result]
                 self._set_row(self.pm_watch, i, vals)
                 self._color_cell(self.pm_watch, i, 9, GREEN if g == "PASS" else (AMBER if evaluable else RED))
                 for c in (3, 5, 6, 7, 8, 9):    # centre BRK + EXPIRY + gate + RESULT cells
