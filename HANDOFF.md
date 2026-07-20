@@ -88,6 +88,25 @@ NIFTY 0DTE +4.69%/1d = **+4.7%/day** · SENSEX +7.62%/1d = **+7.6%/day**. So per
 tied up). That is NOT credible for a live strategy and independently corroborates the repo's standing
 warning that the v2 backtest is OPTIMISTIC — KEEP LOTS AT 1. Do not present +52%/trade without this.
 
+## DONE (2026-07-21) — FIXED: premature-settlement bug that sent a WRONG Telegram WIN
+User got a wrong Telegram at ~00:06 on NIFTY expiry night declaring a WIN before settlement.
+ROOT CAUSE: swing_credit.resolve used `expired = today >= exp`, TRUE from 00:00 on expiry day. At
+midnight the market is shut so `_spot()` returned None and it fell back to `entry_spot` (the price
+from ENTRY, 2 weeks earlier). Against the 24500 short strike that gave intrinsic 0 → full credit →
+fake "WIN", which the _outcomes notifier then Telegrammed 15.5h before the 15:30 settlement.
+FIX (3 notifier books had the same latent defect — all fixed):
+  swing_credit.py (the culprit), stock_credit.py, stock_credit_v2.py:
+  `expired = (today > exp) or (today == exp and past_settle)` where past_settle = IST time >= 15:30,
+  AND never settle on entry_spot — use live spot, else expiry-day daily CLOSE, else leave OPEN + retry.
+  (zero_dte + dte_multi/sensex/bnf ALREADY had the correct past_settle guard — verified.)
+STATE REPAIRED: reverted NIFTY-2026-07-06 swing pos to OPEN (backup /tmp/swing_backup.json), removed
+it from data/outcome_notified.json so the REAL result notifies after 15:30 today.
+CORRECTION TELEGRAM SENT (send_telegram → True): apologised, explained the position is still open,
+settles today 15:30. NOTE: send_telegram reads token at import — a bare `python -c` needs
+`load_dotenv()` + re-inject n.TELEGRAM_BOT_TOKEN/CHAT_ID, else it returns False silently.
+STILL LATENT (not a notifier book, so no wrong-message risk; REGIME-OFF anyway): monthly_fut.py:245
+has the same `today >= exp` pattern. Fix it the same way if that book is ever re-enabled.
+
 ## DONE (2026-07-19) — UI restructure: STRATEGY TABLE to top w/ per-CALENDAR-YEAR win rates, then P&L
 User: "clean the table, win rate IS and OOS and calendar year, structured, keep it top then pnl."
 MEASURED per-calendar-year win rates (all from real per-trade data, NOT estimates):

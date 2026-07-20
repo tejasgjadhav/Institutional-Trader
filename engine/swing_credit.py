@@ -240,12 +240,19 @@ def resolve_swing_positions() -> int:
         return 0
     book = _load_book()
     today = date.today()
+    # BUGFIX 2026-07-21: this was `today >= exp`, which is TRUE from 00:00 on expiry day — so a
+    # position was settled at midnight, ~15.5h before the 15:30 settlement, using whatever spot was
+    # available (none, at that hour) and falling back to the ENTRY spot from days earlier. That
+    # fabricated a "WIN" and Telegrammed it. Settlement now requires the expiry session to be OVER,
+    # matching dte_multi's `(today > exp) or (today == exp and past_settle)`.
+    from engine.config import IST
+    past_settle = datetime.now(IST).strftime("%H:%M") >= "15:30"
     closed = 0
     changed = False
     for p in book:
         try:
             exp = date.fromisoformat(p["expiry"])
-            expired = today >= exp
+            expired = (today > exp) or (today == exp and past_settle)
             # ── MARK-TO-MARKET the current LEG values for every non-expired position (OPEN or
             # already closed) so the UI shows a LIVE 'current' that keeps running even after a
             # WIN/LOSS is booked. The realized P&L (set at close) is preserved below. ──
@@ -258,7 +265,22 @@ def resolve_swing_positions() -> int:
                 continue   # already booked — current refreshed above, realized P&L untouched
             # ── OPEN position: settle at expiry, else check the stop ──
             if expired:
-                spot = _spot(p["index"]) or p.get("entry_spot") or 0
+                # NEVER settle on the ENTRY spot — that is what produced the fake WIN above. Use the
+                # live spot; if unavailable, fall back to the index DAILY CLOSE. If neither can be
+                # had, leave the position OPEN and retry next cycle: a late settle is harmless, a
+                # wrong one is not.
+                spot = _spot(p["index"])
+                if not spot:
+                    try:
+                        df = fetch_upstox_historical(p["index"], unit="days", interval=1,
+                                                     from_date=exp.isoformat(), to_date=exp.isoformat())
+                        if df is not None and not df.empty:
+                            spot = float(df["Close"].iloc[-1])
+                    except Exception as e:
+                        logger.debug(f"swing settle close-fetch {p.get('id')}: {e}")
+                if not spot:
+                    logger.warning(f"swing: {p.get('id')} expired but NO SPOT — leaving OPEN, will retry")
+                    continue
                 if p["side"] == "BEAR_CALL":
                     si = max(0.0, spot - p["short_strike"]); li = max(0.0, spot - p["long_strike"])
                 else:  # BULL_PUT

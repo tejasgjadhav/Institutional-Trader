@@ -260,7 +260,12 @@ def resolve_positions() -> int:
     for p in book:
         try:
             exp = date.fromisoformat(p["expiry"])
-            expired = today >= exp
+            # BUGFIX 2026-07-21 (same defect fixed in swing_credit): `today >= exp` is TRUE from 00:00
+            # on expiry day, so a position could settle at midnight — hours early, with no live spot —
+            # and fall back to the stale ENTRY spot, fabricating a WIN. Require the session to be over.
+            from engine.config import IST
+            past_settle = datetime.now(IST).strftime("%H:%M") >= "15:30"
+            expired = (today > exp) or (today == exp and past_settle)
             # MTM current leg values for every non-expired position (open or closed) so the UI's
             # 'current' keeps running even after a WIN/LOSS is booked; realized P&L preserved below.
             if not expired:
@@ -271,7 +276,21 @@ def resolve_positions() -> int:
             if p.get("status") != "OPEN":
                 continue
             if expired:
-                spot = _spot(p["symbol"]) or p.get("entry_spot") or 0
+                # NEVER settle on the ENTRY spot (that is what fabricated the fake WIN). Live spot,
+                # else the expiry-day daily close; if neither, leave OPEN and retry — a late settle
+                # is harmless, a wrong one is not.
+                spot = _spot(p["symbol"])
+                if not spot:
+                    try:
+                        df = fetch_upstox_historical(p["symbol"] + ".NS", unit="days", interval=1,
+                                                     from_date=exp.isoformat(), to_date=exp.isoformat())
+                        if df is not None and not df.empty:
+                            spot = float(df["Close"].iloc[-1])
+                    except Exception:
+                        pass
+                if not spot:
+                    logger.warning(f"stock_credit: {p.get('id')} expired but NO SPOT — leaving OPEN, will retry")
+                    continue
                 if p["side"] == "BEAR_CALL":
                     si = max(0.0, spot - p["short_strike"]); li = max(0.0, spot - p["long_strike"])
                 else:
