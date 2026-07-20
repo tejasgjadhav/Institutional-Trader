@@ -1,7 +1,59 @@
 # Handoff — institutional-trader
 _Updated: 2026-07-19 by Claude Code_
 
-## ACTIVE GOAL (2026-07-19 cont.) — EXPAND event taxonomy: earnings + geopolitical, avoidable vs not
+## DONE (2026-07-19 cont.) — PRE-OPEN SIGNALS all REJECTED (studies/ZERO_DTE_PREOPEN_SIGNALS.md, e09f294)
+Broader "what's knowable before 9:15" test. INSTRUMENT = the overnight GAP (market's own weighted
+summary of every overnight input — no news API needed; entry is 09:16 AFTER the 09:15 open prints so
+there is NO lookahead). Swept gap / rv5 / prior-day-move thresholds on 448 trades.
+RESULT: nothing survives. Pooled sweeps show some extreme thresholds "helping" but EVERY candidate
+FAILS THE ERA SPLIT: skip rv5>=1.10 = +₹47.6k Era A / −₹18.0k Era B; same reversal for rv5>=1.30,
+gap-up>=0.75%, and the combined rule. The signed-gap asymmetry that looked structural (short-call book
+should fear UP-gaps) INVERTS: down-gaps worst bucket in Era A (−12.5%m), best in Era B (+19.7%m).
+Regime read, not an edge. → do NOT extend NIFTY's rv5<0.9 filter to SENSEX/BANKNIFTY.
+FRAMEWORK (from Fable 5 design pass, folded into the study):
+  * RELEASE-WINDOW TAXONOMY — what matters is where a release lands vs the 09:16→15:30 hold window.
+    INSIDE (RBI 10:00, Budget 11:00, election counting) = the only real risk class. JUST BEFORE
+    (FOMC 23:30, US close, overnight geopolitics, post-market results) = we sell the exhale = GOOD.
+    AFTER (India CPI 17:30, US CPI 18:00+) = IRRELEVANT to today's position — testing them same-day is
+    a CATEGORY ERROR, not an empirical question. This PREDICTS the earlier FOMC finding.
+  * RETROSPECTIVE-EVENT-LIST TRAP — a "major geopolitical shocks" list compiled today is selected FOR
+    having moved the market (survivorship-of-the-scary); inadmissible as a rule. The gap is the
+    admissible instrument for the same question. DO NOT build a hand-list avoid-rule.
+  * Other Fable cautions to honour: multiple testing (~90 tests → 4-5 false positives expected);
+    one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
+    prefer HALF-SIZING over full skip if any effect is ever found.
+
+## DONE (2026-07-19) — EARNINGS + SHOCKS tested → SERIES CLOSED (studies/ZERO_DTE_EARNINGS_SHOCKS.md)
+EARNINGS: dates from NSE board-meeting API which ALSO carries advance-intimation timestamps — min lead
+3d / median 14d across 367 rows, so ex-ante knowability is PROVEN not assumed. Decisive fact = release
+window: only **51 of 367** releases land INSIDE 09:15-15:30; 223 POST_CLOSE, 88 NON_TRADING_DAY
+(HDFCB/ICICIB report SATURDAYS). NIFTY/SENSEX avoidance COSTS money in every variant (weight arithmetic:
+top weights 9-13% → 4% stock move = ~0.4% of index, below a 0.5%-OTM spread's pain threshold);
+intraday-results days were GOOD (pooled 19 trades, 89.5% win, +13.63%m; avoiding = −₹24.3k).
+BANKNIFTY = the one place arithmetic said to look (banks ~half the index) and there was NOTHING:
+**ZERO of 84 expiries hit an intraday bank result** — month-END expiry vs mid-month results. Hypothesis
+structurally starved. The pooled "exhale-case avoidance helps +₹12.9k" is an ARTIFACT — entirely 6
+BANKNIFTY trades; strip them and the other 39 are +₹6.7k (avoidance would cost). Do not act on it.
+SHOCKS (descriptive only — retrospective list inadmissible as a rule): 7 expiries hit a pre-open-
+observable shock → **7/7 win, +21.35%m** (Iran barrage +30.9%m, Mar'26 crude/Fed cluster +34.6%m,
+Hindenburg +5.4/+14.1%m). ZERO intraday-surprise overlaps. The scariest days were the best days.
+**SERIES CLOSED — 3 studies, 448 expiries, nothing earns its keep. Trade the full calendar.**
+Data committed in-repo: studies/ndte/nse_results_dates.py (+csv), india_market_shocks.py.
+NSE recipe that works: cookie warm-up on /companies-listing/corporate-filings-board-meetings then
+GET /api/corporate-board-meetings?index=equities&symbol=X&from_date=DD-MM-YYYY&to_date=... (browser UA
++ Referer + X-Requested-With). Supports multi-year historical range. BSE api.bseindia.com is WAF-blocked.
+
+## (superseded) ACTIVE — heavyweight EARNINGS overlap test
+Agent sourcing real ex-ante board-meeting/results dates 2019→2026 for RIL/HDFCBANK/ICICIBANK/INFY/TCS/
+SBIN/LT/ITC/BHARTIARTL/KOTAKBANK/AXISBANK/HINDUNILVR. Fable's prior: this is a **BANKNIFTY-ONLY**
+hypothesis — NIFTY/SENSEX top weights ~9-13% so a 3-5% single-stock move = only 0.33-0.55% of index
+(below the 0.5%-OTM spread's pain threshold), but HDFCBANK ~26-29% + ICICIBANK ~23-25% ≈ HALF of
+BANKNIFTY. Two mitigations expected to shrink it: banks increasingly report Sat/post-market (lands in
+the GOOD before-window bucket), and BANKNIFTY is now month-END expiry while bank results cluster
+mid-month → coincidence rare. MUST split results into (i) announced INTRADAY today [risk] vs
+(ii) announced since yesterday's close [likely good] — needs NSE filing TIMESTAMPS, not just dates.
+
+## (superseded) ACTIVE GOAL — EXPAND event taxonomy: earnings + geopolitical, avoidable vs not
 User correction ACCEPTED: the BANKNIFTY side-finding is CONFOUNDED, not an edge — BANKNIFTY had WEEKLY
 expiries pre-Nov'24 and monthly-only after (SEBI weekly rationalisation). The monthly contract now
 absorbs flow that used to spread across weeklies, so Era A monthly-slice vs Era B monthly is NOT

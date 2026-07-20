@@ -807,6 +807,25 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+{res("0DTE EVENT AVOIDANCE — SERIES CLOSED, NOTHING EARNS ITS KEEP (2026-07-19). Three studies, 448 "
+     "expiries 2019→Jul'26, all REPORT-ONLY: (1) CALENDAR events (RBI/Budget/FOMC) — avoiding costs "
+     "−₹33.1k, both eras agree. (2) PRE-OPEN SIGNALS (overnight GAP as the instrument — it is the "
+     "market's own summary of ALL overnight news, no feed needed, and entry at 09:16 is AFTER the 09:15 "
+     "open so there's no lookahead) — every candidate FAILS the era split; the signed-gap asymmetry "
+     "INVERTS (down-gaps worst in Era A −12.5%m, BEST in Era B +19.7%m) = regime read, not edge. "
+     "(3) HEAVYWEIGHT EARNINGS + SHOCKS — NIFTY/SENSEX avoidance costs money every variant (top weights "
+     "9-13%, so a 4% single-stock move is only ~0.4% of index = below a 0.5%-OTM spread's pain "
+     "threshold); intraday-results days were GOOD (89.5% win, +13.6%m). BANKNIFTY: banks are ~half the "
+     "index BUT ZERO of 84 expiries hit an intraday bank result (month-END expiry vs mid-month results; "
+     "HDFCB/ICICIB report SATURDAYS). Only 51 of 367 result releases land inside the 09:16-15:30 window "
+     "at all. MARKET SHOCKS (descriptive only — a list compiled today is selected for having moved the "
+     "market, so it can't be a rule): the 7 expiries hitting a pre-open-observable shock went 7/7, "
+     "+21.4%m — Iran missile barrage +30.9%m, Hindenburg +14.1%m. The scariest days were the BEST days. "
+     "WHY IT ALL FAILS: release-window logic — events landing OUTSIDE the hold window (FOMC 23:30, India "
+     "CPI 17:30) aren't events for this book; those landing just BEFORE it mean we sell the exhale into "
+     "the richest premium. Short-vol books are PAID for uncertainty. VERDICT: trade the full calendar. "
+     "Files: ZERO_DTE_EVENT_DAYS.md · ZERO_DTE_PREOPEN_SIGNALS.md · ZERO_DTE_EARNINGS_SHOCKS.md")}
+
 {res("0DTE EVENT-DAY AVOIDANCE — TESTED AND REJECTED, FULL HISTORY 2019→date (2026-07-19): 'skip "
      "expiries landing on RBI policy / Budget / FOMC' COSTS money on every definition, and BOTH ERAS "
      "AGREE INDEPENDENTLY. Pooled 448 expiries 2019→Jul'26 (NIFTY+SENSEX+BANKNIFTY, deployed geometry): "
