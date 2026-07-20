@@ -30,6 +30,8 @@ from engine.instruments import to_instrument_key
 
 logger = logging.getLogger(__name__)
 
+_bl_warned = None   # last date the empty-blackout warning was logged (once/day)
+
 BOOK_PATH = os.path.join(DATA_DIR, "zero_dte_positions.json")
 STATUS_PATH = os.path.join(DATA_DIR, "zero_dte_status.json")
 
@@ -204,7 +206,11 @@ def scan_signal() -> list:
     # The blackout is a HAND-MAINTAINED list — there is no news feed behind it. If every entry is in
     # the past the filter is dead code and cannot protect anything, so say so loudly rather than
     # letting a non-functional safety feature look deployed.
-    if not any(d > today.isoformat() for d in _bl):
+    # Warn at most ONCE PER DAY. The next national election is due 2029, so warning on every scan
+    # would fire for years and become noise that gets ignored — the opposite of the intent.
+    global _bl_warned
+    if _bl and not any(d > today.isoformat() for d in _bl) and _bl_warned != today:
+        _bl_warned = today
         logger.warning("zero_dte: election blackout has NO FUTURE DATES — filter cannot fire. "
                        "Add ECI counting days + exit-poll sessions to ZERO_DTE_ELECTION_BLACKOUT.")
     rv = _rv5()

@@ -11,6 +11,38 @@ and surfaces buy-option signals on a dashboard. **It never places orders** — t
 them manually in Upstox. Status: a forward paper-test of a thin, ~52–61% directional,
 roughly-breakeven-after-costs edge. **Not proven profitable.** Be honest about this always.
 
+## CURRENT LIVE BOOKS (2026-07-21) — read this before the strategy sections below
+
+The strategy prose further down is **historical narrative** and describes several things that are now
+OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, monthly-call shelved).
+**This table is the deployed reality.** All are paper/signals-only at 1 lot.
+
+| Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
+|---|---|---|---|---|
+| ★ Stock fade v2 UNION (TP-50) | `STOCK_CREDIT_ENABLED` | 87% | ~₹20,000 | t=+13.78 · +ve 8/8 yrs |
+| Stock credit v1 (TP-75, control) | `STOCK_CREDIT_ENABLED` | 73% | ~₹12,000 | t=+7.09 · +ve 3/3 yrs (OOS only) |
+| 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
+| 0DTE NIFTY (FLIP) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
+| ~~0DTE BANKNIFTY~~ | `DTE_MULTI_BANKNIFTY_ENABLED=False` | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 |
+| Index swing fade | `SWING_CREDIT_ENABLED` | 54% | ~₹0 | regime-dep · failed OOS |
+| Monthly futures | `MONTHLY_FUT_ENABLED` | 75.7% | ₹0 now | REGIME-OFF · needs ~₹15L |
+
+**≈ ₹36,924/mo model at 1 lot.** Edges are validated; **magnitude is NOT** — v2 implies ~97%/mo on
+deployed capital, which is not credible. **Plan on ~50%, not the model figure, and keep lots at 1.**
+
+**Structural exclusions deployed 2026-07-19** (risk limits, NOT edges):
+`ZERO_DTE_MULTI_MIN_CW=0.04` (SENSEX/BNF; NIFTY unchanged) and `ZERO_DTE_ELECTION_BLACKOUT`.
+⚠ **The blackout is a HAND-MAINTAINED list with NO news engine behind it and currently holds only past
+dates, so it cannot fire.** Nothing fetches election/policy dates at runtime — `engine/events.py`
+scrapes NSE *corporate* news for STOCK scoring only; `studies/ndte/event_calendar.json` is research
+data the engine never reads. The engine logs a once-daily WARNING while the list has no future dates.
+
+**Settled question — do NOT re-mine:** event/news avoidance for 0DTE. RBI/Budget/FOMC, overnight gap,
+India VIX (level *and* spike), heavyweight earnings, and geopolitical shocks were **all tested and all
+cost money** (448 expiries, 2019→Jul'26). Mechanism: this is a short-vol book that is **paid for
+visible fear**, so filters keying on ex-ante-visible stress remove exactly the trades where the market
+overpays. Shock-day expiries went 7/7. See `studies/README.md` for the index and the 6 house rules.
+
 ## Architecture — two processes (decoupled)
 
 | | Headless **ENGINE** (`engine/engine_runner.py`) | Desktop **VIEWER** (`main.py` → `engine/ui_terminal.py`) |
