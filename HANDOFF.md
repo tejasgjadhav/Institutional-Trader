@@ -1,6 +1,31 @@
 # Handoff — institutional-trader
 _Updated: 2026-07-19 by Claude Code_
 
+## DONE (2026-07-19, EXTENDED) — 0DTE EVENT AVOIDANCE now tested on FULL HISTORY 2019→date: STILL NO
+User asked to push the study back to "2016 or 2019 whichever". 2019 is the FLOOR and it's a data fact,
+not a choice: NIFTY weekly options launched Feb 2019 (only monthlies before → no 0DTE weekly book);
+SENSEX weeklies launched 2023 AND are BSE (absent from NSE bhavcopy) so SENSEX is Era-B-only.
+RESULT (448 expiries 2019→Jul'26): trade-all 86.6%/+4.51%m/+₹2.33L vs avoid-all-core 86.8%/+4.40%m/
++₹2.00L = **−₹33.1k**. Win moves ±0.2pp (nothing) while 68 trades of profit are surrendered.
+**BOTH ERAS AGREE INDEPENDENTLY** — bhav 2019→Jul'24 (n=266, incl COVID) −₹14.5k · Upstox Oct'24→date
+(n=182) −₹18.6k. This KILLS the single-regime caveat the first pass carried. Question CLOSED.
+Mechanism unchanged: event subset BEATS baseline (85.3%/+5.14%m); FOMC-spillover = post-event IV crush.
+Tail risk is on ORDINARY days — 10 of 12 worst trades 2019→date, incl. worst (−₹14,298).
+RBI: only 9 of 448 expiries ever hit an MPC day, still net +ve (+₹814) → the Era-B "+₹4.4k from avoiding
+RBI" was 2 trades and dissolves. Budget: ZERO overlap either era.
+KEY METHOD POINT: off-cycle COVID RBI (2020-03-27, 2020-05-22, 2022-05-04) + emergency Fed (incl Sunday
+2020-03-15) are NOT knowable in advance → held in a separate UNAVOIDABLE bucket, NEVER in the avoidable
+set (folding them in = hindsight cheating). None coincided with an expiry (n=0), so they change nothing.
+NEW SCRIPTS: bhav_dl_0dte_idx.py (scans EVERY weekday keeping same-day-expiry OPTIDX rows — expiry
+WEEKDAY changed over the period, Thu→Wed→Tue, so a hardcoded weekday silently drops expiries),
+ndte14_events_2019.py (Era A collector), ndte14_report.py (full-history, era-split, worst-12 tagging).
+GOTCHAS: NSE killed the legacy foDDMMMYYYYbhav.csv.zip format ~Jul 2024 → Era A ends 2024-07-04, gap
+Jul–Sep'24. Cross-checks passed: NIFTY 88.3%/+4.69%m ≡ documented 87.8%/+4.0%m; SENSEX 89.0%/+7.62%m ≡
+documented 88.8%/+7.6%m.
+**SIDE-FINDING NEEDING ITS OWN STUDY:** BANKNIFTY monthly 0DTE is far weaker on full history —
+Era A 75.8% win / **−1.64%m** (n=66) vs Era B 88.9%/+8.60%m (n=18). Its documented "91% win" rests on a
+small recent sample. Flag before that book is ever sized up.
+
 ## DONE (2026-07-19) — 0DTE EVENT-DAY AVOIDANCE: TESTED AND REJECTED (studies/ZERO_DTE_EVENT_DAYS.md)
 Q: skip 0DTE expiries landing on RBI MPC / Budget / FOMC? A: **NO — avoiding COSTS money.**
 Pooled 182 expiries Oct'24→Jul'26 (NIFTY+SENSEX+BNF at deployed geometry): trade-all 90.7%/+7.28%m/
