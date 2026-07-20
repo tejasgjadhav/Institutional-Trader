@@ -88,6 +88,20 @@ NIFTY 0DTE +4.69%/1d = **+4.7%/day** · SENSEX +7.62%/1d = **+7.6%/day**. So per
 tied up). That is NOT credible for a live strategy and independently corroborates the repo's standing
 warning that the v2 backtest is OPTIMISTIC — KEEP LOTS AT 1. Do not present +52%/trade without this.
 
+## OPEN THREAD (2026-07-21) — SWING vs 0DTE Telegram confusion; DECISION PENDING from user
+User read the correction message (SWING NIFTY 24500/24650, expiry 21-Jul) as a same-day 0DTE call and
+objected: "our logic is check 9:16 levels then decide on Tuesday for NIFTY." That is the 0DTE book.
+The message was the SWING book: entered MON 6-Jul on a Donchian breakout (~15:10 scan), strikes chosen
+1-OTM AT ENTRY off 6-Jul close (~24440), held 15 days, expiry TUE 21-Jul. So the levels were NOT a
+today-call — they were locked 2 weeks ago. Coincidence worsening it: 21-Jul is BOTH the swing expiry
+AND a 0DTE Tuesday, so both books touch NIFTY today.
+ROOT UX PROBLEM: two NIFTY books both Telegram "NIFTY bear-call" results; swing broadcasts strikes
+decided at entry, which reads like a fresh same-day call. PENDING user decision (asked twice, not yet
+answered): (a) relabel swing _tg as "SWING · multi-day · entered <date> · held to expiry" so it can't
+be mistaken for 0DTE, and/or (b) SILENCE the swing book on Telegram entirely — it is an unproven paper
+fwd-test (54% win, failed OOS) and arguably should not broadcast beside the validated books.
+Do NOT change _tg labels or silence swing without the user picking — it is their group.
+
 ## DONE (2026-07-21) — FIXED: premature-settlement bug that sent a WRONG Telegram WIN
 User got a wrong Telegram at ~00:06 on NIFTY expiry night declaring a WIN before settlement.
 ROOT CAUSE: swing_credit.resolve used `expired = today >= exp`, TRUE from 00:00 on expiry day. At
