@@ -292,7 +292,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "LOT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
     # BRK = the STRONGEST Donchian window that broke (D5/D10/D15/D20) — D10+ is a more durable
     # breakout than a bare D5 (see studies/DONCHIAN_D5_VS_D10.md).
-    WATCH_COLS = ["STOCK", "DIR", "SIDE", "BRK", "SELL / BUY", "C/W", "PREM", "LIQ", "RESULT"]
+    WATCH_COLS = ["STOCK", "DIR", "SIDE", "BRK", "SELL / BUY", "EXPIRY", "C/W", "PREM", "LIQ", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -344,7 +344,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # ALL columns FIXED (no Stretch): the outer scroll widget is wider than the window
         # (the credit tables below force it), so a Stretch column balloons and pushes the last
         # columns off-screen. Fixed widths summing ~1030px keep the whole row on one screen.
-        for _c, _px in ((0, 100), (1, 70), (2, 62), (3, 54), (4, 280), (5, 100), (6, 124), (7, 114), (8, 134)):
+        for _c, _px in ((0, 96), (1, 66), (2, 60), (3, 52), (4, 250), (5, 104),
+                        (6, 96), (7, 120), (8, 110), (9, 128)):   # +EXPIRY at 5
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
         self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
@@ -1649,10 +1650,10 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 sd = row.get("side", "")
                 side_s = "BEAR" if "CALL" in sd else ("BULL" if "PUT" in sd else (sd or "—"))
                 vals = [row.get("sym", "—"), row.get("dir", "—"), side_s, f"D{row.get('dc','')}",
-                        legs, cwcell, premcell, liqcell, result]
+                        legs, row.get("expiry", "—"), cwcell, premcell, liqcell, result]
                 self._set_row(self.pm_watch, i, vals)
-                self._color_cell(self.pm_watch, i, 8, GREEN if g == "PASS" else (AMBER if evaluable else RED))
-                for c in (3, 5, 6, 7, 8):       # centre BRK + gate + RESULT cells (was ragged-left)
+                self._color_cell(self.pm_watch, i, 9, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+                for c in (3, 5, 6, 7, 8, 9):    # centre BRK + EXPIRY + gate + RESULT cells
                     it = self.pm_watch.item(i, c)
                     if it: it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
