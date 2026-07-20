@@ -23,6 +23,23 @@ FRAMEWORK (from Fable 5 design pass, folded into the study):
     one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
     prefer HALF-SIZING over full skip if any effect is ever found.
 
+## RECOMMENDATION (2026-07-19) — NO strategy change. Validate, don't modify. See studies/NEXT_ACTIONS.md
+Asked "any change in strategy?" Honest answer: **the evidence supports NO geometry/gate change.** Every
+modification tested this session was rejected on data (events, gap, VIX, earnings, shocks, Donchian
+window, rv5-extension). The two things deployed were RISK exclusions, not edges.
+**The real finding is a VALIDATION GAP, not a strategy gap:**
+  * ₹32,000 of the ₹36,924 monthly model (**87%**) is the two STOCK books, NOT re-measured this session.
+  * Every stale number checked this session came in OPTIMISTIC — BANKNIFTY worst: claimed 91%/₹1,500 →
+    measured 78.6%/₹141 (**~10× overstated**). NIFTY ₹2,500→₹1,771.
+  * v2's own numbers imply ≈97%/month on deployed capital — not credible; corroborates the standing
+    "backtest is OPTIMISTIC" warning.
+→ #1 PRIORITY: audit stock v2 + v1 the same way the 0DTE books were audited (per-trade file, per-
+  calendar-year win, RoC per lot, holding period, adversarial checks). v1 has NO per-trade file at all.
+→ #2: plan-on haircut of 80% is TOO GENEROUS on numbers that may themselves be 2-3× high. Suggest
+  planning on ~50% of model until the stock audit lands. (UI still SHOWS 80% — flagged, not changed,
+  because changing a planning assumption needs user sign-off.)
+→ DO NOT: add filters, resize up, or add books. Nothing in the evidence supports it.
+
 ## DONE (2026-07-19) — RETURN ON CAPITAL per lot + holding period added to strategy table
 User: "add net returns considering loss rate per trade... return on capital which is max loss amount...
 mention holding period" then "this is per lot".

@@ -808,6 +808,36 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         return f"""
 <div style="color:{TEXT};">
+<p style="color:{AMBER};font-size:18px;font-weight:bold;">⚠ RECOMMENDATION (2026-07-19) — NO strategy change. The gap is VALIDATION, not strategy.</p>
+{p("<b>Asked: any change in strategy? Evidence says no.</b> Every modification tested this session was "
+   "rejected on data — event/news/earnings/shock filters, gap filters, VIX filters, a longer Donchian "
+   "window, extending rv5 to SENSEX/BNF. The two things deployed (election blackout, min credit/width) "
+   "are RISK exclusions, not edges. The mechanism: this is a short-vol book, it is PAID for visible "
+   "fear, so filters that dodge visible stress remove exactly the trades where the market overpays.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>#</td><td>Action</td><td>Why</td><td>Status</td></tr>
+<tr><td><b>①</b></td><td><b>AUDIT the two STOCK books</b> (v2 + v1)</td>
+    <td><b>₹32,000 of the ₹36,924 model — 87% — is NOT re-measured.</b> Produce for them what now exists
+        for 0DTE: per-trade file, win by calendar year, RoC per lot, avg win/loss, measured holding,
+        adversarial audit. <b>v1 has NO per-trade file at all.</b></td>
+    <td style="color:{AMBER};">NOT STARTED · highest value</td></tr>
+<tr><td><b>②</b></td><td>Reconsider the <b>80% plan-on haircut</b></td>
+    <td>A 20% haircut on numbers that may themselves be 2–3× high is not conservative.
+        <b>~50% (≈₹18.5k) is more defensible</b> until ① lands.</td>
+    <td style="color:{TEXT_DIM};">flagged only — needs your sign-off</td></tr>
+<tr><td><b>③</b></td><td>Do NOT resize / add books / add filters</td>
+    <td>Nothing in the evidence supports it. Keep lots at 1.</td>
+    <td style="color:{GREEN};">holding</td></tr>
+</table>
+{res("<b>WHY ① MATTERS — every stale number checked this session came in OPTIMISTIC.</b> BANKNIFTY: "
+     "claimed 91% win / ₹1,500 per month → measured <b>78.6% / ₹141</b>, roughly <b>10× overstated</b>. "
+     "NIFTY 0DTE: ₹2,500 → ₹1,771 (−29%). SENSEX: ₹3,200 → ₹3,153 (accurate). Two of three overstated, "
+     "one by an order of magnitude — and the two books carrying 87% of the total have not been checked "
+     "at all. Independent corroboration: v2's own measured figures imply <b>≈97% per month on deployed "
+     "capital</b> (~₹22.4k profit on ~₹23.1k tied up). That is not a credible live return. It does NOT "
+     "mean v2 has no edge — it means the MAGNITUDE is inflated, which is exactly what the standing "
+     "'backtest is OPTIMISTIC, keep lots at 1' warning has always said. Full write-up: studies/NEXT_ACTIONS.md")}
+
 <p style="color:{CYAN};font-size:18px;font-weight:bold;">THE LIVE STRATEGIES — SUMMARY</p>
 {dim("Win rate is split IS / OOS / by CALENDAR YEAR. The per-year column is the honesty check: a book that "
      "only worked in one regime cannot hide behind a blended average.")}
