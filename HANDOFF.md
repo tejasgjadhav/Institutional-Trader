@@ -23,6 +23,20 @@ FRAMEWORK (from Fable 5 design pass, folded into the study):
     one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
     prefer HALF-SIZING over full skip if any effect is ever found.
 
+## DONE (2026-07-19) — UI restructure: STRATEGY TABLE to top w/ per-CALENDAR-YEAR win rates, then P&L
+User: "clean the table, win rate IS and OOS and calendar year, structured, keep it top then pnl."
+MEASURED per-calendar-year win rates (all from real per-trade data, NOT estimates):
+  v2 UNION (D5, merged both eras, n=569): 19:96 · 20:88 · 21:85 · 22:90 · 23:79 · 24:81 · 25:85 · 26:89
+    → worst year 79%, positive/8 yrs covered
+  NIFTY 0DTE (n=273): 19:85 · 20:85 · 21:76 · 22:87 · 23:94 · 24:91 · 25:94 · 26:94 → worst 76%
+  SENSEX 0DTE (n=91):  24:75 · 25:90 · 26:93 → worst 75% (3 yrs only, Era-B book)
+  BANKNIFTY (REJECTED, n=84): 19:67 · 20:67 · 21:83 · 22:64 · 23:92 · 24:89 · 25:90 · 26:83
+v1 per-year NOT available — studies/stkfade_oos_v1.json is a dict, not per-trade rows. Left as
+IS/OOS only and marked as such; DO NOT fabricate a per-year series for it.
+Sources: /tmp/d5_10_15_20_{bhav,oct24}.json (v2), studies/ndte/ndte1{3,4}_trades*.json (0DTE).
+NOTE /tmp may be purged — the 0DTE ones are in-repo, the v2 ones are NOT (regenerate via
+studies/ndte/stkfade_d5_10_15_20_{bhav,oct24}.py if needed).
+
 ## DONE (2026-07-19, 1e05f1f) — BANKNIFTY 0DTE **REJECTED & DISABLED** (user decision)
 `DTE_MULTI_BANKNIFTY_ENABLED=False` in config; dte_multi.scan_signals skips it. Open positions STILL
 RESOLVE (only new entries stop). Fully reversible.

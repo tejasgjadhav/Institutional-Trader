@@ -698,65 +698,72 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return w
 
     def _strategy_summary_table(self) -> str:
-        """Canonical strategy table — leader first (mirrors studies/STRATEGY_SUMMARY.md)."""
-        rows = [
-            ("1", "★ STOCK FADE v2 UNION — TP-50 (LEADER)", "SELL", "84.3% IS · 87% OOS",
-             "+26.2% IS · +29.5% OOS (of width)", "369+173 · 2019→Jun26", "5-6",
-             "₹20-23k · ₹10-12k", "✓ VALIDATED + OOS", "LIVE UNION 07-09 · 1 lot", AMBER),
-            ("2", "0DTE NIFTY FLIP spread (Tue)", "SELL", "87.1% (flip) vs 84.7% CE",
-             "+₹1.92L vs +₹1.17L · 2019→26", "372 expiries · real prem", "4-5",
-             "~₹2.2k/mo/lot (model)", "✓ VALIDATED + OOS", "LIVE FLIP 07-07 · 1 lot", CYAN),
-            ("3", "0DTE SENSEX CE spread (Thu)", "SELL", "88.8%",
-             "+7.6% of margin · +₹67k/21mo", "89 exp · Oct24→Jun26", "4-5",
-             "~₹3k/mo/lot (model)", "✓ VALIDATED (21mo)", "LIVE 07-09 · 1 lot", AMBER),
-            ("—", "0DTE BANKNIFTY CE spread (mthly)", "SELL", "78.6% MEASURED (not 91%)",
-             "+0.55%m · t=+0.10 · CI spans 0", "84 mthly · 2019→Jun26", "~1",
-             "₹141/mo (was claimed ₹1,500)", "✗ REJECTED · edge ≈ 0", "DISABLED 07-19", TEXT_DIM),
-            ("5", "Stock credit spread v1 · fade (TP-75)", "SELL", "54% IS (no TP) · 73% OOS",
-             "+5.3%w IS · +17.9%w OOS", "718 + 346 · 2019→Jul26", "~16",
-             "₹9k model · ₹4-5k plan", "✓ VALIDATED + OOS", "LIVE · 1 lot · control book", GREEN),
-            ("6", "Monthly futures pullback (REV1-v2)", "BUY", "75.1% IS · 75.7% OOS",
-             "+1.0%/tr · ~3.9%/mo on margin", "281 IS + 70 OOS · 2018→26", "5/cycle",
-             "needs ~₹15L (paper only)", "✓ VALIDATED OOS", "PAPER 07-10 · earnings-skip", AMBER),
-            ("—", "Index fade · NIFTY/FINNIFTY", "SELL", "54%",
-             "−1.4% of width", "181 · 2019→Sep24", "2-3",
-             "—", "✗ regime-dep · failed OOS", "forward-test only", TEXT_DIM),
-            ("—", "3-Family stocks (BUY)", "BUY", "50.6% (direction)",
-             "dir +0.107%/tr · −1.0% net as opts", "19,454 · 2019→2026", "daily",
-             "—", "~ dir edge, not net", "paper · hidden 07/26", TEXT_DIM),
+        """Canonical strategy table — LIVE books first, then rejected/paper. Win rate is split
+        IS / OOS / per-CALENDAR-YEAR so a book that only works in one regime is visible at a glance.
+        Per-year strings are MEASURED from per-trade data (v2: /tmp/d5_10_15_20_*.json; 0DTE:
+        studies/ndte/ndte1{3,4}_trades*.json) — never estimated. v1 has no per-trade file, so its
+        per-year cell says so rather than inventing one."""
+        live = [
+            # name, B/S, IS, OOS, per-calendar-year, worst yr, return, trades, sig/mo, Rs/mo, colour
+            ("★ Stock fade v2 UNION (TP-50)", "SELL", "84.3%", "87%",
+             "19:96 20:88 21:85 22:90 23:79 24:81 25:85 26:89", "79%",
+             "+26.2%w IS · +29.5%w OOS", "569 · 2019→Jul26", "5–6", "₹20–23k · ₹10–12k", AMBER),
+            ("Stock credit v1 · fade (TP-75)", "SELL", "54%", "73%",
+             "<span style='color:#888;'>no per-trade file — IS/OOS only</span>", "—",
+             "+5.3%w IS · +17.9%w OOS", "718 + 346 · 2019→Jul26", "~16", "₹9k · ₹4–5k", GREEN),
+            ("0DTE SENSEX CE spread", "SELL", "—", "89.0%",
+             "24:75 25:90 26:93", "75%",
+             "+7.62% of margin", "91 · Oct24→Jul26", "~4.1", "₹3,153 · ₹1.6k", AMBER),
+            ("0DTE NIFTY FLIP spread", "SELL", "86.5%", "93.2%",
+             "19:85 20:85 21:76 22:87 23:94 24:91 25:94 26:94", "76%",
+             "+4.69% of margin", "273 · 2019→Jul26", "~3.2", "₹1,771 · ₹0.9k", CYAN),
         ]
-        def vc(v):
-            return GREEN if v.startswith("✓") else (RED if v.startswith("✗") else AMBER)
-        def rowbg(n):
-            return " style='background-color:#2a2410;'" if n == "1" else ""
+        dead = [
+            ("0DTE BANKNIFTY (monthly)", "78.6% (not 91%)",
+             "19:67 20:67 21:83 22:64 23:92 24:89 25:90 26:83", "64%",
+             "+0.55%m · t=+0.10 · CI spans 0", "84 · 2019→Jun26",
+             "✗ REJECTED · edge ≈ 0", "DISABLED 07-19"),
+            ("Monthly futures (REV1-v2)", "75.1% IS · 75.7% OOS", "—", "—",
+             "+1.0%/tr · ~3.9%/mo on margin", "281+70 · 2018→26",
+             "✓ validated OOS", "PAPER · REGIME-OFF (needs ₹15L)"),
+            ("Index fade · NIFTY/FINNIFTY", "54%", "—", "—",
+             "−1.4% of width", "181 · 2019→Sep24",
+             "✗ regime-dep · failed OOS", "forward-test only"),
+            ("3-Family stocks (BUY)", "50.6% (direction)", "—", "—",
+             "dir +0.107%/tr · −1.0% net as options", "19,454 · 2019→26",
+             "~ direction edge, not net", "paper · hidden 07/26"),
+        ]
         lt = "".join(
-            f"<tr{rowbg(n)}><td>{n}</td>"
-            f"<td style='color:{c};font-weight:bold;'>{s}</td><td>{ty}</td><td>{wr}</td><td>{rt}</td>"
-            f"<td>{tw}</td><td>{fq}</td><td>{pnl}</td>"
-            f"<td style='color:{vc(vd)};font-weight:bold;'>{vd}</td><td>{stt}</td></tr>"
-            for n, s, ty, wr, rt, tw, fq, pnl, vd, stt, c in rows)
-        rejected = [
-            ("MIDCPNIFTY fade", "~20% win, −25 to −28% of width, illiquid (options only from mid-2022)", "✗ reject"),
-            ("BANKNIFTY fade", "−6.7% (40 tr; earlier +13% was 14-trade luck)", "✗ dropped"),
-            ("Index spread — FOLLOW breakout", "~40% win, −26 to −39%", "✗ rejected → breakouts REVERT"),
-            ("Generic (ungated) stock spread", "−1.1% (real 4-leg slippage)", "✗ rejected → c/w gate IS the edge"),
-            ("Stock option-buying (min-prem)", "−1.0% full yr (looked +1.5% on 180d — overfit)", "✗ no edge (cost filter only)"),
-        ]
-        rt2 = "".join(
-            f"<tr><td style='color:{TEXT_DIM};'>{nm}</td><td>{rs}</td><td style='color:{RED};'>{dc}</td></tr>"
-            for nm, rs, dc in rejected)
-        return (f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
-                f"<tr style='color:{CYAN};font-weight:bold;'><td>#</td><td>Strategy</td><td>B/S</td>"
-                f"<td>Win rate</td><td>Return</td><td>Trades · window</td><td>Sig/mo</td>"
-                f"<td>₹/mo @1 lot (model · practical)</td><td>Verdict</td><td>Status</td></tr>{lt}</table>"
-                f"<p style='color:{AMBER};font-weight:bold;margin:10px 0 2px 0;'>Rejected / dropped variants — where the edge is NOT:</p>"
-                f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:2px 0;'>"
-                f"<tr style='color:{CYAN};font-weight:bold;'><td>Variant</td><td>Real-data</td><td>Decision</td></tr>{rt2}</table>"
-                f"<p style='color:{TEXT_DIM};font-size:11px;'>Leader ₹/mo is the EXACT capped backtest (width×lot ≤ ₹40k, "
-                f"85.7% win, worst month −₹26.4k, 5/54 months negative); PRACTICAL ≈ half of model until live fills prove it. "
-                f"Rupee history uses TODAY's lot sizes — pre-2022 splits (e.g. BAJAJFINSV) inflate old extremes, one more "
-                f"reason the cap exists. SELL returns are NET of entry+exit costs on real premiums; BUY are underlying-direction "
-                f"only. All books remain paper FORWARD-TESTS — none proven on live fills. Full detail: studies/STRATEGY_SUMMARY.md.</p>")
+            f"<tr><td style='color:{c};font-weight:bold;'>{nm}</td><td>{bs}</td>"
+            f"<td>{is_}</td><td style='color:{GREEN};font-weight:bold;'>{oos}</td>"
+            f"<td style='font-size:10px;'>{yr}</td><td style='color:{AMBER};'>{wy}</td>"
+            f"<td>{ret}</td><td>{tw}</td><td>{fq}</td><td>{pnl}</td></tr>"
+            for nm, bs, is_, oos, yr, wy, ret, tw, fq, pnl, c in live)
+        dt = "".join(
+            f"<tr style='color:{TEXT_DIM};'><td><s>{nm}</s></td><td>{wr}</td>"
+            f"<td colspan='2' style='font-size:10px;'>{yr}</td><td>{wy}</td><td>{ret}</td><td>{tw}</td>"
+            f"<td style='color:{RED};'>{vd}</td><td>{st}</td></tr>"
+            for nm, wr, yr, wy, ret, tw, vd, st in dead)
+        return (
+            f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
+            f"<tr style='color:{CYAN};font-weight:bold;'><td>LIVE book</td><td>B/S</td><td>Win IS</td>"
+            f"<td>Win OOS</td><td>Win by calendar year</td><td>Worst yr</td><td>Return</td>"
+            f"<td>Trades · window</td><td>Sig/mo</td><td>₹/mo @1 lot (model · plan)</td></tr>{lt}"
+            f"<tr style='color:{GREEN};font-weight:bold;'><td colspan='9'>TOTAL — 4 live books</td>"
+            f"<td>≈ ₹36,924 · ₹29,540</td></tr></table>"
+            f"<p style='color:{AMBER};font-weight:bold;margin:10px 0 2px 0;'>Rejected · paper · regime-off — where the edge is NOT</p>"
+            f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:2px 0;'>"
+            f"<tr style='color:{CYAN};font-weight:bold;'><td>Book</td><td>Win</td><td colspan='2'>Win by calendar year</td>"
+            f"<td>Worst yr</td><td>Return</td><td>Trades · window</td><td>Verdict</td><td>Status</td></tr>{dt}</table>"
+            f"<p style='color:{TEXT_DIM};font-size:11px;'><b>How to read this:</b> the per-year column is the "
+            f"honesty check — a book that only works in one regime shows it here. v2 UNION has held 79-96% every "
+            f"year for 8 years; NIFTY 0DTE dipped to 76% in 2021 and has run 91-94% since; SENSEX has only 3 years "
+            f"so treat it as promising, not proven. BANKNIFTY was rejected precisely because its per-year line "
+            f"swings 64-92% with no trend — noise, not edge. All per-year figures are MEASURED from per-trade "
+            f"data; v1 has no per-trade file so it shows IS/OOS only rather than an invented series. SELL returns "
+            f"are NET of entry+exit costs on real premiums; BUY are underlying-direction only. All books remain "
+            f"paper forward-tests — none proven on live fills. Detail: studies/STRATEGY_SUMMARY.md.</p>")
+
 
     def _studies_html(self) -> str:
         def h(t):
@@ -772,6 +779,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         return f"""
 <div style="color:{TEXT};">
+<p style="color:{CYAN};font-size:18px;font-weight:bold;">THE LIVE STRATEGIES — SUMMARY</p>
+{dim("Win rate is split IS / OOS / by CALENDAR YEAR. The per-year column is the honesty check: a book that "
+     "only worked in one regime cannot hide behind a blended average.")}
+{self._strategy_summary_table()}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">IN PLAIN ENGLISH — what these strategies actually do</p>
 {p("<b>Every book here SELLS insurance instead of buying lottery tickets.</b> That one sentence covers all of them. "
    "An option buyer pays a small premium hoping for a big move. We are on the other side: we take the premium, and "
@@ -954,9 +966,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "— skip). 629 trades Oct24-Jul26 real premiums. Win rate is a MIRAGE below 0.40 (breakeven WR ≈76%). "
      "SINGLE REGIME — NOT validated 2019-24; 0.35-0.40 is promising, not proven → if used, a SEPARATE "
      "1-lot secondary tier, never merged into the core book. File: studies/CW_BUCKET_ANALYSIS.md")}
-
-{h("THE LIVE STRATEGIES — SUMMARY")}
-{self._strategy_summary_table()}
 
 {h("CONSOLIDATED PORTFOLIO — organised by WIN-RATE TIER (user request 2026-07-10)")}
 {sub("TIER A — the ≥80%-win books (the priority group, all defined-risk, all fit ~₹2L). "
