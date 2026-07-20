@@ -807,6 +807,32 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">RESEARCH LOG  -  how each piece of the strategy was tested</p>
 {dim("Every change below was backtested before going live (or deliberately NOT deployed). "
      "All P&amp;L is GROSS of costs unless noted. Full write-ups are the .md files in /studies on GitHub.")}
+{res("★ DEPLOYED 2026-07-19 — TWO STRUCTURAL 0DTE EXCLUSIONS (Opus tested · Fable decided · now LIVE). "
+     "Both are RISK exclusions, NOT statistical edges — neither makes a regime claim, so the "
+     "both-eras rule doesn't govern them. Both config-flagged (set []/0 to revert). "
+     "<b>(1) ELECTION BLACKOUT</b> (ZERO_DTE_ELECTION_BLACKOUT — all 3 books): national counting days + "
+     "the exit-poll session. Scheduled INSIDE-window BINARY, and short premium is structurally the wrong "
+     "trade against a bimodal outcome. It NEVER triggered in 448 backtested expiries → measured cost is "
+     "EXACTLY ₹0. 2024-06-04 (NIFTY −5.9%) was dodged by CALENDAR LUCK, not design — this buys that "
+     "protection for zero premium. <b>(2) MIN CREDIT/WIDTH ≥ 0.04</b> (ZERO_DTE_MULTI_MIN_CW — SENSEX + "
+     "BANKNIFTY ONLY; NIFTY untouched, it already carries the principle via ZERO_DTE_MIN_CREDIT_PCT). "
+     "The c/W gradient shows win rate is an INVERSE MIRAGE: cheapest bucket c/W&lt;0.04 had the HIGHEST "
+     "win rate (91.7%) and still LOST money (−0.49%m, −₹1,878 over 60 trades); richest 0.18+ had the "
+     "LOWEST win (81.7%) and made the most (+10.03%m) — the same shape as the stock book's validated "
+     "c/w≥0.40 gate. 0.04 is the STRUCTURAL boundary of the negative-EV bucket and deliberately NOT the "
+     "sweep's argmax: the better-scoring 0.06-0.12 cutoffs were EXPLICITLY REJECTED as in-sample optima "
+     "on small skip-counts. Purpose is to stop selling near-zero credit against a full settlement tail "
+     "(negative EV by arithmetic, not by regime) — not to harvest the ₹1,878.")}
+
+{res("0DTE INDIA VIX — TESTED AND REJECTED (2026-07-19, the last open item): every variant fails, most "
+     "in the OPPOSITE direction to the prior. Prior-close VIX so no lookahead. skip vix_spike≥+10% COSTS "
+     "−₹17,227 and those flagged days were 92.9% win / +13.32%m — among the BEST days in the book. "
+     "vix_level≥15/18/20 cost −₹123.7k / −₹74.5k / −₹37.2k, failing in BOTH eras. vix_level≥25 is the "
+     "ONLY positive sign (Era A +₹10,603, n=11) but Era B has n=1 → UNTESTABLE rather than proven, and "
+     "effectively a description of COVID. Logged as a REVISIT CONDITION only: if Era B ever accrues ≥10 "
+     "expiries with prior-close VIX≥25, rerun that one test. Half-sizing never rescued a rule; "
+     "ex-worst-day removal never changed a sign. File: studies/ZERO_DTE_EARNINGS_SHOCKS.md")}
+
 {res("0DTE EVENT AVOIDANCE — SERIES CLOSED, NOTHING EARNS ITS KEEP (2026-07-19). Three studies, 448 "
      "expiries 2019→Jul'26, all REPORT-ONLY: (1) CALENDAR events (RBI/Budget/FOMC) — avoiding costs "
      "−₹33.1k, both eras agree. (2) PRE-OPEN SIGNALS (overnight GAP as the instrument — it is the "

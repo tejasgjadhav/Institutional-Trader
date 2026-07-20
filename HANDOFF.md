@@ -23,6 +23,43 @@ FRAMEWORK (from Fable 5 design pass, folded into the study):
     one-day dominance (report results ex-worst-day); test filters CONDITIONAL on the c/w gate;
     prefer HALF-SIZING over full skip if any effect is ever found.
 
+## DONE (2026-07-19 FINAL, ddf70db) — SERIES CLOSED. Opus tested, FABLE decided, 2 exclusions DEPLOYED
+Workflow used (user instruction): "test all with opus, fable be decider, implement with opus."
+LAST OPEN ITEM TESTED — India VIX (ndte17_vix_final.py, prior-close so no lookahead): ALL variants
+FAIL, most in the OPPOSITE direction to the prior. skip vix_spike>=+10% costs −₹17,227 and those days
+were 92.9% win/+13.32%m. vix_level>=15/18/20 cost −₹123.7k/−₹74.5k/−₹37.2k, failing BOTH eras.
+vix_level>=25 = only positive sign (Era A +₹10,603 n=11) but Era B n=1 → UNTESTABLE not proven,
+basically a description of COVID. **Revisit condition logged: if Era B ever accrues >=10 expiries with
+prior-close VIX>=25, rerun that ONE test.** Half-sizing never rescued any rule; ex-worst-day never
+changed a sign. Elections: ZERO overlap in all 448 expiries.
+ONE NEW TEST Fable authorised — CREDIT FLOOR (ndte18_creditfloor.py). Did NOT fail. c/W buckets show
+win rate is an INVERSE MIRAGE: cheapest bucket (c/W<0.04) had the HIGHEST win (91.7%) and LOST money
+(−0.49%m, −₹1,878/60 trades); richest (0.18+) LOWEST win (81.7%) and made most (+10.03%m). Same shape
+as the stock book's validated c/w>=0.40 gate → confirmed hypothesis, not a dredge.
+
+**DEPLOYED (live engine, both structural — neither makes a regime claim so both-eras rule doesn't govern):**
+1. `ZERO_DTE_ELECTION_BLACKOUT` (config) — checked in zero_dte.py AND dte_multi.py. National counting
+   days + exit-poll session. NEVER triggered in 448 expiries → measured cost EXACTLY ₹0. 2024-06-04
+   (NIFTY −5.9%) was dodged by CALENDAR LUCK not design. Zero-premium ruin-mode insurance.
+2. `ZERO_DTE_MULTI_MIN_CW = 0.04` — **SENSEX + BANKNIFTY ONLY**, checked in dte_multi._scan_book.
+   NIFTY UNTOUCHED (already has ZERO_DTE_MIN_CREDIT_PCT=0.02). 0.04 = STRUCTURAL boundary of the
+   negative-EV bucket, deliberately NOT the sweep argmax — Fable EXPLICITLY REJECTED the better-scoring
+   0.06-0.12 cutoffs as in-sample optima on small skip-counts (BNF skipped n=9).
+Verified: `python -m engine.engine_runner --once` clean; engine+viewer restarted, stable PIDs.
+Both are config-flagged → set to []/0 to revert.
+
+**CLOSING FINDING (write this into any future proposal review):** this book is PAID FOR VISIBLE FEAR.
+A fixed-%-OTM spread sold on a scary morning collects inflated premium against a strike that hasn't
+moved — observable risk is COMPENSATION, not danger. Every filter keying on ex-ante-visible stress
+(gap/VIX/spike/shocks — shocks went 7/7 win, +21.35%m) removes exactly the trades where the market
+OVERPAYS. Only real threats: (a) INTRADAY surprises — occurred ZERO times in 448 expiries, unfilterable
+ex ante; (b) true crisis regimes (VIX>=25) — too rare to test. Mirror image = the only thing that
+survived: cheap premium is uncompensated tail risk.
+**HARNESS BUG FIXED:** era-verdict helper treated an era with ZERO observations as a silent PASS,
+mislabelling SENSEX single-era results as "BOTH ERAS HELP". Now returns "single-era only".
+**STANDING CONSTRAINT:** SENSEX is PERMANENTLY outside the era-split framework (single-era book, BSE
+weeklies launched 2023) → it may only ever receive STRUCTURAL rules, never swept ones.
+
 ## DONE (2026-07-19) — EARNINGS + SHOCKS tested → SERIES CLOSED (studies/ZERO_DTE_EARNINGS_SHOCKS.md)
 EARNINGS: dates from NSE board-meeting API which ALSO carries advance-intimation timestamps — min lead
 3d / median 14d across 367 rows, so ex-ante knowability is PROVEN not assumed. Decisive fact = release
