@@ -309,7 +309,24 @@ def resolve_positions() -> int:
                         logger.info(f"zero_dte: STOPPED {p['id']} at {ZERO_DTE_STOP_MULT}x "
                                     f"(short {sm:.1f} vs entry {p['short_prem']:.1f}) pnl {p['pnl_pts']:+.1f}")
                 continue
-            spot = _spot() or p.get("entry_spot") or 0
+            # BUGFIX 2026-07-21: was `_spot() or entry_spot or 0` — a quote failure settled on the
+            # ENTRY spot (09:16 price, not the 15:30 close) or 0 → intrinsic 0 → full credit →
+            # FABRICATED WIN. Settlement value is the EXPIRY-DAY daily CLOSE: use it first (correct on
+            # T+1 too, where live spot would be the wrong day); fall back to live spot only on expiry
+            # day itself when the close candle may not be published yet. Never entry/0.
+            spot = None
+            try:
+                df = fetch_upstox_historical(ZERO_DTE_INDEX, unit="days", interval=1,
+                                             from_date=exp.isoformat(), to_date=exp.isoformat())
+                if df is not None and not df.empty:
+                    spot = float(df["Close"].iloc[-1])
+            except Exception as e:
+                logger.debug(f"zero_dte settle close-fetch {p.get('id')}: {e}")
+            if not spot and today == exp:
+                spot = _spot()
+            if not spot:
+                logger.warning(f"zero_dte: {p['id']} expired but NO SETTLE PRICE — leaving OPEN, will retry")
+                continue
             if p.get("side") == "BULL_PUT":
                 si = max(0.0, p["short_strike"] - spot)
                 li = max(0.0, p["long_strike"] - spot)

@@ -50,7 +50,17 @@ def send_telegram(text: str) -> bool:
                 "chat_id": cid, "text": text, "parse_mode": "HTML"
             }, timeout=10)
             if r.status_code == 200:
-                any_ok = True
+                any_ok = True; continue
+            # SAFETY NET (2026-07-21): a 400 is almost always an HTML parse failure — an unescaped
+            # '&' (e.g. the symbol "M&M"), '<' or '>' in an interpolated field. Rather than lose the
+            # message, resend it as PLAIN TEXT (no parse_mode) so it still reaches the user, tags and
+            # all. Callers additionally html.escape dynamic fields so the HTML path normally succeeds.
+            if r.status_code == 400:
+                r2 = requests.post(url, data={"chat_id": cid, "text": text}, timeout=10)
+                if r2.status_code == 200:
+                    any_ok = True; continue
+                logger.warning(f"Telegram failed for {cid}: {r.status_code} {r.text[:120]} "
+                               f"(plain-text retry also failed: {r2.status_code})")
             else:
                 logger.warning(f"Telegram failed for {cid}: {r.status_code} {r.text[:120]}")
         except Exception as e:

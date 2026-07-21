@@ -208,6 +208,24 @@ def _scan_book(bk):
     return [pos]
 
 
+def _expiry_close(bk, exp):
+    """The index DAILY CLOSE on the expiry date — the correct 0DTE settlement reference. Returns
+    None if unavailable (caller then leaves the position OPEN rather than settling on a stale price)."""
+    key = bk.get("spot_key")
+    if not key:
+        return None
+    try:
+        r = SESSION.get(f"{UPSTOX_BASE}/v2/historical-candle/{encode_key(key)}/day/"
+                        f"{exp.isoformat()}/{exp.isoformat()}", timeout=15)
+        if r.status_code == 200:
+            cs = r.json().get("data", {}).get("candles", [])
+            if cs:
+                return float(cs[0][4])   # close of the expiry-day daily candle
+    except Exception as e:
+        logger.debug(f"dte_multi expiry-close {bk['name']}: {e}")
+    return None
+
+
 def _resolve_book(bk, past_settle):
     book = _load_json(bk["book"], [])
     today = date.today()
@@ -218,7 +236,15 @@ def _resolve_book(bk, past_settle):
                 continue
             exp = date.fromisoformat(p["expiry"])
             if (today > exp) or (today == exp and past_settle):
-                spot = _spot(bk) or p.get("entry_spot") or 0
+                # BUGFIX 2026-07-21: was `_spot(bk) or entry_spot or 0` — a quote failure settled on
+                # the ENTRY spot or 0 → intrinsic 0 → full credit → FABRICATED WIN. Settlement value
+                # is the EXPIRY-DAY daily CLOSE. Use it first (correct on T+1 too, where live spot
+                # would be the wrong day); only fall back to live spot on expiry day itself, when the
+                # close candle may not be published yet. Never entry/0; if neither, leave OPEN + retry.
+                spot = _expiry_close(bk, exp) or (_spot(bk) if today == exp else None)
+                if not spot:
+                    logger.warning(f"dte_multi: {p['id']} expired but NO SETTLE PRICE — leaving OPEN, will retry")
+                    continue
                 si = max(0.0, spot - p["short_strike"]); li = max(0.0, spot - p["long_strike"])
                 cost = min(max(si - li, 0.0), p["width_pts"])
                 p["short_cur"] = round(si, 2); p["long_cur"] = round(li, 2)

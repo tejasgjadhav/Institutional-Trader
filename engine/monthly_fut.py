@@ -242,7 +242,12 @@ def resolve_monthly_positions() -> int:
                 p["last_mark"] = today.isoformat()
                 p["sessions"] = int(p.get("sessions", 0)) + 1
             tp_px = p["tp_late_px"] if p["sessions"] > MONTHLY_FUT_DECAY_DAY else p["tp_px"]
-            expired = today >= date.fromisoformat(p["expiry"])
+            # settle at EXPIRY only after the session closes (MOC-style, per this book's own rule),
+            # never at 00:00 on expiry day — same guard applied to the other resolvers 2026-07-21.
+            from engine.config import IST
+            _past_settle = datetime.now(IST).strftime("%H:%M") >= "15:25"
+            expired = (today > date.fromisoformat(p["expiry"])) or \
+                      (today == date.fromisoformat(p["expiry"]) and _past_settle)
             reason = ("tp" if px >= tp_px else
                       "sl" if px <= p["sl_px"] else
                       "expiry" if expired else None)

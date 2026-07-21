@@ -15,6 +15,7 @@ import os
 import sys
 import json
 import time
+import html
 import logging
 import subprocess
 from datetime import datetime
@@ -232,8 +233,10 @@ class EngineRunner:
                 if not isinstance(s, dict):
                     send_telegram(f"🔔 <b>{book}</b> · new signal — details on the dashboard. "
                                   f"Execute with your broker."); continue
-                sym = s.get("symbol") or s.get("index") or s.get("name") or ""
-                side = s.get("side") or s.get("breakout_dir") or ""
+                # html.escape dynamic fields — a symbol like "M&M" carries a raw '&' that breaks
+                # Telegram HTML parse_mode and silently fails the send (bug fixed 2026-07-21).
+                sym = html.escape(str(s.get("symbol") or s.get("index") or s.get("name") or ""))
+                side = html.escape(str(s.get("side") or s.get("breakout_dir") or ""))
                 verb = "CE" if "CALL" in str(side) else ("PE" if "PUT" in str(side) else "")
                 win = self._TG_WIN_SYM.get(sym) if book.startswith("SENSEX") else self._TG_WIN.get(book)
                 g = lambda x: ("%g" % x) if isinstance(x, (int, float)) else None
@@ -546,29 +549,37 @@ class EngineRunner:
                     pid = p.get("id") or f"{fname}:{p.get('entry_date')}:{p.get('symbol')}"
                     if pid in seen:
                         continue
-                    seen.add(pid); changed = True
                     if first_run:
+                        seen.add(pid); changed = True
                         continue          # seed silently — only NEW outcomes notify
+                    # BUGFIX 2026-07-21: mark seen ONLY after a successful send (was marked before,
+                    # so any send failure — a transient network error, or the "M&M" '&' breaking
+                    # HTML parse_mode — permanently suppressed that result with no retry). And escape
+                    # dynamic fields so the HTML path itself doesn't fail.
+                    ok = False
                     try:
-                        sym = p.get("symbol") or p.get("index") or ""
-                        side = p.get("side") or ""
+                        sym = html.escape(str(p.get("symbol") or p.get("index") or ""))
+                        side = html.escape(str(p.get("side") or ""))
+                        lbl = html.escape(str(label))
                         won = p.get("status") == "WIN"
                         qty = p.get("qty") or p.get("lot") or 0
                         pnl_pts = p.get("pnl_pts")
                         rs = f" ₹{pnl_pts*qty:+,.0f}" if isinstance(pnl_pts, (int, float)) and qty else ""
                         g = lambda x: ("%g" % x) if isinstance(x, (int, float)) else "?"
                         verb = "CE" if "CALL" in side else ("PE" if "PUT" in side else "")
-                        send_telegram(
-                            f"📊 <b>RESULT — {label}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}\n"
+                        ok = send_telegram(
+                            f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}\n"
                             f"This is the result of the <b>{p.get('entry_date','?')}</b> call: "
                             f"SELL {g(p.get('short_strike'))} {verb} / BUY {g(p.get('long_strike'))} {verb} "
                             f"(exp {p.get('expiry','?')})\n"
                             f"pts {pnl_pts:+.1f} × qty {qty} · closed {p.get('closed_date','?')}"
                             if isinstance(pnl_pts, (int, float)) else
-                            f"📊 <b>RESULT — {label}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}\n"
+                            f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}\n"
                             f"This is the result of the {p.get('entry_date','?')} call · closed {p.get('closed_date','?')}")
                     except Exception as e:
                         logger.warning(f"outcome notify {label}: {e}")
+                    if ok:
+                        seen.add(pid); changed = True
             if changed:
                 self._write_json(state_path, sorted(seen))
         except Exception as e:

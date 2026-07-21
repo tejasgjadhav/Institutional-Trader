@@ -88,6 +88,29 @@ NIFTY 0DTE +4.69%/1d = **+4.7%/day** · SENSEX +7.62%/1d = **+7.6%/day**. So per
 tied up). That is NOT credible for a live strategy and independently corroborates the repo's standing
 warning that the v2 backtest is OPTIMISTIC — KEEP LOTS AT 1. Do not present +52%/trade without this.
 
+## DONE (2026-07-21) — BUG SWEEP: 3 parallel audit agents + grep; fixed all live CRITICAL/HIGH
+Two settlement bugs + one CRITICAL Telegram bug fixed. Agents audited resolvers, notifications, scan/data.
+**FIXED (live):**
+1. 0DTE FABRICATION (HIGH) — zero_dte.py + dte_multi.py STILL had `spot = _spot() or entry_spot or 0`
+   in settlement (the swing fix hadn't reached them). A settle-time quote failure → intrinsic 0 →
+   full credit → FAKE WIN + wrong Telegram; `or 0` on a bear-call ALWAYS fakes a win. FIXED: settle on
+   the EXPIRY-DAY DAILY CLOSE first (correct on T+1 too, where live spot is the wrong day), live spot
+   only as exp-day fallback, else leave OPEN + retry. Never entry/0. New helper dte_multi._expiry_close.
+2. monthly_fut.py (MED) — `today >= exp` fired at 00:00; now `(today>exp) or (today==exp and >=15:25)`
+   so it books at the close (MOC), matching its backtest. (Not a notifier book; can't send wrong msg.)
+3. **TELEGRAM M&M (CRITICAL)** — "M&M.NS" IS in universe, stored "M&M". The `&` breaks Telegram HTML
+   parse_mode → send 400 → BUT `seen.add(pid)` ran BEFORE the send and the return was ignored →
+   M&M results/entries silently lost FOREVER, no retry. Same vector = ANY transient send failure.
+   FIXED 3 ways: (a) notifications.send_telegram retries as PLAIN TEXT on a 400; (b) html.escape all
+   dynamic fields (sym/side/label) in _tg + _outcomes; (c) _outcomes marks seen ONLY after send
+   returns True (seeding path still silent). import html added.
+**NOTED, NOT FIXED (low / disabled path):** agent.py/signals.py `current_price` never set + fetch_nifty_pct
+returns 0.0 on failure (blocks trades) — but 3-Family is DISABLED, latent. options.py tz-naive expiry
+(daemon runs IST). fetch_ltp_batch dead code. HTTPAdapter max_retries=0 despite docstring (fail-safe).
+credit books (swing/stock) have the same T+1-settles-on-next-day-spot vector but agent judged minor for
+multi-day monthly books (they already don't fabricate) — left to limit blast radius.
+All verified: ast+import OK, M&M escapes to M&amp;M, engine cycle clean, engine+viewer stable.
+
 ## DONE (2026-07-21) — SWING Telegram RELABELLED (user chose relabel over silence)
 Telegram now distinguishes multi-day from same-day so an index credit spread entered days ago can't
 read as a same-day 0DTE call:
