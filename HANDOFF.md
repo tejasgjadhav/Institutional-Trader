@@ -88,7 +88,22 @@ NIFTY 0DTE +4.69%/1d = **+4.7%/day** · SENSEX +7.62%/1d = **+7.6%/day**. So per
 tied up). That is NOT credible for a live strategy and independently corroborates the repo's standing
 warning that the v2 backtest is OPTIMISTIC — KEEP LOTS AT 1. Do not present +52%/trade without this.
 
-## OPEN THREAD (2026-07-21) — SWING vs 0DTE Telegram confusion; DECISION PENDING from user
+## DONE (2026-07-21) — SWING Telegram RELABELLED (user chose relabel over silence)
+Telegram now distinguishes multi-day from same-day so an index credit spread entered days ago can't
+read as a same-day 0DTE call:
+  * `_MULTIDAY_BOOKS` set → every held-to-expiry book (stock v2/v1, swing, monthly) prepends
+    "⏳ MULTI-DAY — strikes fixed at entry TODAY, HELD to expiry (this is NOT a same-day 0DTE call)".
+  * swing signal label: "SWING CREDIT (NIFTY/FINNIFTY)" → "SWING CREDIT · multi-day (NIFTY/FINNIFTY)".
+  * outcome labels: swing → "SWING CREDIT · multi-day"; 0DTE NIFTY/SENSEX → "… (same-day)".
+  * result message already leads with entry-date + expiry, so a settle reads unambiguously.
+ALSO fixed stale win% labels in _TG_WIN: 0DTE NIFTY "90% (calm-filtered)"→"88.3% (measured)",
+SENSEX "89%"→"89.0% (measured)"; REMOVED BANKNIFTY 0DTE entries (book rejected/disabled 07-19).
+Verified by rendering the actual swing + 0DTE messages (no send) — tags correct, contrast clean.
+Engine cycle clean, engine+viewer restarted stable. User did NOT silence swing — kept broadcasting,
+just clearer. (Earlier "VIEWER CRASHED" reads this session were the stability check racing the restart
+and catching a transient PID — verified stable on a settled PID both times.)
+
+## (resolved) OPEN THREAD — SWING vs 0DTE Telegram confusion
 User read the correction message (SWING NIFTY 24500/24650, expiry 21-Jul) as a same-day 0DTE call and
 objected: "our logic is check 9:16 levels then decide on Tuesday for NIFTY." That is the 0DTE book.
 The message was the SWING book: entered MON 6-Jul on a Donchian breakout (~15:10 scan), strikes chosen

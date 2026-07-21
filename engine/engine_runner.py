@@ -203,11 +203,16 @@ class EngineRunner:
 
     # Backtested win rates shown on every signal (honest labels — source: studies/).
     _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "73% OOS",
-               "0DTE NIFTY": "90% (calm-filtered)", "0DTE SENSEX": "89%",
-               "0DTE BANKNIFTY": "79.5% wk / 91% mthly",
-               "SWING CREDIT (NIFTY/FINNIFTY)": "fwd-test, unproven",
+               "0DTE NIFTY": "88.3% (measured)", "0DTE SENSEX": "89.0% (measured)",
+               "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "fwd-test, unproven",
                "MONTHLY FUTURES PULLBACK": "76% OOS", "MONTHLY LONG-CALL PULLBACK": "fwd-test"}
-    _TG_WIN_SYM = {"SENSEX": "89%", "BANKNIFTY": "79.5% wk / 91% mthly"}   # legacy per-symbol map
+    _TG_WIN_SYM = {"SENSEX": "89.0%"}   # legacy per-symbol map (BANKNIFTY 0DTE rejected 07-19)
+    # Books that HOLD to expiry (days→weeks) — the message must say so, or an index credit spread
+    # entered days ago reads like a same-day 0DTE call (user-caught 2026-07-21). Same-day books
+    # (0DTE NIFTY/SENSEX) are deliberately NOT in this set.
+    _MULTIDAY_BOOKS = {"STOCK CREDIT v2 UNION", "STOCK CREDIT v1",
+                       "SWING CREDIT · multi-day (NIFTY/FINNIFTY)", "MONTHLY FUTURES PULLBACK",
+                       "MONTHLY LONG-CALL PULLBACK"}
 
     def _tg(self, book, signals):
         """Fan out newly-opened signals from any book to Telegram in the STANDARD format:
@@ -236,6 +241,9 @@ class EngineRunner:
                 sp, lp = s.get("short_prem"), s.get("long_prem")
                 credit, w, lot = s.get("credit"), s.get("width_pts"), s.get("lot")
                 lines = [f"🔔 <b>{book}</b>" + (f" · win ~{win} (backtest)" if win else "")]
+                if book in self._MULTIDAY_BOOKS:
+                    lines.append("⏳ MULTI-DAY — strikes fixed at entry TODAY, HELD to expiry "
+                                 "(this is NOT a same-day 0DTE call)")
                 lines.append(" · ".join(str(x) for x in (sym, side) if x))
                 if ss and ls:
                     leg1 = f"SELL {ss} {verb}".rstrip() + (f" @ ₹{sp}" if sp is not None else "")
@@ -286,7 +294,7 @@ class EngineRunner:
                 new = swing_credit.scan_swing_signals()
                 if new:
                     logger.info(f"swing: opened {len(new)} new spread(s)")
-                    self._tg("SWING CREDIT (NIFTY/FINNIFTY)", new)
+                    self._tg("SWING CREDIT · multi-day (NIFTY/FINNIFTY)", new)
             except Exception as e:
                 logger.warning(f"swing scan: {e}")
 
@@ -501,10 +509,10 @@ class EngineRunner:
     _OUTCOME_BOOKS = [
         ("STOCK CREDIT v2 UNION", "stock_credit_v2_positions.json"),
         ("STOCK CREDIT v1", "stock_credit_positions.json"),
-        ("SWING CREDIT", "swing_positions.json"),
-        ("0DTE NIFTY", "zero_dte_positions.json"),
-        ("SENSEX 0DTE", "sensex_dte_positions.json"),
-        ("BANKNIFTY 0DTE", "bnf_dte_positions.json"),
+        ("SWING CREDIT · multi-day", "swing_positions.json"),
+        ("0DTE NIFTY (same-day)", "zero_dte_positions.json"),
+        ("SENSEX 0DTE (same-day)", "sensex_dte_positions.json"),
+        ("BANKNIFTY 0DTE", "bnf_dte_positions.json"),   # disabled 07-19; retained so any open pos still settles
     ]
 
     def _outcomes(self):
