@@ -1864,9 +1864,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 cw = row.get("cw"); prem = row.get("prem"); oi = row.get("oi")
                 cwcell = premcell = liqcell = "—"
                 if evaluable:
-                    # all three gates evaluated independently — show each regardless of the others
-                    cwcell = "✓" if row.get("cw_ok") else f"✗ {cw}"
-                    premcell = "✓" if row.get("prem_ok") else f"✗ ₹{prem}"
+                    # show the ACTUAL number in every gate cell (with ✓/✗), not a bare tick
+                    cwcell = f"{'✓' if row.get('cw_ok') else '✗'} {cw}"
+                    premcell = f"{'✓' if row.get('prem_ok') else '✗'} ₹{prem}"
                     liqcell = "✓" if row.get("liq_ok") else f"✗ OI{oi}"
                 result = "★ SIGNAL" if g == "PASS" else ("blocked" if evaluable else g.replace("_", " ").lower())
                 # legs instead of a redundant breakout tick (every row IS a breakout)
