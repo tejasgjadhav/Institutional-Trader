@@ -1108,6 +1108,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "c/w≥0.40 GATE is the durable edge, not the window. Cross-checks: bhav D10 273/85.3% ≡ documented "
      "273/85.35%; Oct'24 D5 200/87.5% ≡ known 203/87.2%. REPORT-ONLY, engine unchanged. "
      "File: studies/DONCHIAN_5_10_15_20.md")}
+{res("HOURLY first-touch entry vs the deployed CLOSE entry (2026-07-24): the engine reads c/w ONCE at "
+     "the 15:10 close. Would entering the FIRST intraday HOUR c/w touches ≥0.40 add edge (more signals) "
+     "or NOISE? Real Upstox intraday premiums Oct'24→date, SAME breakout/strikes/gate/exit — only the "
+     "entry differs; HOURLY is a strict superset of CLOSE. <b>Verdict: NOISE — keep the close rule.</b> "
+     "<b>v2 UNION</b> CLOSE 183 · 87.4% · +32.8%w  vs  HOURLY 253 · 84.6% · +25.7%w. The EXTRA signals "
+     "hourly adds (n=70, 3.3/mo) net only <b>+4.5%w / 74% win</b> — a SEVENTH of the core. <b>v1</b> CLOSE "
+     "331 · 72.2% · +16.9%w  vs  HOURLY 500 · 69.0% · +11.2%w; its extra 169 signals <b>LOSE (−2.5%w, "
+     "61%)</b>. FLIP-SIDE confirmed: 63%/47% of intraday entries are REVERTING SPIKES (c/w back &lt;0.40 "
+     "by close) — reverting vs held = <b>v2 +4.5%w vs +33.5%w · v1 −2.3%w vs +4.7%w</b>. Frequency offsets "
+     "quality so total edge/mo is flat (v1 identical), i.e. more trades + lower win + more variance for NO "
+     "gain. CLOSE reproduces the documented book (v2 87.4%≡87.5%, v1 72.2%≡73.4%). CAVEAT: single regime; "
+     "the c/w≥0.40 gate selects rich-IV wide-strike names whose fade shorts barely trade intraday (both "
+     "legs traded intraday on only 30%/62% of trades) → the extra signals are often unexecutable too. "
+     "REPORT-ONLY, engine unchanged. File: studies/HOURLY_VS_CLOSE_ENTRY.md")}
 
 {h("WHY DOES v1 SHOW 54% NEXT TO v2 UNION's 85%+? — it is NOT the number of calls")}
 {p("<b>Same signal, same gate, different EXIT GEOMETRY — and the 54% is the OLD hold-to-expiry test.</b> "

@@ -1,5 +1,47 @@
 # Handoff — institutional-trader
-_Updated: 2026-07-19 by Claude Code_
+_Updated: 2026-07-24 by Claude Code_
+
+## ACTIVE (2026-07-24) — HOURLY first-touch c/w>=0.40 entry vs CLOSE entry (stock v2 UNION + v1) — VALIDATION ONLY
+User Q: the live engine evaluates c/w ONCE at the 15:10 close; if instead we entered the FIRST intraday
+hour c/w touches >=0.40 we'd catch MORE signals (user's example: OFSS touched 0.43 at 14:45, back <0.40
+by 15:10, so close skipped it). Does hourly add EDGE or NOISE? Hypothesis (flip side): hourly fills on
+transient IV spikes that revert = more signals, lower quality. REPORT-ONLY, do NOT touch the live engine.
+FILES: studies/ndte/hvc_backtest.py (fetch+sim, resumable/cached/checkpointed → /tmp/hvc/hvc_results.json),
+studies/ndte/hvc_report.py (tables), hvc_probe.py (breakout counter). Deliverables PENDING:
+studies/HOURLY_VS_CLOSE_ENTRY.md + a UI STUDIES res() card + commit/push BOTH remotes.
+METHOD: same breakout universe (v2 UNION D5/10/15/20; v1 D10) + same strikes (off breakout-day close ATM)
++ same gate (c/w>=0.40 & prem>=50) + same daily-close exit walk (TP/stop/intrinsic). Only ENTRY differs:
+CLOSE uses 15:10 daily-close premiums; HOURLY steps hourly marks [09:15,10:00..15:00] on the breakout-day
+1-min expired-option candles, enters at first mark c/w>=0.40, else falls back to close (HOURLY ⊇ CLOSE).
+Flip-side metric = of HOURLY intraday entries, fraction that are "reverting spikes" (c/w back <0.40 by
+close = the extra signals CLOSE skips) and their win%/net vs the held ones.
+**CRITICAL BUG FOUND + FIXED (do NOT reintroduce):** bar_at() called _mins() on a bare "HH:MM" mark but
+_mins sliced ts[11:13] (full-ISO only) → ValueError → swallowed by do_stock try/except → the WHOLE record
+dropped. It only fired when the short leg HAD intraday data (`if bs:`), so EVERY breakout whose short
+trades intraday was silently dropped, leaving only illiquid-short survivors (74 v2/60 v1) with 0 intraday
+— which falsely looked like "hourly==close, no data". FIX: split _mins_ts (ISO) vs _mins_hm (HH:MM).
+After fix, record counts jumped (v1 78 by stock 21 alone). MUST re-run fresh (run2). LESSON: the buggy
+run REPRODUCED documented close numbers (v2 86.5%/+35.2%w vs doc 200/87.5%/+31.5%w; v1 71.7%/+16.9%w vs
+73.4%/+17.9%w) so close-sim is validated — the bug only hit the HOURLY branch.
+**DATA FINDING (real, not the bug):** liquid low-priced stocks (RELIANCE/ICICIBANK ~1420) have FULL
+intraday data (375 bars) at ATM/2-OTM/6-OTM but c/w hovers 0.22-0.29 → rarely hit the 0.40 gate. The
+gate structurally selects rich-IV wide-strike options on HIGHER-priced stocks (OFSS/COFORGE/BAJFINANCE)
+whose fade shorts produce FEW/NO intraday TRADE candles (user saw OFSS's path via LIVE QUOTES; historical
+expired-instrument candles record TRADES only). So hourly is partly unmeasurable/unexecutable on exactly
+the gated names — a genuine finding to report alongside whatever the re-run yields.
+FETCH BOUND (documented, conservative): intraday fetched only when close c/w>=0.30 & prem>=40 (band around
+the gate). Deeper reverters excluded → biases TOWARD hourly (against the noise hypothesis). ~26k daily +
+~3k intraday calls; API throttles HARD (a mid-run DNS blip dropped some too — leg fetchers now 6/5 retries
+w/ backoff). Caches in /tmp/hvc/{daily,intra,under}; results /tmp/hvc/hvc_results.json (per-breakout recs).
+RESULT (run2, post-fix, DONE): **HOURLY = NOISE, keep CLOSE.** v2 UNION CLOSE 183·87.4%·+32.8%w vs HOURLY
+253·84.6%·+25.7%w; extra 70 signals (3.3/mo) only +4.5%w/74% (a 7th of core). v1 CLOSE 331·72.2%·+16.9%w
+vs HOURLY 500·69.0%·+11.2%w; extra 169 signals LOSE −2.5%w/61%. FLIP-SIDE confirmed: 63%/47% of intraday
+entries are reverting spikes; reverting vs held = v2 +4.5 vs +33.5%w, v1 −2.3 vs +4.7%w. Total edge/mo flat
+(v1 identical) → more trades+lower win+more variance for no gain. CLOSE reproduced docs (v2 87.4≡87.5,
+v1 72.2≡73.4). Exec caveat: both legs traded intraday on only 30%/62% of trades (gate picks rich-IV
+wide-strike names that don't print sub-day). DELIVERABLES DONE: studies/HOURLY_VS_CLOSE_ENTRY.md, UI res()
+card after the DONCHIAN card (viewer relaunched, PID stable), committed + pushed origin & private. Engine
+NOT touched. Scripts: studies/ndte/hvc_{probe,backtest,report}.py; data cache /tmp/hvc (gitignored, not committed).
 
 ## DONE (2026-07-19 cont.) — PRE-OPEN SIGNALS all REJECTED (studies/ZERO_DTE_PREOPEN_SIGNALS.md, e09f294)
 Broader "what's knowable before 9:15" test. INSTRUMENT = the overnight GAP (market's own weighted
