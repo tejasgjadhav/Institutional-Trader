@@ -57,6 +57,7 @@ class EngineRunner:
         self._last_stockcr_resolve = 0.0
         self._stockcr_scan_day = None
         self._watchlist_tg_day = None
+        self._watchlist_build_day = None
         self._last_monthly_resolve = 0.0
         self._monthly_scan_day = None
         self._last_monthly_call_resolve = 0.0
@@ -377,18 +378,26 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"stock_credit import: {e}")
             return
-        # 15:05 daily — build the UNION watchlist ONCE (breakouts are close-based, so intraday
-        # sweeps are noisy and add latency) and push the near-miss list to Telegram (DO NOT TRADE),
-        # just before the 15:10 scan. notify_nearmiss() calls build_watchlist(), so this single
-        # call both writes union_watchlist.json (for the UI) and sends the digest. Guarded — a
-        # notify failure never disturbs the engine; engine-liveness is shown separately by the
-        # market-snapshot heartbeat, so this doesn't need to run all day.
-        if (self.agent.is_market_open() and (now.hour * 60 + now.minute) >= 15 * 60 + 5
+        _mins = now.hour * 60 + now.minute
+        # 14:45 — BUILD the UNION watchlist (the slow ~100-stock sweep; on a throttled day it took
+        # 17 min → the old combined 15:05 call landed at 15:22). Doing it at 14:45 gives ~20 min of
+        # slack so it's always ready by 15:05. Near-close data (breakouts are close-based).
+        if (self.agent.is_market_open() and _mins >= 14 * 60 + 45
+                and self._watchlist_build_day != now.date()):
+            self._watchlist_build_day = now.date()
+            try:
+                w = stock_credit_v2.build_watchlist()
+                logger.info(f"union watchlist built (14:45): {w.get('breakouts',0)} breakouts")
+            except Exception as e:
+                logger.warning(f"watchlist build 14:45: {e}")
+        # 15:05 — SEND the digest INSTANTLY from the pre-built file (rebuild=False), so the Telegram
+        # message always lands ~15:05 regardless of API throttle.
+        if (self.agent.is_market_open() and _mins >= 15 * 60 + 5
                 and self._watchlist_tg_day != now.date()):
             self._watchlist_tg_day = now.date()
             try:
-                nc = stock_credit_v2.notify_nearmiss()
-                logger.info(f"union watchlist built + Telegram sent: {nc} near-miss candidate(s)")
+                nc = stock_credit_v2.notify_nearmiss(rebuild=False)
+                logger.info(f"union watchlist Telegram sent (15:05): {nc} near-miss candidate(s)")
             except Exception as e:
                 logger.warning(f"watchlist 15:05: {e}")
         if (time.time() - self._last_stockcr_resolve) >= config.STOCK_CREDIT_RESOLVE_INTERVAL:

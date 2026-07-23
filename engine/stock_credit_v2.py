@@ -221,12 +221,17 @@ def build_watchlist() -> dict:
         return {}
 
 
-def notify_nearmiss() -> int:
+def notify_nearmiss(rebuild: bool = True) -> int:
     """Push the near-miss watchlist to Telegram (DO NOT TRADE) — breakouts that pass premium +
-    liquidity but FAIL credit/width. Called once/day ~15:05, before the 15:10 scan. Guarded."""
+    liquidity but FAIL credit/width. rebuild=True runs the ~100-stock sweep first (slow under
+    throttle); rebuild=False sends INSTANTLY from the already-built union_watchlist.json so the
+    15:05 message never drifts late. Guarded."""
     try:
         from engine.notifications import send_telegram
-        d = build_watchlist()
+        if rebuild:
+            d = build_watchlist()
+        else:
+            d = json.load(open(WATCHLIST_PATH)) if os.path.exists(WATCHLIST_PATH) else {}
         cand = [r for r in d.get("rows", []) if r.get("prem_ok") and r.get("liq_ok") and not r.get("cw_ok")]
         ts = d.get("ts", "")[:16].replace("T", " ")
         if not cand:
