@@ -195,8 +195,12 @@ def build_watchlist() -> dict:
             cw_ok = cw >= STOCK_CREDIT_MIN_CW
             prem_ok = sm >= STOCK_CREDIT_MIN_PREM
             liq_ok = (spr <= STOCK_CREDIT_MAX_SPREAD_PCT) and (soi >= STOCK_CREDIT_MIN_OI)
+            lot = int(s.get("lot", 0) or l.get("lot", 0) or 0)
             row.update(cw=cw, prem=round(sm, 1), spread=spr, oi=int(soi),
                        short_strike=s["strike"], long_strike=l["strike"], expiry=exp,
+                       credit=credit, width_pts=w, lot=lot,
+                       max_profit=round(credit * lot) if lot else None,
+                       max_loss=round((w - credit) * lot) if lot else None,
                        cw_ok=cw_ok, prem_ok=prem_ok, liq_ok=liq_ok)
             row["gate"] = "PASS" if (cw_ok and prem_ok and liq_ok) else "BLOCKED"
             rows.append(row)
@@ -239,6 +243,9 @@ def notify_nearmiss() -> int:
             close = "🔥 " if (r.get("cw") or 0) >= 0.35 else ""   # within 0.05 of the 0.40 gate
             lines.append(f"{close}<b>{r['sym']}</b> {r['side']} · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']}")
             lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
+            mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
+            if mp is not None and ml is not None:
+                lines.append(f"   lot {lot} · max profit ₹{mp:,} · max loss ₹{ml:,}")
         lines.append("")
         lines.append("🔥 = c/w ≥ 0.35, within 0.05 of firing (the closest — worth watching next day).")
         lines.append("⛔ <b>DO NOT TRADE</b> — credit/width below 0.40 means no edge; the engine skips them.")

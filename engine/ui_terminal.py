@@ -292,7 +292,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "LOT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
     # BRK = the STRONGEST Donchian window that broke (D5/D10/D15/D20) — D10+ is a more durable
     # breakout than a bare D5 (see studies/DONCHIAN_D5_VS_D10.md).
-    WATCH_COLS = ["STOCK", "DIR", "SIDE", "BRK", "SELL / BUY", "EXPIRY", "C/W", "PREM", "LIQ", "RESULT"]
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SELL / BUY", "EXPIRY", "LOT", "C/W", "PREM", "LIQ", "MAX ₹+", "MAX ₹−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -344,8 +344,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # ALL columns FIXED (no Stretch): the outer scroll widget is wider than the window
         # (the credit tables below force it), so a Stretch column balloons and pushes the last
         # columns off-screen. Fixed widths summing ~1030px keep the whole row on one screen.
-        for _c, _px in ((0, 96), (1, 66), (2, 60), (3, 52), (4, 250), (5, 104),
-                        (6, 96), (7, 120), (8, 110), (9, 128)):   # +EXPIRY at 5
+        for _c, _px in ((0, 120), (1, 72), (2, 52), (3, 300), (4, 92), (5, 60),
+                        (6, 80), (7, 96), (8, 84), (9, 116), (10, 116), (11, 104)):
+            # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
         self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
@@ -1881,11 +1882,15 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     exp_s = f"{_e[8:10]}-{_MON[int(_e[5:7]) - 1]}" if len(_e) >= 10 else (_e or "—")
                 except Exception:
                     exp_s = _e or "—"
-                vals = [row.get("sym", "—"), row.get("dir", "—"), side_s, f"D{row.get('dc','')}",
-                        legs, exp_s, cwcell, premcell, liqcell, result]
+                _lot = row.get("lot"); _mp = row.get("max_profit"); _ml = row.get("max_loss")
+                lot_s = str(_lot) if _lot else "—"
+                mp_s = f"₹{_mp:,}" if isinstance(_mp, (int, float)) else "—"
+                ml_s = f"₹{_ml:,}" if isinstance(_ml, (int, float)) else "—"
+                vals = [row.get("sym", "—"), side_s, f"D{row.get('dc','')}",
+                        legs, exp_s, lot_s, cwcell, premcell, liqcell, mp_s, ml_s, result]
                 self._set_row(self.pm_watch, i, vals)
-                self._color_cell(self.pm_watch, i, 9, GREEN if g == "PASS" else (AMBER if evaluable else RED))
-                for c in (3, 5, 6, 7, 8, 9):    # centre BRK + EXPIRY + gate + RESULT cells
+                self._color_cell(self.pm_watch, i, 11, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+                for c in (2, 4, 5, 6, 7, 8, 9, 10, 11):    # centre everything except STOCK/SIDE/legs
                     it = self.pm_watch.item(i, c)
                     if it: it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
