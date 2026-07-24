@@ -179,7 +179,7 @@ TARGET_PCT_DERIVATIVE = 5.0
 # not live fills. It runs here to forward-test, NOT because it is proven profitable.
 # Signals only — the user places the spread manually in Upstox; the system never trades.
 # See studies/STOCK_OPTIONS_NO_EDGE.md (Part 6) for the full validation record.
-SWING_CREDIT_ENABLED   = True
+SWING_CREDIT_ENABLED   = False  # REMOVED 2026-07-24: failed OOS (net -1.4%w, positive only 2019+2024). See STOCK_OPTIONS_NO_EDGE.md Parts 10-11.
 # Lineup set by a robustness test (5 breakout defs × 5 indices, real costs): the FADE edge holds
 # across ALL breakout definitions (D10/15/20/30/prior-week — genuine reversion, not a D10 fit),
 # but NOT across all indices. NIFTY (PF 1.95) + FINNIFTY (PF 1.44) are the clean edges; BANKNIFTY

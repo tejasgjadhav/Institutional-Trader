@@ -382,9 +382,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stockcr.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_stockcr, 1)
 
-        # SWING CREDIT SPREADS — the 3rd strategy (multi-day · theta · SELL against the breakout).
-        v.addWidget(self._section_label(
-            "SWING CREDIT · NIFTY/FINNIFTY · fade · forward-test only · ~3/mo · SELL", CYAN))
+        # SWING CREDIT (index fade) — HIDDEN 2026-07-24 unless SWING_CREDIT_ENABLED (removed: failed
+        # OOS, net −1.4%w). Widget still created (refresh code references pm_swing) but hidden.
+        from engine import config as _swc
+        _swing_on = getattr(_swc, "SWING_CREDIT_ENABLED", False)
+        _swhdr = self._section_label("SWING CREDIT · NIFTY/FINNIFTY · fade · forward-test only · ~3/mo · SELL", CYAN)
+        v.addWidget(_swhdr)
         self.pm_swing = QTableWidget(); self.pm_swing.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_swing.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_swing)
@@ -392,6 +395,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_swing.verticalHeader().setDefaultSectionSize(34)
         self.pm_swing.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         v.addWidget(self.pm_swing, 1)
+        if not _swing_on:
+            _swhdr.setVisible(False); self.pm_swing.setVisible(False)
 
         # MONTHLY FUTURES PULLBACK — the 5th strategy (monthly cycle · BUY front-month futures).
         # Signals-only paper test; needs ~Rs 15L to trade for real. Earnings-skip applied live.
