@@ -91,6 +91,28 @@ v2 CLOSE 87.4% / +32.8%w ≈ documented D5 200/87.5%/+31.5%w · v1 CLOSE 72.2% /
    net gain**. The "held" intraday entries — the ones the close would have taken anyway — carry essentially
    all of the edge (v2 +33.5%w ≈ the +32.8%w close book).
 
+## Follow-up — "but v2's extra signals were +4.5%w (not negative). Does hourly make sense for v2?"
+
+No. The v2 aggregate +4.5%w is **a single favorable year**, not a durable edge — the extra-70 signals
+break down by year as:
+
+| year | n | win% | net %width |
+|---|---|---|---|
+| 2024 | 3 | 67% | −1.8% |
+| 2025 | 30 | 67% | **−5.5%** |
+| 2026 | 37 | 81% | **+11.6%** |
+
+The extra signals **lost** in 2024 and 2025; the entire positive aggregate is 2026. That is the exact
+shape the repo keeps rejecting — one regime-year masquerading as an edge (cf. the index-fade gates).
+
+And there is no way to keep only the good half: the hourly entries split into **held** (c/w still ≥0.40 at
+close → +33.5%w, essentially the core book) and **reverting spikes** (+4.5%w, fragile), but that split is
+defined *by the close you are trying to front-run* — at entry time you cannot tell which is which. So you
+take the whole marginal, 2026-dependent bag or none. (Note: unlike the deep gated core trades, the v2 extra
+signals **are** executable — 70/70 had both legs trading intraday — so for v2 the barrier is durability, not
+liquidity.) **Keep the CLOSE rule for both books.** Revisit only if a future out-of-sample stretch
+reproduces 2026's +11.6%w on the v2 extra signals.
+
 ## Honesty caveats
 
 - **Single regime.** Intraday option premiums only exist Oct'24→date (~21 months). One regime; the per-year

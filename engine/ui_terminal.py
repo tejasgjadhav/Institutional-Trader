@@ -809,52 +809,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         return f"""
 <div style="color:{TEXT};">
-<p style="color:{AMBER};font-size:18px;font-weight:bold;">⚠ RECOMMENDATION (2026-07-19) — NO strategy change. The gap is VALIDATION, not strategy.</p>
-{p("<b>Asked: any change in strategy? Evidence says no.</b> Every modification tested this session was "
-   "rejected on data — event/news/earnings/shock filters, gap filters, VIX filters, a longer Donchian "
-   "window, extending rv5 to SENSEX/BNF. The two things deployed (election blackout, min credit/width) "
-   "are RISK exclusions, not edges. The mechanism: this is a short-vol book, it is PAID for visible "
-   "fear, so filters that dodge visible stress remove exactly the trades where the market overpays.")}
-<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>#</td><td>Action</td><td>Why</td><td>Status</td></tr>
-<tr><td><b>①</b></td><td><b>AUDIT the two STOCK books</b> (v2 + v1)</td>
-    <td><b>DONE 07-19 — BOTH PASS DECISIVELY.</b> v2 t=<b>+13.78</b>, CI [+60.6,+80.7], positive <b>8/8</b>
-        calendar years, drop the 10 best trades and <b>83% of profit survives</b>. v1 t=<b>+7.09</b>,
-        CI [+19.8,+34.9], <b>3/3</b> years, 69% survives. Worst trade costs 8 and 12 trades of profit
-        respectively — versus BANKNIFTY's <b>102 MONTHS</b>. The ₹32,000 is NOT fabricated.</td>
-    <td style="color:{GREEN};">✓ PASSED</td></tr>
-<tr><td><b>①b</b></td><td>…but the MAGNITUDE is still optimistic</td>
-    <td>The audit proves an edge EXISTS and is robust. It does NOT prove its SIZE survives live fills.
-        v2 implies ≈97%/month on deployed capital, and 24 of 569 trades printed c/W&gt;0.95 (stale marks
-        where a spread appears to pay 99.5% of its width). <b>Keep the books, distrust the number.</b></td>
-    <td style="color:{AMBER};">standing caveat</td></tr>
-<tr><td><b>②</b></td><td>Reconsider the <b>80% plan-on haircut</b></td>
-    <td>A 20% haircut on numbers that may themselves be 2–3× high is not conservative.
-        <b>~50% (≈₹18.5k) is more defensible</b> until ① lands.</td>
-    <td style="color:{TEXT_DIM};">flagged only — needs your sign-off</td></tr>
-<tr style="color:{AMBER};"><td><b>⚠</b></td><td><b>Election blackout is INERT — no news engine</b></td><td>It is a HAND-MAINTAINED date list; nothing fetches election/policy dates at runtime. (events.py scrapes NSE <i>corporate</i> news for STOCK scoring only; event_calendar.json is research data the engine never reads.) <b>All 4 entries are in the past → it cannot fire.</b> Engine now WARNs every scan while no future dates exist. Next Lok Sabha due 2029, ECI has not published dates, so nothing to add yet — but it must be filled in when announced.</td><td style="color:{AMBER};">mechanism live · list empty</td></tr>
-<tr><td><b>③</b></td><td>Do NOT resize / add books / add filters</td>
-    <td>Nothing in the evidence supports it. Keep lots at 1.</td>
-    <td style="color:{GREEN};">holding</td></tr>
-</table>
-{res("<b>★ SHOULD NIFTY 0DTE BE REMOVED? NO — it is the SECOND-STRONGEST book in the portfolio.</b> "
-     "Asked because ₹1,771/mo is the smallest live contribution. But that is a SIZE question, not a "
-     "VALIDITY question, and on evidence NIFTY is second only to v2: <b>273 trades over 8 calendar years, "
-     "positive in 7</b> (only 2019, −₹3,522), <b>t = +4.43</b>, 95% CI [+2.62, +6.77] <b>excludes zero</b>, "
-     "bootstrap p(mean≤0) = <b>0.0002</b>, and dropping its 5 best trades still leaves <b>87% of the "
-     "profit</b> (+₹132,369 of +₹152,267). Compare BANKNIFTY, which WAS removed: t=+0.10, CI spans zero, "
-     "p=0.33, drop 3 best → −₹8. Those are OPPOSITE situations that merely sit near each other in a ₹/month "
-     "column. On return per DAY of capital NIFTY runs +4.7%/day — ahead of v2's +4.3%/day. Removing the "
-     "book with the second-strongest evidence because it has the smallest headline rupee number would be "
-     "exactly backwards. <b>KEEP IT.</b> File: studies/STOCK_BOOKS_AUDIT.md")}
-{res("<b>WHY ① MATTERED — every stale number checked this session came in OPTIMISTIC.</b> BANKNIFTY: "
-     "claimed 91% win / ₹1,500 per month → measured <b>78.6% / ₹141</b>, roughly <b>10× overstated</b>. "
-     "NIFTY 0DTE: ₹2,500 → ₹1,771 (−29%). SENSEX: ₹3,200 → ₹3,153 (accurate). Two of three overstated, "
-     "one by an order of magnitude — and the two books carrying 87% of the total have not been checked "
-     "at all. Independent corroboration: v2's own measured figures imply <b>≈97% per month on deployed "
-     "capital</b> (~₹22.4k profit on ~₹23.1k tied up). That is not a credible live return. It does NOT "
-     "mean v2 has no edge — it means the MAGNITUDE is inflated, which is exactly what the standing "
-     "'backtest is OPTIMISTIC, keep lots at 1' warning has always said. Full write-up: studies/NEXT_ACTIONS.md")}
 
 <p style="color:{CYAN};font-size:18px;font-weight:bold;">THE LIVE STRATEGIES — SUMMARY</p>
 {dim("Win rate is split IS / OOS / by CALENDAR YEAR. The per-year column is the honesty check: a book that "
@@ -1118,7 +1072,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "61%)</b>. FLIP-SIDE confirmed: 63%/47% of intraday entries are REVERTING SPIKES (c/w back &lt;0.40 "
      "by close) — reverting vs held = <b>v2 +4.5%w vs +33.5%w · v1 −2.3%w vs +4.7%w</b>. Frequency offsets "
      "quality so total edge/mo is flat (v1 identical), i.e. more trades + lower win + more variance for NO "
-     "gain. CLOSE reproduces the documented book (v2 87.4%≡87.5%, v1 72.2%≡73.4%). CAVEAT: single regime; "
+     "gain. <b>Does hourly make sense for v2, whose extra signals were +4.5%w (not negative)? NO —</b> that "
+     "+4.5%w is a 2026-ONLY artifact (2024 −1.8%w · 2025 −5.5%w · 2026 +11.6%w) and you can't cherry-pick "
+     "the good (held) half ex-ante — held-vs-reverting is defined by the very close you're front-running. "
+     "CLOSE reproduces the documented book (v2 87.4%≡87.5%, v1 72.2%≡73.4%). CAVEAT: single regime; "
      "the c/w≥0.40 gate selects rich-IV wide-strike names whose fade shorts barely trade intraday (both "
      "legs traded intraday on only 30%/62% of trades) → the extra signals are often unexecutable too. "
      "REPORT-ONLY, engine unchanged. File: studies/HOURLY_VS_CLOSE_ENTRY.md")}

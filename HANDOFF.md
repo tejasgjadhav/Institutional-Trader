@@ -39,7 +39,23 @@ vs HOURLY 500·69.0%·+11.2%w; extra 169 signals LOSE −2.5%w/61%. FLIP-SIDE co
 entries are reverting spikes; reverting vs held = v2 +4.5 vs +33.5%w, v1 −2.3 vs +4.7%w. Total edge/mo flat
 (v1 identical) → more trades+lower win+more variance for no gain. CLOSE reproduced docs (v2 87.4≡87.5,
 v1 72.2≡73.4). Exec caveat: both legs traded intraday on only 30%/62% of trades (gate picks rich-IV
-wide-strike names that don't print sub-day). DELIVERABLES DONE: studies/HOURLY_VS_CLOSE_ENTRY.md, UI res()
+wide-strike names that don't print sub-day). FOLLOW-UP Q "does hourly make sense for v2 (its extra signals
+were +4.5%w, not negative)?": NO — the v2 extra-70 net is 2026-ONLY: 2024 −1.8%w(n3), 2025 −5.5%w(n30),
+2026 +11.6%w(n37); the +4.5%w aggregate is a single favorable year, negative in the two prior. Plus you
+can't cherry-pick the good (held +33.5%w) half ex-ante — held-vs-reverting is defined by the close you're
+front-running. So keep CLOSE for BOTH books. (The v2 extra signals ARE executable — 70/70 both legs intraday
+— so the barrier is durability, not liquidity, unlike the deep gated trades.) v2-per-year + the follow-up
+folded into studies/HOURLY_VS_CLOSE_ENTRY.md + the UI HOURLY card.
+
+## DONE (2026-07-24) — STUDIES TAB RESTRUCTURED (user request) + v2 follow-up added
+User: "fix the ui studies tab. it should not have audit. it should have strategies live first table and
+then pnl and then each strategy which is live and backtesting involved." REMOVED the top AUDIT block
+(_studies_html: the "⚠ RECOMMENDATION — NO strategy change" 18px header + the ①/①b/②/③ actions table +
+the 2 audit res() blocks "SHOULD NIFTY BE REMOVED"/"WHY ① MATTERED", old lines ~812-857). Tab now opens
+directly on THE LIVE STRATEGIES — SUMMARY table → plain-English → CONSOLIDATED MONTHLY P&L → per-strategy
+research (each with its backtest) — which was already the order from line 859 on; only the audit preamble
+was in the way. Also appended the v2 "does hourly make sense? NO, +4.5%w is 2026-only" nuance to the
+HOURLY res() card. Verified: ast OK, viewer relaunched, PID 5138 stable (no crash). Commit + push both. DELIVERABLES DONE: studies/HOURLY_VS_CLOSE_ENTRY.md, UI res()
 card after the DONCHIAN card (viewer relaunched, PID stable), committed + pushed origin & private. Engine
 NOT touched. Scripts: studies/ndte/hvc_{probe,backtest,report}.py; data cache /tmp/hvc (gitignored, not committed).
 
