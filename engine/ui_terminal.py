@@ -514,7 +514,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_status.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
-        hdr = QLabel("★ 0DTE NIFTY CE SPREAD — 90% WIN OOS · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
+        hdr = QLabel("★ 0DTE NIFTY CE SPREAD — WIN 88% in-sample (2019–Sep'24) / 90% out-of-sample (Oct'24–now) · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
                      "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise")
         hdr.setWordWrap(True)
         hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
@@ -534,13 +534,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
         self.zdte_table.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.zdte_table, 1)
-        v.addWidget(self._section_label("SENSEX 0DTE — THURSDAYS · 88.8% win · +7.6%/margin "
+        v.addWidget(self._section_label("SENSEX 0DTE — THURSDAYS · WIN 88.8% out-of-sample only (Oct'24–now) · in-sample NOT available (SENSEX option data starts Oct'24) · +7.6%/margin "
                                         "(89 expiries · 21-month history only · unfiltered)", AMBER))
         self.sdte_status = self._stats_label(); v.addWidget(self.sdte_status)
         self.sdte_stats = self._stats_label(); v.addWidget(self.sdte_stats)
         self.sdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sdte_table, 1)
-        v.addWidget(self._section_label("BANKNIFTY 0DTE — MONTHLY EXPIRY (~1/mo) · 79.5%/+7.4%m "
-                                        "2019-24 weeklies + 91%/+11%m recent monthlies", PURPLE))
+        v.addWidget(self._section_label("BANKNIFTY 0DTE — MONTHLY EXPIRY (~1/mo) · WIN 79.5% in-sample (2019–Sep'24, weeklies, +7.4%m) / 91% out-of-sample (Oct'24–now, monthlies, +11%m)", PURPLE))
         self.bdte_status = self._stats_label(); v.addWidget(self.bdte_status)
         self.bdte_stats = self._stats_label(); v.addWidget(self.bdte_stats)
         self.bdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.bdte_table, 1)
