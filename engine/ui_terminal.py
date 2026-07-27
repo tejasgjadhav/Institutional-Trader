@@ -357,7 +357,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell the breakout spread, book at half credit · 87% win OOS · ~5–6/mo · SELL ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell the breakout spread, book at half credit · WIN 84% in-sample (2019–Sep'24) / 87% out-of-sample (Oct'24–now) · ~5–6/mo · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -373,7 +373,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · 73% win OOS (TP-75) · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · WIN 73% out-of-sample (Oct'24–now, TP-75) · in-sample NOT MEASURED for the TP-75 exit (only the old hold-to-expiry base was, 54%) · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -401,7 +401,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # MONTHLY FUTURES PULLBACK — the 5th strategy (monthly cycle · BUY front-month futures).
         # Signals-only paper test; needs ~Rs 15L to trade for real. Earnings-skip applied live.
         v.addWidget(self._section_label(
-            "MONTHLY FUTURES PULLBACK · REV1-v2 · 76% win OOS · 5/cycle · BUY FUT (paper, ~₹15L)", AMBER))
+            "MONTHLY FUTURES PULLBACK · REV1-v2 · WIN 77.8% in-sample (2018–Sep'24) / 75.7% out-of-sample (Oct'24–now) · 5/cycle · BUY FUT (paper, ~₹15L)", AMBER))
         self.pm_monthly = QTableWidget(); self.pm_monthly.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_monthly.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_monthly)
