@@ -544,6 +544,7 @@ class EngineRunner:
             except Exception:
                 seen = set(); first_run = True
             changed = False
+            sent_any = False   # a NEW result actually went out this cycle (not first-run seeding)
             for label, fname in self._OUTCOME_BOOKS:
                 path = os.path.join(DATA_DIR, fname)
                 if not os.path.exists(path):
@@ -588,11 +589,93 @@ class EngineRunner:
                     except Exception as e:
                         logger.warning(f"outcome notify {label}: {e}")
                     if ok:
-                        seen.add(pid); changed = True
+                        seen.add(pid); changed = True; sent_any = True
             if changed:
                 self._write_json(state_path, sorted(seen))
+            # Follow every RESULT with a running PORTFOLIO SUMMARY (once per cycle, not per
+            # trade — several can resolve together and the summary would be identical).
+            if sent_any:
+                try:
+                    txt = self._portfolio_summary_text()
+                    if txt:
+                        send_telegram(txt)
+                except Exception as e:
+                    logger.warning(f"portfolio summary notify: {e}")
         except Exception as e:
             logger.warning(f"outcomes: {e}")
+
+    # Books whose expiry is same-day (0DTE) — everything else is a multi-day, month/week-end
+    # spread. Drives the intraday-vs-month-end split in the portfolio summary.
+    _INTRADAY_BOOKS = {"zero_dte_positions.json", "sensex_dte_positions.json", "bnf_dte_positions.json"}
+
+    @staticmethod
+    def _fmt_d(s, with_year=False):
+        try:
+            return datetime.strptime(s, "%Y-%m-%d").strftime("%d-%b-%Y" if with_year else "%d-%b")
+        except Exception:
+            return s or "?"
+
+    def _portfolio_summary_text(self):
+        """Running live-trade record across all outcome books, SPLIT into intraday (0DTE,
+        same-day expiry) and month-end (multi-day, held to weekly/monthly expiry). Win/loss/
+        win% are CLOSED-only (an open position is neither yet); open trades carry a live MTM and
+        their settlement date(s). First line stamps the exact date measurement began."""
+        buck = {"i": dict(w=0, l=0, pl=0.0), "m": dict(w=0, l=0, pl=0.0)}
+        openn = 0; open_pl = 0.0; open_exp = set(); start = None
+        for _label, fname in self._OUTCOME_BOOKS:
+            path = os.path.join(DATA_DIR, fname)
+            if not os.path.exists(path):
+                continue
+            try:
+                book = json.load(open(path)) or []
+            except Exception:
+                continue
+            b = buck["i" if fname in self._INTRADAY_BOOKS else "m"]
+            for p in book:
+                ed = p.get("entry_date")
+                if ed and (start is None or ed < start):
+                    start = ed
+                st = p.get("status")
+                qty = p.get("qty") or p.get("lot") or 0
+                pp = p.get("pnl_pts")
+                rs = pp * qty if isinstance(pp, (int, float)) and qty else 0.0
+                if st == "WIN":
+                    b["w"] += 1; b["pl"] += rs
+                elif st == "LOSS":
+                    b["l"] += 1; b["pl"] += rs
+                else:
+                    openn += 1; open_pl += rs
+                    if p.get("expiry"):
+                        open_exp.add(p["expiry"])
+        ic, mc = buck["i"], buck["m"]
+        closed = ic["w"] + ic["l"] + mc["w"] + mc["l"]
+        if closed == 0:
+            return ""
+        wins = ic["w"] + mc["w"]; losses = ic["l"] + mc["l"]
+        realized = ic["pl"] + mc["pl"]
+        wr = wins / closed * 100
+
+        def _row(c):
+            cc = c["w"] + c["l"]
+            w = (c["w"] / cc * 100) if cc else 0.0
+            return (f"   Trades <b>{cc}</b> · ✅ <b>{c['w']}</b> · ❌ <b>{c['l']}</b> · "
+                    f"Win <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>")
+
+        lines = [
+            f"📈 <b>Saavi Institutional Trader has till date delivered for live trade from {self._fmt_d(start, with_year=True)}-</b>",
+            "⚡ <b>INTRADAY</b> (0DTE · same-day expiry)",
+            _row(ic),
+            "📅 <b>MONTH-END EXPIRY</b> (multi-day spreads)",
+            _row(mc),
+            f"➕ <b>Overall</b>: {closed} closed · Win <b>{wr:.1f}%</b> · Realized <b>₹{realized:+,.0f}</b>",
+        ]
+        if openn:
+            xs = " / ".join(self._fmt_d(e) for e in sorted(open_exp)) or "expiry"
+            lines.append(f"⏳ Open: <b>{openn} trade{'s' if openn != 1 else ''}</b> · "
+                         f"MTM <b>₹{open_pl:+,.0f}</b> — will settle on <b>{xs}</b>")
+        else:
+            lines.append("⏳ Open: <b>0 trades</b>")
+        return "\n".join(lines)
 
     def cycle(self):
         now = datetime.now(IST)
