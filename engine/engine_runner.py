@@ -607,6 +607,15 @@ class EngineRunner:
     # Books whose expiry is same-day (0DTE) — everything else is a multi-day, month/week-end
     # spread. Drives the intraday-vs-month-end split in the portfolio summary.
     _INTRADAY_BOOKS = {"zero_dte_positions.json", "sensex_dte_positions.json", "bnf_dte_positions.json"}
+    # Short display tag per book for the open-positions breakdown.
+    _BOOK_TAG = {
+        "stock_credit_v2_positions.json": "v2",
+        "stock_credit_positions.json": "v1",
+        "swing_positions.json": "SWING",
+        "zero_dte_positions.json": "0DTE NIFTY",
+        "sensex_dte_positions.json": "0DTE SENSEX",
+        "bnf_dte_positions.json": "0DTE BNF",
+    }
 
     @staticmethod
     def _fmt_d(s, with_year=False):
@@ -621,7 +630,7 @@ class EngineRunner:
         win% are CLOSED-only (an open position is neither yet); open trades carry a live MTM and
         their settlement date(s). First line stamps the exact date measurement began."""
         buck = {"i": dict(w=0, l=0, pl=0.0), "m": dict(w=0, l=0, pl=0.0)}
-        openn = 0; open_pl = 0.0; open_exp = set(); start = None
+        openn = 0; open_pl = 0.0; opens = []; start = None
         for _label, fname in self._OUTCOME_BOOKS:
             path = os.path.join(DATA_DIR, fname)
             if not os.path.exists(path):
@@ -631,6 +640,7 @@ class EngineRunner:
             except Exception:
                 continue
             b = buck["i" if fname in self._INTRADAY_BOOKS else "m"]
+            tag = self._BOOK_TAG.get(fname, fname)
             for p in book:
                 ed = p.get("entry_date")
                 if ed and (start is None or ed < start):
@@ -645,8 +655,8 @@ class EngineRunner:
                     b["l"] += 1; b["pl"] += rs
                 else:
                     openn += 1; open_pl += rs
-                    if p.get("expiry"):
-                        open_exp.add(p["expiry"])
+                    opens.append({"exp": p.get("expiry"), "tag": tag,
+                                  "sym": p.get("symbol") or p.get("index") or "?"})
         ic, mc = buck["i"], buck["m"]
         closed = ic["w"] + ic["l"] + mc["w"] + mc["l"]
         if closed == 0:
@@ -670,9 +680,16 @@ class EngineRunner:
             f"➕ <b>Overall</b>: {closed} closed · Win <b>{wr:.1f}%</b> · Realized <b>₹{realized:+,.0f}</b>",
         ]
         if openn:
-            xs = " / ".join(self._fmt_d(e) for e in sorted(open_exp)) or "expiry"
             lines.append(f"⏳ Open: <b>{openn} trade{'s' if openn != 1 else ''}</b> · "
-                         f"MTM <b>₹{open_pl:+,.0f}</b> — will settle on <b>{xs}</b>")
+                         f"MTM <b>₹{open_pl:+,.0f}</b> — settle by date:")
+            groups = {}
+            for o in opens:
+                groups.setdefault(o["exp"], []).append(o)
+            for exp in sorted(groups, key=lambda e: (e is None, e)):
+                items = groups[exp]
+                n = len(items)
+                names = ", ".join(f"{o['sym']} ({o['tag']})" for o in items)
+                lines.append(f"   • {self._fmt_d(exp)}: <b>{n} trade{'s' if n != 1 else ''}</b> — {names}")
         else:
             lines.append("⏳ Open: <b>0 trades</b>")
         return "\n".join(lines)
