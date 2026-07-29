@@ -245,8 +245,12 @@ def notify_nearmiss(rebuild: bool = True) -> int:
             verb = "CE" if r["side"] == "BEAR_CALL" else "PE"
             ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
             ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
-            close = "🔥 " if (r.get("cw") or 0) >= 0.35 else ""   # within 0.05 of the 0.40 gate
-            lines.append(f"{close}<b>{r['sym']}</b> {r['side']} · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']}")
+            cw = r.get("cw") or 0
+            close = "🔥 " if cw >= 0.35 else ""   # within 0.05 of the 0.40 gate
+            # backtested win prob by c/w bucket (CW_BUCKET_ANALYSIS.md, 629 trades Oct'24→Jul'26):
+            # ≥0.40=87% (the signal) · 0.35–0.40=82% · 0.30–0.35=76% · <0.30 = breakeven/lower
+            prob = "~82%" if cw >= 0.35 else ("~76%" if cw >= 0.30 else "<76%")
+            lines.append(f"{close}<b>{r['sym']}</b> {r['side']} · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']} · backtest win {prob}")
             lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
             mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
             if mp is not None and ml is not None:

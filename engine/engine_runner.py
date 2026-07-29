@@ -272,10 +272,11 @@ class EngineRunner:
                 sp, lp = s.get("short_prem"), s.get("long_prem")
                 credit, w, lot = s.get("credit"), s.get("width_pts"), s.get("lot")
                 tgt_stop = self._tgt_stop(book)
-                lines = [f"🔔 <b>{book}</b>" + (f" · win ~{win} at the target/stop below (backtest)" if win else "")]
+                lines = [f"🔔 <b>{book}</b>" + (f" · win ~{win} at the target below (backtest)" if win else "")]
                 if book in self._MULTIDAY_BOOKS:
-                    lines.append("⏳ MULTI-DAY — strikes fixed at entry TODAY, HELD to expiry "
-                                 "(this is NOT a same-day 0DTE call)")
+                    lines.append("⏳ Multiday Trade")
+                elif "0DTE" in book:
+                    lines.append("⚡ Intraday Trade")
                 lines.append(" · ".join(str(x) for x in (sym, side) if x))
                 if ss and ls:
                     leg1 = f"SELL {ss} {verb}".rstrip() + (f" @ ₹{sp}" if sp is not None else "")
@@ -294,12 +295,10 @@ class EngineRunner:
                         lines.append(f"🎯 Target: book {tp_frac*100:.0f}% of credit ≈ +₹{tp_frac*credit*lot:,.0f}/lot"
                                      if tp_frac > 0 else "🎯 Target: hold to expiry — keep the full credit")
                         # STOP — honest per trade: a vertical can't cost more than its width to close,
-                        # so a stop at stop_mult×credit only BINDS when stop_mult×credit < width.
-                        if stop_mult * credit >= w:
-                            lines.append(f"🛑 Stop: {stop_mult:g}× credit is UNREACHABLE at this c/w "
-                                         f"(spread can't cost more than its ₹{w*lot:,.0f} width) → held to expiry, "
-                                         f"floor = max loss −₹{(w-credit)*lot:,.0f}/lot")
-                        else:
+                        # so a stop at stop_mult×credit only BINDS when stop_mult×credit < width. When it
+                        # can't bind (e.g. v2's 3× at c/w≥0.40) it is a no-op → don't print a stop line at
+                        # all (user 2026-07-29: drop the v2 stop line). Max-loss line still shows the floor.
+                        if stop_mult * credit < w:
                             lines.append(f"🛑 Stop: buy back if cost hits {stop_mult:g}× credit "
                                          f"≈ −₹{(stop_mult-1)*credit*lot:,.0f}/lot")
                     elif tgt_stop:
@@ -716,8 +715,8 @@ class EngineRunner:
         def _row(c):
             cc = c["w"] + c["l"]
             w = (c["w"] / cc * 100) if cc else 0.0
-            return (f"   Trades <b>{cc}</b> · ✅ <b>{c['w']}</b> · ❌ <b>{c['l']}</b> · "
-                    f"Win <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>")
+            return (f"   Trades <b>{cc}</b> · WIN ✅ <b>{c['w']}</b> · Loss ❌ <b>{c['l']}</b> · "
+                    f"Win-rate <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>")
 
         lines = [
             f"📈 <b>Saavi Institutional Trader has till date delivered for live trade from {self._fmt_d(start, with_year=True)}-</b>",
