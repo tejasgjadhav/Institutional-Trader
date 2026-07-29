@@ -6,8 +6,17 @@ and the module overrides. All are **paper/signals-only at 1 lot**. Credit spread
 
 | Book | Entry structure | **TARGET (take-profit)** | **STOP-LOSS** | Fallback exit |
 |---|---|---|---|---|
-| ★ **Stock Fade v2 UNION** (TP-50) | sell **2-OTM** / buy **width-4** credit spread, *against* a UNION Donchian(5/10/15/20) breakout | **book at 50% of the credit** (early — captures the IV crush) | buy back if cost-to-close **≥ 3× credit** | settle intrinsic at monthly expiry |
-| **Stock Credit v1** (control) | sell **1-OTM** / buy **width-3** | **75% of max profit** | cost-to-close **≥ 2× credit** | monthly expiry |
+| ★ **Stock Fade v2 UNION** (TP-50) | sell **2-OTM** / buy **width-4** credit spread, *against* a UNION Donchian(5/10/15/20) breakout | **book at 50% of the credit** (early — captures the IV crush) | 3× credit — **INERT** (never binds, see below) → floor = max loss | settle intrinsic at monthly expiry |
+| **Stock Credit v1** (control) | sell **1-OTM** / buy **width-3** | **75% of max profit** | 2× credit — binds only when c/w < 0.50 | monthly expiry |
+
+> **The stop is largely a no-op under the c/w ≥ 0.40 gate (user-caught 2026-07-29).** A vertical spread can
+> never cost more than its width to close (no-arbitrage: max value = distance between strikes). The stop fires
+> only when `stop_mult × credit < width`, i.e. `c/w < 1/stop_mult`. So **v2's 3× stop needs c/w < 0.333 — impossible
+> past the 0.40 gate → it NEVER triggers; every v2 trade is effectively held to TP-50 or expiry, floored at the
+> defined max loss `(width − credit) × lot`.** **v1's 2× stop needs c/w < 0.50 — it binds for c/w 0.40–0.50 (caps
+> loss at ~1× credit) but is inert for c/w ≥ 0.50.** This is exactly why the stop-loss sweep found 3× ≈ no-stop
+> (`SWING_PUTCALL_STOP_ANALYSIS.md`), and tighter stops tested WORSE — so the inert 3× is left as-is (no trading
+> change); only the labels were corrected. The Telegram signal now prints this per-trade.
 | **0DTE NIFTY** (FLIP) | sell ~0.5% OTM / buy **200-pt wing**, same-day expiry | none — **hold to expiry** | none (the bought wing IS the cap; `ZERO_DTE_STOP_MULT=0`) | same-day 15:30 settle |
 | **0DTE SENSEX** | sell 1-OTM / buy wing, same-day expiry | hold to expiry | none | same-day settle |
 | **Monthly Futures** (REGIME-OFF) | BUY front-month future on pullback | **+2% on close** (decays to +1% late in cycle) | **−5% on close** (real gaps avg ≈ −6.3%) | monthly expiry |

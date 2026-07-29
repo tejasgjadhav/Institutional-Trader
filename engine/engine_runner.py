@@ -219,6 +219,14 @@ class EngineRunner:
                     "MONTHLY FUTURES PULLBACK": ("+2% on close (→+1% late)", "−5% on close"),
                     "MONTHLY LONG-CALL PULLBACK": ("+2% on close (→+1% late)", "−5% on close")}
 
+    # (take-profit fraction of credit, stop multiple of credit) per credit-spread book — used to
+    # print the TARGET in ₹ and an HONEST stop. NB: with the c/w>=0.40 gate, 3x credit >= 1.2x width
+    # and a vertical spread can never cost more than its width to close, so v2's 3x stop NEVER binds
+    # (the real floor is the defined max loss). v1's 2x stop = 0.8x width DOES bind (user-caught 2026-07-29).
+    _TG_EXIT = {"STOCK CREDIT v2 UNION": (0.50, 3.0),
+                "STOCK CREDIT v1": (0.75, 2.0),
+                "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": (0.0, 2.0)}
+
     def _tgt_stop(self, book):
         """(target, stop) for a book — tolerant of the SENSEX label variants passed to _tg()."""
         if book in self._TG_TGT_STOP:
@@ -278,9 +286,25 @@ class EngineRunner:
                                                    (f"credit ₹{credit}" if credit is not None else ""),
                                                    (f"lot {lot}" if lot else "")) if x)
                     if extra: lines.append(extra)
-                    if tgt_stop:
+                    have_nums = isinstance(credit, (int, float)) and isinstance(w, (int, float)) and lot
+                    exit_ = self._TG_EXIT.get(book)
+                    if exit_ and have_nums:
+                        tp_frac, stop_mult = exit_
+                        # TARGET in ₹ (booking tp_frac of the credit early)
+                        lines.append(f"🎯 Target: book {tp_frac*100:.0f}% of credit ≈ +₹{tp_frac*credit*lot:,.0f}/lot"
+                                     if tp_frac > 0 else "🎯 Target: hold to expiry — keep the full credit")
+                        # STOP — honest per trade: a vertical can't cost more than its width to close,
+                        # so a stop at stop_mult×credit only BINDS when stop_mult×credit < width.
+                        if stop_mult * credit >= w:
+                            lines.append(f"🛑 Stop: {stop_mult:g}× credit is UNREACHABLE at this c/w "
+                                         f"(spread can't cost more than its ₹{w*lot:,.0f} width) → held to expiry, "
+                                         f"floor = max loss −₹{(w-credit)*lot:,.0f}/lot")
+                        else:
+                            lines.append(f"🛑 Stop: buy back if cost hits {stop_mult:g}× credit "
+                                         f"≈ −₹{(stop_mult-1)*credit*lot:,.0f}/lot")
+                    elif tgt_stop:
                         lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
-                    if isinstance(credit, (int, float)) and isinstance(w, (int, float)) and lot:
+                    if have_nums:
                         lines.append(f"Max profit/lot ₹{credit*lot:,.0f} · Max loss/lot ₹{(w-credit)*lot:,.0f}")
                 elif s.get("order_label"):
                     lines.append(str(s["order_label"]))

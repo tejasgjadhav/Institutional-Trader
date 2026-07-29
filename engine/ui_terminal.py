@@ -357,7 +357,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · STOP 3× credit · WIN 84% in-sample (2019–Sep'24) / 87% out-of-sample (Oct'24–now) at this target/stop · ~7.6/mo (113-name universe) · SELL ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · STOP 3× credit is INERT at c/w≥0.40 (held to expiry, floor = max loss) · WIN 84% in-sample (2019–Sep'24) / 87% out-of-sample (Oct'24–now) at this target/stop · ~7.6/mo (113-name universe) · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -373,7 +373,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit · WIN 73% out-of-sample (Oct'24–now) at this target/stop · in-sample NOT MEASURED for the TP-75 exit (only the old hold-to-expiry base was, 54%) · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit (binds only c/w<0.50, else held to expiry) · WIN 73% out-of-sample (Oct'24–now) at this target/stop · in-sample NOT MEASURED for the TP-75 exit (only the old hold-to-expiry base was, 54%) · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -1100,10 +1100,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "thin → NOT changed. (3) <b>Timing:</b> no day-of-week edge; entering at the breakout CLOSE (deployed) "
      "is optimal — waiting one session drops ~40% of trades for no gain. File: studies/SWING_PUTCALL_STOP_ANALYSIS.md")}
 {res("TARGET &amp; STOP per book (see studies/TARGET_STOP_TABLE.md): <b>v2 UNION</b> — sell 2-OTM / buy "
-     "width-4 · TARGET book@50% of credit · STOP 3× credit. <b>v1</b> — sell 1-OTM / buy width-3 · TARGET "
-     "75% of max profit · STOP 2× credit. <b>0DTE NIFTY/SENSEX</b> — hold to same-day expiry, no stop (the "
-     "bought wing is the cap). <b>Monthly futures</b> — TARGET +2% (→+1% late) · STOP −5% on close. "
-     "Max profit = credit×lot; max loss = (width−credit)×lot.")}
+     "width-4 · TARGET book@50% of credit · STOP 3× credit is <b>INERT</b> (a spread can't cost &gt;width to "
+     "close, and 3×credit&gt;width once c/w≥0.40 → held to expiry, floor = defined max loss). <b>v1</b> — sell "
+     "1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit (binds only when c/w&lt;0.50). "
+     "<b>0DTE NIFTY/SENSEX</b> — hold to same-day expiry, no stop (the bought wing is the cap). <b>Monthly "
+     "futures</b> — TARGET +2% (→+1% late) · STOP −5% on close. Max profit = credit×lot; max loss = "
+     "(width−credit)×lot. This is why the stop sweep found 3× ≈ no-stop (user-caught 2026-07-29).")}
 
 {h("WHY DOES v1 SHOW 54% NEXT TO v2 UNION's 85%+? — it is NOT the number of calls")}
 {p("<b>Same signal, same gate, different EXIT GEOMETRY — and the 54% is the OLD hold-to-expiry test.</b> "
