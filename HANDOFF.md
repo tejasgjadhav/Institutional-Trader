@@ -1,5 +1,51 @@
 # Handoff — institutional-trader
-_Updated: 2026-07-24 by Claude Code_
+_Updated: 2026-07-29 by Claude Code_
+
+## ACTIVE (2026-07-29) — GOAL /loop: MORE swing trades @85% + put/call + timing + stop-loss + size ₹1L/mo on ₹5L
+User goal (Stop hook active): expand the swing book — more trades while holding ~85% win — analyse put-vs-call,
+entry-timing, stop-loss limits; size to ~₹1 lakh/month for a retail trader with **₹5L margin** (updated from ₹2L).
+STATUS: GOAL #1 COMPLETE. Backtest done → studies/SWING_PUTCALL_STOP_ANALYSIS.md (committed). VERDICT:
+ (1) PUT vs CALL = NO stable edge. IS puts looked better (92.5%win/+24.9%w vs calls 80.8%/+25.0%w) but OOS the
+     put NET COLLAPSED (+9.1%w) while calls held (+23.7%w) — the reversal CLAUDE.md warned of. Trade BOTH sides,
+     no tilt. (2) STOP: looser is better-or-equal in BOTH windows, never worse (IS no-stop +30.4%w vs 3.0x +25%w;
+     OOS no-stop +18.4%w vs 3.0x +18.0%w), worst loss bounded ~−62 to −65%w by defined risk. Widen 3.0x→3.5x/no-stop
+     = marginal + and harmless, but SMALL & OOS-thin. My earlier prelim "-199%w on 3x stop" was a quick-sim artifact
+     (intraday path-walk); authoritative close-sim caps ~−65%w. (3) TIMING: no DOW edge (inconsistent IS vs OOS);
+     entering at breakout CLOSE (deployed) is optimal — waiting one session drops ~40% of trades for no net gain.
+ NET: none of these ADD trades — they're quality/risk tweaks. Only a deploy-worthy OPTIONAL: widen stop 3.0x→3.5x.
+ NOT deployed — needs user approval. "More trades @85%" answer = universe expansion (Goal #2, next).
+DONE (on-disk, delivered to user):
+ - Frequency ceiling CONFIRMED: v2 UNION already = the 85% swing book (~5.8/mo, 84–87% OOS, +26–29%w). "More trades
+   at 85%" is CAPPED by the c/w≥0.40 gate (the edge). Below gate: 0.35–0.40→82%win but only +9%w; 0.30–0.35→76%/+1%w
+   (breakeven). Win% stays high (mirage, TP-50 books early); MONEY collapses. Sources: UNION_DONCHIAN_FREQUENCY.md,
+   CW_BUCKET_ANALYSIS.md.
+ - ₹5L sizing (from LIVE forward-test economics): margin ~₹6–13k/trade (defined risk), blended net ~₹2,700/trade,
+   ~20–22 trades/mo @1 lot. ₹1L/mo needs ~3 lots at favorable/model rate (~₹300k peak margin, fits ₹5L) but ~6 lots
+   at the sober 50%-haircut rate (~₹500k, fully deployed). Verdict: ₹1L/mo = good-regime CEILING; durable base ~₹50–70k/mo
+   at 3–4 lots. UNION losses CLUSTER on same down-days (−55% avg loss) → keep dry powder.
+IN FLIGHT: a detached backtest `studies/ndte/stkfade_putcall_stop.py` (pid was 91107) is RUNNING on the freshly
+ re-downloaded /tmp/bhav_cache_stk (1500 files). It computes, IS(2019→Sep24)+OOS(Oct24→now): (1) BEAR-CALL vs
+ BULL-PUT win%/net split; (2) stop-loss sweep {2.0/2.5/3.0(deployed)/3.5/hold}; (3) day-of-week + close-vs-next-open
+ timing. Output PENDING: studies/SWING_PUTCALL_STOP_ANALYSIS.md. The spawning subagent (id a38bf824d62b60730) ALREADY
+ STOPPED before results landed — resume it via SendMessage OR just wait for the script + read the .md.
+NEXT: read SWING_PUTCALL_STOP_ANALYSIS.md when done → relay put/call + stop + timing numbers to user → if any finding
+ is deploy-worthy, show numbers & get user approval BEFORE touching engine (never deploy on a hunch). Then commit
+ studies + push BOTH remotes (origin + private). Goal Stop hook auto-clears when condition met.
+RE-RUN NOTE: the agent-launched detached run died silently mid-collection (no md, no /tmp jsons). Relaunched by me
+ (pid tracked, log /tmp/pcs_run.log). Script studies/ndte/stkfade_putcall_stop.py writes /tmp/stkfade_pcs_is.json +
+ _oos.json then studies/SWING_PUTCALL_STOP_ANALYSIS.md. Cache load of 1500 full FO-bhavcopy CSVs is SLOW (~mins).
+GOTCHA: NSE bhav cache in /tmp is wiped on reboot — re-download via studies/ndte/bhav_dl_stk.py. Don't push .env.
+
+## QUEUED GOAL #2 (2026-07-29, Stop hook) — EXPAND the F&O universe without diluting signal count
+User: "look at all fno options band and work on enhancing and increasing the universe without compromising on the
+number of signals — do this AFTER you finish the first test." Interpretation: current universe = ~100 hand-picked
+names (config.UNIVERSE, chosen by intraday movement; beat a mcap-top-100 67% vs 61%). NSE F&O has ~180–220 stock
+underlyings. Take the F&O names NOT already in UNIVERSE, run v2 UNION fade + c/w≥0.40 gate on them, keep those that
+ADD signals at ≥~85% quality (the gate self-selects rich-IV higher-priced names — see FUNDAMENTAL_TECHNICAL_FINDING).
+"Without compromising signals" = additive only; must not lower the 85% win / +26%w. NEEDS bhav option data for the
+EXTRA names too (current /tmp/bhav_cache_stk only has the ~100 universe) → download via bhav_dl_stk.py variant with
+the expanded symbol list. Deliverable: studies/UNIVERSE_EXPANSION.md + proposed additions; show user numbers &
+get approval BEFORE editing config.UNIVERSE. Do ONLY after Goal #1's backtest is reported.
 
 ## ACTIVE (2026-07-24) — HOURLY first-touch c/w>=0.40 entry vs CLOSE entry (stock v2 UNION + v1) — VALIDATION ONLY
 User Q: the live engine evaluates c/w ONCE at the 15:10 close; if instead we entered the FIRST intraday
