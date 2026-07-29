@@ -46,6 +46,14 @@ ADD signals at ≥~85% quality (the gate self-selects rich-IV higher-priced name
 EXTRA names too (current /tmp/bhav_cache_stk only has the ~100 universe) → download via bhav_dl_stk.py variant with
 the expanded symbol list. Deliverable: studies/UNIVERSE_EXPANSION.md + proposed additions; show user numbers &
 get approval BEFORE editing config.UNIVERSE. Do ONLY after Goal #1's backtest is reported.
+STATUS 2026-07-29: RUNNING as background subagent (phased: enumerate full F&O OPTSTK list from one recent NSE
+ bhavcopy → cheap breakout-frequency+price screen → real option backtest on ~25-35 shortlist under
+ /tmp/bhav_cache_expand). Deliverable studies/UNIVERSE_EXPANSION.md PENDING. Awaiting completion notification.
+ Current UNIVERSE=100 names (config.UNIVERSE, '.NS' suffixed). Bhav cache /tmp/bhav_cache_stk is filtered to
+ those 100 only, so new names need their own download. When it returns: relay proposed additions + projected
+ blended win%/net to user, get approval BEFORE editing config.UNIVERSE, then commit + push BOTH remotes.
+NOTE: origin push of Goal-#1 commit eedcc00 TIMED OUT (github unreachable ~2min) — PRIVATE remote has it; retry
+ origin when network recovers (`git push origin main`). Upstox+github both flaky this session.
 
 ## ACTIVE (2026-07-24) — HOURLY first-touch c/w>=0.40 entry vs CLOSE entry (stock v2 UNION + v1) — VALIDATION ONLY
 User Q: the live engine evaluates c/w ONCE at the 15:10 close; if instead we entered the FIRST intraday
