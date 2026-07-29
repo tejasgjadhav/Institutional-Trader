@@ -46,12 +46,19 @@ ADD signals at ≥~85% quality (the gate self-selects rich-IV higher-priced name
 EXTRA names too (current /tmp/bhav_cache_stk only has the ~100 universe) → download via bhav_dl_stk.py variant with
 the expanded symbol list. Deliverable: studies/UNIVERSE_EXPANSION.md + proposed additions; show user numbers &
 get approval BEFORE editing config.UNIVERSE. Do ONLY after Goal #1's backtest is reported.
-STATUS 2026-07-29: RUNNING as background subagent (phased: enumerate full F&O OPTSTK list from one recent NSE
- bhavcopy → cheap breakout-frequency+price screen → real option backtest on ~25-35 shortlist under
- /tmp/bhav_cache_expand). Deliverable studies/UNIVERSE_EXPANSION.md PENDING. Awaiting completion notification.
- Current UNIVERSE=100 names (config.UNIVERSE, '.NS' suffixed). Bhav cache /tmp/bhav_cache_stk is filtered to
- those 100 only, so new names need their own download. When it returns: relay proposed additions + projected
- blended win%/net to user, get approval BEFORE editing config.UNIVERSE, then commit + push BOTH remotes.
+STATUS 2026-07-29: DONE (subagent). Deliverable studies/UNIVERSE_EXPANSION.md (149 lines) + scripts
+ studies/ndte/expand_phase0_enum.py / expand_phase1_screen.py / expand_phase2_dl.py / expand_split_bysym.py /
+ expand_phase2_bt.py + /tmp/expand_phase2.json. VERIFIED against raw JSON (not prose): baseline reproduced
+ 370tr/84.1%/+25.7%w/+ve6/6yr (matches known target → sim faithful). RESULT: universe CAN expand additively.
+ Screened 180 F&O underlyings → 88 candidates not in UNIVERSE → 37 clear c/w≥0.40 gate, ALL net-+ve IS. Options:
+  • STRICT (2: MRF,DEEPAKNTR, n≥15): 5.78→6.39/mo, 84.1→84.4%win, +25.7→+28.0%w
+  • TIER-5 (13: COLPAL,ASTRAL,INDIAMART,ALKEM,DALBHARAT,UBL,NAVINFLUOR,MRF,ATUL,CUMMINSIND,DEEPAKNTR,HAL,BOSCHLTD)
+    recommended: 5.78→7.56/mo (+31%), 84.1→85.5%win, +25.7→+27.6%w
+  • ALL-GATED (37): 5.78→8.89/mo (+54%), 84.1→84.9%win, +25.7→+26.4%w
+ ALL keep win% & net%w at/above baseline. CAVEAT: IS-only (no per-name OOS — Upstox premium hist ~1mo);
+ mid-cap live fills erode net more than shown; small per-name n = noise (trust pooled). config NOT edited.
+ AWAITING USER APPROVAL on which tier before editing config.UNIVERSE (approval-first rule). Then bhav_dl for
+ added names is already cached under /tmp/bhav_cache_expand; commit config+study, push BOTH remotes.
 NOTE: origin push of Goal-#1 commit eedcc00 TIMED OUT (github unreachable ~2min) — PRIVATE remote has it; retry
  origin when network recovers (`git push origin main`). Upstox+github both flaky this session.
 

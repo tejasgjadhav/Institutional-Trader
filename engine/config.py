@@ -49,8 +49,15 @@ UNIVERSE = [
     "ZYDUSLIFE.NS", "TITAN.NS", "DMART.NS", "TRENT.NS", "JUBLFOOD.NS", "BHARTIARTL.NS",
     "NAUKRI.NS", "INDIGO.NS", "DLF.NS", "GODREJPROP.NS", "JINDALSTEL.NS", "INDIANB.NS",
     "AUBANK.NS", "BAJAJHLDNG.NS", "TATAELXSI.NS", "ETERNAL.NS",
+    # === TIER-5 EXPANSION (2026-07-29, user-approved) — 13 F&O names that clear the c/w>=0.40
+    # gate and ADD signals without diluting: blend 5.78->7.56 trades/mo (+31%), 84.1->85.5% win,
+    # +25.7->+27.6% of width, +ve 6/6 yrs IS. IS-only (2019->Sep'24 bhavcopy; no per-name OOS —
+    # Upstox premium history too short). Higher-priced/liquid mid-large caps. See
+    # studies/UNIVERSE_EXPANSION.md. The c/w + live liquidity gates still decide each trade. ===
+    "COLPAL.NS", "ASTRAL.NS", "INDIAMART.NS", "ALKEM.NS", "DALBHARAT.NS", "UBL.NS",
+    "NAVINFLUOR.NS", "MRF.NS", "ATUL.NS", "CUMMINSIND.NS", "DEEPAKNTR.NS", "HAL.NS", "BOSCHLTD.NS",
 ]
-assert len(UNIVERSE) == 100, "Universe should have 100 stocks"
+assert len(UNIVERSE) == 113, "Universe should have 113 stocks (100 base + 13 Tier-5 expansion)"
 
 # PRIORITY stocks — the only names whose high gates-1-5 win rate PERSISTED out-of-sample.
 # Found by a 365-day per-stock backtest split into train (older 60%) / held-out test (newer

@@ -357,7 +357,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell the breakout spread, book at half credit · WIN 84% in-sample (2019–Sep'24) / 87% out-of-sample (Oct'24–now) · ~5–6/mo · SELL ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · STOP 3× credit · WIN 84% in-sample (2019–Sep'24) / 87% out-of-sample (Oct'24–now) at this target/stop · ~7.6/mo (113-name universe) · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -373,7 +373,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · WIN 73% out-of-sample (Oct'24–now, TP-75) · in-sample NOT MEASURED for the TP-75 exit (only the old hold-to-expiry base was, 54%) · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit · WIN 73% out-of-sample (Oct'24–now) at this target/stop · in-sample NOT MEASURED for the TP-75 exit (only the old hold-to-expiry base was, 54%) · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -401,7 +401,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # MONTHLY FUTURES PULLBACK — the 5th strategy (monthly cycle · BUY front-month futures).
         # Signals-only paper test; needs ~Rs 15L to trade for real. Earnings-skip applied live.
         v.addWidget(self._section_label(
-            "MONTHLY FUTURES PULLBACK · REV1-v2 · WIN 77.8% in-sample (2018–Sep'24) / 75.7% out-of-sample (Oct'24–now) · 5/cycle · BUY FUT (paper, ~₹15L)", AMBER))
+            "MONTHLY FUTURES PULLBACK · REV1-v2 · TARGET +2% (→+1% late) · STOP −5% on close · WIN 77.8% in-sample (2018–Sep'24) / 75.7% out-of-sample (Oct'24–now) at this target/stop · 5/cycle · BUY FUT (paper, ~₹15L)", AMBER))
         self.pm_monthly = QTableWidget(); self.pm_monthly.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_monthly.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_monthly)
@@ -713,7 +713,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("★ Stock fade v2 UNION (TP-50)", "SELL", "84.3%", "87%",
              "19:96 20:88 21:85 22:90 23:79 24:81 25:85 26:89", "79%",
              "~₹10,500", "<b>+52.3%</b> (~₹4,069)", "+101.7% / −101.8%", "<b>12.1d</b> avg<br/>med 9 · p90 27",
-             "5–6", "₹20–23k · ₹10–12k", AMBER),
+             "5.8→7.6*", "₹20–23k · ₹10–12k", AMBER),
             ("Stock credit v1 · fade (TP-75)", "SELL", "54%", "73%",
              "<span style='color:#888;'>no per-trade file</span>", "—",
              "~₹9,000", "+17.9%w OOS", "—", "days–weeks",
@@ -1083,6 +1083,27 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "the c/w≥0.40 gate selects rich-IV wide-strike names whose fade shorts barely trade intraday (both "
      "legs traded intraday on only 30%/62% of trades) → the extra signals are often unexecutable too. "
      "REPORT-ONLY, engine unchanged. File: studies/HOURLY_VS_CLOSE_ENTRY.md")}
+{res("★ UNIVERSE EXPANSION — TIER-5 DEPLOYED (2026-07-29, user-approved): screened all <b>180 NSE F&amp;O "
+     "stock underlyings</b> → 88 not in the universe → <b>37 clear the c/w≥0.40 gate and every one is "
+     "net-positive IS</b>. Added the <b>13 Tier-5 names</b> (COLPAL, ASTRAL, INDIAMART, ALKEM, DALBHARAT, "
+     "UBL, NAVINFLUOR, MRF, ATUL, CUMMINSIND, DEEPAKNTR, HAL, BOSCHLTD) → universe <b>100 → 113</b>. Blend "
+     "before→after (IS 2019→Sep'24, all +ve 6/6 yr): <b>5.78 → 7.56 trades/mo (+31%) · 84.1 → 85.5% win · "
+     "+25.7 → +27.6% of width</b>. Every name RAISES signal-rate while holding win% and net at/above "
+     "baseline — additive, no dilution. CAVEAT: IS-only (no per-name OOS — Upstox premium history too "
+     "short); mid-cap live fills erode net more than shown; the c/w + live-liquidity gates still decide "
+     "each trade. File: studies/UNIVERSE_EXPANSION.md")}
+{res("PUT vs CALL · STOP · TIMING (2026-07-29, 387 IS + 222 OOS trades) — (1) <b>No stable side edge:</b> "
+     "IS puts looked better (92.5% win vs calls 80.8%) but OOS the put NET COLLAPSED (+9.1%w vs calls "
+     "+23.7%w) — a regime flip, so trade BOTH sides, no tilt. (2) <b>Stop:</b> looser ≥ tighter in BOTH "
+     "windows, never worse; worst loss bounded ~−62 to −65%w by defined risk (IS no-stop +30.4%w vs 3.0× "
+     "+25.0%w; OOS +18.4 vs +18.0). Deployed 3.0× is fine; 3.5×/no-stop marginally better but small/OOS-"
+     "thin → NOT changed. (3) <b>Timing:</b> no day-of-week edge; entering at the breakout CLOSE (deployed) "
+     "is optimal — waiting one session drops ~40% of trades for no gain. File: studies/SWING_PUTCALL_STOP_ANALYSIS.md")}
+{res("TARGET &amp; STOP per book (see studies/TARGET_STOP_TABLE.md): <b>v2 UNION</b> — sell 2-OTM / buy "
+     "width-4 · TARGET book@50% of credit · STOP 3× credit. <b>v1</b> — sell 1-OTM / buy width-3 · TARGET "
+     "75% of max profit · STOP 2× credit. <b>0DTE NIFTY/SENSEX</b> — hold to same-day expiry, no stop (the "
+     "bought wing is the cap). <b>Monthly futures</b> — TARGET +2% (→+1% late) · STOP −5% on close. "
+     "Max profit = credit×lot; max loss = (width−credit)×lot.")}
 
 {h("WHY DOES v1 SHOW 54% NEXT TO v2 UNION's 85%+? — it is NOT the number of calls")}
 {p("<b>Same signal, same gate, different EXIT GEOMETRY — and the 54% is the OLD hold-to-expiry test.</b> "

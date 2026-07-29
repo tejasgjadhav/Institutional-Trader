@@ -209,6 +209,25 @@ class EngineRunner:
                "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "fwd-test, unproven",
                "MONTHLY FUTURES PULLBACK": "76% OOS", "MONTHLY LONG-CALL PULLBACK": "fwd-test"}
     _TG_WIN_SYM = {"SENSEX": "89.0%"}   # legacy per-symbol map (BANKNIFTY 0DTE rejected 07-19)
+    # (target, stop) the backtest win% is CONDITIONED ON — stated on every signal so the win rate
+    # is never read in isolation (user 2026-07-29: "the winrate is subject to target and stop loss").
+    _TG_TGT_STOP = {"STOCK CREDIT v2 UNION": ("book at 50% of credit", "3× credit"),
+                    "STOCK CREDIT v1": ("75% of max profit", "2× credit"),
+                    "0DTE NIFTY": ("hold to same-day expiry", "none — bought wing caps the loss"),
+                    "0DTE SENSEX": ("hold to same-day expiry", "none — bought wing caps the loss"),
+                    "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": ("hold to expiry", "2× credit"),
+                    "MONTHLY FUTURES PULLBACK": ("+2% on close (→+1% late)", "−5% on close"),
+                    "MONTHLY LONG-CALL PULLBACK": ("+2% on close (→+1% late)", "−5% on close")}
+
+    def _tgt_stop(self, book):
+        """(target, stop) for a book — tolerant of the SENSEX label variants passed to _tg()."""
+        if book in self._TG_TGT_STOP:
+            return self._TG_TGT_STOP[book]
+        if book.startswith("SENSEX") or "SENSEX" in book:
+            return self._TG_TGT_STOP["0DTE SENSEX"]
+        if "NIFTY" in book and "0DTE" in book:
+            return self._TG_TGT_STOP["0DTE NIFTY"]
+        return None
     # Books that HOLD to expiry (days→weeks) — the message must say so, or an index credit spread
     # entered days ago reads like a same-day 0DTE call (user-caught 2026-07-21). Same-day books
     # (0DTE NIFTY/SENSEX) are deliberately NOT in this set.
@@ -244,7 +263,8 @@ class EngineRunner:
                 ss, ls = g(s.get("short_strike")), g(s.get("long_strike"))
                 sp, lp = s.get("short_prem"), s.get("long_prem")
                 credit, w, lot = s.get("credit"), s.get("width_pts"), s.get("lot")
-                lines = [f"🔔 <b>{book}</b>" + (f" · win ~{win} (backtest)" if win else "")]
+                tgt_stop = self._tgt_stop(book)
+                lines = [f"🔔 <b>{book}</b>" + (f" · win ~{win} at the target/stop below (backtest)" if win else "")]
                 if book in self._MULTIDAY_BOOKS:
                     lines.append("⏳ MULTI-DAY — strikes fixed at entry TODAY, HELD to expiry "
                                  "(this is NOT a same-day 0DTE call)")
@@ -258,10 +278,14 @@ class EngineRunner:
                                                    (f"credit ₹{credit}" if credit is not None else ""),
                                                    (f"lot {lot}" if lot else "")) if x)
                     if extra: lines.append(extra)
+                    if tgt_stop:
+                        lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
                     if isinstance(credit, (int, float)) and isinstance(w, (int, float)) and lot:
                         lines.append(f"Max profit/lot ₹{credit*lot:,.0f} · Max loss/lot ₹{(w-credit)*lot:,.0f}")
                 elif s.get("order_label"):
                     lines.append(str(s["order_label"]))
+                    if tgt_stop:
+                        lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
                 lines.append("Execute with your broker.")
                 send_telegram("\n".join(lines))
         except Exception as e:
