@@ -57,8 +57,16 @@ STATUS 2026-07-29: DONE (subagent). Deliverable studies/UNIVERSE_EXPANSION.md (1
   • ALL-GATED (37): 5.78→8.89/mo (+54%), 84.1→84.9%win, +25.7→+26.4%w
  ALL keep win% & net%w at/above baseline. CAVEAT: IS-only (no per-name OOS — Upstox premium hist ~1mo);
  mid-cap live fills erode net more than shown; small per-name n = noise (trust pooled). config NOT edited.
- AWAITING USER APPROVAL on which tier before editing config.UNIVERSE (approval-first rule). Then bhav_dl for
- added names is already cached under /tmp/bhav_cache_expand; commit config+study, push BOTH remotes.
+ DEPLOYED 2026-07-29 (user approved "yes go for Tier-5"): config.UNIVERSE 100->113 (+13 Tier-5 names), assert
+ ->113, engine restarted (all 13 resolve live spots). Commit b042a13, pushed BOTH remotes. ALSO in same commit:
+  - Telegram _tg(): every signal now shows 🎯 Target + 🛑 Stop the win% is conditioned on, grouped w/ max
+    profit/loss; win% stated once "at the target/stop below" (per user: winrate subject to target+stop).
+    Map _TG_TGT_STOP + _tgt_stop() in engine_runner.py.
+  - UI STUDIES tab: universe-expansion card + put/call/stop/timing card + target/stop card; v2 sig/mo 5.8->7.6*.
+  - UI PM DECISIONS: TARGET+STOP on v2/v1/monthly headers. studies/TARGET_STOP_TABLE.md (new).
+ BUG CHECK done (user asked): 13 names resolve live, no stale size-assert, _tg label coverage verified, engine+
+ viewer healthy @113. Minor cosmetic: '94-stock' descriptive comments in agent.py/orb_vwap_live.py now stale
+ (pre-existing, left per surgical rule). BOTH GOAL STOP HOOKS should now be satisfied.
 NOTE: origin push of Goal-#1 commit eedcc00 TIMED OUT (github unreachable ~2min) — PRIVATE remote has it; retry
  origin when network recovers (`git push origin main`). Upstox+github both flaky this session.
 
