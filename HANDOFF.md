@@ -1,5 +1,15 @@
 # Handoff — institutional-trader
 
+## DONE (2026-07-30) — Telegram signal format v2 LIVE (commit 37bccb3, both remotes)
+User-designed format deployed in _tg(): "🟢 EXECUTE NOW — MULTIDAY/INTRADAY SIGNAL" · no 0DTE jargon
+("Expires TODAY at 3:30 PM") · target ₹ + max P/L · "📚 Why this signal — Tejas Jadhav, CFA…" with effort
+funnel (v2 32,852→609; v1 25,978→997) + SEPARATE IS/OOS lines with full dates ({TODAY} auto-fills via
+datetime.now(IST)) · SENSEX says in-sample CANNOT be captured · SEBI disclaimer every signal · removed
+"Execute with your broker" + "7 of 8 years". BUGFIX: 0DTE BANKNIFTY inherited NIFTY stats ("NIFTY" substring)
+— excluded. Dead _TG_WIN/_TG_WIN_SYM removed. STUDIES card documents format. 2 samples sent to Telegram
+(🧪-prefixed). Engine+viewer restarted, alive. NOTE: shell env can carry stale TELEGRAM_BOT_TOKEN — use
+load_dotenv(.env, override=True) for manual sends; launchd engine unaffected.
+
 ## DONE (2026-07-30) — v1 exit TP-40/no-stop DEPLOYED (goal: raise win rate, zero signal loss)
 Sweep (V1_WINRATE_SWEEP.md) + OOS path-replay (242 real-premium trades, stkfade_v1_oos_exits.py): TP-40/no-stop
 = 85.0% IS / 86.0% OOS win, net +18.2/+17.6%w vs deployed TP-75/stop-2× 64.0/73.6% & +10.3/+15.1%w — SAME
