@@ -204,7 +204,7 @@ class EngineRunner:
             logger.warning(f"fast resolve: {e}")
 
     # Backtested win rates shown on every signal (honest labels — source: studies/).
-    _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "64% IS / 73% OOS",
+    _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "85% IS / 86% OOS",
                "0DTE NIFTY": "88.3% (measured)", "0DTE SENSEX": "89.0% (measured)",
                "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "fwd-test, unproven",
                "MONTHLY FUTURES PULLBACK": "76% OOS", "MONTHLY LONG-CALL PULLBACK": "fwd-test"}
@@ -212,7 +212,7 @@ class EngineRunner:
     # (target, stop) the backtest win% is CONDITIONED ON — stated on every signal so the win rate
     # is never read in isolation (user 2026-07-29: "the winrate is subject to target and stop loss").
     _TG_TGT_STOP = {"STOCK CREDIT v2 UNION": ("book at 50% of credit", "3× credit"),
-                    "STOCK CREDIT v1": ("75% of max profit", "2× credit"),
+                    "STOCK CREDIT v1": ("book 40% of credit", "none — wing caps the loss"),
                     "0DTE NIFTY": ("hold to same-day expiry", "none — bought wing caps the loss"),
                     "0DTE SENSEX": ("hold to same-day expiry", "none — bought wing caps the loss"),
                     "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": ("hold to expiry", "2× credit"),
@@ -224,7 +224,7 @@ class EngineRunner:
     # and a vertical spread can never cost more than its width to close, so v2's 3x stop NEVER binds
     # (the real floor is the defined max loss). v1's 2x stop = 0.8x width DOES bind (user-caught 2026-07-29).
     _TG_EXIT = {"STOCK CREDIT v2 UNION": (0.50, 3.0),
-                "STOCK CREDIT v1": (0.75, 2.0),
+                "STOCK CREDIT v1": (0.40, 99.0),
                 "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": (0.0, 2.0)}
 
     def _tgt_stop(self, book):

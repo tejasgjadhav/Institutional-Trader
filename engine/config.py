@@ -271,8 +271,11 @@ STOCK_CREDIT_SHORT_OFFSET = 1       # short 1 strike OTM
 STOCK_CREDIT_WIDTH        = 3       # long 3 strikes further OTM (defined risk)
 STOCK_CREDIT_MIN_CW       = 0.40    # THE EDGE: only trade when credit >= 40% of the strike width
 STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/untradeable options)
-STOCK_CREDIT_STOP_MULT    = 2.0     # stop if cost-to-close >= 2x credit
-STOCK_CREDIT_TAKE_PROFIT  = 0.75    # BOOK a win at 75% of max profit — de-risks the mid-cap expiry
+STOCK_CREDIT_STOP_MULT    = 99.0    # NO stop (unreachable) — the bought wing caps risk at width-credit.
+                                    # Sweep 2026-07-30 (V1_WINRATE_SWEEP.md): the 2x stop realized losses
+                                    # that recover; removing it raised win AND net in IS and OOS.
+STOCK_CREDIT_TAKE_PROFIT  = 0.40    # BOOK the win at 40% of credit (was 0.75). 85.0% IS / 86.0% OOS,
+                                    # net +18.2/+17.6%w vs +10.3/+15.1 deployed — user-approved 2026-07-30.
                                     # tail (index stays at hold-to-expiry). 0 = hold to expiry.
 STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
 STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)

@@ -7,7 +7,7 @@ and the module overrides. All are **paper/signals-only at 1 lot**. Credit spread
 | Book | Entry structure | **TARGET (take-profit)** | **STOP-LOSS** | Fallback exit |
 |---|---|---|---|---|
 | ★ **Stock Fade v2 UNION** (TP-50) | sell **2-OTM** / buy **width-4** credit spread, *against* a UNION Donchian(5/10/15/20) breakout | **book at 50% of the credit** (early — captures the IV crush) | 3× credit — **INERT** (never binds, see below) → floor = max loss | settle intrinsic at monthly expiry |
-| **Stock Credit v1** (control) | sell **1-OTM** / buy **width-3** | **75% of max profit** | 2× credit — binds only when c/w < 0.50 | monthly expiry |
+| **Stock Credit v1** | sell **1-OTM** / buy **width-3** | **book at 40% of the credit** (TP-40, deployed 2026-07-30 — was 75%) | **none** (wing caps risk; old 2× stop removed — it realized recoverable losses) | monthly expiry |
 
 > **The stop is largely a no-op under the c/w ≥ 0.40 gate (user-caught 2026-07-29).** A vertical spread can
 > never cost more than its width to close (no-arbitrage: max value = distance between strikes). The stop fires

@@ -373,7 +373,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit (binds only c/w<0.50, else held to expiry) · WIN 64% in-sample (2019–Sep'24, TP-75) / 73% out-of-sample (Oct'24–now) at this target/stop · +ve every yr (weakest 2023 54.8%) · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · WIN 85% in-sample (2019–Sep'24) / 86% out-of-sample (Oct'24–now) at this target · +ve every yr · TP-40/no-stop deployed 2026-07-30 (was TP-75/stop-2×: 64%/73%) · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -1102,7 +1102,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {res("TARGET &amp; STOP per book (see studies/TARGET_STOP_TABLE.md): <b>v2 UNION</b> — sell 2-OTM / buy "
      "width-4 · TARGET book@50% of credit · STOP 3× credit is <b>INERT</b> (a spread can't cost &gt;width to "
      "close, and 3×credit&gt;width once c/w≥0.40 → held to expiry, floor = defined max loss). <b>v1</b> — sell "
-     "1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit (binds only when c/w&lt;0.50). "
+     "1-OTM / buy width-3 · TARGET book@40% of credit · NO stop (wing caps loss) — TP-40/no-stop deployed "
+     "2026-07-30 per V1_WINRATE_SWEEP (85% IS / 86% OOS vs 64/74 on old TP-75/stop-2×; same signals). "
      "<b>0DTE NIFTY/SENSEX</b> — hold to same-day expiry, no stop (the bought wing is the cap). <b>Monthly "
      "futures</b> — TARGET +2% (→+1% late) · STOP −5% on close. Max profit = credit×lot; max loss = "
      "(width−credit)×lot. This is why the stop sweep found 3× ≈ no-stop (user-caught 2026-07-29).")}
