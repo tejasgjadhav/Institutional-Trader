@@ -753,3 +753,5 @@ proven, keep tiers separate, validate 2019-24 first, 1 lot is right sizing.
   same-cycle as settlement (~15:35, a1251c3); 0DTE signals are per-index labels (75bffcf).
 
 ## 2026-07-30 late: expectancy gaps filled (v1 live 11W/3L +5,874/-8,766 → +2,737; 0DTE formulas inline); watchlist digest: html-escaped syms (fixes literal <b> on parse-fail fallback) + friendly side names ('Bear Call Strategy — we expect the stock to stay lower…'). SENSEX result 4pm = my engine restarts 15:30-16:00 delayed settle+notify (not a code bug).
+
+## 2026-07-30 CLOSE: user typed 'confirmed' — explicit approval of Tier-5 113-name deployment now in transcript; /loop universe goal fully closed (both tasks done+approved).
