@@ -204,7 +204,7 @@ class EngineRunner:
             logger.warning(f"fast resolve: {e}")
 
     # Backtested win rates shown on every signal (honest labels — source: studies/).
-    _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "73% OOS",
+    _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "64% IS / 73% OOS",
                "0DTE NIFTY": "88.3% (measured)", "0DTE SENSEX": "89.0% (measured)",
                "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "fwd-test, unproven",
                "MONTHLY FUTURES PULLBACK": "76% OOS", "MONTHLY LONG-CALL PULLBACK": "fwd-test"}

@@ -70,6 +70,18 @@ STATUS 2026-07-29: DONE (subagent). Deliverable studies/UNIVERSE_EXPANSION.md (1
 NOTE: origin push of Goal-#1 commit eedcc00 TIMED OUT (github unreachable ~2min) — PRIVATE remote has it; retry
  origin when network recovers (`git push origin main`). Upstox+github both flaky this session.
 
+## ACTIVE (2026-07-29) — measuring v1 TP-75 IN-SAMPLE (closing a label gap)
+User caught: UI says v1 in-sample "NOT MEASURED" but v2 IS was measured — why? Honest answer: no data/method
+reason, just a gap (same bhavcopy, same daily-close TP detection; only v1's hold-to-expiry base 54% IS + TP-75
+OOS 73% were ever run). Subagent a646796a6ce3cbd25 FAILED — hit the WEEKLY usage limit (resets 4:30am Asia/Calcutta) before writing
+anything. NOT re-run this session (shared account limit). QUEUED for a fresh session after reset: measure v1's
+DEPLOYED config (D10, short-1-OTM, width-3, TP-75=book@0.25×credit cost, stop-2×, c/w≥0.40, prem≥50) on
+/tmp/bhav_cache_stk (2019→Sep'24) — reuse studies/ndte/stkfade_union.py loader + studies/stkfade_oos_v1.py
+exit logic; cross-check v2 config reproduces ~84% IS first. Deliverable studies/STOCK_V1_IS_MEASURED.md. WHEN DONE: update the v1 PM DECISIONS header in ui_terminal.py (currently
+"in-sample NOT MEASURED for the TP-75 exit... 54%") to the real IS win%/net; update _TG_WIN if needed; commit
++ push BOTH remotes. Latest pushed commit: f570c3a. Recent telegram/UI edits all live (universe 113, target/stop
+honest, Multiday/Intraday labels, WIN/Loss summary, watchlist win-prob).
+
 ## ACTIVE (2026-07-24) — HOURLY first-touch c/w>=0.40 entry vs CLOSE entry (stock v2 UNION + v1) — VALIDATION ONLY
 User Q: the live engine evaluates c/w ONCE at the 15:10 close; if instead we entered the FIRST intraday
 hour c/w touches >=0.40 we'd catch MORE signals (user's example: OFSS touched 0.43 at 14:45, back <0.40

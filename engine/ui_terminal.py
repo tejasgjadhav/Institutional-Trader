@@ -373,7 +373,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit (binds only c/w<0.50, else held to expiry) · WIN 73% out-of-sample (Oct'24–now) at this target/stop · in-sample NOT MEASURED for the TP-75 exit (only the old hold-to-expiry base was, 54%) · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET 75% of max profit · STOP 2× credit (binds only c/w<0.50, else held to expiry) · WIN 64% in-sample (2019–Sep'24, TP-75) / 73% out-of-sample (Oct'24–now) at this target/stop · +ve every yr (weakest 2023 54.8%) · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
