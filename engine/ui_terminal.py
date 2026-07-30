@@ -820,6 +820,27 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "only worked in one regime cannot hide behind a blended average.")}
 {self._strategy_summary_table()}
 
+{res("v1 EXIT SWEEP → TP-40/no-stop DEPLOYED (2026-07-30, 755 IS + 242 OOS trades) — swept TP×stop×geometry "
+     "with entry gates FIXED (zero signal loss; wider geometries cut n to 286–571 → rejected). Winner "
+     "<b>TP-40/no-stop: 85.0% IS / 86.0% OOS win</b> (nearly identical = real mechanism, not a fit), net "
+     "+18.2/+17.6%w vs old TP-75/stop-2× 64.0/73.6% &amp; +10.3/+15.1%w — SAME trades. Mechanism = v2's recipe "
+     "on v1 geometry: book the IV crush early; the 2× stop realized losses that recover; risk stays wing-capped. "
+     "OOS = path-replay of every trade's real Upstox premiums. File: studies/V1_WINRATE_SWEEP.md")}
+{res("TELEGRAM SIGNAL FORMAT v2 (2026-07-30, user-designed) — every signal now: <b>🟢 EXECUTE NOW — "
+     "MULTIDAY/INTRADAY SIGNAL</b> → plain-language trade (no 0DTE jargon; Expires TODAY at 3:30 PM) → "
+     "target in ₹ + max profit/loss per lot → <b>📚 Why this signal</b> (Tejas Jadhav, CFA) with the effort "
+     "funnel (raw signals screened → gate-passed trades analysed) and SEPARATE in-sample/out-of-sample lines "
+     "with full date ranges (OOS end date auto-updates daily) → one-line SEBI disclaimer. SENSEX states "
+     "in-sample CANNOT be captured (options only exist from Oct-2024). Bug fixed in review: BANKNIFTY no "
+     "longer inherits NIFTY stats via substring match.")}
+{h("v1's WIN-RATE HISTORY: 54% → 73% → 86% — same signals, only the EXIT changed")}
+{p("<b>The exit, not the signal, sets v1's win rate.</b> Hold-to-expiry (the original test): 54–55%/+5-6%w. "
+   "TP-75/stop-2× (deployed until 07-30): 64.0% IS / 73.6% OOS, +10.3/+15.1%w. "
+   "<b>TP-40/no-stop (deployed 2026-07-30): 85.0% IS / 86.0% OOS · +18.2/+17.6%w — positive every year in "
+   "both windows, on the IDENTICAL trade list (755 IS / 242 OOS).</b> Booking the IV crush early is the "
+   "same mechanism as v2's TP-50, applied more aggressively; the old 2× stop was realizing losses that "
+   "recover, so removing it raised BOTH win rate and net (risk stays wing-capped). See V1_WINRATE_SWEEP.md.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">LIVE STRATEGIES — 1 lot</p>
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win in-sample</td><td>Win out-of-sample</td><td>Signals/mo</td><td>₹/mo (model)</td></tr>
@@ -1040,19 +1061,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "+25.0%w; OOS +18.4 vs +18.0). Deployed 3.0× is fine; 3.5×/no-stop marginally better but small/OOS-"
      "thin → NOT changed. (3) <b>Timing:</b> no day-of-week edge; entering at the breakout CLOSE (deployed) "
      "is optimal — waiting one session drops ~40% of trades for no gain. File: studies/SWING_PUTCALL_STOP_ANALYSIS.md")}
-{res("v1 EXIT SWEEP → TP-40/no-stop DEPLOYED (2026-07-30, 755 IS + 242 OOS trades) — swept TP×stop×geometry "
-     "with entry gates FIXED (zero signal loss; wider geometries cut n to 286–571 → rejected). Winner "
-     "<b>TP-40/no-stop: 85.0% IS / 86.0% OOS win</b> (nearly identical = real mechanism, not a fit), net "
-     "+18.2/+17.6%w vs old TP-75/stop-2× 64.0/73.6% &amp; +10.3/+15.1%w — SAME trades. Mechanism = v2's recipe "
-     "on v1 geometry: book the IV crush early; the 2× stop realized losses that recover; risk stays wing-capped. "
-     "OOS = path-replay of every trade's real Upstox premiums. File: studies/V1_WINRATE_SWEEP.md")}
-{res("TELEGRAM SIGNAL FORMAT v2 (2026-07-30, user-designed) — every signal now: <b>🟢 EXECUTE NOW — "
-     "MULTIDAY/INTRADAY SIGNAL</b> → plain-language trade (no 0DTE jargon; Expires TODAY at 3:30 PM) → "
-     "target in ₹ + max profit/loss per lot → <b>📚 Why this signal</b> (Tejas Jadhav, CFA) with the effort "
-     "funnel (raw signals screened → gate-passed trades analysed) and SEPARATE in-sample/out-of-sample lines "
-     "with full date ranges (OOS end date auto-updates daily) → one-line SEBI disclaimer. SENSEX states "
-     "in-sample CANNOT be captured (options only exist from Oct-2024). Bug fixed in review: BANKNIFTY no "
-     "longer inherits NIFTY stats via substring match.")}
+
+
 {res("TARGET &amp; STOP per book (see studies/TARGET_STOP_TABLE.md): <b>v2 UNION</b> — sell 2-OTM / buy "
      "width-4 · TARGET book@50% of credit · STOP 3× credit is <b>INERT</b> (a spread can't cost &gt;width to "
      "close, and 3×credit&gt;width once c/w≥0.40 → held to expiry, floor = defined max loss). <b>v1</b> — sell "
@@ -1062,13 +1072,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "futures</b> — TARGET +2% (→+1% late) · STOP −5% on close. Max profit = credit×lot; max loss = "
      "(width−credit)×lot. This is why the stop sweep found 3× ≈ no-stop (user-caught 2026-07-29).")}
 
-{h("v1's WIN-RATE HISTORY: 54% → 73% → 86% — same signals, only the EXIT changed")}
-{p("<b>The exit, not the signal, sets v1's win rate.</b> Hold-to-expiry (the original test): 54–55%/+5-6%w. "
-   "TP-75/stop-2× (deployed until 07-30): 64.0% IS / 73.6% OOS, +10.3/+15.1%w. "
-   "<b>TP-40/no-stop (deployed 2026-07-30): 85.0% IS / 86.0% OOS · +18.2/+17.6%w — positive every year in "
-   "both windows, on the IDENTICAL trade list (755 IS / 242 OOS).</b> Booking the IV crush early is the "
-   "same mechanism as v2's TP-50, applied more aggressively; the old 2× stop was realizing losses that "
-   "recover, so removing it raised BOTH win rate and net (risk stays wing-capped). See V1_WINRATE_SWEEP.md.")}
+
 {p("<b>Apples-to-apples on the identical window/script:</b> v2 UNION 87–88% win · +29.5–31.9%w · ~8/mo "
    "vs v1 (TP-40) 86.0% · +17.6%w · ~16/mo. v2 keeps the higher net%w per trade (deeper 2-OTM "
    "strikes, wider wings, faster profit-taking, 3× stop room). <b>Why keep v1:</b> (1) longest-validated "
