@@ -923,8 +923,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Stock v2 UNION</td><td>1</td><td>+2,534</td><td>+2,534</td></tr>
 <tr><td>Stock v1</td><td>14</td><td>+2,737</td><td>+38,312</td></tr>
 <tr><td>Intraday NIFTY+SENSEX</td><td>6</td><td>+774</td><td>+4,642</td></tr>
-<tr style="color:{TEXT_DIM};"><td>Index swing (removed)</td><td>2</td><td>−597</td><td>−1,195</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>23</b></td><td><b>+1,926</b></td><td><b>+₹44,292</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL (live books)</b></td><td><b>21</b></td><td><b>+2,166</b></td><td><b>+₹45,488</b></td></tr>
 </table>
 {dim("Formula per trade: net ₹ = pnl_pts × qty (1 lot). WIN books at the target (50%/40% of credit); LOSS = "
      "wing-capped at (width−credit)×qty. Realized ₹44,292 vs model ₹37,924 — first month ran ≈ model, but ONE "
