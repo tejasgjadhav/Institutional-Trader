@@ -1,4 +1,25 @@
 # Handoff — institutional-trader
+
+## ACTIVE (2026-07-30) — /loop GOAL: raise v1 WIN RATE without cutting signals (all technical params)
+User goal (dynamic /loop + ScheduleWakeup armed): better v1's win rate (64% IS / 73% OOS), signal count must
+NOT drop. Levers = n-preserving only: TP fraction {0.40,0.50,0.60,0.75dep,0.90,hold} × stop {1.5,2,2.5,3,none}
+× geometry {(1,3)dep,(2,4),(2,3),(1,4)} — entry gates FIXED. IS SWEEP DONE (log /tmp/v1sweep.log, json in scratchpad
+v1sweep_results.json; both faithfulness checks reproduced: v2 85.3%, v1 755/64.0%/+10.3%w). KEY IS RESULT —
+only s1w3 keeps n=755 (s2w4→286, s2w3→390, s1w4→571 = signal cuts, violate constraint). n-preserving winners:
+TP.40/no-stop 85.0%/+18.2%w · TP.50/no-stop 82.4%/+18.8%w · TP.40/stop3 82.0%/+15.9%w vs deployed 64.0%/+10.3%w
+— all 0 neg yrs. Same mechanism as v2 (early booking + stop was realizing recoverable losses; no-stop still
+defined-risk). Time-exit overlay marginal (~73-74%). NOW RUNNING: OOS confirmation — NEW script
+studies/ndte/stkfade_v1_oos_exits.py (pid 88624, log /tmp/v1oos_exits.log, json /tmp/v1_oos_exits.json):
+fetches each v1-geometry trade's daily path ONCE from Upstox (Oct'24→date), evaluates all 4 exits on the SAME
+trades. Watcher bv80ungyf fires on exit. PACE WARNING (10:05 IST): 10/113 stocks in ~29min — market-hours Upstox
+throttling (engine shares the API) → full pass ~4-5h; interim read possible at ~50-stock checkpoint
+(/tmp/v1_oos_exits.json refreshes every 10 stocks — evaluate the 4 exits on partial recs with the walk() in
+the script). User told; default = let it grind, interim at ~50. WHEN DONE: if OOS confirms (win%↑ AND net%w ≥
+deployed OOS +17.9%w), write studies/V1_WINRATE_SWEEP.md, show user, get approval BEFORE changing
+STOCK_CREDIT_TAKE_PROFIT/STOP_MULT in config (v1 is the CONTROL book — flag that changing it loses the
+TP-75 control benchmark), commit+push BOTH remotes. WHEN DONE: relay table + honest verdict (TP-earlier
+win% gains partly cosmetic — judge on net%w + per-year), get approval BEFORE deploying any param change; commit
++ push BOTH remotes. NOTE: model switched to Fable 5 this session by user (/model claude-fable-5).
 _Updated: 2026-07-29 by Claude Code_
 
 ## ACTIVE (2026-07-29) — GOAL /loop: MORE swing trades @85% + put/call + timing + stop-loss + size ₹1L/mo on ₹5L
