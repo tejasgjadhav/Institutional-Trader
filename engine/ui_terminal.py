@@ -714,9 +714,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
              "19:96 20:88 21:85 22:90 23:79 24:81 25:85 26:89", "79%",
              "~₹10,500", "<b>+52.3%</b> (~₹4,069)", "+101.7% / −101.8%", "<b>12.1d</b> avg<br/>med 9 · p90 27",
              "5.8→7.6*", "₹20–23k · ₹10–12k", AMBER),
-            ("Stock credit v1 · fade (TP-75)", "SELL", "54%", "73%",
+            ("Stock credit v1 · fade (TP-40, 07-30)", "SELL", "85%", "86%",
              "<span style='color:#888;'>no per-trade file</span>", "—",
-             "~₹9,000", "+17.9%w OOS", "—", "days–weeks",
+             "~₹9,000", "+17.6%w OOS (TP-40 path-replay)", "—", "days–weeks",
              "~16", "₹9k · ₹4–5k", GREEN),
             ("0DTE SENSEX CE spread", "SELL", "—", "89.0%",
              "24:75 25:90 26:93", "75%",
@@ -762,7 +762,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             f"<td>avg WIN / avg LOSS</td><td>Holding</td>"
             f"<td>Sig/mo</td><td>₹/mo @1 lot (model · plan)</td></tr>{lt}"
             f"<tr style='color:{GREEN};font-weight:bold;'><td colspan='11'>TOTAL — 4 live books</td>"
-            f"<td>≈ ₹36,924 · ₹29,540</td></tr></table>"
+            f"<td>≈ ₹37,924 · ₹30,340</td></tr></table>"
             f"<p style='color:{TEXT_DIM};font-size:11px;'><b>All figures are PER LOT.</b> Capital = the margin "
             f"actually blocked = (width − credit) × lot = the <b>maximum possible loss</b>, which for a "
             f"defined-risk spread is the true capital at risk. The NET return column is already net of the loss "
@@ -855,11 +855,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>~₹/mo · 1 lot</b></td><td><b>~₹/mo · 2 lots</b></td><td><b>basis</b></td></tr>
 <tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
-<tr><td>Stock fade v1 (control)</td><td>73%</td><td>~₹12,000*</td><td>~₹24,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>Stock fade v1 (TP-40)</td><td>86%</td><td>~₹13,000*</td><td>~₹26,000</td><td style="color:{TEXT_DIM};">TP-40/no-stop deployed 07-30 · 85% IS / 86% OOS</td></tr>
 <tr><td>0DTE NIFTY</td><td>88.3%</td><td>~₹1,771</td><td>~₹3,542</td><td style="color:{GREEN};">MEASURED 273 tr · 86 mo</td></tr>
 <tr><td>0DTE SENSEX</td><td>89.0%</td><td>~₹3,153</td><td>~₹6,306</td><td style="color:{GREEN};">MEASURED 91 tr · 22 mo</td></tr>
 <tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY (monthly)</s> <span style="color:{RED};font-weight:bold;">REJECTED 07-19</span></td><td><s>78.6%</s></td><td><s>~₹141</s></td><td><s>~₹282</s></td><td>edge ≈ 0 · see rejection note</td></tr>
-<tr style="color:{GREEN};"><td><b>CONSOLIDATED (full history, ex-BANKNIFTY)</b></td><td><b>—</b></td><td><b>≈ ₹36,924</b></td><td><b>≈ ₹73,848</b></td><td></td></tr>
+<tr style="color:{GREEN};"><td><b>CONSOLIDATED (full history, ex-BANKNIFTY)</b></td><td><b>—</b></td><td><b>≈ ₹37,924</b></td><td><b>≈ ₹75,848</b></td><td></td></tr>
 <tr style="color:{AMBER};"><td><b>Plan-on (80% of net)</b></td><td><b>—</b></td><td><b>≈ ₹29,540</b></td><td><b>≈ ₹59,080</b></td><td></td></tr>
 </table>
 {dim("<b>CORRECTED 2026-07-19</b> — the three 0DTE rows are now MEASURED from the 448-expiry dataset "
@@ -901,17 +901,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Live book</td><td>Status</td><td>Win</td><td>₹/mo · 1 lot</td><td>Evidence</td></tr>
 <tr><td>★ Stock fade v2 UNION</td><td style="color:{GREEN};">LIVE</td><td>87%</td><td>~₹20,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
-<tr><td>Stock fade v1 (control)</td><td style="color:{GREEN};">LIVE</td><td>73%</td><td>~₹12,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>Stock fade v1 (TP-40)</td><td style="color:{GREEN};">LIVE</td><td>86%</td><td>~₹13,000</td><td style="color:{TEXT_DIM};">TP-40/no-stop deployed 07-30 · 85% IS / 86% OOS</td></tr>
 <tr><td>0DTE SENSEX</td><td style="color:{GREEN};">LIVE</td><td>89.0%</td><td>~₹3,153</td><td style="color:{GREEN};">MEASURED · 91 trades</td></tr>
 <tr><td>0DTE NIFTY</td><td style="color:{GREEN};">LIVE</td><td>88.3%</td><td>~₹1,771</td><td style="color:{GREEN};">MEASURED · 273 trades</td></tr>
 <tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY</s></td><td style="color:{RED};font-weight:bold;">REJECTED 07-19</td><td>78.6%</td><td>₹0 <s>(was ₹141)</s></td><td>edge ≈ 0 · t = +0.10</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade (NIFTY/FINNIFTY)</td><td>paper</td><td>54%</td><td>~₹0</td><td>regime-dep · failed OOS</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Monthly futures (REV1-v2)</td><td>REGIME-OFF</td><td>75.7%</td><td>₹0 now</td><td>needs ~₹15L · NIFTY &lt; 200DMA</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL · 1 lot</b></td><td></td><td><b>—</b></td><td><b>≈ ₹36,924</b></td><td>was ₹39,000 pre-correction</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL · 1 lot</b></td><td></td><td><b>—</b></td><td><b>≈ ₹37,924</b></td><td>v1 TP-40 uplift 07-30</td></tr>
 <tr style="color:{AMBER};font-weight:bold;"><td><b>PLAN ON · 80% of net</b></td><td></td><td><b>—</b></td><td><b>≈ ₹29,540</b></td><td>live-fill haircut</td></tr>
 <tr style="color:{AMBER};"><td>TOTAL · 2 lots</td><td></td><td>—</td><td>≈ ₹73,848</td><td>plan-on ≈ ₹59,080</td></tr>
 </table>
-{dim("<b>Read this honestly:</b> ₹36,924 is a MODEL on real premiums with costs charged and the loss leg already "
+{dim("<b>Read this honestly:</b> ₹37,924 is a MODEL on real premiums with costs charged and the loss leg already "
      "subtracted — not a forecast. <b>₹32,000 of it (87%) is the two STOCK books, which were NOT re-measured this "
      "session</b> and still rest on their prior studies; only the ₹4,924 of 0DTE is measured here. In the current "
      "signal drought a realistic this-month is near ₹0. Every book is correlated short-premium — a crash month "
@@ -921,7 +921,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>Avg win</b></td><td><b>Avg loss</b></td><td><b>Net / trade (win×W − loss×L)</b></td><td><b>×/mo</b></td><td><b>≈ ₹/mo</b></td></tr>
 <tr><td>v2 UNION</td><td>86%</td><td>+₹6,048</td><td>−₹7,922</td><td>.86×6,048 − .14×7,922 = <b>+₹4,069</b></td><td>~5</td><td>~₹20,000</td></tr>
-<tr><td>Stock v1</td><td>73%</td><td>+41.0% width</td><td>−51.5% width</td><td>.73×41 − .27×51.5 = <b>≈+16%w</b> (OOS +17.9%w)</td><td>~16</td><td>~₹12,000*</td></tr>
+<tr><td>Stock v1</td><td>86%</td><td>smaller wins (TP-40 books early)</td><td>wing-capped</td><td>measured OOS path-replay = <b>+17.6%w</b></td><td>~16</td><td>~₹13,000*</td></tr>
 <tr><td>0DTE NIFTY</td><td><b>88.3%</b></td><td>—</td><td>—</td><td><b>+4.69% of margin</b> MEASURED, 273 tr / 86 mo</td><td>~3.2</td><td>~₹1,771</td></tr>
 <tr><td>0DTE SENSEX</td><td><b>89.0%</b></td><td>—</td><td>—</td><td><b>+7.62% of margin</b> MEASURED, 91 tr / 22 mo</td><td>~4.1</td><td>~₹3,153</td></tr>
 <tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY</s></td><td><s>91%</s> → 78.6%</td><td>—</td><td>−₹14,298 worst</td><td>+0.55%m · <b>t=+0.10, CI spans 0</b> · profit was 3 trades</td><td>~1</td><td style="color:{RED};">REJECTED</td></tr>
@@ -1018,7 +1018,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td style="color:{AMBER};">1 · Monthly futures pullback (REV1-v2, FUT)</td><td>75.7% OOS</td><td>5/cycle</td><td>~3.9%/mo · worst −20%</td><td>~₹15L margin</td></tr>
 <tr><td style="color:{AMBER};">2 · Same signal as monthly CALL (early-exit)</td><td>67% OOS</td><td>5/cycle</td><td>~6–7%/mo · worst −51%</td><td>~₹2L premium</td></tr>
 </table>
-{dim("Stock credit v1 (73% OOS) sits between the tiers — kept as the ~16/mo live-fill control book, "
+{dim("Stock credit v1 (86% OOS, TP-40) sits between the tiers — kept as the ~16/mo live-fill control book, "
      "not counted in Tier A. Tier B stays PAPER; it is the long-delta diversifier and the "
      "return-on-capital experiment, deliberately apart from the ≥80%-win group per the user's ask. "
      "10%/mo AT ≥75% win was shown empirically unreachable — see studies/monthly_fut.")}
@@ -1099,6 +1099,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "+25.0%w; OOS +18.4 vs +18.0). Deployed 3.0× is fine; 3.5×/no-stop marginally better but small/OOS-"
      "thin → NOT changed. (3) <b>Timing:</b> no day-of-week edge; entering at the breakout CLOSE (deployed) "
      "is optimal — waiting one session drops ~40% of trades for no gain. File: studies/SWING_PUTCALL_STOP_ANALYSIS.md")}
+{res("v1 EXIT SWEEP → TP-40/no-stop DEPLOYED (2026-07-30, 755 IS + 242 OOS trades) — swept TP×stop×geometry "
+     "with entry gates FIXED (zero signal loss; wider geometries cut n to 286–571 → rejected). Winner "
+     "<b>TP-40/no-stop: 85.0% IS / 86.0% OOS win</b> (nearly identical = real mechanism, not a fit), net "
+     "+18.2/+17.6%w vs old TP-75/stop-2× 64.0/73.6% &amp; +10.3/+15.1%w — SAME trades. Mechanism = v2's recipe "
+     "on v1 geometry: book the IV crush early; the 2× stop realized losses that recover; risk stays wing-capped. "
+     "OOS = path-replay of every trade's real Upstox premiums. File: studies/V1_WINRATE_SWEEP.md")}
 {res("TARGET &amp; STOP per book (see studies/TARGET_STOP_TABLE.md): <b>v2 UNION</b> — sell 2-OTM / buy "
      "width-4 · TARGET book@50% of credit · STOP 3× credit is <b>INERT</b> (a spread can't cost &gt;width to "
      "close, and 3×credit&gt;width once c/w≥0.40 → held to expiry, floor = defined max loss). <b>v1</b> — sell "
@@ -1108,15 +1114,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "futures</b> — TARGET +2% (→+1% late) · STOP −5% on close. Max profit = credit×lot; max loss = "
      "(width−credit)×lot. This is why the stop sweep found 3× ≈ no-stop (user-caught 2026-07-29).")}
 
-{h("WHY DOES v1 SHOW 54% NEXT TO v2 UNION's 85%+? — it is NOT the number of calls")}
-{p("<b>Same signal, same gate, different EXIT GEOMETRY — and the 54% is the OLD hold-to-expiry test.</b> "
-   "The 54%/+5.3%w figure (718 bhavcopy trades 2019→Sep'24) predates v1's deployed TP-75 book-early "
-   "exit. Re-tested 2026-07-10 with the DEPLOYED config (TP at 75% of the credit, stop 2×) on the same "
-   "Upstox OOS window v2 used (Oct'24→Jul'26): <b>346 trades · 73.4% win · +17.9% of width · positive "
-   "every year incl. the 2026 correction</b> (2024 +29.7 / 2025 +17.0 / 2026 +15.0). Booking the win "
-   "early is what lifts the rate — the same mechanism as v2's TP-50, just less aggressive.")}
+{h("v1's WIN-RATE HISTORY: 54% → 73% → 86% — same signals, only the EXIT changed")}
+{p("<b>The exit, not the signal, sets v1's win rate.</b> Hold-to-expiry (the original test): 54–55%/+5-6%w. "
+   "TP-75/stop-2× (deployed until 07-30): 64.0% IS / 73.6% OOS, +10.3/+15.1%w. "
+   "<b>TP-40/no-stop (deployed 2026-07-30): 85.0% IS / 86.0% OOS · +18.2/+17.6%w — positive every year in "
+   "both windows, on the IDENTICAL trade list (755 IS / 242 OOS).</b> Booking the IV crush early is the "
+   "same mechanism as v2's TP-50, applied more aggressively; the old 2× stop was realizing losses that "
+   "recover, so removing it raised BOTH win rate and net (risk stays wing-capped). See V1_WINRATE_SWEEP.md.")}
 {p("<b>Apples-to-apples on the identical window/script:</b> v2 UNION 87–88% win · +29.5–31.9%w · ~8/mo "
-   "vs v1 73.4% · +17.9%w · ~16/mo. v2 stays the LEADER on both win rate and expectancy (deeper 2-OTM "
+   "vs v1 (TP-40) 86.0% · +17.6%w · ~16/mo. v2 keeps the higher net%w per trade (deeper 2-OTM "
    "strikes, wider wings, faster profit-taking, 3× stop room). <b>Why keep v1:</b> (1) longest-validated "
    "baseline (718 + 346 real-premium trades); (2) ~2× the signals → live-fill evidence twice as fast; "
    "(3) the control in the live A/B — if v2's edge shrinks on real fills, v1 shows whether the fault is "

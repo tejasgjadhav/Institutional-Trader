@@ -20,14 +20,14 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
 | ★ Stock fade v2 UNION (TP-50) | `STOCK_CREDIT_ENABLED` | 87% | ~₹20,000 | t=+13.78 · +ve 8/8 yrs |
-| Stock credit v1 (TP-75, control) | `STOCK_CREDIT_ENABLED` | 73% | ~₹12,000 | t=+7.09 · +ve 3/3 yrs (OOS only) |
+| Stock credit v1 (TP-40/no-stop, 07-30) | `STOCK_CREDIT_ENABLED` | 86% | ~₹13,000 | 85% IS / 86% OOS · same signals (V1_WINRATE_SWEEP) |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | `DTE_MULTI_BANKNIFTY_ENABLED=False` | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 |
 | Index swing fade | `SWING_CREDIT_ENABLED` | 54% | ~₹0 | regime-dep · failed OOS |
 | Monthly futures | `MONTHLY_FUT_ENABLED` | 75.7% | ₹0 now | REGIME-OFF · needs ~₹15L |
 
-**≈ ₹36,924/mo model at 1 lot.** Edges are validated; **magnitude is NOT** — v2 implies ~97%/mo on
+**≈ ₹37,924/mo model at 1 lot.** Edges are validated; **magnitude is NOT** — v2 implies ~97%/mo on
 deployed capital, which is not credible. **Plan on ~50%, not the model figure, and keep lots at 1.**
 
 **Structural exclusions deployed 2026-07-19** (risk limits, NOT edges):
