@@ -70,7 +70,16 @@ STATUS 2026-07-29: DONE (subagent). Deliverable studies/UNIVERSE_EXPANSION.md (1
 NOTE: origin push of Goal-#1 commit eedcc00 TIMED OUT (github unreachable ~2min) — PRIVATE remote has it; retry
  origin when network recovers (`git push origin main`). Upstox+github both flaky this session.
 
-## ACTIVE (2026-07-29) — measuring v1 TP-75 IN-SAMPLE (closing a label gap)
+## DONE (2026-07-30) — v1 TP-75 IN-SAMPLE measured + backtest-lookback assessment
+v1 TP-75 IS = **64.0% win / +10.3%w / 755 tr (2019→Sep'24), +ve every yr (2023 weak 54.8%)**. Harness validated
+(v2 config reproduced 85.3% DC10 baseline). OOS(73%)>IS(64%) → deployed 73% was optimistic end, not overfit;
+honest = 64% IS / 73% OOS (~67% pooled). Hold-to-expiry base 55.1% (confirms the "~54%"). Script
+studies/ndte/stkfade_v1_is.py, doc studies/STOCK_V1_IS_MEASURED.md. UI v1 header + _TG_WIN corrected from
+"NOT MEASURED" → "64% IS / 73% OOS". Lookback: studies/BACKTEST_LOOKBACK_ASSESSMENT.md (Fable) — 7yr is
+sufficient-as-available, can't go usefully further back for stock option premiums, defined-risk caps the tail,
+extend the FORWARD test not the lookback. Committed 94bb8e6, pushed BOTH remotes. Engine+viewer restarted, alive.
+
+## (prior) ACTIVE (2026-07-29) — measuring v1 TP-75 IN-SAMPLE (closing a label gap)
 User caught: UI says v1 in-sample "NOT MEASURED" but v2 IS was measured — why? Honest answer: no data/method
 reason, just a gap (same bhavcopy, same daily-close TP detection; only v1's hold-to-expiry base 54% IS + TP-75
 OOS 73% were ever run). Subagent a646796a6ce3cbd25 FAILED — hit the WEEKLY usage limit (resets 4:30am Asia/Calcutta) before writing
