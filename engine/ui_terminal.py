@@ -250,7 +250,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         self.tab_btns = []
         tabs = [("PM DECISIONS", 0), ("INTRADAY DECISIONS", 6),
-                ("SWING TRADE LOG", 2), ("TRADE LOG", 3), ("STUDIES", 4), ("README", 5)]
+                ("SWING TRADE LOG", 2), ("INTRADAY TRADE LOG", 3), ("STUDIES", 4), ("README", 5)]
         for label, idx in tabs:
             b = QPushButton(label)
             b.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -430,7 +430,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stock.setVisible(False)
 
 
-        self.pm_empty = QLabel("Credit-spread signals appear ~15:10; 0DTE books live on the INTRADAY DECISIONS tab.")
+        self.pm_empty = QLabel("Credit-spread signals appear ~15:10; expiry-day books live on the INTRADAY DECISIONS tab.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
         v.addWidget(self.pm_empty)
@@ -511,14 +511,14 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """INTRADAY DECISIONS — the 0DTE NIFTY expiry-day CE credit spread (5th strategy).
         One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:30."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
-        v.addWidget(self._panel_title("INTRADAY DECISIONS  -  0DTE NIFTY expiry-day call credit spread", CYAN))
+        v.addWidget(self._panel_title("INTRADAY DECISIONS  -  NIFTY expiry-day call credit spread", CYAN))
         # dynamic pre-market checker — engine refreshes data/zero_dte_status.json every ~2-5 min
         self.zdte_status = QLabel("checking today's status…")
         self.zdte_status.setWordWrap(True)
         self.zdte_status.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
-        hdr = QLabel("★ 0DTE NIFTY CE SPREAD — WIN 88% in-sample (2019–Sep'24) / 90% out-of-sample (Oct'24–now) · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
+        hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% in-sample (2019–Sep'24) / 90% out-of-sample (Oct'24–now) · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
                      "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise")
         hdr.setWordWrap(True)
         hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
@@ -538,12 +538,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
         self.zdte_table.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.zdte_table, 1)
-        v.addWidget(self._section_label("SENSEX 0DTE — THURSDAYS · WIN 88.8% out-of-sample only (Oct'24–now) · in-sample NOT available (SENSEX option data starts Oct'24) · +7.6%/margin "
+        v.addWidget(self._section_label("SENSEX EXPIRY-DAY — THURSDAYS · WIN 88.8% out-of-sample only (Oct'24–now) · in-sample NOT available (SENSEX option data starts Oct'24) · +7.6%/margin "
                                         "(89 expiries · 21-month history only · unfiltered)", AMBER))
         self.sdte_status = self._stats_label(); v.addWidget(self.sdte_status)
         self.sdte_stats = self._stats_label(); v.addWidget(self.sdte_stats)
         self.sdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sdte_table, 1)
-        v.addWidget(self._section_label("BANKNIFTY 0DTE — MONTHLY EXPIRY (~1/mo) · WIN 79.5% in-sample (2019–Sep'24, weeklies, +7.4%m) / 91% out-of-sample (Oct'24–now, monthlies, +11%m)", PURPLE))
+        v.addWidget(self._section_label("BANKNIFTY EXPIRY-DAY — MONTHLY (~1/mo) · WIN 79.5% in-sample (2019–Sep'24, weeklies, +7.4%m) / 91% out-of-sample (Oct'24–now, monthlies, +11%m)", PURPLE))
         self.bdte_status = self._stats_label(); v.addWidget(self.bdte_status)
         self.bdte_stats = self._stats_label(); v.addWidget(self.bdte_stats)
         self.bdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.bdte_table, 1)
@@ -589,7 +589,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                         pass
                 wr = W / (W + L) * 100 if (W + L) else 0
                 rc = GREEN if rs > 0 else RED if rs < 0 else TEXT_DIM
-                self.log_stats.setText(f"  INTRADAY 0DTE (all 3 books, live paper): {W} W / {L} L · "
+                self.log_stats.setText(f"  INTRADAY expiry-day (all 3 books, live paper): {W} W / {L} L · "
                                        f"WIN {wr:.0f}% · booked <span style='color:{rc};'>Rs {rs:+,.0f}</span>")
                 self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; "
                                              f"border:2px solid {CYAN}; font-weight:bold;")
@@ -647,7 +647,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """TRADE LOG — the BUY strategies (3-Family stocks + ORB index). Credit spreads (SELL) are
         in the SWING TRADES tab. LIVE paper vs SIMULATION kept separate."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
-        v.addWidget(self._panel_title("TRADE LOG  -  intraday 0DTE books (2-leg format)"))
+        v.addWidget(self._panel_title("INTRADAY TRADE LOG  -  expiry-day books (2-leg format)"))
 
         # LIVE / SIMULATION toggle
         self.log_view = "live"
@@ -674,11 +674,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_stock = self._make_log_table(); self.log_stock.setVisible(False)  # hidden (3-Family)
         self.log_nifty = self._make_log_table(); self.log_nifty.setVisible(False)  # hidden (ORB retired)
         # INTRADAY 0DTE credit spreads (SELL) — same 2-leg format as SWING TRADES
-        v.addWidget(self._section_label("INTRADAY 0DTE  —  NIFTY expiry-day FLIP spread (Tuesdays)", CYAN))
+        v.addWidget(self._section_label("INTRADAY  —  NIFTY expiry-day FLIP spread (Tuesdays)", CYAN))
         self.log_zdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_zdte, 1)
-        v.addWidget(self._section_label("INTRADAY 0DTE  —  SENSEX expiry-day CE spread (Thursdays)", AMBER))
+        v.addWidget(self._section_label("INTRADAY  —  SENSEX expiry-day CE spread (Thursdays)", AMBER))
         self.log_sdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_sdte, 1)
-        v.addWidget(self._section_label("INTRADAY 0DTE  —  BANKNIFTY expiry-day CE spread (monthly)", PURPLE))
+        v.addWidget(self._section_label("INTRADAY  —  BANKNIFTY expiry-day CE spread (monthly)", PURPLE))
         self.log_bdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_bdte, 1)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
@@ -1792,7 +1792,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         elif m < 9 * 60 + 15:
             txt, col = "Pre-open — scanning starts 09:15; intraday signals from ~09:30.", AMBER
         elif m < 15 * 60 + 10:
-            txt, col = ("● Market open. On expiry days the 0DTE spread posts right after the 09:16 open; "
+            txt, col = ("● Market open. On expiry days the intraday spread posts right after the 09:16 open; "
                         "the CREDIT books — ★v2 + v1 + index swing — all scan at ~15:10.", GREEN)
         elif m <= 15 * 60 + 35:
             txt, col = ("● NOW: ~15:10 CREDIT SCAN — check ★ STOCK CREDIT v2 (gold) first, then v1 + INDEX SWING. "
