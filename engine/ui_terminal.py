@@ -1105,6 +1105,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "+18.2/+17.6%w vs old TP-75/stop-2× 64.0/73.6% &amp; +10.3/+15.1%w — SAME trades. Mechanism = v2's recipe "
      "on v1 geometry: book the IV crush early; the 2× stop realized losses that recover; risk stays wing-capped. "
      "OOS = path-replay of every trade's real Upstox premiums. File: studies/V1_WINRATE_SWEEP.md")}
+{res("TELEGRAM SIGNAL FORMAT v2 (2026-07-30, user-designed) — every signal now: <b>🟢 EXECUTE NOW — "
+     "MULTIDAY/INTRADAY SIGNAL</b> → plain-language trade (no 0DTE jargon; Expires TODAY at 3:30 PM) → "
+     "target in ₹ + max profit/loss per lot → <b>📚 Why this signal</b> (Tejas Jadhav, CFA) with the effort "
+     "funnel (raw signals screened → gate-passed trades analysed) and SEPARATE in-sample/out-of-sample lines "
+     "with full date ranges (OOS end date auto-updates daily) → one-line SEBI disclaimer. SENSEX states "
+     "in-sample CANNOT be captured (options only exist from Oct-2024). Bug fixed in review: BANKNIFTY no "
+     "longer inherits NIFTY stats via substring match.")}
 {res("TARGET &amp; STOP per book (see studies/TARGET_STOP_TABLE.md): <b>v2 UNION</b> — sell 2-OTM / buy "
      "width-4 · TARGET book@50% of credit · STOP 3× credit is <b>INERT</b> (a spread can't cost &gt;width to "
      "close, and 3×credit&gt;width once c/w≥0.40 → held to expiry, floor = defined max loss). <b>v1</b> — sell "

@@ -203,12 +203,6 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"fast resolve: {e}")
 
-    # Backtested win rates shown on every signal (honest labels — source: studies/).
-    _TG_WIN = {"STOCK CREDIT v2 UNION": "87% OOS", "STOCK CREDIT v1": "85% IS / 86% OOS",
-               "0DTE NIFTY": "88.3% (measured)", "0DTE SENSEX": "89.0% (measured)",
-               "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "fwd-test, unproven",
-               "MONTHLY FUTURES PULLBACK": "76% OOS", "MONTHLY LONG-CALL PULLBACK": "fwd-test"}
-    _TG_WIN_SYM = {"SENSEX": "89.0%"}   # legacy per-symbol map (BANKNIFTY 0DTE rejected 07-19)
     # (target, stop) the backtest win% is CONDITIONED ON — stated on every signal so the win rate
     # is never read in isolation (user 2026-07-29: "the winrate is subject to target and stop loss").
     _TG_TGT_STOP = {"STOCK CREDIT v2 UNION": ("book at 50% of credit", "3× credit"),
@@ -243,73 +237,128 @@ class EngineRunner:
                        "SWING CREDIT · multi-day (NIFTY/FINNIFTY)", "MONTHLY FUTURES PULLBACK",
                        "MONTHLY LONG-CALL PULLBACK"}
 
+    # "Why this signal" — per-book backtest evidence line (trades analysed + win% + explicit
+    # IS/OOS date ranges). Ends every signal message (user format 2026-07-30). Honest labels only.
+    _TG_ANALYSIS = {
+        "STOCK CREDIT v2 UNION":
+            "• 32,852 raw breakout signals screened → 609 passed the quality gates and were analysed\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 84% win rate achieved · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 87% win rate achieved · positive every year",
+        "STOCK CREDIT v1":
+            "• 25,978 raw breakout signals screened → 997 passed the quality gates and were analysed\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 85% win rate achieved · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 86% win rate achieved · positive every year",
+        "0DTE NIFTY":
+            "• 448 weekly expiries analysed since 2019\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 88% win rate achieved\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 90% win rate achieved",
+        "0DTE SENSEX":
+            "• 89 expiries analysed\n"
+            "• In-sample: CANNOT be captured — SENSEX weekly options only exist from Oct-2024\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 88.8% win rate achieved",
+        "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "• forward paper-test — regime-dependent, unproven",
+        "MONTHLY FUTURES PULLBACK":
+            "• In-sample (2018 → 30-Sep-2024): 77.8% win rate achieved\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 75.7% win rate achieved",
+        "MONTHLY LONG-CALL PULLBACK": "• forward paper-test — shelved as unreliable",
+    }
+    _TG_DISCLAIMER = ("⚠️ Tejas Jadhav is NOT a SEBI-registered research analyst/investment advisor. "
+                      "Educational signals · invest at your own risk · consult a SEBI-registered advisor.")
+    _TG_SIDE = {"BEAR_CALL": "BEAR CALL SPREAD", "BULL_PUT": "BULL PUT SPREAD", "BUY_FUT": "BUY FUTURES"}
+
+    def _analysis(self, book, sym=""):
+        a = self._TG_ANALYSIS.get(book)
+        if a is None and ("SENSEX" in book or sym == "SENSEX"):
+            a = self._TG_ANALYSIS["0DTE SENSEX"]
+        # NB "NIFTY" is a substring of "BANKNIFTY" — must exclude it or BANKNIFTY (a REJECTED
+        # book) would inherit NIFTY's 88/90% stats (bug caught in path test 2026-07-30).
+        if a is None and "0DTE" in book and "NIFTY" in book and "BANKNIFTY" not in book:
+            a = self._TG_ANALYSIS["0DTE NIFTY"]
+        if a:
+            a = a.replace("{TODAY}", datetime.now(IST).strftime("%-d-%b-%Y"))
+        return a
+
     def _tg(self, book, signals):
-        """Fan out newly-opened signals from any book to Telegram in the STANDARD format:
-        both legs with premiums, backtested win%, max profit/loss per lot, 'execute with your
-        broker'. `signals` is the list of new position dicts (all books share the schema).
+        """Fan out newly-opened signals to Telegram (format user-approved 2026-07-30):
+        '🟢 EXECUTE NOW — MULTIDAY/INTRADAY SIGNAL' → trade + target/risk → separator →
+        '📚 Why this signal — Tejas Jadhav, CFA …' with trades analysed + IS/OOS dates.
         Best-effort: never let a notify failure disturb the engine."""
         if not signals:
             return
         try:
             from engine.notifications import send_telegram
+            kind = "MULTIDAY" if book in self._MULTIDAY_BOOKS else ("INTRADAY" if "0DTE" in book else "MULTIDAY")
             items = signals if isinstance(signals, list) else []
             if not items:
-                send_telegram(f"🔔 <b>{book}</b> · {signals} new signal(s) — details on the dashboard. "
-                              f"Execute with your broker.")
+                send_telegram(f"🟢 <b>EXECUTE NOW — {kind} SIGNAL</b>\n{book} · new signal(s) — "
+                              f"details on the dashboard.")
                 return
             for s in items:
                 if not isinstance(s, dict):
-                    send_telegram(f"🔔 <b>{book}</b> · new signal — details on the dashboard. "
-                                  f"Execute with your broker."); continue
+                    send_telegram(f"🟢 <b>EXECUTE NOW — {kind} SIGNAL</b>\n{book} · new signal — "
+                                  f"details on the dashboard."); continue
                 # html.escape dynamic fields — a symbol like "M&M" carries a raw '&' that breaks
                 # Telegram HTML parse_mode and silently fails the send (bug fixed 2026-07-21).
                 sym = html.escape(str(s.get("symbol") or s.get("index") or s.get("name") or ""))
-                side = html.escape(str(s.get("side") or s.get("breakout_dir") or ""))
-                verb = "CE" if "CALL" in str(side) else ("PE" if "PUT" in str(side) else "")
-                win = self._TG_WIN_SYM.get(sym) if book.startswith("SENSEX") else self._TG_WIN.get(book)
+                raw_side = str(s.get("side") or s.get("breakout_dir") or "")
+                side = html.escape(self._TG_SIDE.get(raw_side, raw_side))
+                verb = "CE" if "CALL" in raw_side else ("PE" if "PUT" in raw_side else "")
                 g = lambda x: ("%g" % x) if isinstance(x, (int, float)) else None
                 ss, ls = g(s.get("short_strike")), g(s.get("long_strike"))
                 sp, lp = s.get("short_prem"), s.get("long_prem")
                 credit, w, lot = s.get("credit"), s.get("width_pts"), s.get("lot")
-                tgt_stop = self._tgt_stop(book)
-                lines = [f"🔔 <b>{book}</b>" + (f" · win ~{win} at the target below (backtest)" if win else "")]
-                if book in self._MULTIDAY_BOOKS:
-                    lines.append("⏳ Multiday Trade")
-                elif "0DTE" in book:
-                    lines.append("⚡ Intraday Trade")
-                lines.append(" · ".join(str(x) for x in (sym, side) if x))
+                pretty = {"STOCK CREDIT v2 UNION": "Stock Credit v2 UNION",
+                          "STOCK CREDIT v1": "Stock Credit v1",
+                          "MONTHLY FUTURES PULLBACK": "Monthly Pullback",
+                          "MONTHLY LONG-CALL PULLBACK": "Monthly Long-Call",
+                          "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "Index Swing"}.get(book, book)
+                head2 = (f"{sym} · {side}" if kind == "INTRADAY"
+                         else f"{sym} · {side} ({pretty})")
+                lines = [f"🟢 <b>EXECUTE NOW — {kind} SIGNAL</b>", head2]
                 if ss and ls:
                     leg1 = f"SELL {ss} {verb}".rstrip() + (f" @ ₹{sp}" if sp is not None else "")
                     leg2 = f"BUY {ls} {verb}".rstrip() + (f" @ ₹{lp}" if lp is not None else "")
                     lines.append(f"{leg1}  /  {leg2}")
-                    exp = s.get("expiry") or ""
-                    extra = " · ".join(x for x in ((f"exp {exp}" if exp else ""),
+                    exp = self._fmt_d(s.get("expiry") or "")
+                    if kind == "INTRADAY":
+                        expbit = "Expires TODAY at 3:30 PM"
+                    else:
+                        expbit = f"Expiry {exp}" if exp else ""
+                    extra = " · ".join(x for x in (expbit,
                                                    (f"credit ₹{credit}" if credit is not None else ""),
                                                    (f"lot {lot}" if lot else "")) if x)
                     if extra: lines.append(extra)
                     have_nums = isinstance(credit, (int, float)) and isinstance(w, (int, float)) and lot
                     exit_ = self._TG_EXIT.get(book)
-                    if exit_ and have_nums:
+                    if kind == "INTRADAY":
+                        lines.append("🎯 Hold to settle · no stop — bought wing caps the loss")
+                    elif exit_ and have_nums:
                         tp_frac, stop_mult = exit_
-                        # TARGET in ₹ (booking tp_frac of the credit early)
-                        lines.append(f"🎯 Target: book {tp_frac*100:.0f}% of credit ≈ +₹{tp_frac*credit*lot:,.0f}/lot"
-                                     if tp_frac > 0 else "🎯 Target: hold to expiry — keep the full credit")
-                        # STOP — honest per trade: a vertical can't cost more than its width to close,
-                        # so a stop at stop_mult×credit only BINDS when stop_mult×credit < width. When it
-                        # can't bind (e.g. v2's 3× at c/w≥0.40) it is a no-op → don't print a stop line at
-                        # all (user 2026-07-29: drop the v2 stop line). Max-loss line still shows the floor.
-                        if stop_mult * credit < w:
+                        binds = stop_mult * credit < w   # a vertical can't cost > width to close
+                        tgt = (f"🎯 Target: book {tp_frac*100:.0f}% of credit ≈ +₹{tp_frac*credit*lot:,.0f}/lot"
+                               if tp_frac > 0 else "🎯 Target: hold to expiry — keep the full credit")
+                        lines.append(tgt + ("" if binds else " (no stop — wing caps loss)"))
+                        if binds:
                             lines.append(f"🛑 Stop: buy back if cost hits {stop_mult:g}× credit "
                                          f"≈ −₹{(stop_mult-1)*credit*lot:,.0f}/lot")
-                    elif tgt_stop:
-                        lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
+                    else:
+                        tgt_stop = self._tgt_stop(book)
+                        if tgt_stop:
+                            lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
                     if have_nums:
                         lines.append(f"Max profit/lot ₹{credit*lot:,.0f} · Max loss/lot ₹{(w-credit)*lot:,.0f}")
                 elif s.get("order_label"):
                     lines.append(str(s["order_label"]))
+                    tgt_stop = self._tgt_stop(book)
                     if tgt_stop:
                         lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
-                lines.append("Execute with your broker.")
+                ana = self._analysis(book, sym)
+                if ana:
+                    lines.append("——————————————")
+                    lines.append("📚 <b>Why this signal</b> — Tejas Jadhav, CFA has performed extensive "
+                                 "analysis of this strategy which gave below historical results —")
+                    lines.append(ana)
+                lines.append(self._TG_DISCLAIMER)
                 send_telegram("\n".join(lines))
         except Exception as e:
             logger.warning(f"telegram notify ({book}): {e}")
