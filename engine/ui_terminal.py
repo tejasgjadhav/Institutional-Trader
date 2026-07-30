@@ -14,7 +14,7 @@ from PySide6.QtWidgets import (
     QHeaderView, QStackedWidget, QTextEdit, QFrame, QScrollArea
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QThread
-from PySide6.QtGui import QFont, QColor, QBrush
+from PySide6.QtGui import QFont, QColor, QBrush, QIcon, QPixmap
 
 from engine.config import IST, DATA_DIR
 from engine.agent import Agent
@@ -37,6 +37,9 @@ STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
 STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
 STOCKCR2_BOOK = _os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
+# App logo — Saavi. Lives in data/ (gitignored) so the photo never leaves this machine;
+# every use below falls back gracefully when the file is absent.
+LOGO_PATH = _os.path.join(DATA_DIR, "saavi_logo.png")
 ZDTE_BOOK = _os.path.join(DATA_DIR, "zero_dte_positions.json")
 ZDTE_STATUS = _os.path.join(DATA_DIR, "zero_dte_status.json")
 SDTE_BOOK = _os.path.join(DATA_DIR, "sensex_dte_positions.json")
@@ -68,7 +71,9 @@ PURPLE      = "#b388ff"   # ORB+VWAP parallel strategy
 class TerminalApp(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("INSTITUTIONAL TRADER · TERMINAL")
+        self.setWindowTitle("SAAVI INSTITUTIONAL TRADER · TERMINAL")
+        if _os.path.exists(LOGO_PATH):
+            self.setWindowIcon(QIcon(LOGO_PATH))
         self.setGeometry(40, 40, 1700, 1000)
         self.setMinimumSize(960, 620)   # keep nav + sections usable when resized down
         self.setStyleSheet(self._qss())
@@ -202,7 +207,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         w = QWidget(); w.setStyleSheet(f"background-color:{PANEL}; border-bottom:1px solid {BORDER};")
         h = QHBoxLayout(w); h.setContentsMargins(16, 10, 16, 10)
 
-        title = QLabel("◤ INSTITUTIONAL TRADER")
+        if _os.path.exists(LOGO_PATH):
+            logo = QLabel()
+            logo.setPixmap(QPixmap(LOGO_PATH).scaled(
+                40, 40, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            h.addWidget(logo); h.addSpacing(8)
+
+        title = QLabel("◤ SAAVI INSTITUTIONAL TRADER")
         title.setFont(QFont("Menlo", 16, QFont.Weight.Bold))
         title.setStyleSheet(f"color:{GREEN}; letter-spacing:2px;")
         h.addWidget(title)
@@ -2637,6 +2648,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
 def main():
     app = QApplication(sys.argv)
     app.setStyle("Fusion")
+    app.setApplicationDisplayName("SAAVI INSTITUTIONAL TRADER")
+    if _os.path.exists(LOGO_PATH):
+        app.setWindowIcon(QIcon(LOGO_PATH))   # macOS Dock icon
     win = TerminalApp()
     win.show()
     sys.exit(app.exec())
