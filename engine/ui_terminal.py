@@ -225,8 +225,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         self.nifty_lbl = self._ticker_label("NIFTY 50", "—")
         self.bnf_lbl   = self._ticker_label("BANKNIFTY", "—")
+        self.sensex_lbl = self._ticker_label("SENSEX", "—")
         self.vix_lbl   = self._ticker_label("INDIA VIX", "—", AMBER)
-        for lbl in (self.nifty_lbl, self.bnf_lbl, self.vix_lbl):
+        for lbl in (self.nifty_lbl, self.bnf_lbl, self.sensex_lbl, self.vix_lbl):
             h.addWidget(lbl)
         h.addStretch()
         # live clock (top-right) — ticks every second
@@ -819,97 +820,25 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "only worked in one regime cannot hide behind a blended average.")}
 {self._strategy_summary_table()}
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">IN PLAIN ENGLISH — what these strategies actually do</p>
-{p("<b>Every book here SELLS insurance instead of buying lottery tickets.</b> That one sentence covers all of them. "
-   "An option buyer pays a small premium hoping for a big move. We are on the other side: we take the premium, and "
-   "we keep it as long as the big move does NOT happen. Most of the time, it does not happen.")}
-{p("<b>The 0DTE index books (NIFTY / SENSEX / BANKNIFTY) — a one-day bet that the market won&#39;t sprint.</b> "
-   "On the morning an index option expires, we look at where the index opened — say NIFTY at 25,000. We then sell "
-   "someone the right to buy NIFTY at 25,125 (0.5% higher) before the day ends. They pay us for that right. "
-   "We are betting NIFTY will NOT climb 0.5% today. If it doesn&#39;t, the right expires worthless and we keep the "
-   "whole payment. That happens roughly <b>9 times out of 10</b>.")}
-{p("<b>The safety net (this is the important part).</b> If NIFTY did rocket upward, selling that right alone could "
-   "cost us an unlimited amount. So at the same time we BUY the right to buy at 25,325 (further out). That second "
-   "option is our insurance: no matter how violently the market moves, our maximum loss is capped and known before "
-   "we enter. That pair — sell one, buy one further away — is what &#39;credit spread&#39; means. We collect the "
-   "difference, and the gap between the two strikes is the worst case.")}
-{p("<b>So the trade-off is: win small, often — lose bigger, rarely.</b> We might collect ₹9,500 when we win and "
-   "lose ₹10,500 when we don&#39;t. That is why the win rate has to stay high to make money. At ~89% wins it works; "
-   "at ~76% it would break even; below that it bleeds. Everything else in this tab is us checking, honestly, "
-   "whether the win rate is real and whether it holds up in bad years.")}
-{p("<b>The stock fade books do the same thing over days instead of hours.</b> When a stock jumps to a new high, "
-   "crowds rush to buy its call options and those options get expensive on hope. Breakouts usually stall. So we sell "
-   "that expensive hope with the same capped-risk structure, and buy it back cheaper a few days later.")}
-{res("THE ONE COUNTER-INTUITIVE LESSON (proved across 448 trades, 2019→2026): <b>scary days are GOOD days for us.</b> "
-     "It feels obvious that we should stand aside on RBI policy day, on a war headline, on a big results day. We "
-     "tested all of it — and every single &#39;avoid the scary day&#39; rule LOST money. The reason: when everyone is "
-     "frightened, insurance gets expensive, and we are the ones SELLING insurance. Fear is what we are paid for. "
-     "The 7 expiry days that landed on a real geopolitical shock won 7 out of 7. What actually hurts us is not "
-     "drama — it is being paid too little, which is why the only filter we added refuses trades where the premium "
-     "is too thin to be worth the risk.")}
-
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">CONSOLIDATED MONTHLY P&amp;L — model, all live books (1 lot vs 2 lots)</p>
-{dim("MODEL figures on REAL premiums, NET of charged slippage + brokerage, win/loss rate already baked in. "
-     "Plan on ~80% of net (a 20% haircut for live fill quality — fair for these real-premium books, vs a "
-     "blanket half). All correlated short-premium — a crash month hits several at once. studies/CONSOLIDATED_PNL.md")}
-<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>~₹/mo · 1 lot</b></td><td><b>~₹/mo · 2 lots</b></td><td><b>basis</b></td></tr>
-<tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td><td style="color:{TEXT_DIM};">model estimate (validated study)</td></tr>
-<tr><td>Stock fade v1 (TP-40)</td><td>86%</td><td>~₹13,000*</td><td>~₹26,000</td><td style="color:{TEXT_DIM};">TP-40/no-stop deployed 07-30 · 85% IS / 86% OOS</td></tr>
-<tr><td>0DTE NIFTY</td><td>88.3%</td><td>~₹1,771</td><td>~₹3,542</td><td style="color:{GREEN};">MEASURED 273 tr · 86 mo</td></tr>
-<tr><td>0DTE SENSEX</td><td>89.0%</td><td>~₹3,153</td><td>~₹6,306</td><td style="color:{GREEN};">MEASURED 91 tr · 22 mo</td></tr>
-<tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY (monthly)</s> <span style="color:{RED};font-weight:bold;">REJECTED 07-19</span></td><td><s>78.6%</s></td><td><s>~₹141</s></td><td><s>~₹282</s></td><td>edge ≈ 0 · see rejection note</td></tr>
-<tr style="color:{GREEN};"><td><b>CONSOLIDATED (full history, ex-BANKNIFTY)</b></td><td><b>—</b></td><td><b>≈ ₹37,924</b></td><td><b>≈ ₹75,848</b></td><td></td></tr>
-<tr style="color:{AMBER};"><td><b>Plan-on (80% of net)</b></td><td><b>—</b></td><td><b>≈ ₹29,540</b></td><td><b>≈ ₹59,080</b></td><td></td></tr>
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">LIVE STRATEGIES — 1 lot</p>
+<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win in-sample</td><td>Win out-of-sample</td><td>Signals/mo</td><td>₹/mo (model)</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>84% (2019–Sep'24)</td><td>87% (Oct'24–now)</td><td>~7.6</td><td>~₹20,000</td></tr>
+<tr><td>Stock v1 (TP-40)</td><td>85% (2019–Sep'24)</td><td>86% (Oct'24–now)</td><td>~16</td><td>~₹13,000</td></tr>
+<tr><td>Intraday NIFTY</td><td>88% (2019–Sep'24)</td><td>90% (Oct'24–now)</td><td>~4 (Tue)</td><td>~₹1,771</td></tr>
+<tr><td>Intraday SENSEX</td><td>n/a — data starts Oct'24</td><td>88.8% (Oct'24–now)</td><td>~4 (Thu)</td><td>~₹3,153</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td></td><td><b>≈ ₹37,924</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (80% haircut)</b></td><td></td><td></td><td></td><td><b>≈ ₹30,340</b></td></tr>
 </table>
-{dim("<b>CORRECTED 2026-07-19</b> — the three 0DTE rows are now MEASURED from the 448-expiry dataset "
-     "(1 lot, net of costs, ₹/mo = total ÷ distinct calendar months), replacing older estimates. What changed: "
-     "NIFTY ₹2,500→₹1,771 · SENSEX ₹3,200→₹3,153 (confirmed) · <b>BANKNIFTY 91%/₹1,500 → 78.6%/₹141</b>. "
-     "The BANKNIFTY claim was the badly stale one. On the RECENT era only (Oct&#39;24→date) the 0DTE books read "
-     "NIFTY 93.2%/₹2,290 · SENSEX 89.0%/₹3,153 · BANKNIFTY 88.9%/₹696 (consolidated ≈₹38,139) — that recent "
-     "slice is what the old numbers were built on. Full history is the honest planning number.")}
-{res("<b>★ BANKNIFTY 0DTE — REJECTED &amp; DISABLED 2026-07-19</b> (DTE_MULTI_BANKNIFTY_ENABLED=False; open "
-     "positions still settle, only new entries stop). NOT because it loses — the MEDIAN trade is +14.1% of "
-     "margin — but because its edge is <b>indistinguishable from zero</b> and the tail swamps it: avg +0.55%m, "
-     "<b>t = +0.10</b>, 95% CI [−9.98%, +11.09%], bootstrap p(mean≤0) = 0.33. <b>The entire profit is 3 trades</b> "
-     "— drop the 3 best and 7.5 years comes to <b>−₹8</b>. It made +₹141/month while its worst single day cost "
-     "−₹14,298 = <b>~102 months of profit in one session</b>. The &#39;91% / ₹1,500-a-month&#39; number it was "
-     "carried on was never supported (measured: 78.6% / ₹141). Two rescues were tested and BOTH failed: the "
-     "monthly-pinning hypothesis (monthly 76.1% vs weekly 80.4% within the same era) and &#39;the recent era "
-     "proves it&#39; (n=18, and EVERY book rose in Era B). An adversarial audit found no bug that flips the sign; "
-     "the one gap it did find (no liquidity floor on the long wing) would FLATTER the book, so rejecting is the "
-     "conservative side of that error. NOT claiming it is proven unprofitable — the CI spans zero, so the verdict "
-     "is UNPROVEN. At ~12 trades/yr it can never accumulate evidence fast enough to prove itself, which is itself "
-     "the argument. Reversal bar: ≥30 new monthly expiries with a 95% CI excluding zero. "
-     "File: studies/BANKNIFTY_0DTE_REJECTION.md")}
-{dim("<b>BANKNIFTY — &#39;but monthly expiry should win more, surely?&#39; TESTED 2026-07-19, answer NO.</b> "
-     "Real mechanism to expect it (monthly = huge OI = strike PINNING holds the index still, which is what an OTM "
-     "seller wants), so it was worth testing. Tested WITHIN Era A — same years, same pipeline, only expiry type "
-     "differing: <b>MONTHLY n=67 → 76.1% win / −1.55%m</b> vs <b>WEEKLY n=214 → 80.4% win / +8.51%m</b>. Monthly was "
-     "WORSE, beat weekly in only 2 of 6 years, and isn&#39;t even collecting richer premium (median c/W 0.190 vs "
-     "0.170). 2-proportion z = −0.75 = NOT significant, so honestly: monthly confers NO win-rate advantage; the gap "
-     "is noise that if anything points the wrong way. So Era B&#39;s 88.9% is REGIME + tiny sample (n=18 = 16W/2L, "
-     "CI ≈65-99%), not the expiry change — EVERY book jumped in Era B (NIFTY 86.5%→93.2%). Its era gap is still "
-     "CONFOUNDED by the weekly→monthly break, so read all this as &#39;the 91%/₹1,500 claim is unsupported&#39;, "
-     "NOT as &#39;the book is proven bad&#39;. File: studies/ndte/ndte19_bnf_monthly.py. "
-     "*v1 ₹ remains an estimate (per-lot ₹ not separately published). Stock-book rows are carried from prior "
-     "studies and were NOT re-measured this session. Capital ~₹2–2.5L (1 lot) / ~₹4–5L (2 lots). Monthly Futures "
-     "excluded (needs ₹15L, regime-off). NOT live — in the current drought a realistic this-month is near ₹0; "
-     "2 lots doubles P&amp;L AND drawdown.")}
 
-<p style="color:{CYAN};font-size:16px;font-weight:bold;">→ WHAT THE BOOK EARNS PER MONTH TODAY (post-rejection · 1 lot)</p>
-<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Live book</td><td>Status</td><td>Win</td><td>₹/mo · 1 lot</td><td>Evidence</td></tr>
-<tr><td>★ Stock fade v2 UNION</td><td style="color:{GREEN};">LIVE</td><td>87%</td><td>~₹20,000</td><td style="color:{TEXT_DIM};">model estimate (validated study)</td></tr>
-<tr><td>Stock fade v1 (TP-40)</td><td style="color:{GREEN};">LIVE</td><td>86%</td><td>~₹13,000</td><td style="color:{TEXT_DIM};">TP-40/no-stop deployed 07-30 · 85% IS / 86% OOS</td></tr>
-<tr><td>0DTE SENSEX</td><td style="color:{GREEN};">LIVE</td><td>89.0%</td><td>~₹3,153</td><td style="color:{GREEN};">MEASURED · 91 trades</td></tr>
-<tr><td>0DTE NIFTY</td><td style="color:{GREEN};">LIVE</td><td>88.3%</td><td>~₹1,771</td><td style="color:{GREEN};">MEASURED · 273 trades</td></tr>
-<tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY</s></td><td style="color:{RED};font-weight:bold;">REJECTED 07-19</td><td>78.6%</td><td>₹0 <s>(was ₹141)</s></td><td>edge ≈ 0 · t = +0.10</td></tr>
-<tr style="color:{TEXT_DIM};"><td>Index swing fade (NIFTY/FINNIFTY)</td><td>paper</td><td>54%</td><td>~₹0</td><td>regime-dep · failed OOS</td></tr>
-<tr style="color:{TEXT_DIM};"><td>Monthly futures (REV1-v2)</td><td>REGIME-OFF</td><td>75.7%</td><td>₹0 now</td><td>needs ~₹15L · NIFTY &lt; 200DMA</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL · 1 lot</b></td><td></td><td><b>—</b></td><td><b>≈ ₹37,924</b></td><td>v1 TP-40 uplift 07-30</td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>PLAN ON · 80% of net</b></td><td></td><td><b>—</b></td><td><b>≈ ₹30,340</b></td><td>live-fill haircut</td></tr>
-<tr style="color:{AMBER};"><td>TOTAL · 2 lots</td><td></td><td>—</td><td>≈ ₹75,848</td><td>plan-on ≈ ₹60,680</td></tr>
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">REJECTED / OFF</p>
+<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Status</td><td>Why</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Intraday BANKNIFTY</td><td style="color:{RED};">REJECTED 07-19</td><td>edge ≈ 0 (t=+0.10, CI spans 0) · studies/BANKNIFTY_0DTE_REJECTION.md</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Index swing fade (NIFTY/FINNIFTY)</td><td style="color:{RED};">REMOVED 07-24</td><td>failed out-of-sample (−1.4%w) · regime-dependent</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Monthly futures (REV1-v2)</td><td>REGIME-OFF</td><td>needs ~₹15L · waits for NIFTY &gt; 200-DMA</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Monthly long-call</td><td>SHELVED 07-13</td><td>gap/luck-dependent, unreliable</td></tr>
+<tr style="color:{TEXT_DIM};"><td>3-Family + ORB+VWAP option-buying</td><td>OFF</td><td>direction is real but does not survive option-buying costs</td></tr>
 </table>
 {dim("<b>Read this honestly:</b> ₹37,924 is a MODEL on real premiums with costs charged and the loss leg already "
      "subtracted — not a forecast. <b>₹32,000 of it (87%) is the two STOCK books, which were NOT re-measured this "
@@ -2616,6 +2545,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         self._holiday = bool(d.get("holiday"))   # weekday+hours but no live data = NSE holiday
         self._set_ticker(self.nifty_lbl, "NIFTY 50", d["nifty"])
         self._set_ticker(self.bnf_lbl, "BANKNIFTY", d["banknifty"])
+        if d.get("sensex"):   # older snapshot files lack it until the engine restarts
+            self._set_ticker(self.sensex_lbl, "SENSEX", d["sensex"])
         # VIX: arrow + colored by direction (down-vol = green calm, up-vol = red fear)
         x = d["vix"]
         xdir = x.get("direction", "FLAT")

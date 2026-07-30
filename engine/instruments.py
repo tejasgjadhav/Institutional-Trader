@@ -27,6 +27,7 @@ INDEX_KEYS = {
     "FINNIFTY": "NSE_INDEX|Nifty Fin Service",   # swing credit-spread (robustness-validated)
     "MIDCPNIFTY": "NSE_INDEX|NIFTY MID SELECT",  # tested; not deployed (marginal + thin liquidity)
     "VIX": "NSE_INDEX|India VIX",
+    "SENSEX": "BSE_INDEX|SENSEX",           # BSE benchmark — UI ticker + 0DTE SENSEX book
 }
 
 
@@ -110,7 +111,7 @@ def to_instrument_key(ticker: str) -> str:
     """
     # Already a fully-formed Upstox instrument key (e.g. 'NSE_FO|50593',
     # 'NSE_EQ|INE...', 'NSE_INDEX|Nifty 50') → pass through unchanged.
-    if "|" in ticker and ticker.split("|", 1)[0] in ("NSE_FO", "NSE_EQ", "NSE_INDEX", "BSE_EQ", "BSE_FO"):
+    if "|" in ticker and ticker.split("|", 1)[0] in ("NSE_FO", "NSE_EQ", "NSE_INDEX", "BSE_EQ", "BSE_FO", "BSE_INDEX"):
         return ticker
 
     # Index aliases
@@ -120,6 +121,7 @@ def to_instrument_key(ticker: str) -> str:
         "FINNIFTY": "FINNIFTY", "NIFTY FIN SERVICE": "FINNIFTY",
         "MIDCPNIFTY": "MIDCPNIFTY", "NIFTY MID SELECT": "MIDCPNIFTY",
         "^INDIAVIX": "VIX", "VIX": "VIX", "INDIA VIX": "VIX",
+        "^BSESN": "SENSEX", "SENSEX": "SENSEX",
     }
     if ticker in index_aliases:
         return INDEX_KEYS[index_aliases[ticker]]

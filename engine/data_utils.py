@@ -65,7 +65,7 @@ def _intraday_index_prices(names: list) -> dict:
 
 
 # Yahoo symbols for the indices — last-resort live-price fallback.
-_YF_INDEX = {"NIFTY": "^NSEI", "BANKNIFTY": "^NSEBANK", "VIX": "^INDIAVIX"}
+_YF_INDEX = {"NIFTY": "^NSEI", "BANKNIFTY": "^NSEBANK", "VIX": "^INDIAVIX", "SENSEX": "^BSESN"}
 
 
 def _yahoo_index_prices(names: list) -> dict:
@@ -282,7 +282,7 @@ def get_market_snapshot() -> dict:
     This is what the live dashboard polls — batching is what keeps it under the
     Upstox rate-limit so the values update LIVE instead of falling back to last close.
     """
-    names = ["NIFTY", "BANKNIFTY", "VIX"]
+    names = ["NIFTY", "BANKNIFTY", "SENSEX", "VIX"]
     open_ = _market_is_open()
     # LTP works during AND after the session (returns the day's last traded price), so
     # fetch it unconditionally. Otherwise after-hours we'd fall back to the daily
@@ -313,9 +313,10 @@ def get_market_snapshot() -> dict:
         return d
 
     nifty, bnf, vix = build("NIFTY", "NIFTY 50"), build("BANKNIFTY", "BANKNIFTY"), build("VIX", "VIX")
+    sensex = build("SENSEX", "SENSEX")
     if vix["price"] == 0.0:
         vix["price"] = 15.0
-    return {"nifty": nifty, "banknifty": bnf, "vix": vix}
+    return {"nifty": nifty, "banknifty": bnf, "sensex": sensex, "vix": vix}
 
 
 def check_api_health() -> dict:
