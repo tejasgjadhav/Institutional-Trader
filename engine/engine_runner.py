@@ -242,24 +242,24 @@ class EngineRunner:
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
             "• 32,852 raw breakout signals screened → 609 passed the quality gates and were analysed\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 84% win rate achieved · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 87% win rate achieved · positive every year",
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>84%</b> win rate achieved · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>87%</b> win rate achieved · positive every year",
         "STOCK CREDIT v1":
             "• 25,978 raw breakout signals screened → 997 passed the quality gates and were analysed\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 85% win rate achieved · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 86% win rate achieved · positive every year",
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>85%</b> win rate achieved · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>86%</b> win rate achieved · positive every year",
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 88% win rate achieved\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 90% win rate achieved",
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>88%</b> win rate achieved\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>90%</b> win rate achieved",
         "0DTE SENSEX":
             "• 89 expiries analysed\n"
             "• In-sample: CANNOT be captured — SENSEX weekly options only exist from Oct-2024\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 88.8% win rate achieved",
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>88.8%</b> win rate achieved",
         "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "• forward paper-test — regime-dependent, unproven",
         "MONTHLY FUTURES PULLBACK":
-            "• In-sample (2018 → 30-Sep-2024): 77.8% win rate achieved\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 75.7% win rate achieved",
+            "• In-sample (2018 → 30-Sep-2024): <b>77.8%</b> win rate achieved\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>75.7%</b> win rate achieved",
         "MONTHLY LONG-CALL PULLBACK": "• forward paper-test — shelved as unreliable",
     }
     _TG_DISCLAIMER = ("⚠️ Tejas Jadhav is NOT a SEBI-registered research analyst/investment advisor. "

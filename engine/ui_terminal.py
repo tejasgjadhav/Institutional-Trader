@@ -854,7 +854,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "blanket half). All correlated short-premium — a crash month hits several at once. studies/CONSOLIDATED_PNL.md")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>~₹/mo · 1 lot</b></td><td><b>~₹/mo · 2 lots</b></td><td><b>basis</b></td></tr>
-<tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>★ Stock fade v2 UNION (leader)</td><td>87%</td><td>~₹20,000</td><td>~₹40,000</td><td style="color:{TEXT_DIM};">model estimate (validated study)</td></tr>
 <tr><td>Stock fade v1 (TP-40)</td><td>86%</td><td>~₹13,000*</td><td>~₹26,000</td><td style="color:{TEXT_DIM};">TP-40/no-stop deployed 07-30 · 85% IS / 86% OOS</td></tr>
 <tr><td>0DTE NIFTY</td><td>88.3%</td><td>~₹1,771</td><td>~₹3,542</td><td style="color:{GREEN};">MEASURED 273 tr · 86 mo</td></tr>
 <tr><td>0DTE SENSEX</td><td>89.0%</td><td>~₹3,153</td><td>~₹6,306</td><td style="color:{GREEN};">MEASURED 91 tr · 22 mo</td></tr>
@@ -900,7 +900,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <p style="color:{CYAN};font-size:16px;font-weight:bold;">→ WHAT THE BOOK EARNS PER MONTH TODAY (post-rejection · 1 lot)</p>
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Live book</td><td>Status</td><td>Win</td><td>₹/mo · 1 lot</td><td>Evidence</td></tr>
-<tr><td>★ Stock fade v2 UNION</td><td style="color:{GREEN};">LIVE</td><td>87%</td><td>~₹20,000</td><td style="color:{TEXT_DIM};">prior study · not re-measured</td></tr>
+<tr><td>★ Stock fade v2 UNION</td><td style="color:{GREEN};">LIVE</td><td>87%</td><td>~₹20,000</td><td style="color:{TEXT_DIM};">model estimate (validated study)</td></tr>
 <tr><td>Stock fade v1 (TP-40)</td><td style="color:{GREEN};">LIVE</td><td>86%</td><td>~₹13,000</td><td style="color:{TEXT_DIM};">TP-40/no-stop deployed 07-30 · 85% IS / 86% OOS</td></tr>
 <tr><td>0DTE SENSEX</td><td style="color:{GREEN};">LIVE</td><td>89.0%</td><td>~₹3,153</td><td style="color:{GREEN};">MEASURED · 91 trades</td></tr>
 <tr><td>0DTE NIFTY</td><td style="color:{GREEN};">LIVE</td><td>88.3%</td><td>~₹1,771</td><td style="color:{GREEN};">MEASURED · 273 trades</td></tr>
@@ -908,14 +908,27 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{TEXT_DIM};"><td>Index swing fade (NIFTY/FINNIFTY)</td><td>paper</td><td>54%</td><td>~₹0</td><td>regime-dep · failed OOS</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Monthly futures (REV1-v2)</td><td>REGIME-OFF</td><td>75.7%</td><td>₹0 now</td><td>needs ~₹15L · NIFTY &lt; 200DMA</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL · 1 lot</b></td><td></td><td><b>—</b></td><td><b>≈ ₹37,924</b></td><td>v1 TP-40 uplift 07-30</td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>PLAN ON · 80% of net</b></td><td></td><td><b>—</b></td><td><b>≈ ₹29,540</b></td><td>live-fill haircut</td></tr>
-<tr style="color:{AMBER};"><td>TOTAL · 2 lots</td><td></td><td>—</td><td>≈ ₹73,848</td><td>plan-on ≈ ₹59,080</td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>PLAN ON · 80% of net</b></td><td></td><td><b>—</b></td><td><b>≈ ₹30,340</b></td><td>live-fill haircut</td></tr>
+<tr style="color:{AMBER};"><td>TOTAL · 2 lots</td><td></td><td>—</td><td>≈ ₹75,848</td><td>plan-on ≈ ₹60,680</td></tr>
 </table>
 {dim("<b>Read this honestly:</b> ₹37,924 is a MODEL on real premiums with costs charged and the loss leg already "
      "subtracted — not a forecast. <b>₹32,000 of it (87%) is the two STOCK books, which were NOT re-measured this "
      "session</b> and still rest on their prior studies; only the ₹4,924 of 0DTE is measured here. In the current "
      "signal drought a realistic this-month is near ₹0. Every book is correlated short-premium — a crash month "
      "hits them together, so treat the total as ONE position, not five independent ones.")}
+
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">PROFIT CALCULATION — first LIVE paper month (29-Jun → 30-Jul-2026)</p>
+<table border="1" cellpadding="6" cellspacing="0" style="border-color:{BORDER};">
+<tr style="color:{CYAN};"><th>Book</th><th>Closed trades</th><th>Avg net ₹/trade</th><th>Realized ₹</th></tr>
+<tr><td>Stock v2 UNION</td><td>1</td><td>+2,534</td><td>+2,534</td></tr>
+<tr><td>Stock v1</td><td>14</td><td>+2,737</td><td>+38,312</td></tr>
+<tr><td>Intraday NIFTY+SENSEX</td><td>6</td><td>+774</td><td>+4,642</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Index swing (removed)</td><td>2</td><td>−597</td><td>−1,195</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>23</b></td><td><b>+1,926</b></td><td><b>+₹44,292</b></td></tr>
+</table>
+{dim("Formula per trade: net ₹ = pnl_pts × qty (1 lot). WIN books at the target (50%/40% of credit); LOSS = "
+     "wing-capped at (width−credit)×qty. Realized ₹44,292 vs model ₹37,924 — first month ran ≈ model, but ONE "
+     "month proves nothing; the gate is 20–30 trades with LIVE ≥ 60% of MODEL.")}
 
 <p style="color:{CYAN};font-size:16px;font-weight:bold;">How each ₹/mo is built — expectancy = win% × avg win − loss% × avg loss (the loss leg IS subtracted)</p>
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
