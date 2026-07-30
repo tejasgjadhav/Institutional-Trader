@@ -588,8 +588,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                     except Exception:
                         pass
                 wr = W / (W + L) * 100 if (W + L) else 0
+                rc = GREEN if rs > 0 else RED if rs < 0 else TEXT_DIM
                 self.log_stats.setText(f"  INTRADAY 0DTE (all 3 books, live paper): {W} W / {L} L · "
-                                       f"WIN {wr:.0f}% · booked Rs {rs:+,.0f}")
+                                       f"WIN {wr:.0f}% · booked <span style='color:{rc};'>Rs {rs:+,.0f}</span>")
                 self.log_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; "
                                              f"border:2px solid {CYAN}; font-weight:bold;")
             if hasattr(self, "log_zdte"):
@@ -2255,12 +2256,16 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             margin_now = sum((p.get("capital") or 0) for p in opens)        # capital deployed in open trades
             booked = sum(_pnl(p) for p in book if p.get("status") in ("WIN", "LOSS"))
             live = sum(_pnl(p) for p in opens)
-            pc = GREEN if booked >= 0 else RED
+            # each P&L figure carries ITS OWN sign colour — a green line with a red MTM inside it
+            # was being read as "everything is profit" (user report 2026-07-30)
+            def rs(x):
+                c = GREEN if x > 0 else RED if x < 0 else TEXT_DIM
+                return f"<span style='color:{c};'>Rs {x:+,.0f}</span>"
             stats_label.setText(
                 f"  TRADES {n} · OPEN {len(opens)} · W {wins} L {losses} · WIN {wr:.0f}% "
-                f"· margin Rs {margin_now:,.0f} · booked Rs {booked:+,.0f} · MTM Rs {live:+,.0f}")
+                f"· margin Rs {margin_now:,.0f} · booked {rs(booked)} · MTM {rs(live)}")
             stats_label.setStyleSheet(
-                f"color:{pc}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
+                f"color:{TEXT}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
         # open positions first, then newest closed
         book = sorted(book, key=lambda p: (p.get("status") != "OPEN", p.get("entry_date") or ""), reverse=False)
         book = sorted(book, key=lambda p: (p.get("status") == "OPEN", p.get("entry_date") or ""), reverse=True)
