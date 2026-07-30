@@ -1,6 +1,15 @@
 # Handoff — institutional-trader
 
-## ACTIVE (2026-07-30) — /loop GOAL: raise v1 WIN RATE without cutting signals (all technical params)
+## DONE (2026-07-30) — v1 exit TP-40/no-stop DEPLOYED (goal: raise win rate, zero signal loss)
+Sweep (V1_WINRATE_SWEEP.md) + OOS path-replay (242 real-premium trades, stkfade_v1_oos_exits.py): TP-40/no-stop
+= 85.0% IS / 86.0% OOS win, net +18.2/+17.6%w vs deployed TP-75/stop-2× 64.0/73.6% & +10.3/+15.1%w — SAME
+trades, zero signal change. User approved ("then deploy tp-40"). Deployed: config TP 0.75→0.40, STOP_MULT
+2.0→99.0 (none; wing caps risk). Labels updated (PM header, STUDIES card, TARGET_STOP_TABLE, _TG_WIN "85% IS /
+86% OOS"). v1 is NO LONGER the TP-75 control. NOTE: the 3 existing open v1 positions keep their STORED 2×
+stop_cost (baked at entry) but get the new TP-40 immediately (favorable). Commit 8d2aa66, both remotes.
+Engine+viewer restarted, alive. Loop goal met → wakeup stopped.
+
+## (prior) ACTIVE (2026-07-30) — /loop GOAL: raise v1 WIN RATE without cutting signals (all technical params)
 User goal (dynamic /loop + ScheduleWakeup armed): better v1's win rate (64% IS / 73% OOS), signal count must
 NOT drop. Levers = n-preserving only: TP fraction {0.40,0.50,0.60,0.75dep,0.90,hold} × stop {1.5,2,2.5,3,none}
 × geometry {(1,3)dep,(2,4),(2,3),(1,4)} — entry gates FIXED. IS SWEEP DONE (log /tmp/v1sweep.log, json in scratchpad
