@@ -711,19 +711,19 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         per-year cell says so rather than inventing one."""
         live = [
             # name, B/S, IS, OOS, per-yr, worst yr, capital/lot, net/trade RoC, avgW/avgL, hold, sig/mo, Rs/mo, colour
-            ("★ Stock fade v2 UNION (TP-50)", "SELL", "84.3%", "87%",
+            ("★ Stock fade v2 UNION (TP-50)", "84.3%", "87%",
              "19:96 20:88 21:85 22:90 23:79 24:81 25:85 26:89", "79%",
              "~₹10,500", "<b>+52.3%</b> (~₹4,069)", "+101.7% / −101.8%", "<b>12.1d</b> avg<br/>med 9 · p90 27",
              "5.8→7.6*", "₹20–23k · ₹10–12k", AMBER),
-            ("Stock credit v1 · fade (TP-40, 07-30)", "SELL", "85%", "86%",
+            ("Stock credit v1 · fade (TP-40, 07-30)", "85%", "86%",
              "live paper: 11W/3L", "—",
              "~₹9,000", "+17.6%w OOS (TP-40 path-replay)", "+₹5,874 / −₹8,766 (live)", "days–weeks",
              "~16", "₹9k · ₹4–5k", GREEN),
-            ("Intraday SENSEX CE spread", "SELL", "n/a — SENSEX weekly options only exist from Oct-2024, no earlier data", "89.0%",
+            ("Intraday SENSEX CE spread", "n/a — SENSEX weekly options only exist from Oct-2024, no earlier data", "89.0%",
              "24:75 25:90 26:93", "75%",
              "₹11,519", "<b>+6.62%</b> (+₹762)", "+₹1,418 / −₹4,549", "SAME DAY",
              "~4.1", "₹3,153 · ₹1.6k", AMBER),
-            ("Intraday NIFTY FLIP spread", "SELL", "86.5%", "93.2%",
+            ("Intraday NIFTY FLIP spread", "86.5%", "93.2%",
              "19:85 20:85 21:76 22:87 23:94 24:91 25:94 26:94", "76%",
              "₹13,577", "<b>+4.11%</b> (+₹558)", "+₹1,168 / −₹4,038", "SAME DAY",
              "~3.2", "₹1,771 · ₹0.9k", CYAN),
@@ -744,12 +744,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
              "~ direction edge, not net", "paper · hidden 07/26"),
         ]
         lt = "".join(
-            f"<tr><td style='color:{c};font-weight:bold;'>{nm}</td><td>{bs}</td>"
+            f"<tr><td style='color:{c};font-weight:bold;'>{nm}</td>"
             f"<td>{is_}</td><td style='color:{GREEN};font-weight:bold;'>{oos}</td>"
             f"<td style='font-size:10px;'>{yr}</td><td style='color:{AMBER};'>{wy}</td>"
             f"<td>{cap}</td><td style='color:{GREEN};'>{roc}</td><td style='font-size:10px;'>{wl}</td>"
             f"<td style='color:{CYAN};'>{hold}</td><td>{fq}</td><td>{pnl}</td></tr>"
-            for nm, bs, is_, oos, yr, wy, cap, roc, wl, hold, fq, pnl, c in live)
+            for nm, is_, oos, yr, wy, cap, roc, wl, hold, fq, pnl, c in live)
         dt = "".join(
             f"<tr style='color:{TEXT_DIM};'><td><s>{nm}</s></td><td>{wr}</td>"
             f"<td colspan='2' style='font-size:10px;'>{yr}</td><td>{wy}</td><td>{ret}</td><td>{tw}</td>"
@@ -757,12 +757,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             for nm, wr, yr, wy, ret, tw, vd, st in dead)
         return (
             f"<table cellpadding='5' cellspacing='0' style='color:{TEXT};border-collapse:collapse;margin:6px 0;'>"
-            f"<tr style='color:{CYAN};font-weight:bold;'><td>LIVE book</td><td>B/S</td><td>Win IS</td>"
+            f"<tr style='color:{CYAN};font-weight:bold;'><td>LIVE book</td><td>Win IS</td>"
             f"<td>Win OOS</td><td>Win by calendar year</td><td>Worst yr</td>"
             f"<td>Capital /lot<br/>(= max loss)</td><td>NET return on capital<br/>per trade (after losses)</td>"
             f"<td>avg WIN / avg LOSS</td><td>Holding</td>"
             f"<td>Sig/mo</td><td>₹/mo @1 lot (model · plan)</td></tr>{lt}"
-            f"<tr style='color:{GREEN};font-weight:bold;'><td colspan='11'>TOTAL — 4 live books</td>"
+            f"<tr style='color:{GREEN};font-weight:bold;'><td colspan='10'>TOTAL — 4 live books</td>"
             f"<td>≈ ₹37,924 · ₹30,340</td></tr></table>"
             f"<p style='color:{TEXT_DIM};font-size:11px;'><b>All figures are PER LOT.</b> Capital = the margin "
             f"actually blocked = (width − credit) × lot = the <b>maximum possible loss</b>, which for a "
