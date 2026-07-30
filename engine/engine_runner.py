@@ -370,13 +370,13 @@ class EngineRunner:
         even when the market is closed so overnight & weekend expiries get settled in the book."""
         try:
             from engine import config
-            if not getattr(config, "SWING_CREDIT_ENABLED", False):
-                return
             from engine import swing_credit
         except Exception as e:
             logger.warning(f"swing import: {e}")
             return
-        # periodic resolve (open positions only; cheap no-op when none are open)
+        # periodic resolve — runs even with SWING_CREDIT_ENABLED off so positions opened before
+        # a disable still get marked-to-market and settled (the 07-24 disable orphaned an OPEN
+        # NIFTY spread whose NOW/EXIT went stale in the UI). Cheap no-op when the book is empty.
         if (time.time() - self._last_swing_resolve) >= config.SWING_RESOLVE_INTERVAL:
             self._last_swing_resolve = time.time()
             try:
@@ -385,7 +385,9 @@ class EngineRunner:
                     logger.info(f"swing: resolved/closed {n} position(s)")
             except Exception as e:
                 logger.warning(f"swing resolve: {e}")
-        # once-daily scan after the cutoff, only on a trading day
+        # once-daily scan after the cutoff, only on a trading day — the flag gates NEW entries only
+        if not getattr(config, "SWING_CREDIT_ENABLED", False):
+            return
         h, m = map(int, config.SWING_SCAN_AFTER.split(":"))
         after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
         if (self.agent.is_market_open() and after_cutoff and self._swing_scan_day != now.date()):

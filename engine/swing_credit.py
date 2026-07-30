@@ -236,9 +236,11 @@ def scan_swing_signals() -> list:
 def resolve_swing_positions() -> int:
     """Mark-to-market every OPEN position; close on hard stop (cost >= stop_cost) or at expiry
     (settle at intrinsic). Overnight carry — never force-closed at 15:30. Returns # newly closed."""
-    if not SWING_CREDIT_ENABLED:
-        return 0
     book = _load_book()
+    # The flag gates NEW entries, not bookkeeping: positions opened before a disable must still
+    # be marked and settled (2026-07-24 disable left an OPEN NIFTY spread stale in the UI).
+    if not SWING_CREDIT_ENABLED and not any(p.get("status") == "OPEN" for p in book):
+        return 0
     today = date.today()
     # BUGFIX 2026-07-21: this was `today >= exp`, which is TRUE from 00:00 on expiry day — so a
     # position was settled at midnight, ~15.5h before the 15:30 settlement, using whatever spot was

@@ -471,6 +471,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     # Trade log: each spread = TWO leg rows (one below the other), per-leg P&L, then the NET.
     SWING_TAB_COLS = ["ENTERED", "LEG", "INSTRUMENT", "LOT", "ENTRY", "NOW/EXIT", "LEG P&L", "NET / STATUS"]
+    # stock-credit variant: same layout + an explicit BOOK column (v1 / v2) so the two
+    # fade books are never confused when read side by side.
+    SWING_TAB_BOOK_COLS = ["ENTERED", "BOOK", "LEG", "INSTRUMENT", "LOT", "ENTRY", "NOW/EXIT", "LEG P&L", "NET / STATUS"]
 
     def _screen_swing(self) -> QWidget:
         """SWING TRADES — the credit-spread TRADE LOG, split into the two strategies. Each row shows
@@ -487,7 +490,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_stk2_stats = self._stats_label()
         self.sw_stk2_stats.setStyleSheet(f"color:{AMBER}; padding:8px; background-color:{PANEL}; border:2px solid {AMBER};")
         v.addWidget(self.sw_stk2_stats)
-        self.sw_stk2 = self._make_log_table(self.SWING_TAB_COLS)
+        self.sw_stk2 = self._make_log_table(self.SWING_TAB_BOOK_COLS)
         self.sw_stk2.setStyleSheet(f"QTableWidget {{ border: 2px solid {AMBER}; }}")
         v.addWidget(self.sw_stk2)
         v.addWidget(self._section_label("INDEX SWING — NIFTY/FINNIFTY · fade the breakout · hold to expiry (fwd-test only) · ~3/mo", CYAN))
@@ -495,7 +498,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx)
         v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~10/mo · SELL", GREEN))
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
-        self.sw_stk = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_stk)
+        self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
         v.addStretch(1)
         return self._scroll(inner)
 
@@ -2217,17 +2220,18 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if not hasattr(self, "sw_idx"):
             return
         try:
-            self._fill_swing_table(self.sw_stk2, STOCKCR2_BOOK, self.sw_stk2_stats)
+            self._fill_swing_table(self.sw_stk2, STOCKCR2_BOOK, self.sw_stk2_stats, book_label="v2")
             self._fill_swing_table(self.sw_idx, SWING_BOOK, self.sw_idx_stats)
-            self._fill_swing_table(self.sw_stk, STOCKCR_BOOK, self.sw_stk_stats)
+            self._fill_swing_table(self.sw_stk, STOCKCR_BOOK, self.sw_stk_stats, book_label="v1")
         except Exception as e:
             logger.warning(f"swing tab fill: {e}")
 
-    def _fill_swing_table(self, table, book_path, stats_label=None, open_only=False):
+    def _fill_swing_table(self, table, book_path, stats_label=None, open_only=False, book_label=None):
         """One credit-spread trade log: each row spells out the SELL leg and BUY leg (strike +
         premium), expiry, net credit (total Rs), live/booked cost, P&L and status. Newest first.
         open_only=True → show ONLY still-open or entered-today rows (the INTRADAY 'live' view);
-        settled history then lives in the TRADE LOG tab."""
+        settled history then lives in the TRADE LOG tab.
+        book_label ('v1'/'v2') → the table has the extra BOOK column (SWING_TAB_BOOK_COLS)."""
         import json
         from datetime import date as _date
         book = []
@@ -2265,8 +2269,11 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             if stats_label is not None:
                 stats_label.setText("  no trades yet — stats will populate after the first signal")
             table.setRowCount(1)
-            self._set_row(table, 0, ["—", "—", "no trades yet — fires on a breakout with rich credit",
-                                     "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
+            empty = ["—", "—", "no trades yet — fires on a breakout with rich credit",
+                     "—", "—", "—", "—", "WATCHING"]
+            if book_label:
+                empty.insert(1, book_label)
+            self._set_row(table, 0, empty, fg=QColor(TEXT_DIM))
             self._fit_table(table); return
         table.setRowCount(len(rows) * 2)          # two leg rows per trade
         for i, p in enumerate(rows):
@@ -2289,21 +2296,24 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             rS, rB = 2 * i, 2 * i + 1
             # LEG carries the option TYPE (CE/PE) so it's never truncated by a long stock name.
             # Row 1 — SELL leg (the short you sold)
-            self._set_row(table, rS,
-                          [p.get("entry_date", "—"), f"① SELL {verb}", f"{name} {p.get('short_strike','—')}",
-                           lot_str, price(sp), price(sc), money(sell_pnl), status], fg=QColor(RED))
+            sell_vals = [p.get("entry_date", "—"), f"① SELL {verb}", f"{name} {p.get('short_strike','—')}",
+                         lot_str, price(sp), price(sc), money(sell_pnl), status]
             # Row 2 — BUY leg (the hedge) + the consolidated NET for the whole spread
             net_txt = f"NET {money(net_rs)}" + (f" ({net_pct:+.0f}%)" if net_pct is not None else "")
-            self._set_row(table, rB,
-                          [f"exp {p.get('expiry','—')}", f"② BUY {verb}", f"{name} {p.get('long_strike','—')}",
-                           lot_str, price(lp), price(lc), money(buy_pnl), net_txt], fg=QColor(GREEN))
+            buy_vals = [f"exp {p.get('expiry','—')}", f"② BUY {verb}", f"{name} {p.get('long_strike','—')}",
+                        lot_str, price(lp), price(lc), money(buy_pnl), net_txt]
+            off = 0
+            if book_label:                       # BOOK column sits after ENTERED, on both leg rows
+                sell_vals.insert(1, book_label); buy_vals.insert(1, book_label); off = 1
+            self._set_row(table, rS, sell_vals, fg=QColor(RED))
+            self._set_row(table, rB, buy_vals, fg=QColor(GREEN))
             # colors: status on SELL row, per-leg P&L + NET tinted by sign
-            self._color_cell(table, rS, 7, self._status_color(status))
+            self._color_cell(table, rS, 7 + off, self._status_color(status))
             if sell_pnl is not None:
-                self._color_cell(table, rS, 6, QColor(GREEN) if sell_pnl > 0 else QColor(RED) if sell_pnl < 0 else QColor(TEXT_DIM))
+                self._color_cell(table, rS, 6 + off, QColor(GREEN) if sell_pnl > 0 else QColor(RED) if sell_pnl < 0 else QColor(TEXT_DIM))
             if buy_pnl is not None:
-                self._color_cell(table, rB, 6, QColor(GREEN) if buy_pnl > 0 else QColor(RED) if buy_pnl < 0 else QColor(TEXT_DIM))
-            self._color_cell(table, rB, 7, QColor(GREEN) if net_rs > 0 else QColor(RED) if net_rs < 0 else QColor(TEXT_DIM))
+                self._color_cell(table, rB, 6 + off, QColor(GREEN) if buy_pnl > 0 else QColor(RED) if buy_pnl < 0 else QColor(TEXT_DIM))
+            self._color_cell(table, rB, 7 + off, QColor(GREEN) if net_rs > 0 else QColor(RED) if net_rs < 0 else QColor(TEXT_DIM))
         self._fit_table(table)
 
     def _norm_trade(self, t: dict) -> dict:
