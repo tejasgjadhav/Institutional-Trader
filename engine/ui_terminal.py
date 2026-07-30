@@ -716,8 +716,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
              "~₹10,500", "<b>+52.3%</b> (~₹4,069)", "+101.7% / −101.8%", "<b>12.1d</b> avg<br/>med 9 · p90 27",
              "5.8→7.6*", "₹20–23k · ₹10–12k", AMBER),
             ("Stock credit v1 · fade (TP-40, 07-30)", "SELL", "85%", "86%",
-             "<span style='color:#888;'>no per-trade file</span>", "—",
-             "~₹9,000", "+17.6%w OOS (TP-40 path-replay)", "—", "days–weeks",
+             "live paper: 11W/3L", "—",
+             "~₹9,000", "+17.6%w OOS (TP-40 path-replay)", "+₹5,874 / −₹8,766 (live)", "days–weeks",
              "~16", "₹9k · ₹4–5k", GREEN),
             ("0DTE SENSEX CE spread", "SELL", "—", "89.0%",
              "24:75 25:90 26:93", "75%",
@@ -862,7 +862,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};"><td><b>Book</b></td><td><b>Win</b></td><td><b>Avg win</b></td><td><b>Avg loss</b></td><td><b>Net / trade (win×W − loss×L)</b></td><td><b>×/mo</b></td><td><b>≈ ₹/mo</b></td></tr>
 <tr><td>v2 UNION</td><td>86%</td><td>+₹6,048</td><td>−₹7,922</td><td>.86×6,048 − .14×7,922 = <b>+₹4,069</b></td><td>~5</td><td>~₹20,000</td></tr>
-<tr><td>Stock v1</td><td>86%</td><td>smaller wins (TP-40 books early)</td><td>wing-capped</td><td>measured OOS path-replay = <b>+17.6%w</b></td><td>~16</td><td>~₹13,000*</td></tr>
+<tr><td>Stock v1</td><td>86%</td><td>+₹5,874 (live)</td><td>−₹8,766 (live)</td><td>.79×5,874 − .21×8,766 = <b>+₹2,737</b> (live paper) · OOS path-replay +17.6%w</td><td>~16</td><td>~₹13,000*</td></tr>
 <tr><td>0DTE NIFTY</td><td><b>88.3%</b></td><td>—</td><td>—</td><td><b>+4.69% of margin</b> MEASURED, 273 tr / 86 mo</td><td>~3.2</td><td>~₹1,771</td></tr>
 <tr><td>0DTE SENSEX</td><td><b>89.0%</b></td><td>—</td><td>—</td><td><b>+7.62% of margin</b> MEASURED, 91 tr / 22 mo</td><td>~4.1</td><td>~₹3,153</td></tr>
 <tr style="color:{TEXT_DIM};"><td><s>0DTE BANKNIFTY</s></td><td><s>91%</s> → 78.6%</td><td>—</td><td>−₹14,298 worst</td><td>+0.55%m · <b>t=+0.10, CI spans 0</b> · profit was 3 trades</td><td>~1</td><td style="color:{RED};">REJECTED</td></tr>

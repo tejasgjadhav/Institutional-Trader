@@ -241,6 +241,8 @@ def notify_nearmiss(rebuild: bool = True) -> int:
         lines = [f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE</b> ({ts})",
                  "These pass premium + liquidity but FAIL the credit/width gate, so they are NOT "
                  "signals. Watch only — the engine will not fire them:", ""]
+        SIDE_TXT = {"BEAR_CALL": "Bear Call Strategy — we expect the stock to stay lower and capitalise on option premium",
+                    "BULL_PUT": "Bull Put Strategy — we expect the stock to stay higher and capitalise on option premium"}
         for r in cand:
             verb = "CE" if r["side"] == "BEAR_CALL" else "PE"
             ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
@@ -250,7 +252,9 @@ def notify_nearmiss(rebuild: bool = True) -> int:
             # backtested win prob by c/w bucket (CW_BUCKET_ANALYSIS.md, 629 trades Oct'24→Jul'26):
             # ≥0.40=87% (the signal) · 0.35–0.40=82% · 0.30–0.35=76% · <0.30 = breakeven/lower
             prob = "~82%" if cw >= 0.35 else ("~76%" if cw >= 0.30 else "<76%")
-            lines.append(f"{close}<b>{r['sym']}</b> {r['side']} · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']} · backtest win {prob}")
+            import html as _h
+            lines.append(f"{close}<b>{_h.escape(str(r['sym']))}</b> · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']} · backtest win {prob}")
+            lines.append(f"   {SIDE_TXT.get(r['side'], r['side'])}")
             lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
             mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
             if mp is not None and ml is not None:
