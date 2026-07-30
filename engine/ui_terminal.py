@@ -2573,7 +2573,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         pct = d.get("pct", 0.0)
         # % FIRST (right after price) so it's never the part that clips on a narrow window.
         # Source (live / close / delayed) is in the hover tooltip, not inline — keeps the bar clean.
-        lbl.setText(f"{name}  {d['price']:,.2f}  {arrow} {pct:+.2f}%  ({chg:+,.2f})")
+        lbl.setText(f"{name}  {d['price']:,.2f}  {arrow} {pct:+.2f}%")
         lbl.setStyleSheet(f"color:{color};")
         lbl.setToolTip(f"{name}: {d['price']:,.2f}  {chg:+,.2f} ({pct:+.2f}%)  source: {d.get('source','')}")
 
