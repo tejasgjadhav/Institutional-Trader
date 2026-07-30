@@ -1,5 +1,12 @@
 # Handoff — institutional-trader
 
+## DONE (2026-07-30 evening) — SENSEX ticker + README LIVE/REJECTED restructure (4c7121b)
+SENSEX in top ticker strip (BSE_INDEX|SENSEX in _batch_index_ltp, ^BSESN Yahoo fallback, snapshot key
+"sensex", UI sensex_lbl; verified live 77,772.70). README: plain-English narrative + 2 sprawling tables
+replaced by two crisp tables — LIVE (win IS/OOS+dates, signals/mo, ₹/mo) & REJECTED/OFF (status+why).
+Also this session: bold win rates in TG signals, profit-calc table (live month 21tr/+₹45,488 after user
+removed index-swing row), stale totals fixed (30,340/75,848). All pushed both remotes; engine+viewer alive.
+
 ## DONE (2026-07-30) — Telegram signal format v2 LIVE (commit 37bccb3, both remotes)
 User-designed format deployed in _tg(): "🟢 EXECUTE NOW — MULTIDAY/INTRADAY SIGNAL" · no 0DTE jargon
 ("Expires TODAY at 3:30 PM") · target ₹ + max P/L · "📚 Why this signal — Tejas Jadhav, CFA…" with effort
