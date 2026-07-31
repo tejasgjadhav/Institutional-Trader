@@ -802,3 +802,5 @@ proven, keep tiers separate, validate 2019-24 first, 1 lot is right sizing.
 ## /goal CLOSED: signal×geometry optimization DONE (1,572 cells). 53 real band-hold conditions; IS star 98.3%/+9.7%w FAILED OOS flat (2 full-width wipeouts). Money = premium price (c/w≥0.40), not condition. Nothing deployable. SIGNAL_GEOMETRY_OPTIMIZATION.md + UI card.
 
 ## /goal iter-2 (2026-07-31): SYNTHESIS SEARCH — cross the 53 real band-hold conditions × premium-richness gate (only sell when band-edge structure c/w rich), + EARNINGS IV-CRUSH book (sell rich spreads pre-results, exit post — nse_results_dates.csv on disk). Fable agent → studies/SIGNAL_GEOMETRY_OPT2.md
+
+## iter-2 status: agent stopped w/ 4 DETACHED runs live (sg2x_dl_oos, sg2x_oos_upstox, stkfade_lowcw_geometry, stkfade_lowcw_oos; logs /tmp/lowcw*.log + scratchpad sg2x*). SIGNAL_GEOMETRY_OPT2.md partial (6.3KB). Watcher b43fr9vr5 armed — on completion: read tails, finish study, UI card, commit both repos.
