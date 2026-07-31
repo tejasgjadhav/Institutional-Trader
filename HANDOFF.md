@@ -34,14 +34,40 @@ month-block bootstrap p5 +26%, 32/34 symbols +ve, 58/68 months +ve, live liquidi
 (W1 long leg carries 23k-8.5M OI at 0.4-2.5% spread; only BAJAJHLDNG rejects). Those test
 consistency WITHIN a regime. Same lesson as the index-fade salvage (CLAUDE.md Part 11).
 
-**OPEN QUESTION the user just raised — "we checked everything for 0.3 to 0.4?"** Configuration
-space: yes, exhaustively (geometry x target x stop x DTE x adaptive rules). **NOT** covered:
-(a) the band was POOLED — 0.30-0.35 vs 0.35-0.40 were never split, and CW_BUCKET_ANALYSIS says they
-differ a lot (77%/+9.2%w vs 78%/+1.1%w); (b) conditional filters — IV/VIX regime, breakout size,
-which Donchian window fired, per-name IV rank; (c) time-based exits; (d) intraday entry.
-**NEXT STEP IN FLIGHT:** re-run the OOS split by sub-band. This is CHEAP now — `/tmp/lowcw_legcache.pkl`
-holds the fetched legs, so it needs almost no API calls. Script to edit: `studies/ndte/stkfade_lowcw_oos2.py`
-(add 0.30-0.35 / 0.35-0.40 buckets to CONFIGS + the `pop` classifier).
+**SUB-BAND SPLIT — DONE, and it FOUND something the pooled test buried (commit 8f466f6).**
+User pushed back ("we checked everything for 0.3 to 0.4?"). Split the band in half. Scripts
+`ndte/stkfade_lowcw_subband.py` (OOS, reuses /tmp/lowcw_legcache.pkl so nearly free) +
+`_subband_is.py`.
+
+  OOS Oct'24->Jul'26 (upper n=43, lower n=66)      | do-nothing W4 | **W4 TP-40 no-stop** | W1 TP-40
+    upper 0.35-0.40                                | 79.1%/+12.1%  | **90.7%/+19.4% 3/3yr** | 75.0%/+0.3%
+    lower 0.30-0.35                                | 74.2%/-2.6%   | 75.8%/**-5.2%**      | 73.8%/+1.8%
+  IS 2019->Sep'24 (upper n=310, lower n=472)
+    upper 0.35-0.40                                | 72.9%/-1.4%   | **77.4%/+1.9% 4/6yr**  | 88.6%/+23.6% 6/6
+    lower 0.30-0.35                                | 75.2%/-0.9%   | 79.4%/+0.2%          | 87.3%/+15.5% 6/6
+
+1. **W1 width re-cut REJECTED, now more strongly** — strong IS in BOTH halves (6/6 yrs each), dead
+   OOS in BOTH. 2. **0.30-0.35 is dead everywhere** — that is the half filling the watchlist; keep
+   blocking. 3. **ONE live cell, and it is NOT a geometry change: 0.35-0.40 at the DEPLOYED width
+   with TP-40/no-stop.** Positive both windows. Matches CW_BUCKET_ANALYSIS OOS (+9.2%w; this run
+   +12.2%w). **This SETTLES the two-tier gate deferred 2026-07-16** (couldn't be validated on
+   2019-24 then). Verdict: real but MARGINAL — +1.9% ROM IS with 2/6 yrs negative vs the core
+   book's +58-70%; added trades earn ~1/30th the core's ROM; only works paired with TP-40/no-stop
+   (which OOS says is neutral on the core). Recommended: **paper forward-test a 0.35 tier, do NOT
+   deploy.**
+
+**IN FLIGHT — user asked: "SO 0.35-0.4 CAN BE ADDED TO PM DECISIONS IN SEPARATE TAB".** Scope
+question put to the user (display-only section vs a tracked paper book). Display-only is a
+read-only `ui_terminal.py` section fed by the existing 14:45 `union_watchlist.json` rows filtered to
+0.35<=c/w<0.40 — cheap, zero engine risk, but accumulates NO measurable forward data. A tracked
+paper book (new `STOCK_CREDIT_TIER2_*` config + book + resolver, TP-40/no-stop, own outcome file)
+is what actually forward-tests it. AWAITING the user's choice; nothing built yet.
+
+**STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
+promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
+rank/sector, calendar time-exit. OOS covered 38/113 names. WARNING given to user: 432 cells already
+searched and the winner died OOS; more mining on the same 782 IS signals risks another mirage —
+pre-register ONE hypothesis and test it OOS-first.
 
 **Scripts (all committed):** `ndte/bhav_stk_parquet.py` (one-time compaction of the 1,500-file
 bhavcopy CSV cache -> /tmp/bhav_stk.pkl; the old per-row pd.to_datetime loader cost ~75 min PER RUN,
@@ -65,8 +91,9 @@ this is 45 s once — reuse it in future studies), `ndte/stkfade_lowcw_geometry.
 - **Another Claude session (fable-5) is committing to this same repo concurrently** (e.g. 73e725c
   "handoff: search loops stopped"). Check `git log` before pushing; a push carries its commits too.
 
-**NOT DONE / awaiting user:** push to both remotes (asked, not answered), STUDIES-tab card recording
-the rejection (repo convention documents rejections, cf. BANKNIFTY_0DTE_REJECTION.md).
+**NOT DONE / awaiting user:** (a) the PM DECISIONS tier-2 scope choice above, (b) push to both
+remotes — 6 local commits: bc3801d, 6872345, 3da95c5, handoff, 8f466f6 (+ this one), (c) STUDIES-tab
+card recording the rejection (repo convention documents rejections, cf. BANKNIFTY_0DTE_REJECTION.md).
 _Updated: 2026-07-31 by Claude Code_
 
 ## DONE (2026-07-30 night) — BOOK column · swing-MTM fix · UI renames · Saavi branding (653d3c9→1bb1f6d)
