@@ -1,19 +1,26 @@
-# The 0.30–0.40 credit/width band: not premium-poor, just cut too wide
+# The 0.30–0.40 credit/width band: REJECTED — the in-sample rescue failed out-of-sample
 
 **Question (user, 2026-07-31):** the union watchlist is full of blocked names sitting at c/w ≈ 0.30.
 Is there a configuration — geometry, target, anything — that makes them tradeable at a good win
 rate and real net?
 
-**Answer: yes, and it is not a gate change.** Those signals are not short of premium. They are
-being priced at a width their premium cannot fill. Buy the wing **1 strike away instead of 4**
-and the same signals show c/w ≈ 0.42 — they clear the existing 0.40 gate on their own terms,
-and go from losing money to 88% win / +18% return on margin, positive in all six years.
+**Answer: no. Do not trade the band. The gate stays exactly as it is.**
 
-Separately and worth more money: **v2's 3× stop is costing it ~21% of its net.** v1 got the
-TP-40/no-stop fix on 30 Jul; v2 never did.
+In-sample the answer looked like yes, and it looked strong: re-cutting the wing from 4 strikes to
+1 turned the band from −1.1% return on margin into **87.8% win / +18.1% ROM, positive in all six
+years**, on 680 trades, surviving a matched-sample bias check, a month-block bootstrap (p5 +26%)
+and a live liquidity probe. Out-of-sample on real Upstox premiums it collapsed to
+**74.3% win / +1.4% ROM — worse than doing nothing** — and 2026 is negative for every variant.
 
-Status: **in-sample complete, out-of-sample running. Nothing deployed.** Per the approval-first
-rule, no engine change until the OOS numbers are in and the user has seen them.
+That is the whole result. A 432-cell search found a winner; the winner was a regime artifact.
+This repeats the index-fade salvage of July (CLAUDE.md Part 11): six positive years inside one
+regime is not out-of-sample evidence, and the 2019→Sep'24 bhavcopy window is one regime.
+
+The second finding — dropping v2's 3× stop — is **not confirmed either**, though it is harmless
+rather than wrong: in-sample it gained +21% relative net, out-of-sample it is a wash (n=48).
+
+**Nothing deployed. Nothing recommended.** The standing conclusion of `CW_BUCKET_ANALYSIS` is
+reinstated: below c/w 0.40 the win rate stays respectable and the money does not follow.
 
 ---
 
@@ -148,7 +155,7 @@ Two guardrails the table enforces:
 - **Skip width 2.** ADAPT-W allows it and lands below ADAPT-41. W2 trades are mediocre (+6.1% ROM
   standalone); going straight from 4 to 1 is better than stepping through.
 
-## 5. Honest limits
+## 5. Honest limits (written before the OOS run — every one of these held, and the result still failed)
 
 - **The added trades are small.** A band W1 trade nets +3.43 points/lot on ~19 points of margin,
   against +27.69 on ~48 for a core gated trade — roughly an eighth of the rupees each. The rule
@@ -167,16 +174,63 @@ Two guardrails the table enforces:
   782 signals (45%)**. Fewer than half the band clears the gate even re-cut. Thin-premium days
   still correctly produce no trade. Do not expect the watchlist to empty out.
 - **432 cells were swept.** Guarded by neighbourhood stability, 6/6 positive years, and a matched
-  sample — but it is still a search, and out-of-sample is the test that matters.
+  sample — but it is still a search, and out-of-sample is the test that matters. It was, and it
+  failed. See the verdict section.
 
 ---
 
-## Out-of-sample — PENDING
+## Out-of-sample — THE VERDICT
 
-`studies/ndte/stkfade_lowcw_oos2.py`, Upstox expired options Oct'24 → date. Confirms exactly two
-pre-registered claims and nothing else: (1) the gated book improves with TP-40/no-stop at
-unchanged geometry, (2) the band is dead at W4 and tradeable at W1. Results to be appended here
-before any recommendation becomes a deployment.
+`studies/ndte/stkfade_lowcw_oos2.py`, Upstox expired options **Oct'24 → Jul'26**, 38 of the 113
+names (every 3rd by position in `config.UNIVERSE` — an arbitrary slice w.r.t. performance; the
+endpoint throttles to ~7 s/call and the full universe needed ~30k calls). Signals seen:
+**48 gated · 109 band · 198 below**. Two claims were pre-registered before the window was touched.
+
+### CLAIM 2 — the band rescue: **FAILED**
+
+| the band, OOS Oct'24→Jul'26 | n | win | ROM | +ve yrs | per-year |
+|---|---|---|---|---|---|
+| S2/W4 TP-50 stop-3× *(do nothing)* | 109 | 76.1% | +1.9% | 1/3 | +38% / −1% / −2% |
+| S2/W4 TP-40 no-stop | 109 | 81.7% | +2.2% | 2/3 | +34% / +0% / −2% |
+| S1/W1 TP-40 no-stop | 103 | 79.6% | **+0.1%** | 2/3 | +15% / +2% / −6% |
+| **S2/W1 TP-40 no-stop** *(the IS winner)* | 101 | **74.3%** | **+1.4%** | 2/3 | +39% / +4% / **−7%** |
+| S2/W1 TP-50 no-stop | 101 | 75.2% | +4.0% | 2/3 | +40% / +5% / −3% |
+
+Against in-sample **87.8% win / +18.1% ROM**. The win rate fell 88% → 74% and the money went to
+zero. The best variant (TP-50, +4.0%) beats doing nothing by 2 points of margin — inside noise on
+n=101, and negative in 2026. **No configuration rescues the band.**
+
+Note what did *not* happen: the band is not catastrophic, it is *flat*. That is the same shape
+`CW_BUCKET_ANALYSIS` found — win rate holds up because a TP exit books small winners early, and
+net money collapses because the payoff is lopsided. The width re-cut changed the geometry without
+changing that.
+
+### CLAIM 1 — remove v2's stop: **not confirmed, a wash**
+
+| c/w ≥ 0.40, geometry unchanged, OOS | n | win | ROM |
+|---|---|---|---|
+| TP-50, stop-3× *(deployed)* | 48 | 95.8% | +219.4% |
+| TP-40, no stop | 48 | 97.9% | +204.5% |
+| TP-50, no stop | 48 | 97.9% | +221.0% |
+| TP-75, no stop | 48 | 95.8% | +229.1% |
+
+In-sample the no-stop version gained +21% relative (+70.4% vs +58.1%). Out-of-sample all four are
+indistinguishable — because at a 96% win rate over these 48 trades the 3× stop almost never binds,
+so there is nothing for its removal to save. Not evidence against it; not evidence for it.
+
+**Do not change v2's exits on this.** If the case is ever revisited it needs the full universe
+(n=48 here vs ~200 in the earlier full-universe OOS studies) and this window is an unusually
+favourable regime — +219% ROM is not a number to reason from. The v1 TP-40/no-stop change of
+30 Jul rests on much stronger ground (242 OOS trades) and is untouched by this.
+
+### Why in-sample lied
+
+The IS window (2019 → Sep'24) and the OOS window (Oct'24 →) are different volatility regimes; the
+repo's own IS/OOS boundary exists for exactly this reason. Every guard that was run — neighbourhood
+stability across 20 width-1 cells, 6/6 positive years, matched sample, month-block bootstrap p5
++26%, 32/34 symbols positive — passed, **and none of them detected this**. They test consistency
+*within* a regime. Only a genuinely held-out window tests across one. Worth remembering the next
+time a sweep produces a clean-looking survivor.
 
 ## Scripts
 

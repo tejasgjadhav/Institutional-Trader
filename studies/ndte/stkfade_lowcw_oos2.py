@@ -16,7 +16,7 @@ CLAIM 2 (the 0.30-0.40 band — the user's question):
 Both were selected on 2019->Sep'24 bhavcopy. This window is untouched by that selection.
 Leg series are cached to disk so an interrupted run resumes cheaply.
 """
-import sys, os, warnings, json, threading, concurrent.futures, pickle
+import sys, os, warnings, json, threading, concurrent.futures, pickle, collections
 warnings.filterwarnings("ignore")
 sys.path.insert(0, "/Users/sayali/files/institutional-trader")
 import pandas as pd
@@ -85,16 +85,32 @@ def leg(key, d0, to):
         if c:
             df = pd.DataFrame(c, columns=["ts", "O", "H", "L", "C", "V", "OI"])
             df["ts"] = pd.to_datetime(df["ts"])
-            s = df.set_index("ts").sort_index()["C"].astype("float32")
+            s = df.set_index("ts").sort_index()["C"].to_numpy(dtype="float32")
     with LEGLK: LEGC[ck] = s
     return s
 
+BYSYM = "/tmp/lowcw_oos2_bysym.json"
+
+def _load_bysym():
+    try:
+        with open(BYSYM) as f: return json.load(f)
+    except Exception: return {}
+
+DONE_SYM = _load_bysym()          # sym -> {"trades": {ci: [...]}, "seen": {...}}
+print(f"resuming: {len(DONE_SYM)} stocks already complete", flush=True)
 out = {i: [] for i in range(len(CONFIGS))}
 seen = {"gate": 0, "band": 0, "low": 0}
+for _s, _d in DONE_SYM.items():
+    for _ci, _tr in _d["trades"].items(): out[int(_ci)].extend(_tr)
+    for _k, _v in _d["seen"].items(): seen[_k] += _v
 EXPC = {}; CHC = {}; LK = threading.Lock(); DONE = [0]
 
 def do_stock(sym0):
     sym = sym0.replace(".NS", "")
+    if sym in DONE_SYM:
+        with LK: DONE[0] += 1
+        return
+    mine = collections.defaultdict(list); myseen = {"gate": 0, "band": 0, "low": 0}
     try:
         u = fetch_upstox_historical(sym0, unit="days", interval=1,
                                     from_date="2024-06-01", to_date=date.today().isoformat())
@@ -145,17 +161,17 @@ def do_stock(sym0):
         # the long-leg call on every one of them. The endpoint is the binding constraint.
         rsp = leg(chain[rs]["instrument_key"], d0, to)
         if rsp is None or len(rsp) < 1: continue
-        rse = float(rsp.iloc[0])
+        rse = float(rsp[0])
         if rse < MIN_PREM: continue
         rlp = leg(chain[rl]["instrument_key"], d0, to)
         if rlp is None or len(rlp) < 1: continue
-        rle = float(rlp.iloc[0])
+        rle = float(rlp[0])
         rcredit = rse - rle; rw = abs(ks[rs] - ks[rl])
         if rcredit <= 0 or rcredit >= rw: continue
         last[typ] = day
         cw = rcredit / rw
         pop = "gate" if cw >= 0.40 else ("band" if cw >= BAND[0] else "low")
-        with LK: seen[pop] += 1
+        myseen[pop] += 1
         if pop == "low": continue
 
         for ci, (lab, want, S, W, TP, STOP) in enumerate(CONFIGS):
@@ -166,12 +182,12 @@ def do_stock(sym0):
             if si == li: continue
             sp_ = leg(chain[si]["instrument_key"], d0, to); lp_ = leg(chain[li]["instrument_key"], d0, to)
             if sp_ is None or lp_ is None or len(sp_) < 1 or len(lp_) < 1: continue
-            se, le = float(sp_.iloc[0]), float(lp_.iloc[0])
+            se, le = float(sp_[0]), float(lp_[0])
             credit = se - le; w = abs(ks[si] - ks[li])
             if se < MIN_PREM or credit <= 0 or credit >= w: continue
             close = None; m = min(len(sp_), len(lp_))
             for t in range(1, m):
-                a, b = float(sp_.iloc[t]), float(lp_.iloc[t]); cost = a - b
+                a, b = float(sp_[t]), float(lp_[t]); cost = a - b
                 if TP is not None and cost <= credit * (1 - TP):
                     close = max(cost, 0.0) + (a * spf(a) + b * spf(b)) / 100.0; break
                 if STOP is not None and cost >= credit * STOP:
@@ -182,10 +198,15 @@ def do_stock(sym0):
                 intl = max(0.0, espot - ks[li]) if typ == "CE" else max(0.0, ks[li] - espot)
                 close = min(max(intr - intl, 0.0), w)
             net = (credit - close) - (se * spf(se) + le * spf(le)) / 100.0
-            with LK:
-                out[ci].append(dict(y=day.year, net=float(net), w=float(w),
-                                    margin=float(w - credit), win=int(net > 0)))
+            mine[ci].append(dict(y=day.year, net=float(net), w=float(w),
+                                 margin=float(w - credit), win=int(net > 0)))
     with LK:
+        for _ci, _tr in mine.items(): out[_ci].extend(_tr)
+        for _k, _v in myseen.items(): seen[_k] += _v
+        DONE_SYM[sym] = {"trades": {str(k): v for k, v in mine.items()}, "seen": myseen}
+        tmp = BYSYM + ".tmp"
+        with open(tmp, "w") as f: json.dump(DONE_SYM, f)
+        os.replace(tmp, BYSYM)
         DONE[0] += 1
         if DONE[0] % 3 == 0:
             print(f"  …{DONE[0]}/{len(SUBSET)} stocks · gate={seen['gate']} band={seen['band']} "
@@ -193,7 +214,7 @@ def do_stock(sym0):
             json.dump({str(k): v for k, v in out.items()}, open("/tmp/lowcw_oos2.json", "w"))
             _save_cache()
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=12) as ex:
+with concurrent.futures.ThreadPoolExecutor(max_workers=6) as ex:
     list(ex.map(do_stock, SUBSET))
 json.dump({str(k): v for k, v in out.items()}, open("/tmp/lowcw_oos2.json", "w"))
 _save_cache()
