@@ -845,6 +845,14 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "only worked in one regime cannot hide behind a blended average.")}
 {self._strategy_summary_table()}
 
+{res("CHAMPION-STRATEGY SWEEP (2026-07-31, 227k+ trades, NET of costs) — user asked: can ANY classic "
+     "strategy beat 80% win with real profit? Tested: Connors RSI-2 (65-67% win, edge decayed to +0.02% "
+     "OOS), Larry-Williams breakout (dead), Turtle/Donchian FOLLOW &amp; Supertrend (all profit was COVID "
+     "regime, −1% OOS), VWAP 2σ reversion (−0.074%/tr — fails retail costs), gap plays (tiny), NR7/inside-"
+     "bar (honest +0.13%/tr all-8-yrs-positive but small, direction-only). PROOF OF THE ILLUSION: a "
+     "0.15%-target/3%-stop bot prints 83.6% win with NEGATIVE expectancy. VERDICT: &gt;80% win + positive "
+     "net on this data is unique to the gated short-premium books. File: studies/CHAMPION_STRATEGY_SWEEP.md")}
+
 {res("★ 0DTE NIFTY FLIP-CONDOR HYBRID — deployed as paper 2026-07-31 (user-approved). At the 9:16 FLIP scan the "
      "OPPOSITE side (short ~1.0% OTM, same 200-pt wing) is ALSO sold when its own credit/width ≥ 0.08; margin is "
      "SHARED (condor — one side's wing covers both, so the worst case is FLIP's own). IS 2019–Sep'24: "
