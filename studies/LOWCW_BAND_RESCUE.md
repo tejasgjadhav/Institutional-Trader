@@ -68,7 +68,7 @@ So the gate is not wrong. At width 4 these are coin-flips paying roughly 1:3 and
 Removing the stop alone does not rescue them — it moves −1.1% to +0.8%, still breakeven.
 **This is the do-nothing baseline every candidate below must beat.**
 
-## 2. Re-cutting the width rescues them
+## 2. Re-cutting the width rescued them — IN-SAMPLE ONLY (this is the result that failed)
 
 Same 782 signals, wing bought closer:
 
@@ -125,9 +125,9 @@ At width 1 the result is flat from 5 to 30 days — DTE adds nothing. At width 4
 useful past 40 days, where n collapses to 105 and the trade is held ~51 days. Deployed DTE ≥ 10
 is fine. Width was the variable all along.
 
-## 4. The deployable form: adaptive width
+## 4. What the in-sample result implied — SUPERSEDED, never deployed
 
-Not "add a width-1 book". Keep the c/w ≥ 0.40 gate exactly as it is, and let the engine pick a
+Recorded for the file, not as a recommendation. Not "add a width-1 book": keep the c/w ≥ 0.40 gate exactly as it is, and let the engine pick a
 width the signal can support. All rules on the full priced population, IS 2019 → Sep'24:
 
 | rule | trades/mo | win | ROM | total net | +ve yrs |
@@ -138,7 +138,7 @@ width the signal can support. All rules on the full priced population, IS 2019 �
 | **ADAPT-41** W4 if it clears 0.40, else W1 if IT clears | **11.5** | **89.9%** | +58.7% | **14,147 pts** | 6/6 |
 | ADAPT-1ANY W4 if clears, else W1 **ungated** | 28.7 | 85.9% | +20.6% | 14,711 pts | 6/6 |
 
-**ADAPT-41 wins**: +50% more total net than deployed, 2.3× the trades, and a *higher* win rate
+**ADAPT-41 won in-sample** (and then failed the held-out window — see the verdict): +50% more total net than deployed, 2.3× the trades, and a *higher* win rate
 (89.9% vs 82.9%). Where it comes from:
 
 | source | n | win | ROM | net contribution | avg width |
