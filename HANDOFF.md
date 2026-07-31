@@ -129,11 +129,30 @@ table + TIER A now carry v0, signals/mo, model Rs/mo and a cap-applied Rs/mo col
 cap — its Rs13,000 model figure sits in the totals as an ESTIMATE next to two measurements. The cap
 blocks only ~10% of v1's names (measured live) so it should be close. Offered to run it; not yet done.
 
-**IN FLIGHT (user's latest):** (1) change PLAN-ON from a 50% haircut to **80% of model** (the UI table
-used 80% before I changed it to 50%; CLAUDE.md still says "plan on ~50%" — reconcile). (2) Explain
-"cap-applied" vs "cap-blocked". (3) User is checking I did not mix up the take-profits: **v2 books at
-50% of credit, v1 at 40%** — CONFIRMED the v2 cap-applied figure used TP-50/stop-3x (its real config);
-the "TP-40 no-stop" row in that comparison was v2 GEOMETRY with v1 EXITS, a hypothetical, NOT v1.
+**EXPOSURE CAP REMOVED (commit 4632cd0, pushed).** `STOCK_CREDIT_MAX_EXPOSURE` is now a config
+constant; hardcoded 40k -> 60k -> **0 (NO CAP)**, all on 2026-07-31 at the user's instruction.
+Applies to v2 AND v0 (v0 runs a second instance of the same module). Measured first, OOS, v2 @1 lot:
+40k = 26 tr/Rs22.0k mo · 60k = 27 tr/Rs28.6k mo · no cap = 43 tr @ Rs47,824 avg.
+HONEST CAVEATS recorded in config + STUDIES: no-cap is NOT unbounded (largest live width x lot is
+HEROMOTOCO Rs90,000 = ~Rs45k max loss; median Rs30,000; 60k already allowed 87/92 names so removal
+adds ~5) BUT it removes the ceiling for any future high-priced listing. The ~Rs278k/mo no-cap figure
+is NOT credible (>100%/mo on deployed margin, n=43) and was deliberately kept OUT of the totals.
+Real risk = whale profile: big-exposure trades won 95.3% in this window; the one that loses cost
+-Rs84.7k, worst MONTH -Rs2.28L, on the longer window that produced the original 40k limit (~17% of
+a Rs5L account). **BUG I CAUSED AND FIXED:** the first config patch DELETED the constant instead of
+replacing it -> ImportError that would have crashed the engine on next restart. Caught pre-restart.
+**PLAN-ON is 80% of model** (was 50%; UI had used 80% before I wrongly changed it). CLAUDE.md updated.
+**Take-profits confirmed distinct: v2 = TP-50 + stop-3x · v1 = TP-40 no stop · v0 = TP-40 no stop.**
+The "TP-40 no-stop" row in the earlier v2 comparison was v2 GEOMETRY with v1 EXITS (a hypothetical to
+isolate the stop) — NOT v1.
+
+**IN FLIGHT (user's latest): STRIP DOWN THE STUDIES TAB.** User says the first LIVE STRATEGY summary
+table is irrelevant and there is a second live-strategy backtest table he wants kept. Instructions:
+delete most cards, KEEP ONLY WHAT IS SUCCESSFUL, and add a simple POINT-WISE "how to execute each
+strategy" section on the STUDIES tab. NOTE: deleting UI cards is safe — every study remains in
+studies/*.md on disk. Keep a compact one-line REJECTED list though (repo convention documents
+rejections so they are not re-mined: BANKNIFTY 0DTE, index swing fade, width-1 band re-cut,
+long-gamma/non-fade intraday, hourly-vs-close entry).
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
