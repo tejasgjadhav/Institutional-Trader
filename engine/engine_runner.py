@@ -206,6 +206,7 @@ class EngineRunner:
     # (target, stop) the backtest win% is CONDITIONED ON — stated on every signal so the win rate
     # is never read in isolation (user 2026-07-29: "the winrate is subject to target and stop loss").
     _TG_TGT_STOP = {"STOCK CREDIT v2 UNION": ("book at 50% of credit", "3× credit"),
+                    "STOCK CREDIT v0 · EXPERIMENTAL (c/w 0.35-0.40)": ("book at 40% of credit", "none — wing caps the loss"),
                     "STOCK CREDIT v1": ("book 40% of credit", "none — wing caps the loss"),
                     "0DTE NIFTY": ("hold to same-day expiry", "none — bought wing caps the loss"),
                     "0DTE SENSEX": ("hold to same-day expiry", "none — bought wing caps the loss"),
@@ -218,6 +219,7 @@ class EngineRunner:
     # and a vertical spread can never cost more than its width to close, so v2's 3x stop NEVER binds
     # (the real floor is the defined max loss). v1's 2x stop = 0.8x width DOES bind (user-caught 2026-07-29).
     _TG_EXIT = {"STOCK CREDIT v2 UNION": (0.50, 3.0),
+                "STOCK CREDIT v0 · EXPERIMENTAL (c/w 0.35-0.40)": (0.40, 99.0),
                 "STOCK CREDIT v1": (0.40, 99.0),
                 "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": (0.0, 2.0)}
 
@@ -233,7 +235,7 @@ class EngineRunner:
     # Books that HOLD to expiry (days→weeks) — the message must say so, or an index credit spread
     # entered days ago reads like a same-day 0DTE call (user-caught 2026-07-21). Same-day books
     # (0DTE NIFTY/SENSEX) are deliberately NOT in this set.
-    _MULTIDAY_BOOKS = {"STOCK CREDIT v2 UNION", "STOCK CREDIT v1",
+    _MULTIDAY_BOOKS = {"STOCK CREDIT v2 UNION", "STOCK CREDIT v1", "STOCK CREDIT v0 · EXPERIMENTAL (c/w 0.35-0.40)",
                        "SWING CREDIT · multi-day (NIFTY/FINNIFTY)", "MONTHLY FUTURES PULLBACK",
                        "MONTHLY LONG-CALL PULLBACK"}
 
@@ -244,6 +246,13 @@ class EngineRunner:
             "• 32,852 raw breakout signals screened → 609 passed the quality gates and were analysed\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>84%</b> win rate achieved · positive every year\n"
             "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>87%</b> win rate achieved · positive every year",
+        "STOCK CREDIT v0 · EXPERIMENTAL (c/w 0.35-0.40)":
+            "• ⚠️ <b>EXPERIMENTAL</b> — the tier just BELOW the proven c/w≥0.40 gate. Weaker evidence than v1/v2.\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>77%</b> win rate · positive only <b>4 of 6</b> years\n"
+            "   return on margin +1.9% — inside noise of zero, on 310 trades\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>91%</b> win rate · positive 3 of 3 years · only <b>43</b> trades\n"
+            "• Adds ~9% net for ~99% more capital; one more lot of the CORE book returned 82% more\n"
+            "• Running at 1 lot to build a live record — see studies/LOWCW_BAND_RESCUE.md §7",
         "STOCK CREDIT v1":
             "• 25,978 raw breakout signals screened → 997 passed the quality gates and were analysed\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>85%</b> win rate achieved · positive every year\n"
@@ -473,6 +482,10 @@ class EngineRunner:
                 return
             from engine import stock_credit
             from engine import stock_credit_v2
+            try:
+                from engine import stock_credit_v0
+            except Exception:
+                stock_credit_v0 = None
         except Exception as e:
             logger.warning(f"stock_credit import: {e}")
             return
@@ -512,6 +525,13 @@ class EngineRunner:
                     logger.info(f"stock_credit_v2: resolved/closed {n2} position(s)")
             except Exception as e:
                 logger.warning(f"stock_credit_v2 resolve: {e}")
+            if stock_credit_v0 is not None and getattr(config, "STOCK_CREDIT_V0_ENABLED", False):
+                try:
+                    n3 = stock_credit_v0.resolve_positions()
+                    if n3:
+                        logger.info(f"stock_credit_v0: resolved/closed {n3} position(s)")
+                except Exception as e:
+                    logger.warning(f"stock_credit_v0 resolve: {e}")
         h, m = map(int, config.STOCK_CREDIT_SCAN_AFTER.split(":"))
         after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
         if (self.agent.is_market_open() and after_cutoff and self._stockcr_scan_day != now.date()):
@@ -532,6 +552,16 @@ class EngineRunner:
                     self._tg("STOCK CREDIT v1", new)
             except Exception as e:
                 logger.warning(f"stock_credit scan: {e}")
+            # v0 scans LAST of the three: it is the least-proven book, so it defers to both
+            # v1 and v2 and skips any name they already hold (cross-book one-position-per-stock).
+            if stock_credit_v0 is not None and getattr(config, "STOCK_CREDIT_V0_ENABLED", False):
+                try:
+                    new3 = stock_credit_v0.scan_signals()
+                    if new3:
+                        logger.info(f"stock_credit_v0: opened {len(new3)} new spread(s)")
+                        self._tg("STOCK CREDIT v0 · EXPERIMENTAL (c/w 0.35-0.40)", new3)
+                except Exception as e:
+                    logger.warning(f"stock_credit_v0 scan: {e}")
 
     def _zero_dte(self, now):
         """0DTE INTRADAY (5th strategy) — NIFTY expiry-day CE credit spread. One entry right
@@ -620,6 +650,7 @@ class EngineRunner:
     _OUTCOME_BOOKS = [
         ("STOCK CREDIT v2 UNION", "stock_credit_v2_positions.json"),
         ("STOCK CREDIT v1", "stock_credit_positions.json"),
+        ("STOCK CREDIT v0 · EXPERIMENTAL (c/w 0.35-0.40)", "stock_credit_v0_positions.json"),
         ("SWING CREDIT · multi-day", "swing_positions.json"),
         ("0DTE NIFTY (same-day)", "zero_dte_positions.json"),
         ("SENSEX 0DTE (same-day)", "sensex_dte_positions.json"),
@@ -710,6 +741,7 @@ class EngineRunner:
     _BOOK_TAG = {
         "stock_credit_v2_positions.json": "v2",
         "stock_credit_positions.json": "v1",
+        "stock_credit_v0_positions.json": "v0",
         "swing_positions.json": "SWING",
         "zero_dte_positions.json": "0DTE NIFTY",
         "sensex_dte_positions.json": "0DTE SENSEX",

@@ -286,6 +286,25 @@ STOCK_CREDIT_LOTS         = 1       # paper sizing — KEEP AT 1 to forward-test
 STOCK_CREDIT_SCAN_AFTER   = "15:10" # once/day after this (a daily breakout needs ~the close)
 STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight carry)
 
+# ── STOCK CREDIT v0 (0.35-0.40 c/w) — EXPERIMENTAL PAPER BOOK, user-approved 2026-07-31 ──
+# The v2 gate takes c/w >= 0.40. This runs the SAME geometry (short 2-OTM, width 4) on the band
+# just below it, with the exits that half wants: TP-40 and NO stop.
+#
+# EVIDENCE IS DELIBERATELY THIN — read studies/LOWCW_BAND_RESCUE.md section 7 before trusting it:
+#   IS  2019->Sep'24 : 77.4% win, +1.9% ROM, positive only 4 of 6 years  (n=310)
+#   OOS Oct'24->Jul'26: 90.7% win, +19.4% ROM, positive 3 of 3 years     (n=43, 38 names)
+# The in-sample leg is inside noise of zero. Measured against the core book it adds ~+9% net for
+# ~+99% capital, and the same capital in one more CORE lot returned 82% more. It is here to build
+# a live track record, NOT because it is proven. KEEP LOTS AT 1.
+STOCK_CREDIT_V0_ENABLED   = True
+STOCK_CREDIT_V0_MIN_CW    = 0.35    # floor
+STOCK_CREDIT_V0_MAX_CW    = 0.40    # ceiling (EXCLUSIVE) — at/above this v2 owns the trade
+STOCK_CREDIT_V0_TAKE_PROFIT = 0.40  # book at 40% of credit (the exit this band wants)
+STOCK_CREDIT_V0_STOP_MULT = 99.0    # NO stop — the bought wing caps risk at width-credit
+STOCK_CREDIT_V0_MAX_NEW_PER_DAY = 3 # tighter than v2's 5 — this is the unproven book
+STOCK_CREDIT_V0_MAX_OPEN  = 10      # tighter than v2's 20, caps the margin it can tie up
+STOCK_CREDIT_V0_LOTS      = 1       # KEEP AT 1
+
 # === 0DTE INTRADAY (the 5th strategy, paper forward-test) ===
 # NIFTY expiry-day CALL credit spread: at the open, SELL the CE ~0.5% OTM of spot, BUY the CE
 # 200 pts further out, hold to same-day settlement. NO intraday stop (backtested that way).

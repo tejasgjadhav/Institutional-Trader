@@ -41,6 +41,12 @@ STOCK_CREDIT_WIDTH        = 4
 STOCK_CREDIT_TAKE_PROFIT  = 0.50
 STOCK_CREDIT_STOP_MULT    = 3.0
 
+# ── hooks for the v0 instance (engine/stock_credit_v0.py loads a SECOND, independent copy of
+# this module and rebinds these). Both are no-ops for v2 itself: v2 has no c/w ceiling and
+# excludes nothing. Do not set them here. ──
+STOCK_CREDIT_MAX_CW = None     # exclusive upper bound on credit/width, or None for no ceiling
+EXCLUDE_SYMBOLS     = frozenset()   # symbols another book already holds open — skip them
+
 
 # ── persistence ──────────────────────────────────────────────────────────────
 def _load_book() -> list:
@@ -295,6 +301,8 @@ def scan_signals() -> list:
             break
         sym = ticker.replace(".NS", "")
         try:
+            if sym in EXCLUDE_SYMBOLS:      # another stock-credit book already holds this name
+                continue
             if any(p["symbol"] == sym and p["status"] == "OPEN" for p in book):
                 continue
             entries = [p["entry_date"] for p in book if p["symbol"] == sym]
@@ -329,6 +337,8 @@ def scan_signals() -> list:
             # ── the gates ──
             if credit / width_pts < STOCK_CREDIT_MIN_CW:           # the edge: rich credit vs risk
                 continue
+            if STOCK_CREDIT_MAX_CW is not None and credit / width_pts >= STOCK_CREDIT_MAX_CW:
+                continue                                            # v0 only: v2 owns >= its ceiling
             if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
                 continue
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate

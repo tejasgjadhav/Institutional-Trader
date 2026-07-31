@@ -37,6 +37,8 @@ STOCKCR_SNAP = _os.path.join(DATA_DIR, "stock_credit.json")
 STOCKCR2_SNAP = _os.path.join(DATA_DIR, "stock_credit_v2.json")
 STOCKCR_BOOK = _os.path.join(DATA_DIR, "stock_credit_positions.json")
 STOCKCR2_BOOK = _os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
+STOCKV0_SNAP  = _os.path.join(DATA_DIR, "stock_credit_v0.json")
+STOCKV0_BOOK  = _os.path.join(DATA_DIR, "stock_credit_v0_positions.json")
 # App logo — Saavi. Lives in data/ (gitignored) so the photo never leaves this machine;
 # every use below falls back gracefully when the file is absent.
 LOGO_PATH = _os.path.join(DATA_DIR, "saavi_logo.png")
@@ -86,6 +88,7 @@ class TerminalApp(QMainWindow):
         self._monthly_call_rows = []
         self._stockcr_rows = []
         self._stockcr2_rows = []
+        self._stockv0_rows = []
         self.active_screen = 0
         self._mkt_running = False
         self._scanning = False
@@ -390,6 +393,27 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stockcr2.setStyleSheet(f"QTableWidget {{ border: 2px solid {AMBER}; }}")
         v.addWidget(self.pm_stockcr2, 1)
 
+        # STOCK CREDIT v0 (c/w 0.35-0.40) — EXPERIMENTAL, user-approved 2026-07-31. Deliberately
+        # rendered LAST and in RED, not gold: it is the least-proven book on the dashboard and must
+        # never be mistaken for v2. Stats are the honest pair — see studies/LOWCW_BAND_RESCUE.md §7.
+        pmv0 = QLabel("⚠️ v0 EXPERIMENTAL · c/w 0.35–0.40 (the band BELOW the proven gate) · same geometry as v2 "
+                      "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
+                      "WIN 77% in-sample (2019–Sep'24, positive only 4 of 6 yrs, +1.9% on margin = noise) / "
+                      "91% out-of-sample (Oct'24–now, only 43 trades) · adds ~9% net for ~99% more capital — "
+                      "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · NOT PROVEN — building a live record")
+        pmv0.setWordWrap(True)
+        pmv0.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        pmv0.setStyleSheet(f"color:{RED}; padding:8px; background-color:{PANEL}; border:2px dashed {RED}; border-radius:4px;")
+        v.addWidget(pmv0)
+        self.pm_stockv0 = QTableWidget(); self.pm_stockv0.setColumnCount(len(self.PM_CREDIT_COLS))
+        self.pm_stockv0.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
+        self._credit_cols(self.pm_stockv0)
+        self.pm_stockv0.setAlternatingRowColors(True); self.pm_stockv0.verticalHeader().setVisible(False)
+        self.pm_stockv0.verticalHeader().setDefaultSectionSize(32)
+        self.pm_stockv0.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.pm_stockv0.setStyleSheet(f"QTableWidget {{ border: 2px dashed {RED}; }}")
+        v.addWidget(self.pm_stockv0, 1)
+
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
             "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · WIN 85% in-sample (2019–Sep'24) / 86% out-of-sample (Oct'24–now) at this target · +ve every yr · TP-40/no-stop deployed 2026-07-30 (was TP-75/stop-2×: 64%/73%) · ~16/mo · SELL", GREEN))
@@ -517,6 +541,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~10/mo · SELL", GREEN))
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
+        v0hdr = QLabel("⚠️ v0 EXPERIMENTAL (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
+                       "NOT PROVEN (77% IS, +ve 4/6 yrs · 91% OOS on 43 trades) — kept separate so it never flatters the books above")
+        v0hdr.setWordWrap(True)
+        v0hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
+        v0hdr.setStyleSheet(f"color:{RED}; padding:8px; background-color:{PANEL}; border:2px dashed {RED}; border-radius:4px;")
+        v.addWidget(v0hdr)
+        self.sw_v0_stats = self._stats_label()
+        self.sw_v0_stats.setStyleSheet(f"color:{RED}; padding:8px; background-color:{PANEL}; border:2px dashed {RED};")
+        v.addWidget(self.sw_v0_stats)
+        self.sw_v0 = self._make_log_table(self.SWING_TAB_BOOK_COLS)
+        self.sw_v0.setStyleSheet(f"QTableWidget {{ border: 2px dashed {RED}; }}")
+        v.addWidget(self.sw_v0)
         v.addStretch(1)
         return self._scroll(inner)
 
@@ -1704,6 +1740,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             if _os.path.exists(STOCKCR2_SNAP):
                 s2 = json.load(open(STOCKCR2_SNAP))
                 self._stockcr2_rows = s2.get("rows", []) or []
+            if _os.path.exists(STOCKV0_SNAP):
+                s3 = json.load(open(STOCKV0_SNAP))
+                self._stockv0_rows = s3.get("rows", []) or []
         except Exception as e:
             logger.warning(f"load stock_credit.json failed: {e}")
 
@@ -2108,6 +2147,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self._fill_pm_credit(self.pm_stockcr, list(self._stockcr_rows or []), "stock")
         if hasattr(self, "pm_stockcr2"):
             self._fill_pm_credit(self.pm_stockcr2, list(self._stockcr2_rows or []), "stock")
+        if hasattr(self, "pm_stockv0"):
+            self._fill_pm_credit(self.pm_stockv0, list(self._stockv0_rows or []), "stock")
 
     def _refresh_monthly(self):
         """MONTHLY FUTURES PULLBACK on PM DECISIONS — one row per position (single-leg futures).
@@ -2268,6 +2309,8 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             return
         try:
             self._fill_swing_table(self.sw_stk2, STOCKCR2_BOOK, self.sw_stk2_stats, book_label="v2")
+            if hasattr(self, "sw_v0"):
+                self._fill_swing_table(self.sw_v0, STOCKV0_BOOK, self.sw_v0_stats, book_label="T2")
             self._fill_swing_table(self.sw_idx, SWING_BOOK, self.sw_idx_stats)
             self._fill_swing_table(self.sw_stk, STOCKCR_BOOK, self.sw_stk_stats, book_label="v1")
         except Exception as e:
