@@ -21,7 +21,7 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 |---|---|---|---|---|
 | ★ Stock fade v2 UNION (TP-50) | `STOCK_CREDIT_ENABLED` | 87% | ~₹20,000 | t=+13.78 · +ve 8/8 yrs |
 | Stock credit v1 (TP-40/no-stop, 07-30) | `STOCK_CREDIT_ENABLED` | 86% | ~₹13,000 | 85% IS / 86% OOS · same signals (V1_WINRATE_SWEEP) |
-| Stock credit **v0** (c/w 0.35–0.40) | `STOCK_CREDIT_V0_ENABLED` | 77% IS / 91% OOS | ~₹13,300 (5.5 sig/mo × ₹2,408) | IS +1.9% ROM, +ve only 4/6 yrs (n=310); OOS n=43. Adds ~9% net for ~99% capital — one more CORE lot returned 82% more. User-approved 2026-07-31 to build a live record. See LOWCW_BAND_RESCUE §7 |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 77% IS / 91% OOS | ~₹13,300 (5.5 sig/mo × ₹2,408) | IS +1.9% ROM, +ve only 4/6 yrs (n=310); OOS n=43. Adds ~9% net for ~99% capital — one more CORE lot returned 82% more. User-approved 2026-07-31 to build a live record. See LOWCW_BAND_RESCUE §7 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | `DTE_MULTI_BANKNIFTY_ENABLED=False` | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 |

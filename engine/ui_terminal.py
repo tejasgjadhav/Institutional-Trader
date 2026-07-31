@@ -400,7 +400,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
                       "WIN 77% in-sample (2019–Sep'24, positive only 4 of 6 yrs, +1.9% on margin = noise) / "
                       "91% out-of-sample (Oct'24–now, only 43 trades) · adds ~9% net for ~99% more capital — "
-                      "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · ~5.5 sig/mo · avg net ₹2,408/lot per trade · 1 lot")
+                      "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · ~5.5 sig/mo · avg net ₹2,408/lot per trade · 1 lot · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
         pmv0.setWordWrap(True)
         pmv0.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         pmv0.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -542,7 +542,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
         v0hdr = QLabel("STOCK CREDIT v0 (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
-                       "77% IS (+ve 4/6 yrs) · 91% OOS (43 trades) — logged separately from v1/v2")
+                       "77% IS (+ve 4/6 yrs) · 91% OOS (43 trades) · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
         v0hdr.setWordWrap(True)
         v0hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         v0hdr.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -927,16 +927,27 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
    "same mechanism as v2's TP-50, applied more aggressively; the old 2× stop was realizing losses that "
    "recover, so removing it raised BOTH win rate and net (risk stays wing-capped). See V1_WINRATE_SWEEP.md.")}
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">LIVE STRATEGIES — 1 lot</p>
+<p style="color:{CYAN};font-size:17px;font-weight:bold;">LIVE STRATEGIES — 1 lot · full-window backtest averages</p>
+<p style="color:{TEXT_DIM};font-size:13px;">Averages across ALL years of each window — in-sample 1-Jan-2019→30-Sep-2024, out-of-sample
+1-Oct-2024→31-Jul-2026. Single months are not evidence and are not quoted here. The <b>₹/mo (model)</b> column comes from backtests run
+WITHOUT the live ₹40,000 exposure cap (<i>width × lot ≤ 40k</i>) and without the live spread/OI gates; the <b>cap-applied</b> column is the
+same OOS window re-measured WITH the cap, i.e. counting only trades the engine can actually take.</p>
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win in-sample</td><td>Win out-of-sample</td><td>Signals/mo</td><td>₹/mo (model)</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>84% (2019–Sep'24)</td><td>87% (Oct'24–now)</td><td>~7.6</td><td>~₹20,000</td></tr>
-<tr><td>Stock v1 (TP-40)</td><td>85% (2019–Sep'24)</td><td>86% (Oct'24–now)</td><td>~16</td><td>~₹13,000</td></tr>
-<tr><td>Intraday NIFTY</td><td>88% (2019–Sep'24)</td><td>90% (Oct'24–now)</td><td>~4 (Tue)</td><td>~₹1,771</td></tr>
-<tr><td>Intraday SENSEX</td><td>n/a — data starts Oct'24</td><td>88.8% (Oct'24–now)</td><td>~4 (Thu)</td><td>~₹3,153</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td></td><td><b>≈ ₹37,924</b></td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (80% haircut)</b></td><td></td><td></td><td></td><td><b>≈ ₹30,340</b></td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win in-sample</td><td>Win out-of-sample</td><td>Sig/mo</td><td>₹/mo (model, no cap)</td><td>₹/mo (cap-applied OOS)</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>84% · +ve every yr</td><td>87% · +ve every yr</td><td>~7.6 model → <b>3.5</b> capped</td><td>~₹20,000</td><td><b>~₹22,000</b> (₹6,267/trade)</td></tr>
+<tr><td>Stock v1 (TP-40)</td><td>85% · +ve every yr</td><td>86% · +ve every yr</td><td>~16</td><td>~₹13,000</td><td>not re-measured · cap blocks only ~10% of its names</td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>77% · +ve 4 of 6 yrs</td><td>91% · +ve every yr</td><td>~5.5</td><td>~₹13,300</td><td><b>~₹13,300</b> (₹2,408/trade)</td></tr>
+<tr><td>Intraday NIFTY</td><td>88% · +ve 7 of 8 yrs</td><td>90% · +ve every yr</td><td>~4 (Tue)</td><td>~₹1,771</td><td>n/a — index book, stock cap does not apply</td></tr>
+<tr><td>Intraday SENSEX</td><td>n/a — data starts Oct'24</td><td>88.8% · 3 yrs only</td><td>~4 (Thu)</td><td>~₹3,153</td><td>n/a — index book</td></tr>
+<tr><td>Index swing fade</td><td colspan="2">regime-dependent · FAILED out-of-sample (−1.4% of width)</td><td>~2.5</td><td>₹0</td><td>₹0</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td>~33–39/mo</td><td><b>≈ ₹51,224</b></td><td><b>≈ ₹53,400</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (50% haircut)</b></td><td></td><td></td><td></td><td><b>≈ ₹25,600</b></td><td><b>≈ ₹26,700</b></td></tr>
 </table>
+<p style="color:{TEXT_DIM};font-size:13px;">Why v2's model overstates it, structurally and not as a one-month fluke: v2 is short-2-OTM/<b>width 4</b>
+while v1 is short-1-OTM/<b>width 3</b>. The wider wing both lowers credit/width (so v2 clears the 0.40 gate less often — v1's live c/w sits at
+0.40–0.47, only just over) and inflates <i>width × lot</i>, so the ₹40k cap blocks <b>33% of the universe for v2 against 10% for v1</b>, and
+<b>17 of v2's 43</b> out-of-sample trades against <b>2 of v0's</b>. Same mechanism the 0.30–0.40 band study proved. Per rupee of margin v2 is
+still the best book (+41.2% vs v0's +18.7%) — it is simply signal-starved, which is why v0 adds on top rather than competing.</p>
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">REJECTED / OFF</p>
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
@@ -1056,11 +1067,14 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "the long-delta diversifier / higher-return-on-capital experiment.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>TIER A · ≥80% WIN</td><td>Win (IS / OOS)</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON</td></tr>
-<tr><td>★ Stock fade v2 UNION (swing)</td><td>85% / <b>88%</b></td><td>5–6</td><td>₹20–23k</td><td>₹10–12k</td></tr>
+<tr><td>★ Stock fade v2 UNION (swing)</td><td>85% / <b>88%</b></td><td>5–6 → <b>3.5</b> capped</td><td>₹20–23k</td><td>₹10–12k</td></tr>
+<tr><td>Stock credit v1 (TP-40, swing)</td><td>85% / <b>86%</b></td><td>~16</td><td>₹13,000</td><td>₹6.5k</td></tr>
+<tr><td>Stock credit v0 (0.35–0.40, swing)</td><td>77% / <b>91%</b></td><td>~5.5</td><td>₹13,300</td><td>₹6.6k</td></tr>
 <tr><td>NIFTY 0DTE (FLIP)</td><td><b>88.3%</b> measured</td><td>~3.2</td><td>₹1,771</td><td>₹0.9k</td></tr>
 <tr><td>SENSEX 0DTE (CE)</td><td><b>89.0%</b> measured</td><td>~4.1</td><td>₹3,153</td><td>₹1.6k</td></tr>
 <tr style="color:{TEXT_DIM};"><td><s>BANKNIFTY monthly 0DTE</s> <span style="color:{RED};">REJECTED 07-19</span></td><td><s>91.3%</s> → 78.6%</td><td>~1</td><td><s>₹820</s> → ₹141</td><td>₹0</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td>TIER A TOTAL (~₹2–2.5L capital)</td><td><b>≈88% blended</b></td><td>~13</td><td>~₹25k</td><td>~₹12.5k</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td>TIER A TOTAL (~₹3–3.5L capital)</td><td><b>≈86% blended</b></td><td>~34</td><td>~₹51k</td><td>~₹26k</td></tr>
+<tr><td colspan="5" style="color:{TEXT_DIM};font-size:13px;">Signals/mo are MODEL figures from backtests with no ₹40k exposure cap. v2's model is the least reliable: the ₹40k cap blocks 33% of the universe for its width-4 geometry (vs 10% for v1's width-3) and 17 of its 43 OOS trades, so its true cadence is ~3.5/mo. v0's 77% in-sample leg is the weakest evidence in this tier; its 91% out-of-sample rests on 43 trades.</td></tr>
 <tr><td colspan="5" style="color:{BORDER};">———————————————————————————————————</td></tr>
 <tr style="color:{AMBER};font-weight:bold;"><td>TIER B · monthly futures pair (SEPARATE)</td><td>Win</td><td>Freq</td><td>Return on capital</td><td>Capital</td></tr>
 <tr><td style="color:{AMBER};">1 · Monthly futures pullback (REV1-v2, FUT)</td><td>75.7% OOS</td><td>5/cycle</td><td>~3.9%/mo · worst −20%</td><td>~₹15L margin</td></tr>

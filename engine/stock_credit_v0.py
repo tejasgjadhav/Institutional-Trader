@@ -59,33 +59,45 @@ BAND_LABEL = f"c/w {_impl.STOCK_CREDIT_MIN_CW:.2f}-{_impl.STOCK_CREDIT_MAX_CW:.2
 WIN_LABEL  = "77% IS (2019-Sep'24, +ve 4/6 yrs) / 91% OOS (Oct'24-Jul'26, n=43)"
 
 
-def _open_symbols_in_other_books() -> frozenset:
-    """Kept for reference only — v0 no longer defers to the other books (see scan_signals)."""
+def _v1_open_symbols() -> frozenset:
+    """Symbols v1 currently holds OPEN — including anything it opened in this same 15:10 cycle,
+    because v1 scans before v0 in engine_runner._stock_credit.
+
+    Deliberately v1 ONLY. v0 does NOT defer to v2: the two share a geometry and their c/w bands are
+    mutually exclusive (v2 takes >= 0.40, v0 takes 0.35-0.40), so one stock can never qualify for
+    both on the same day, and for a name v2 opened on an earlier day the user wants the books
+    independent.
+    """
     syms = set()
-    for fn in ("stock_credit_v2_positions.json", "stock_credit_positions.json"):
-        try:
-            with open(os.path.join(DATA_DIR, fn)) as f:
-                for p in json.load(f) or []:
-                    if p.get("status") == "OPEN" and p.get("symbol"):
-                        syms.add(p["symbol"])
-        except Exception:
-            continue
+    try:
+        with open(os.path.join(DATA_DIR, "stock_credit_positions.json")) as f:
+            for p in json.load(f) or []:
+                if p.get("status") == "OPEN" and p.get("symbol"):
+                    syms.add(p["symbol"])
+    except Exception:
+        pass
     return frozenset(syms)
 
 
 def scan_signals() -> list:
-    """Open v0 spreads. Runs INDEPENDENTLY of v1 and v2 (user instruction 2026-07-31): the three
-    books scan in parallel and v0 no longer skips names the others hold.
+    """Open v0 spreads. v0, v1 and v2 scan in parallel and independently, with ONE tie-break:
 
-    v0 and v2 can never collide anyway — same geometry, mutually exclusive c/w bands (v2 takes
-    >= 0.40, v0 takes 0.35-0.40), so one stock cannot qualify for both on the same day. v0 and v1
-    CAN both fire on one stock: v1 is short-1-OTM/width-3, so its credit/width is higher on the
-    same underlying. That gives two same-direction positions on one name, which the cross-book rule
-    used to prevent. Accepted deliberately; single-name exposure is bounded by v0's 1 lot,
-    max 3 new/day and max 10 open.
+        if v0 and v1 would both trade the SAME stock, v1 wins and v0 stands down,
+        so only one signal goes out for that name (user rule, 2026-07-31).
+
+    v1 is the tie-break winner because it is the validated book (85% IS / 86% OOS) and it earns
+    more per trade. The clash is real: v1 is short-1-OTM/width-3, so on the same underlying its
+    credit/width runs higher than v0's width-4 geometry and both can qualify on one day. v0 vs v2
+    cannot clash at all (same geometry, mutually exclusive c/w bands), so v2 is not consulted.
+
+    Everything else stays independent — v0 is NOT blocked by names v2 holds, and not by v1 names
+    that are already closed.
     """
-    _impl.EXCLUDE_SYMBOLS = frozenset()
-    return _impl.scan_signals()
+    _impl.EXCLUDE_SYMBOLS = _v1_open_symbols()
+    try:
+        return _impl.scan_signals()
+    finally:
+        _impl.EXCLUDE_SYMBOLS = frozenset()
 
 
 def resolve_positions() -> int:

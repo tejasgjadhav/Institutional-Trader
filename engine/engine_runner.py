@@ -553,8 +553,10 @@ class EngineRunner:
                     self._tg("STOCK CREDIT v1", new)
             except Exception as e:
                 logger.warning(f"stock_credit scan: {e}")
-            # v0 scans LAST of the three: it is the least-proven book, so it defers to both
-            # v1 and v2 and skips any name they already hold (cross-book one-position-per-stock).
+            # v0 scans LAST of the three so it can see what v1 just opened. The books are
+            # otherwise independent; the ONE tie-break is that if v0 and v1 would both trade the
+            # same stock, v1 wins and v0 stands down, so only one signal goes out for that name
+            # (user rule 2026-07-31). v0 vs v2 cannot clash — mutually exclusive c/w bands.
             if stock_credit_v0 is not None and getattr(config, "STOCK_CREDIT_V0_ENABLED", False):
                 try:
                     new3 = stock_credit_v0.scan_signals()
