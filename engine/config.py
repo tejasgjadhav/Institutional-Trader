@@ -318,6 +318,21 @@ ZERO_DTE_FLIP_RET5 = 1.0     # FLIP rule (user-approved 2026-07-07): if NIFTY 5-
                              # W=200 both sides): FLIP 87.1% win / +Rs192k vs CE-always 84.7% /
                              # +Rs117k; OOS-era 91-94% win. Flip's weak years: 2019 (-Rs3.9k),
                              # 2021 (77% win). 0 = disabled (CE always). studies/FLIP_SIDE_CREDIT_FADE.md
+# FLIP-CONDOR HYBRID (user-approved paper deploy 2026-07-31): at the same 9:16 scan, ALSO sell
+# the OPPOSITE side (short ~1.0% OTM, same 200-pt wing) ONLY when that side's own credit/width
+# >= the floor. Margin is shared (both wings W=200 -> condor margin = W - total credit; one
+# side's wing covers both), so the add lifts return on the SAME capital and the worst case is
+# identical to FLIP's. Evidence (studies/PATH_TO_1L.md iter-2, ndte24_flipcondor.py IS /
+# ndte26_flipcondor_oos.py OOS, cells frozen before the OOS run): d=1.00 cw>=0.08 cell —
+# IS 2019->Sep'24: 86.5% win / +Rs148,045 vs FLIP 85.8% / +Rs103,818; OOS Oct'24->Jul'26:
+# 91.5% win / +Rs82,225 vs FLIP 91.6% / +Rs64,323; worst trade identical (-Rs12,975 IS /
+# -Rs11,629 OOS — FLIP's own worst day). Fires on only ~12-14% of expiries (39/282 IS, 11/94
+# OOS) — rich credit IS the gate, the stock-book lesson again. Honest prize: ~+Rs800-1,000/mo
+# at 1 lot. Caveats: floor swept (robust neighborhood, but selection risk real); OOS add-count
+# thin (11); bhav OPEN fills optimistic for 4 legs — hence paper forward-test, NOT proven.
+ZERO_DTE_HYBRID_ENABLED = True   # False = plain FLIP (one side only)
+ZERO_DTE_HYBRID_OTM     = 0.0100 # added (opposite) side: short strike nearest spot*(1 -/+ 1.0%)
+ZERO_DTE_HYBRID_MIN_CW  = 0.08   # sell the added side only if ITS OWN credit/width >= this
 # === 0DTE STRUCTURAL EXCLUSIONS (2026-07-19) ===
 # Both added on STRUCTURAL grounds after the event-avoidance series (studies/ZERO_DTE_*.md).
 # Neither is a statistical edge; both are risk exclusions. Set to [] / 0 to disable.

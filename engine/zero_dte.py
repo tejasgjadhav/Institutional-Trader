@@ -6,6 +6,11 @@ BUY the CE ~200 pts further out. Hold to same-day settlement — NO intraday sto
 it was backtested; a stop-vs-HIGH model destroyed the edge). Defined risk: max loss =
 (width − credit) × qty, ~₹14k/lot.
 
+FLIP-CONDOR HYBRID (paper 2026-07-31): at the same 9:16 scan, the OPPOSITE side (short ~1.0%
+OTM, same 200-pt wing) is ALSO sold when its own credit/width >= 0.08 — booked as its own
+side-tagged position; margin is shared (condor: one side's wing covers both). Evidence in
+studies/PATH_TO_1L.md iteration 2 and config.ZERO_DTE_HYBRID_* comments.
+
 Validated on REAL premiums — NSE bhavcopy 2019→Sep'24 (282 expiry days, config family chosen
 here) + Upstox expired-instruments Oct'24→Jun'26 (91 days, untouched OOS): combined 373 trades,
 85.0% win, +3.20% of margin per trade, net-positive EVERY calendar year 2019→2026. Costs
@@ -24,6 +29,7 @@ from engine.config import (
     IST, DATA_DIR, ZERO_DTE_ENABLED, ZERO_DTE_INDEX, ZERO_DTE_OTM_PCT, ZERO_DTE_WIDTH_PTS,
     ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX, ZERO_DTE_STOP_MULT,
     ZERO_DTE_MIN_CREDIT_PCT, ZERO_DTE_FLIP_RET5, ZERO_DTE_ELECTION_BLACKOUT,
+    ZERO_DTE_HYBRID_ENABLED, ZERO_DTE_HYBRID_OTM, ZERO_DTE_HYBRID_MIN_CW,
 )
 from engine.data_fetcher import fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp, fetch_upstox_historical
 from engine.instruments import to_instrument_key
@@ -270,9 +276,75 @@ def scan_signal() -> list:
         "closed_date": None, "exit_cost": None,
     }
     book.append(pos)
+    new = [pos]
+    # FLIP-CONDOR HYBRID (user-approved paper 2026-07-31): also sell the OPPOSITE side, short
+    # ~ZERO_DTE_HYBRID_OTM OTM with the same wing, ONLY if its own credit/width >= the floor.
+    # Own side-tagged position so resolve/telegram/trade-log machinery is reused unchanged.
+    # Best-effort: any failure here must never block the primary FLIP entry.
+    if ZERO_DTE_HYBRID_ENABLED:
+        try:
+            hopt = "PE" if opt == "CE" else "CE"
+            hsgn = -sgn
+            hchain = _todays_chain(hopt)
+            hstrikes = [c["strike"] for c in hchain]
+            if hstrikes:
+                hi = min(range(len(hstrikes)),
+                         key=lambda i: abs(hstrikes[i] - spot * (1 + hsgn * ZERO_DTE_HYBRID_OTM)))
+                hj = min(range(len(hstrikes)),
+                         key=lambda i: abs(hstrikes[i] - (hstrikes[hi] + hsgn * ZERO_DTE_WIDTH_PTS)))
+                hshort, hlong = hchain[hi], hchain[hj]
+                hw = abs(hlong["strike"] - hshort["strike"])
+                geom_ok = (hw >= ZERO_DTE_WIDTH_PTS * 0.5 and
+                           ((hsgn == 1 and hlong["strike"] > hshort["strike"]) or
+                            (hsgn == -1 and hlong["strike"] < hshort["strike"])))
+                hlot = int(hshort.get("lot", 0) or hlong.get("lot", 0) or 0)
+                if geom_ok and hlot > 0:
+                    hsm, hlm = _quote(hshort["key"]), _quote(hlong["key"])
+                    if hsm is not None and hlm is not None:
+                        hcredit = round(hsm - hlm, 2)
+                        hcw = hcredit / hw if hw else 0.0
+                        if hcredit > 0 and hcw >= ZERO_DTE_HYBRID_MIN_CW:
+                            hqty = hlot * num_lots
+                            hpos = {
+                                "id": f"0DTE-{today.isoformat()}-HYB", "symbol": ZERO_DTE_INDEX,
+                                "breakout_dir": None, "hybrid": True,
+                                "side": "BEAR_CALL" if hopt == "CE" else "BULL_PUT",
+                                "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
+                                "short_key": hshort["key"], "short_strike": int(hshort["strike"]),
+                                "long_key": hlong["key"], "long_strike": int(hlong["strike"]),
+                                "width_pts": int(hw), "lot": hlot, "num_lots": num_lots, "qty": hqty,
+                                "expiry": today.isoformat(),
+                                "short_prem": round(hsm, 2), "long_prem": round(hlm, 2),
+                                "credit": hcredit, "credit_width": round(hcw, 2),
+                                "stop_cost": None,           # NO intraday stop — hold to settlement
+                                "max_loss_pts": round(hw - hcredit, 2),
+                                # margin is SHARED with the FLIP side (condor: only one side can
+                                # lose; margin = W - total credit). Book 0 here so the UI's
+                                # margin-deployed sum does not double-count — the primary's
+                                # (W - credit) x qty slightly OVERSTATES the true condor margin,
+                                # which is the conservative direction.
+                                "capital": 0.0,
+                                "order_label": (f"SELL {ZERO_DTE_INDEX} {int(hshort['strike'])} {hopt} / "
+                                                f"BUY {int(hlong['strike'])} {hopt}  0DTE {today.isoformat()}"
+                                                f"  (HYBRID ADD {'bear-call' if hopt == 'CE' else 'bull-put'},"
+                                                f" credit Rs{hcredit}, c/w {hcw:.2f}"
+                                                f"{f' x{num_lots}' if num_lots != 1 else ''},"
+                                                f" margin shared with FLIP side, settles today 15:30)"),
+                                "current_cost": hcredit, "short_cur": round(hsm, 2), "long_cur": round(hlm, 2),
+                                "pnl_pts": 0.0, "status": "OPEN",
+                                "closed_date": None, "exit_cost": None,
+                            }
+                            book.append(hpos)
+                            new.append(hpos)
+                        else:
+                            logger.info(f"zero_dte: hybrid add SKIP — c/w {hcw:.3f} < "
+                                        f"{ZERO_DTE_HYBRID_MIN_CW} (credit {hcredit:.1f} on {hw:.0f}w)")
+        except Exception as e:
+            logger.warning(f"zero_dte hybrid add: {e}")
     _save_book(book)
-    logger.info(f"zero_dte: opened {pos['order_label']} (spot {spot:.0f})")
-    return [pos]
+    for p in new:
+        logger.info(f"zero_dte: opened {p['order_label']} (spot {spot:.0f})")
+    return new
 
 
 def resolve_positions() -> int:

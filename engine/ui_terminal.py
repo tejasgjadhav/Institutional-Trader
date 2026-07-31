@@ -116,6 +116,13 @@ class TerminalApp(QMainWindow):
         self.idx_timer = QTimer(); self.idx_timer.timeout.connect(self._refresh_index_signals)
         self.idx_timer.start(60_000)
 
+    def keyPressEvent(self, event):
+        # Esc leaves full-screen (the launcher starts the app full-screen)
+        if event.key() == Qt.Key.Key_Escape and self.isFullScreen():
+            self.showNormal()
+        else:
+            super().keyPressEvent(event)
+
     def closeEvent(self, event):
         """On quit: stop timers and wait for worker threads so we never destroy a
         still-running QThread (the 'Destroyed while thread is still running' warning)."""
@@ -530,7 +537,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
         hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% in-sample (2019–Sep'24) / 90% out-of-sample (Oct'24–now) · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
-                     "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise")
+                     "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise · "
+                     "HYBRID ADD (paper 07-31): the OPPOSITE side ~1% OTM is ALSO sold when it pays c/w ≥ 0.08 — "
+                     "shared margin · IS 86.5%/+₹1.48L vs FLIP +₹1.04L · OOS 91.5%/+₹0.82L vs +₹0.64L · worst-case identical")
         hdr.setWordWrap(True)
         hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         hdr.setStyleSheet(f"color:#000000; background-color:{CYAN}; padding:8px; border:2px solid {CYAN}; border-radius:4px;")
@@ -538,6 +547,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         how = QLabel("RULES · trade ONLY when the strip above is GREEN (engine skips hot weeks)\n"
                      "  the strip tells you the SIDE: FLIP sells PE in up-momentum weeks (5-day ≥+1%), else CE\n"
                      "  9:16   SELL the chosen leg ~0.5% OTM · BUY the hedge 200 pts further out (same-day expiry)\n"
+                     "  hybrid if the engine ALSO fires the opposite side (~1% OTM, c/w ≥ 0.08), place that spread too — margin is shared\n"
                      "  order  basket, wing (BUY) first, limit at mid · then NOTHING — no stop, no adjusting\n"
                      "  15:30  settles automatically · wins ~9 weeks in 10 · the rare loss can cost the full margin\n"
                      "FLIP edge: 87.1% win / +₹1.92L since 2019 vs 84.7% / +₹1.17L CE-only. Full research: STUDIES tab.")
@@ -835,6 +845,14 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "only worked in one regime cannot hide behind a blended average.")}
 {self._strategy_summary_table()}
 
+{res("★ 0DTE NIFTY FLIP-CONDOR HYBRID — deployed as paper 2026-07-31 (user-approved). At the 9:16 FLIP scan the "
+     "OPPOSITE side (short ~1.0% OTM, same 200-pt wing) is ALSO sold when its own credit/width ≥ 0.08; margin is "
+     "SHARED (condor — one side's wing covers both, so the worst case is FLIP's own). IS 2019–Sep'24: "
+     "<b>86.5% win / +₹148k</b> vs FLIP 85.8% / +₹104k; OOS Oct'24–Jul'26 (cells frozen before the run): "
+     "<b>91.5% / +₹82k</b> vs 91.6% / +₹64k; worst trade IDENTICAL both eras; the add fires on only ~12–14% of "
+     "expiries — rich credit IS the gate. Honest prize ≈ +₹0.8–1k/mo at 1 lot; OOS add-count is thin (11) and "
+     "4-leg open fills are optimistic — hence paper. Files: studies/PATH_TO_1L.md (iter 2), "
+     "ndte24_flipcondor.py (IS), ndte26_flipcondor_oos.py (OOS)")}
 {res("v1 EXIT SWEEP → TP-40/no-stop DEPLOYED (2026-07-30, 755 IS + 242 OOS trades) — swept TP×stop×geometry "
      "with entry gates FIXED (zero signal loss; wider geometries cut n to 286–571 → rejected). Winner "
      "<b>TP-40/no-stop: 85.0% IS / 86.0% OOS win</b> (nearly identical = real mechanism, not a fit), net "
@@ -2652,7 +2670,7 @@ def main():
     if _os.path.exists(LOGO_PATH):
         app.setWindowIcon(QIcon(LOGO_PATH))   # macOS Dock icon
     win = TerminalApp()
-    win.show()
+    win.showFullScreen()
     sys.exit(app.exec())
 
 

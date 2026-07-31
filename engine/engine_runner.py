@@ -578,7 +578,8 @@ class EngineRunner:
             try:
                 new = zero_dte.scan_signal()
                 if new:
-                    logger.info(f"zero_dte: opened {new[0]['order_label']}")
+                    for p_ in new:   # may be 2: FLIP side + the hybrid add (2026-07-31)
+                        logger.info(f"zero_dte: opened {p_['order_label']}")
                     self._tg("0DTE NIFTY", new)
             except Exception as e:
                 logger.warning(f"zero_dte scan: {e}")
