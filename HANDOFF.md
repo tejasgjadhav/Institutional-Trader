@@ -107,18 +107,33 @@ cadence, or raise the exposure cap (a risk-appetite call — the cap cut worst s
 -Rs84.7k to -Rs21.6k). Offered a cap-sensitivity run (60k/80k vs signal count and worst loss);
 user did NOT take it up.
 
-**IN FLIGHT (user's latest instruction, supersedes the 80% cap):**
-1. **REVERT the 80% win-rate cap — user wants the ACTUAL backtest number (91% OOS) shown.** The cap
-   was added one message earlier at his request, then reversed. Show measured figures.
-2. Report whether v0's net % is positive and, if so, **average net return PER LOT (in Rs) and the
-   trade COUNT**. Per-symbol OOS data is in `/tmp/lowcw_subband_bysym.json`; multiply net points by
-   lot size from the Upstox options master.
-3. **Make v1, v2, watchlist and v0 scan in PARALLEL and INDEPENDENTLY** — i.e. REMOVE v0's cross-book
-   exclusion so it no longer skips names v1/v2 already hold. User believes expected profit adds.
-   RISK TO FLAG: v0+v2 can never collide (same geometry, mutually exclusive c/w bands 0.35-0.40 vs
-   >=0.40), but v0+v1 CAN — different geometry (S1/W3 vs S2/W4) — giving two same-direction positions
-   on ONE stock. That doubles single-name exposure and is exactly what the cross-book rule (user's own
-   request 2026-07-08) was built to stop. Bounded by v0's 1 lot / max 10 open / max 3 per day.
+**v0 SHIPPED + ECONOMICS CORRECTED (commits 09e7605, faae476, 89ebb3e — all pushed both remotes).**
+I had v0's economics WRONG TWICE and corrected them: first "+9% net / Rs276 per trade" (compared the
+books in POINTS not rupees — v0 trades big-lot names ADANIGREEN 600 / COFORGE 475 / LUPIN 425), then
+ignored the live Rs40k exposure cap (backtests have NO cap, so they count trades the engine can never
+take). Re-measured on real Upstox premiums Oct'24->Jul'26, 38 names, 1 lot, WITH the cap:
+    v2 core (c/w>=0.40, TP-50/stop-3x = its REAL config) : 3.5/mo · 92.3% · +41.2% margin · Rs6,267/tr · ~Rs22,000/mo
+    v0      (0.35-0.40, TP-40/no-stop)                   : 5.5/mo · 90.2% · +18.7% margin · Rs2,408/tr · ~Rs13,300/mo
+Cap blocks 17 of v2's 43 OOS trades but only 2 of v0's -> **v0 fires MORE often live than v2 and adds
+~+61% on top.** Per rupee of margin v2 still wins (+41.2 vs +18.7) but it is signal-starved.
+v0 IS/OOS: 77% (+ve 4/6 yrs, n=310) / 91% (+ve 3/3, n=43). Telegram quotes the MEASURED 91% (an
+80% cap was added then reverted at user request).
+**TIE-BREAK RULE (user):** v1/v2/v0 + watchlist scan in PARALLEL and INDEPENDENTLY, EXCEPT if v0 and
+v1 would both trade the SAME stock -> **v1 wins, v0 stands down, ONE signal only**. v0 scans last so
+it sees v1's new entries. v0 vs v2 can never clash (same geometry, mutually exclusive c/w bands), so
+v2 is NOT consulted. Implemented in `stock_credit_v0._v1_open_symbols()`.
+**STUDIES tab** rebuilt on FULL-WINDOW AVERAGES (user: never quote a single month) — LIVE STRATEGIES
+table + TIER A now carry v0, signals/mo, model Rs/mo and a cap-applied Rs/mo column.
+
+**KNOWN GAP:** v1's own geometry (short-1-OTM/width-3, TP-40/no-stop) was NEVER re-measured with the
+cap — its Rs13,000 model figure sits in the totals as an ESTIMATE next to two measurements. The cap
+blocks only ~10% of v1's names (measured live) so it should be close. Offered to run it; not yet done.
+
+**IN FLIGHT (user's latest):** (1) change PLAN-ON from a 50% haircut to **80% of model** (the UI table
+used 80% before I changed it to 50%; CLAUDE.md still says "plan on ~50%" — reconcile). (2) Explain
+"cap-applied" vs "cap-blocked". (3) User is checking I did not mix up the take-profits: **v2 books at
+50% of credit, v1 at 40%** — CONFIRMED the v2 cap-applied figure used TP-50/stop-3x (its real config);
+the "TP-40 no-stop" row in that comparison was v2 GEOMETRY with v1 EXITS, a hypothetical, NOT v1.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
