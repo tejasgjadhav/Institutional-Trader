@@ -940,8 +940,8 @@ same OOS window re-measured WITH the cap, i.e. counting only trades the engine c
 <tr><td>Intraday NIFTY</td><td>88% · +ve 7 of 8 yrs</td><td>90% · +ve every yr</td><td>~4 (Tue)</td><td>~₹1,771</td><td>n/a — index book, stock cap does not apply</td></tr>
 <tr><td>Intraday SENSEX</td><td>n/a — data starts Oct'24</td><td>88.8% · 3 yrs only</td><td>~4 (Thu)</td><td>~₹3,153</td><td>n/a — index book</td></tr>
 <tr><td>Index swing fade</td><td colspan="2">regime-dependent · FAILED out-of-sample (−1.4% of width)</td><td>~2.5</td><td>₹0</td><td>₹0</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td>~33–39/mo</td><td><b>≈ ₹51,224</b></td><td><b>≈ ₹53,400</b></td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (50% haircut)</b></td><td></td><td></td><td></td><td><b>≈ ₹25,600</b></td><td><b>≈ ₹26,700</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td>~33–39/mo</td><td><b>≈ ₹51,224</b></td><td><b>≈ ₹53,224</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (50% haircut)</b></td><td></td><td></td><td></td><td><b>≈ ₹25,600</b></td><td><b>≈ ₹26,600</b></td></tr>
 </table>
 <p style="color:{TEXT_DIM};font-size:13px;">Why v2's model overstates it, structurally and not as a one-month fluke: v2 is short-2-OTM/<b>width 4</b>
 while v1 is short-1-OTM/<b>width 3</b>. The wider wing both lowers credit/width (so v2 clears the 0.40 gate less often — v1's live c/w sits at
