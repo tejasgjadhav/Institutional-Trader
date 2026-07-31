@@ -400,7 +400,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
                       "WIN 77% in-sample (2019–Sep'24, positive only 4 of 6 yrs, +1.9% on margin = noise) / "
                       "91% out-of-sample (Oct'24–now, only 43 trades) · adds ~9% net for ~99% more capital — "
-                      "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · forward paper-test, 1 lot")
+                      "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · ~5.5 sig/mo · avg net ₹2,408/lot per trade · 1 lot")
         pmv0.setWordWrap(True)
         pmv0.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         pmv0.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -1142,8 +1142,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "3 yrs (n=43)</b>. This settles the two-tier gate deferred on 2026-07-16 (it could not be validated "
      "on 2019-24 then). Deployed as book <b>v0</b>: same geometry as v2 (sell 2-OTM / buy width-4), band "
      "0.35-0.40, book at 40% of credit, no stop, 1 lot, max 3/day and 10 open, scans LAST and skips any "
-     "name v1 or v2 already holds. HONEST SIZING: v0 adds ~+9% net for ~+99% more capital — the same "
-     "margin in one more v2/v1 lot returned <b>82% more</b>, so scale the core books first. "
+     "name v1 or v2 already holds. "
      "File: studies/LOWCW_BAND_RESCUE.md §7")}
 {res("REJECTED — RE-CUTTING THE BAND TO WIDTH 1 (2026-07-31): the 0.30-0.40 signals are not premium-poor, "
      "they are priced at a width their premium cannot fill (c/w is a function of how far the wing sits, so "

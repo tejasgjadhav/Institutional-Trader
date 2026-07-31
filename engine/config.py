@@ -291,11 +291,15 @@ STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight car
 # just below it, with the exits that half wants: TP-40 and NO stop.
 #
 # EVIDENCE IS DELIBERATELY THIN — read studies/LOWCW_BAND_RESCUE.md section 7 before trusting it:
-#   IS  2019->Sep'24 : 77.4% win, +1.9% ROM, positive only 4 of 6 years  (n=310)
-#   OOS Oct'24->Jul'26: 90.7% win, +19.4% ROM, positive 3 of 3 years     (n=43, 38 names)
-# The in-sample leg is inside noise of zero. Measured against the core book it adds ~+9% net for
-# ~+99% capital, and the same capital in one more CORE lot returned 82% more. It is here to build
-# a live track record, NOT because it is proven. KEEP LOTS AT 1.
+#   IS  2019->Sep'24 : 77.4% win, +1.9% ROM, positive 4 of 6 years  (n=310)
+#   OOS Oct'24->Jul'26: 90.7% win, +19.4% ROM, positive 3 of 3 years (n=43, 38 names)
+# The in-sample leg is weak. The OOS leg is not: with the live Rs40k exposure cap applied so the
+# numbers match what the engine can actually take, v0 does **Rs2,408 net/lot per trade at ~5.5
+# signals/mo (~Rs13,300/mo scaled to 113 names)** vs the v2 core's Rs6,267 at 3.5/mo (~Rs22,000).
+# Per rupee of margin v2 is still ~2.2x better (+41.2% vs +18.7%), but v2 is signal-starved -- the
+# Rs40k cap blocks 17 of its 43 OOS trades and only 2 of v0's -- so v0 ADDS roughly +61% on top.
+# (An earlier note here said "+9% net for +99% capital"; that compared the books in POINTS, not
+# rupees, and ignored the cap. v0 trades big-lot names, so it was wrong.) KEEP LOTS AT 1.
 STOCK_CREDIT_V0_ENABLED   = True
 STOCK_CREDIT_V0_MIN_CW    = 0.35    # floor
 STOCK_CREDIT_V0_MAX_CW    = 0.40    # ceiling (EXCLUSIVE) — at/above this v2 owns the trade

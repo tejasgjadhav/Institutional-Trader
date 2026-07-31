@@ -60,9 +60,7 @@ WIN_LABEL  = "77% IS (2019-Sep'24, +ve 4/6 yrs) / 91% OOS (Oct'24-Jul'26, n=43)"
 
 
 def _open_symbols_in_other_books() -> frozenset:
-    """One position per stock across ALL stock-credit books — the standing cross-book rule
-    (v2 leads, v1 defers). v0 defers to BOTH: it is the least-proven book, so it must never
-    double down on a name the validated books are already carrying."""
+    """Kept for reference only — v0 no longer defers to the other books (see scan_signals)."""
     syms = set()
     for fn in ("stock_credit_v2_positions.json", "stock_credit_positions.json"):
         try:
@@ -76,12 +74,18 @@ def _open_symbols_in_other_books() -> frozenset:
 
 
 def scan_signals() -> list:
-    """Open v0 spreads. Runs AFTER v1 and v2 have scanned, and skips any name they hold."""
-    _impl.EXCLUDE_SYMBOLS = _open_symbols_in_other_books()
-    try:
-        return _impl.scan_signals()
-    finally:
-        _impl.EXCLUDE_SYMBOLS = frozenset()
+    """Open v0 spreads. Runs INDEPENDENTLY of v1 and v2 (user instruction 2026-07-31): the three
+    books scan in parallel and v0 no longer skips names the others hold.
+
+    v0 and v2 can never collide anyway — same geometry, mutually exclusive c/w bands (v2 takes
+    >= 0.40, v0 takes 0.35-0.40), so one stock cannot qualify for both on the same day. v0 and v1
+    CAN both fire on one stock: v1 is short-1-OTM/width-3, so its credit/width is higher on the
+    same underlying. That gives two same-direction positions on one name, which the cross-book rule
+    used to prevent. Accepted deliberately; single-name exposure is bounded by v0's 1 lot,
+    max 3 new/day and max 10 open.
+    """
+    _impl.EXCLUDE_SYMBOLS = frozenset()
+    return _impl.scan_signals()
 
 
 def resolve_positions() -> int:
