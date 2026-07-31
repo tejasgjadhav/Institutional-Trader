@@ -56,12 +56,31 @@ User pushed back ("we checked everything for 0.3 to 0.4?"). Split the band in ha
    (which OOS says is neutral on the core). Recommended: **paper forward-test a 0.35 tier, do NOT
    deploy.**
 
-**IN FLIGHT — user asked: "SO 0.35-0.4 CAN BE ADDED TO PM DECISIONS IN SEPARATE TAB".** Scope
-question put to the user (display-only section vs a tracked paper book). Display-only is a
-read-only `ui_terminal.py` section fed by the existing 14:45 `union_watchlist.json` rows filtered to
-0.35<=c/w<0.40 — cheap, zero engine risk, but accumulates NO measurable forward data. A tracked
-paper book (new `STOCK_CREDIT_TIER2_*` config + book + resolver, TP-40/no-stop, own outcome file)
-is what actually forward-tests it. AWAITING the user's choice; nothing built yet.
+**BUILT & LIVE — stock credit "v0" EXPERIMENTAL book (commit fcf9ecc, user-approved after being
+shown it is a bad capital trade).** User was told three times, with numbers, that v0 adds ~+9% net
+for ~+99% capital and that one more CORE lot returns 82% more on the same margin. He chose to run
+it to build a live record. Built in full:
+- `engine/stock_credit_v0.py` — loads a SECOND independent instance of `stock_credit_v2.py` via
+  importlib and rebinds its constants (ONE copy of scan/resolve, no 400-line fork). Exports only
+  scan_signals/resolve_positions/rows_for_ui — build_watchlist & notify_nearmiss are deliberately
+  NOT re-exported (they own union_watchlist.json).
+- `stock_credit_v2.py` gained TWO hooks that are NO-OPS for v2: `STOCK_CREDIT_MAX_CW` (None) and
+  `EXCLUDE_SYMBOLS` (empty). VERIFIED v2 still = band 0.40 / ceiling None / TP-50 / stop-3x / own book.
+- config `STOCK_CREDIT_V0_*`: band 0.35-0.40 (MAX_CW exclusive), TP 0.40, STOP 99 (none), geometry
+  inherited from v2 (S2/W4), 1 lot, max 3 new/day, max 10 open (tighter than v2's 5/20).
+- runner: v0 resolves after v2 and scans LAST of the three; skips any name v1 or v2 holds OPEN
+  (extends the cross-book one-position-per-stock rule). Own Telegram EXECUTE signal with the
+  standard IS/OOS-with-dates block, led by ⚠️ EXPERIMENTAL + the 4-of-6-years and n=43 caveats.
+- UI: separate PM DECISIONS section + separate SWING TRADE LOG section, both dashed RED (NOT v2's
+  gold), placed LAST so it can never be mistaken for the leader book. Tracked as "v0".
+- CLAUDE.md live-books table has a v0 row with the honest weak-evidence note.
+Engine (pid 352) + viewer (pid 597) restarted, both alive, no errors. v0 snapshot written; book
+empty until the next 15:10 scan. v1 (3 open: TCS/BAJAJFINSV/BAJAJ-AUTO) and v2 books verified
+unmodified. **v0 will skip those 3 names by design.**
+
+**IN FLIGHT:** user asked for a 🧪 DEMO v0 Telegram message (sample signal, not a real one). Use
+`load_dotenv(.env, override=True)` — the shell env can carry a STALE TELEGRAM_BOT_TOKEN for manual
+sends (launchd engine is unaffected). Prefix 🧪 and make clear it is a sample.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
