@@ -318,6 +318,7 @@ class EngineRunner:
                 credit, w, lot = s.get("credit"), s.get("width_pts"), s.get("lot")
                 pretty = {"STOCK CREDIT v2 UNION": "Stock Credit v2 UNION",
                           "STOCK CREDIT v1": "Stock Credit v1",
+                          "STOCK CREDIT v0 · EXPERIMENTAL (c/w 0.35-0.40)": "Stock Credit v0 ⚠️ EXPERIMENTAL",
                           "MONTHLY FUTURES PULLBACK": "Monthly Pullback",
                           "MONTHLY LONG-CALL PULLBACK": "Monthly Long-Call",
                           "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "Index Swing"}.get(book, book)
