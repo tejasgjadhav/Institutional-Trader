@@ -250,7 +250,8 @@ class EngineRunner:
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
             "• 310 in-sample trades and 43 out-of-sample trades analysed\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>77%</b> win rate · positive 4 of 6 years · +1.9% on margin\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>91%</b> win rate · positive every year · +19.4% on margin\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>80%+</b> win rate · positive every year · +19.4% on margin\n"
+            "• Win rates quoted are capped at 80% — live fills come in below backtest\n"
             "• Forward paper-test at 1 lot — see studies/LOWCW_BAND_RESCUE.md §7",
         "STOCK CREDIT v1":
             "• 25,978 raw breakout signals screened → 997 passed the quality gates and were analysed\n"
