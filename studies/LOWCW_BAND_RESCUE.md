@@ -4,7 +4,11 @@
 Is there a configuration — geometry, target, anything — that makes them tradeable at a good win
 rate and real net?
 
-**Answer: no. Do not trade the band. The gate stays exactly as it is.**
+**Answer: no configuration rescues the band — but splitting it in half found one live cell.**
+The 0.30-0.35 half (the names actually filling the watchlist) is dead in every test. The 0.35-0.40
+half at the DEPLOYED geometry with TP-40/no-stop is positive in both windows (+1.9% IS, +19.4% OOS,
+90.7% win, 3/3 OOS years) — the deferred two-tier gate, finally validated on 2019-24, and the
+validation is marginal. Paper forward-test material, not a deployment. See section 7.
 
 In-sample the answer looked like yes, and it looked strong: re-cutting the wing from 4 strikes to
 1 turned the band from −1.1% return on margin into **87.8% win / +18.1% ROM, positive in all six
@@ -232,6 +236,49 @@ stability across 20 width-1 cells, 6/6 positive years, matched sample, month-blo
 *within* a regime. Only a genuinely held-out window tests across one. Worth remembering the next
 time a sweep produces a clean-looking survivor.
 
+
+---
+
+## 7. Sub-band split — the pooled test buried a live cell (user challenge, same session)
+
+The 432-cell sweep and the OOS run both treated 0.30-0.40 as one bucket. `CW_BUCKET_ANALYSIS`
+reports the halves behaving very differently, so pooling could hide a live upper half under a dead
+lower one. Split (`ndte/stkfade_lowcw_subband.py` OOS, `_subband_is.py` IS):
+
+**OOS Oct'24 -> Jul'26** (38 names; upper n=43, lower n=66)
+
+| | do nothing (W4 TP-50 stop-3x) | **W4 TP-40 no-stop** | W1 re-cut TP-40 |
+|---|---|---|---|
+| upper 0.35-0.40 | 79.1% · +12.1% · 2/3 | **90.7% · +19.4% · 3/3** | 75.0% · +0.3% · 1/3 |
+| lower 0.30-0.35 | 74.2% · −2.6% · 1/3 | 75.8% · **−5.2%** · 1/3 | 73.8% · +1.8% · 2/3 |
+
+**IS 2019 -> Sep'24** (upper n=310, lower n=472)
+
+| | do nothing | **W4 TP-40 no-stop** | W1 re-cut TP-40 |
+|---|---|---|---|
+| upper 0.35-0.40 | 72.9% · −1.4% · 4/6 | 77.4% · **+1.9%** · 4/6 | 88.6% · +23.6% · 6/6 |
+| lower 0.30-0.35 | 75.2% · −0.9% · 3/6 | 79.4% · +0.2% · 3/6 | 87.3% · +15.5% · 6/6 |
+
+1. **The width re-cut is dead, and the split makes the rejection stronger** — excellent IS in BOTH
+   halves (+23.6% / +15.5%, 6/6 yrs each), dead OOS in BOTH (+0.3% / +1.8%). No ambiguity.
+2. **0.30-0.35 is dead everywhere** (IS +0.2%, OOS −5.2%). The names sitting at c/w 0.30 in the
+   watchlist — the ones that prompted the question — are specifically the dead half. Keep blocking.
+3. **One live cell, and it is NOT a geometry change: 0.35-0.40 at the DEPLOYED width with TP-40 and
+   no stop.** Positive in both windows: +1.9% ROM IS (4/6 yrs), **+19.4% ROM / 90.7% win / 3/3 yrs
+   OOS**. Consistent with CW_BUCKET_ANALYSIS's OOS +9.2% of width for this bucket (this run: +12.2%).
+
+### This settles the deferred two-tier gate
+
+The 0.35-0.40 tier was spec'd on 2026-07-16 and left un-deployed because it could not be validated
+on 2019-24 (stock-option bhavcopy purged). It can now. **Verdict: real but marginal.** +1.9% ROM
+in-sample with 2 of 6 years negative, against the core book's +58-70%. The added trades earn about
+a thirtieth of the core's return on margin, and the cell only works paired with TP-40/no-stop —
+which the OOS run says is neutral on the core book.
+
+**Recommendation: paper forward-test a 0.35 tier with TP-40/no-stop. Do NOT deploy on this.**
+n=43 out-of-sample and an in-sample leg inside noise of zero is not a deployment case. Nothing was
+changed in the engine.
+
 ## Scripts
 
 | file | what it does |
@@ -242,4 +289,6 @@ time a sweep produces a clean-looking survivor.
 | `ndte/stkfade_lowcw_matched.py` | matched-sample bias check + settlement exposure |
 | `ndte/stkfade_lowcw_dte.py` | days-to-expiry sweep |
 | `ndte/stkfade_lowcw_adaptive.py` | the deployable adaptive-width rules |
-| `ndte/stkfade_lowcw_oos2.py` | focused OOS confirmation |
+| `ndte/stkfade_lowcw_oos2.py` | focused OOS confirmation (resumable; per-stock checkpoints) |
+| `ndte/stkfade_lowcw_subband.py` | OOS 0.30-0.35 vs 0.35-0.40 split (reuses the leg cache) |
+| `ndte/stkfade_lowcw_subband_is.py` | in-sample twin of the split |
