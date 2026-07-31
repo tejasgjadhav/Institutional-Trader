@@ -1,5 +1,28 @@
 # Handoff — institutional-trader
 
+## DONE (2026-07-30 night) — BOOK column · swing-MTM fix · UI renames · Saavi branding (653d3c9→1bb1f6d)
+Four commits, all pushed both remotes, viewer relaunched stable after each (final PID 58816), engine
+restarted once (57214):
+1. **BOOK column (653d3c9)** — SWING TRADE LOG's two stock-credit tables now carry an explicit BOOK
+   column ("v2"/"v1") after ENTERED on both leg rows: SWING_TAB_BOOK_COLS + book_label param on
+   _fill_swing_table (engine/ui_terminal.py). Other tables untouched (8 cols).
+2. **Stale-MTM root cause + fix (653d3c9)** — SWING_CREDIT_ENABLED=False (07-24) sat BEFORE
+   resolve_swing_positions in both engine_runner._swing and the resolver itself, so the OPEN NIFTY
+   2026-08-04 BULL_PUT (opened 07-24 15:10, just before the disable) froze at Jul 24 16:35 marks and
+   would never have settled. Flag now gates NEW entries only; resolve runs while OPEN positions exist
+   (double-gated: scan_swing_signals keeps its own flag check). Verified: book re-marked 19:43,
+   short PE 155.65→7.50, position near max profit (+48.68 of 51.3 credit) — engine TP/expiry books it.
+3. **Per-figure P&L colours (30424b1)** — stats lines coloured the WHOLE line by booked's sign, so v1's
+   negative open MTM (−₹1,031) rendered green. Now booked and MTM each get their own green/red span
+   (MTM math itself verified correct: credit − current cost per trade).
+4. **Renames + branding (73dfb0b, 1bb1f6d)** — TRADE LOG tab → "INTRADAY TRADE LOG"; "0DTE" stripped
+   from ALL UI chrome (tab, titles, section labels → "EXPIRY-DAY"/"INTRADAY", stats, status strip) but
+   KEPT in STUDIES/README research prose (quotes study filenames). App renamed SAAVI INSTITUTIONAL
+   TRADER (window title, Dock name, header) with a circular gold-ring logo of the user's daughter at
+   data/saavi_logo.png — data/ is GITIGNORED on purpose: the child's photo must NEVER be pushed to the
+   public repo. All logo uses fall back cleanly if the file is absent. Regenerate: crop (250,520,510,780)
+   of ~/Downloads/SAAVI.jpg, gold gradient ring (script was in session scratchpad).
+
 ## DONE (2026-07-30 evening) — SENSEX ticker + README LIVE/REJECTED restructure (4c7121b)
 SENSEX in top ticker strip (BSE_INDEX|SENSEX in _batch_index_ltp, ^BSESN Yahoo fallback, snapshot key
 "sensex", UI sensex_lbl; verified live 77,772.70). README: plain-English narrative + 2 sprawling tables
@@ -755,3 +778,5 @@ proven, keep tiers separate, validate 2019-24 first, 1 lot is right sizing.
 ## 2026-07-30 late: expectancy gaps filled (v1 live 11W/3L +5,874/-8,766 → +2,737; 0DTE formulas inline); watchlist digest: html-escaped syms (fixes literal <b> on parse-fail fallback) + friendly side names ('Bear Call Strategy — we expect the stock to stay lower…'). SENSEX result 4pm = my engine restarts 15:30-16:00 delayed settle+notify (not a code bug).
 
 ## 2026-07-30 CLOSE: user typed 'confirmed' — explicit approval of Tier-5 113-name deployment now in transcript; /loop universe goal fully closed (both tasks done+approved).
+
+## ACTIVE /loop (2026-07-30 night): can INDEX swing fade (NIFTY/BNF/SENSEX, both sides) reach 80% win via the v1-style exit sweep? OOS FIRST, NIFTY first. Known: old config 54%/−1.4%w IS, salvage gates failed OOS — but TP-40/50+no-stop early-booking sweep NEVER tried on index (it took v1 54→85%). Agent writing studies/ndte/idxfade_oos_exits.py (clone of stkfade_v1_oos_exits.py: NIFTY D10 s1w3, no c/w gate, Upstox expired premiums Oct'24→now, exits {hold/stop2 dep, TP75/2, TP50/none, TP40/none} on SAME trades). Then IS bhavcopy if promising; then BNF/SENSEX. Deliverable studies/INDEX_FADE_EXIT_SWEEP.md. Do NOT deploy without user approval.
