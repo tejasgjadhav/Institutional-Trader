@@ -800,3 +800,5 @@ proven, keep tiers separate, validate 2019-24 first, 1 lot is right sizing.
 ## ACTIVE /goal (2026-07-31 pm): SIGNAL×GEOMETRY OPTIMIZATION (user critique: prior sweep fixed exits; correct machine = stage-1 mine raw conditions >60-70% hit, stage-2 optimize payoff geometry jointly for win×net — the v1/v2 recipe generalized). Fable agent: stage-1 signal mining (incl NR7 +0.13%/8yr survivor) on daily+5min, stage-2 geometry mapping via bhavcopy premiums (credit spreads OTM×width×TP×stop grid, cash asymmetric exits), train/test + multiple-testing guard. → studies/SIGNAL_GEOMETRY_OPTIMIZATION.md
 
 ## /goal CLOSED: signal×geometry optimization DONE (1,572 cells). 53 real band-hold conditions; IS star 98.3%/+9.7%w FAILED OOS flat (2 full-width wipeouts). Money = premium price (c/w≥0.40), not condition. Nothing deployable. SIGNAL_GEOMETRY_OPTIMIZATION.md + UI card.
+
+## /goal iter-2 (2026-07-31): SYNTHESIS SEARCH — cross the 53 real band-hold conditions × premium-richness gate (only sell when band-edge structure c/w rich), + EARNINGS IV-CRUSH book (sell rich spreads pre-results, exit post — nse_results_dates.csv on disk). Fable agent → studies/SIGNAL_GEOMETRY_OPT2.md
