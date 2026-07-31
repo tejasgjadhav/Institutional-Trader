@@ -184,6 +184,13 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
 
 ## Operating conventions (follow these)
 
+- **RESULTS → STUDIES → UI → GITHUB (standing rule, user 2026-07-31):** whenever new trading
+  results land (a backtest completes, a paper trade resolves into a meaningful sample, a book's
+  measured stats change), update the STUDIES tab + README tables in `engine/ui_terminal.py` in the
+  SAME format as the existing cards/tables, restart the viewer, and commit+push BOTH remotes
+  (`origin` = Institutional-Trader public, `private` = Institutional-Trader-private-). Never leave
+  the UI or the repos behind the studies/ files.
+
 - **SECURITY:** `.env` holds the Upstox token + notification keys. It is **gitignored and must
   NEVER be committed/pushed.** Before every commit verify: `git diff --cached --name-only | grep -q "\.env$"` returns nothing.
 - **Restart after engine/UI code changes** (launchd does not hot-reload):
