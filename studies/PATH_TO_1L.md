@@ -132,3 +132,98 @@ reproduces its documented numbers exactly — 282 trades, 84.4% win, +3.17%m.**
 
 *Repro:* `studies/ndte/ndte23_ic.py` (data: `studies/ndte/bhav_expiry_dl.py` → `/tmp/ndte_bhav`,
 spot cache `/tmp/ndte_cache/spot2019.json`). /tmp caches are wiped on reboot — both are resumable.
+
+---
+
+# Iteration 2 (2026-07-31) — FLIP-condor hybrid + SENSEX condor
+
+## 5. FLIP-CONDOR HYBRID on NIFTY 0DTE — PROMISING (IS + OOS)
+
+**Idea:** keep the deployed FLIP side exactly as-is (ret5 ≥ +1% → PE, else CE; short 0.5% OTM,
+W=200), and ADD the opposite-side spread only when that side's own credit/width clears a floor.
+Margin is shared (both wings W=200, only one side can lose at settlement → margin = W − total
+credit), so any positive added-side EV lifts return-on-margin on the same capital.
+
+**Reproduction gate (`studies/ndte/ndte24_flipcondor.py`):** on the same 282 expiries
+(2019-02→Jul'24, `/tmp/ndte_bhav`), the FLIP baseline reproduces **n=282, 85.8% win, +3.82%m —
+exactly** under intrinsic settlement (the flip study's convention). The documented ₹137,523 does
+NOT reproduce in rupees: the original scratchpad (deleted) used a different lot-size bookkeeping —
+era lots give **+₹103,818**, flat-75 gives +₹144,363, which bracket it. Every comparison below is
+same-machinery (era lots, intrinsic settle), so the verdict does not hinge on that bookkeeping.
+
+### IS — same 282 expiries, 1 lot, net of 2.5% slippage + brokerage
+
+| Config | n (2-side) | Win | Avg %m | Total ₹ | Worst | Per-year ₹ (19/20/21/22/23/24) |
+|---|--:|--:|--:|--:|--:|---|
+| FLIP (deployed baseline) | 282 (0) | 85.8% | +3.82% | +₹103,818 | −₹12,975 | −4k/+23k/+13k/+26k/+19k/+27k |
+| HYB add d=0.75 cw≥0.07 | 282 (89) | 84.4% | +6.19% | **+₹159,575** | −₹12,975 | +2k/+46k/+33k/+25k/+22k/+31k |
+| **HYB add d=1.00 cw≥0.08** | 282 (39) | **86.5%** | +5.81% | **+₹148,045** | −₹12,975 | +1k/+49k/+17k/+31k/+20k/+31k |
+
+Not a fit cell: the whole swept neighborhood (add d ∈ {0.75, 1.00, 1.25} × floor ∈ {0.05…0.10},
+15 cells) lands at +₹127k–₹167k, i.e. **every cell beats FLIP's +₹104k**; win% ranges 82.6–86.5%.
+Symmetric no-floor condors (add d=0.50) are the worst of the family — the floor and the wider
+added side are what convert iteration-1's "condor loses to FLIP" into a win. Worst trade is
+unchanged (it is FLIP's own worst day; the added side cannot add a new max-loss — one side's
+wing covers both). 2019, FLIP's one negative year, turns positive in both headline cells.
+
+### OOS — Oct'24→Jul'26, real Upstox expired premiums, cells frozen before the run
+
+`studies/ndte/ndte26_flipcondor_oos.py`, 95 expiries (`/tmp/ndte_nifty_oos`):
+
+| Config | n (2-side) | Win | Avg %m | Total ₹ | Worst |
+|---|--:|--:|--:|--:|--:|
+| FLIP (deployed baseline) | 95 (0) | 91.6% | +5.92% | +₹64,323 | −₹11,629 |
+| HYB d=0.75 cw≥0.07 [frozen] | 95 (33) | 89.5% | +10.24% | +₹85,797 | −₹11,629 |
+| **HYB d=1.00 cw≥0.08 [frozen]** | 94 (11) | **91.5%** | +9.18% | +₹82,225 | −₹11,629 |
+
+All 8 OOS neighbor cells also beat FLIP (+₹79k–96k at 88.4–91.6% win). One expiry (2026-02-03)
+is excluded by the margin≤0 guard — its 1%-OTM added side shows a stale 189.9-credit open print
+(junk data that would have flattered the hybrid; exclusion is the conservative call).
+
+**Verdict: PROMISING — needs user approval + paper forward-test, NOT deploy.**
+- The d=1.00 cw≥0.08 cell matches FLIP's win rate (86.5% IS / 91.5% OOS vs 85.8/91.6), beats it
+  on money in BOTH eras (+43% IS, +28% OOS), same worst-case, positive all 6 IS years — and it
+  only fires the second side on ~12–14% of expiries (39/282 IS, 11/94 OOS), when the far side is
+  paid ≥16 pts on 200. Mechanically it is the stock-book lesson again: rich credit IS the gate.
+- Honest size of the prize at 1 lot: **≈ +₹800–1,000/month over FLIP** (OOS era). Real, not
+  transformative — it does not move the ₹1L needle alone; it raises the 0DTE NIFTY book's rate
+  from ~₹1.8k to ~₹2.6–2.8k/mo on the same margin.
+- Caveats: the floor value is swept (selection risk is real even with a robust neighborhood);
+  bhav OPEN fills on both legs are optimistic for a 4-leg entry; the added side fires rarely
+  OOS (11–33 trades), so the OOS uplift rests on a thin add-count even though the full-book n=95.
+
+## 6. SENSEX 0DTE condor — REJECT (fails the win-rate bar on a thin, one-regime sample)
+
+`studies/ndte/ndte25_sensex_condor.py`, cache `/tmp/ndte_sensex` rebuilt (was wiped);
+baselines reproduce exactly (CE-only 89 exp **88.8% / +7.57%m / +₹67,248**, worst −₹8,963;
+sensex_flip's CE/PE/FLIP figures all match the 2026-07-08 study). Deployed CE side + PE side
+gated by its own c/w floor, real premiums Oct'24→Jul'26:
+
+| Config | n (2-side) | Win | Avg %m | Total ₹ | Worst | 24/25/26 ₹ |
+|---|--:|--:|--:|--:|--:|---|
+| CE-only (deployed) | 89 (0) | **88.8%** | +7.57% | +₹67,248 | −₹8,963 | −4k/+34k/+37k |
+| IC +PE 0.50 (symmetric, best floor) | 89 (62–83) | 73–75% | +10.5% | +₹63–65k | −₹12,499 | worse everywhere |
+| IC +PE 0.75 cw≥0.06 (best cell) | 89 (57) | 85.4% | +13.39% | +₹96,879 | −₹9,531 | −3k/+37k/+63k |
+
+The best cell adds +₹30k over 22 months but: win% drops 88.8→85.4 (fails "same-or-better"),
+the worst trade deepens (−₹9.0k→−₹9.5k), the 2024 stub — the only adverse stretch in the sample —
+gets worse in every variant (75%→58–67% win), and the uplift is concentrated in 2026's hot regime
+(its 100%-win 2026 line on 26 trades is exactly what floor-selection on 89 expiries produces).
+**89 expiries, 22 months, one regime — same reason SENSEX FLIP was rejected. Keep SENSEX CE-only.**
+Revisit only if the NIFTY hybrid passes its paper test AND the SENSEX book has ≥150 expiries.
+
+## 7. Iteration-2 verdict
+
+1. **The FLIP-condor hybrid (add d=1.00, cw≥0.08) is the first iteration-2 candidate to clear the
+   bar**: more money than FLIP in-sample AND out-of-sample at the same win rate and the same
+   worst-case, on shared margin. Status: awaiting user approval → paper forward-test at 1 lot.
+2. **SENSEX condor: rejected** on the win-rate bar and sample thinness.
+3. Prize honesty: ≈ +₹0.8–1k/mo at 1 lot. The ₹1L path remains lot-scaling of the proven books
+   (Section 1); this is a rate improvement on one of them, not a new engine.
+4. Still open from the backlog: calendar/diagonal backtest (`/tmp/bhav_nifty_opt` cached, wiped on
+   reboot — re-download via `studies/ndte/bhav_dl_0dte_idx.py` era scripts), daily hold-to-expiry
+   CE re-scrutiny.
+
+*Repro:* `studies/ndte/ndte24_flipcondor.py` (IS), `ndte26_flipcondor_oos.py` (OOS, cache
+`/tmp/ndte_nifty_oos`), `ndte25_sensex_condor.py` (SENSEX, cache `/tmp/ndte_sensex`). All /tmp
+caches are resumable; scripts refetch what a reboot wipes.
