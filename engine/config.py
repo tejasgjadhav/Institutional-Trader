@@ -286,7 +286,7 @@ STOCK_CREDIT_LOTS         = 1       # paper sizing — KEEP AT 1 to forward-test
 STOCK_CREDIT_SCAN_AFTER   = "15:10" # once/day after this (a daily breakout needs ~the close)
 STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight carry)
 
-# ── STOCK CREDIT v0 (0.35-0.40 c/w) — EXPERIMENTAL PAPER BOOK, user-approved 2026-07-31 ──
+# ── STOCK CREDIT v0 (0.35-0.40 c/w) — forward paper-test, user-approved 2026-07-31 ──
 # The v2 gate takes c/w >= 0.40. This runs the SAME geometry (short 2-OTM, width 4) on the band
 # just below it, with the exits that half wants: TP-40 and NO stop.
 #

@@ -1,4 +1,4 @@
-"""STOCK CREDIT v0 (c/w 0.35-0.40) — EXPERIMENTAL paper book, user-approved 2026-07-31.
+"""STOCK CREDIT v0 (c/w 0.35-0.40) — forward paper-test book, user-approved 2026-07-31.
 
 v2 trades credit/width >= 0.40. This trades the band just BELOW that gate, at the SAME geometry
 (short 2-OTM, width 4), with the exits that band wants: take profit at 40% of credit, NO stop.

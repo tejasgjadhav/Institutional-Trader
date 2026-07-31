@@ -393,17 +393,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stockcr2.setStyleSheet(f"QTableWidget {{ border: 2px solid {AMBER}; }}")
         v.addWidget(self.pm_stockcr2, 1)
 
-        # STOCK CREDIT v0 (c/w 0.35-0.40) — EXPERIMENTAL, user-approved 2026-07-31. Deliberately
-        # rendered LAST and in RED, not gold: it is the least-proven book on the dashboard and must
-        # never be mistaken for v2. Stats are the honest pair — see studies/LOWCW_BAND_RESCUE.md §7.
-        pmv0 = QLabel("⚠️ v0 EXPERIMENTAL · c/w 0.35–0.40 (the band BELOW the proven gate) · same geometry as v2 "
+        # STOCK CREDIT v0 (c/w 0.35-0.40) — user-approved 2026-07-31. Rendered LAST and in cyan
+        # rather than v2's gold, so the leader book stays visually distinct. Stats shown are the
+        # honest IS/OOS pair — see studies/LOWCW_BAND_RESCUE.md §7.
+        pmv0 = QLabel("STOCK CREDIT v0 · c/w 0.35–0.40 (the band below the v2 gate) · same geometry as v2 "
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
                       "WIN 77% in-sample (2019–Sep'24, positive only 4 of 6 yrs, +1.9% on margin = noise) / "
                       "91% out-of-sample (Oct'24–now, only 43 trades) · adds ~9% net for ~99% more capital — "
-                      "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · NOT PROVEN — building a live record")
+                      "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · forward paper-test, 1 lot")
         pmv0.setWordWrap(True)
         pmv0.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
-        pmv0.setStyleSheet(f"color:{RED}; padding:8px; background-color:{PANEL}; border:2px dashed {RED}; border-radius:4px;")
+        pmv0.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
         v.addWidget(pmv0)
         self.pm_stockv0 = QTableWidget(); self.pm_stockv0.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockv0.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
@@ -411,7 +411,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stockv0.setAlternatingRowColors(True); self.pm_stockv0.verticalHeader().setVisible(False)
         self.pm_stockv0.verticalHeader().setDefaultSectionSize(32)
         self.pm_stockv0.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.pm_stockv0.setStyleSheet(f"QTableWidget {{ border: 2px dashed {RED}; }}")
+        self.pm_stockv0.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.pm_stockv0, 1)
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
@@ -541,17 +541,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~10/mo · SELL", GREEN))
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
-        v0hdr = QLabel("⚠️ v0 EXPERIMENTAL (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
-                       "NOT PROVEN (77% IS, +ve 4/6 yrs · 91% OOS on 43 trades) — kept separate so it never flatters the books above")
+        v0hdr = QLabel("STOCK CREDIT v0 (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
+                       "77% IS (+ve 4/6 yrs) · 91% OOS (43 trades) — logged separately from v1/v2")
         v0hdr.setWordWrap(True)
         v0hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
-        v0hdr.setStyleSheet(f"color:{RED}; padding:8px; background-color:{PANEL}; border:2px dashed {RED}; border-radius:4px;")
+        v0hdr.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
         v.addWidget(v0hdr)
         self.sw_v0_stats = self._stats_label()
-        self.sw_v0_stats.setStyleSheet(f"color:{RED}; padding:8px; background-color:{PANEL}; border:2px dashed {RED};")
+        self.sw_v0_stats.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN};")
         v.addWidget(self.sw_v0_stats)
         self.sw_v0 = self._make_log_table(self.SWING_TAB_BOOK_COLS)
-        self.sw_v0.setStyleSheet(f"QTableWidget {{ border: 2px dashed {RED}; }}")
+        self.sw_v0.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.sw_v0)
         v.addStretch(1)
         return self._scroll(inner)
@@ -1131,6 +1131,32 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "the c/w≥0.40 gate selects rich-IV wide-strike names whose fade shorts barely trade intraday (both "
      "legs traded intraday on only 30%/62% of trades) → the extra signals are often unexecutable too. "
      "REPORT-ONLY, engine unchanged. File: studies/HOURLY_VS_CLOSE_ENTRY.md")}
+{res("★ STOCK CREDIT v0 — THE 0.35-0.40 BAND, DEPLOYED AS A PAPER BOOK (2026-07-31, user-approved): the "
+     "watchlist blocks ~35% of all signals in the 0.30-0.40 c/w band, so the whole band was tested — "
+     "<b>432 configs</b> (geometry: strike-step short 0-3 × width 1-5 AND percent-of-spot short 1-4% × "
+     "width 2-6%; targets 40/50/75/hold; stops none/2×/3×) plus a DTE sweep 5→55. <b>Pooling 0.30-0.40 "
+     "hid the answer.</b> Split in half: the <b>LOWER 0.30-0.35 half is dead in every test</b> (IS +0.2%, "
+     "OOS −5.2% on margin) — that is the half filling the watchlist, keep blocking it. The <b>UPPER "
+     "0.35-0.40 half at the DEPLOYED geometry with TP-40 and NO stop is positive in both windows: "
+     "IS 77% win / +1.9% on margin / +ve 4 of 6 yrs (n=310) · OOS 91% win / +19.4% on margin / +ve 3 of "
+     "3 yrs (n=43)</b>. This settles the two-tier gate deferred on 2026-07-16 (it could not be validated "
+     "on 2019-24 then). Deployed as book <b>v0</b>: same geometry as v2 (sell 2-OTM / buy width-4), band "
+     "0.35-0.40, book at 40% of credit, no stop, 1 lot, max 3/day and 10 open, scans LAST and skips any "
+     "name v1 or v2 already holds. HONEST SIZING: v0 adds ~+9% net for ~+99% more capital — the same "
+     "margin in one more v2/v1 lot returned <b>82% more</b>, so scale the core books first. "
+     "File: studies/LOWCW_BAND_RESCUE.md §7")}
+{res("REJECTED — RE-CUTTING THE BAND TO WIDTH 1 (2026-07-31): the 0.30-0.40 signals are not premium-poor, "
+     "they are priced at a width their premium cannot fill (c/w is a function of how far the wing sits, so "
+     "a FIXED width-4 rejects coarse-strike-ladder names, not thin-premium ones). Buying the wing <b>1 "
+     "strike away instead of 4</b> lifted the same signals to <b>87.8% win / +18.1% on margin / +ve 6 of 6 "
+     "years on 680 trades</b> in-sample, and it survived every in-regime guard: 20 adjacent cells all "
+     "positive, matched-sample bias check (the 102 signals width-1 cannot price are equally bad, −2.2%), "
+     "month-block bootstrap p5 +26%, 32/34 symbols and 58/68 months positive, and a live liquidity probe "
+     "(the adjacent long strike carries 23k-8.5M OI at 0.4-2.5% spread). <b>OUT-OF-SAMPLE IT COLLAPSED: "
+     "74.3% win / +1.4% on margin — WORSE than doing nothing (76.1% / +1.9%) — and negative in 2026.</b> "
+     "Dead in BOTH halves of the band. The guards test consistency WITHIN a regime; only a held-out window "
+     "tests across one — same lesson as the index-fade salvage. NOT deployed. "
+     "File: studies/LOWCW_BAND_RESCUE.md")}
 {res("★ UNIVERSE EXPANSION — TIER-5 DEPLOYED (2026-07-29, user-approved): screened all <b>180 NSE F&amp;O "
      "stock underlyings</b> → 88 not in the universe → <b>37 clear the c/w≥0.40 gate and every one is "
      "net-positive IS</b>. Added the <b>13 Tier-5 names</b> (COLPAL, ASTRAL, INDIAMART, ALKEM, DALBHARAT, "
