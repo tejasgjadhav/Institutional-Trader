@@ -1,5 +1,74 @@
 # Handoff — institutional-trader
 
+## DONE (2026-07-31 night) — 0.30-0.40 c/w BAND RESCUE: **REJECTED on OOS** (commits bc3801d, 6872345, 3da95c5 — LOCAL ONLY, not pushed)
+
+User goal: the union watchlist blocks a lot of names at c/w ~0.30 — can any config (geometry,
+target, "any other config") make them tradeable at better win rate + net? Answer delivered: **NO.
+Nothing deployed, no engine file touched.** Study: `studies/LOWCW_BAND_RESCUE.md`.
+
+**IS (bhavcopy 2019->Sep'24, 113 names, 2,254 priced UNION signals; band 0.30-0.40 = 782 = 34.7%):**
+swept 432 cells — geometry strike-step (S0-3 x W1-5) AND percent-of-spot (S1-4% x W2-6%), TP
+{40,50,75,hold}, stop {none,2x,3x} — plus a DTE sweep {5..55} and adaptive-width rules. Band at
+deployed S2/W4 TP-50 stop-3x = 74.3% win / **-1.1% ROM** / +ve 3/6 (dead). Re-cut to **width 1**:
+87.8% win / **+18.1% ROM** / +ve 6/6 on 680 trades, avg c/w rising 0.34 -> 0.42 (mechanism: c/w is
+a function of how far the wing sits, so a FIXED width-4 rejects coarse-strike-ladder names, not
+thin-premium ones). Best composite ADAPT-41 (W4 if clears 0.40 else W1 if IT clears): 11.5 tr/mo
+vs 4.9, 89.9% win, +50% total net. Separately IS said v2's 3x stop costs ~21% of net (TP-40/no-stop
+89.4%/+70.4% vs deployed 82.9%/+58.1% on the same 340 signals).
+
+**OOS (Upstox expired options Oct'24->Jul'26, 38 of 113 names = UNIVERSE[::3]; 48 gate / 109 band /
+198 below): BOTH CLAIMS FAIL.**
+  band do-nothing W4      n=109  76.1% win  +1.9% ROM   (2024 +38 / 2025 -1 / 2026 -2)
+  band S2/W1 TP-40 (IS winner) n=101  **74.3% win  +1.4% ROM**  (2026 **-7%**)
+  band S2/W1 TP-50        n=101  75.2% win  +4.0% ROM   (2026 -3%)
+  gate deployed / TP40-nostop / TP50-nostop / TP75-nostop, all n=48:
+        95.8%/+219.4% · 97.9%/+204.5% · 97.9%/+221.0% · 95.8%/+229.1% — indistinguishable; at 96%
+        win the 3x stop never binds, so removing it saves nothing. NOT evidence either way.
+**Verdict: CW_BUCKET_ANALYSIS reinstated — below 0.40 win% holds (TP books small winners early) and
+money does not follow. The gate IS the edge; leave it. v1's 30-Jul TP-40/no-stop (242 OOS trades)
+is unaffected and stays.**
+
+**Why IS lied:** every in-regime guard PASSED and none detected it — 20 adjacent W1 cells all +ve,
+6/6 yrs, matched-sample bias check (the 102 signals W1 can't price are equally bad: -2.2% ROM),
+month-block bootstrap p5 +26%, 32/34 symbols +ve, 58/68 months +ve, live liquidity probe fine
+(W1 long leg carries 23k-8.5M OI at 0.4-2.5% spread; only BAJAJHLDNG rejects). Those test
+consistency WITHIN a regime. Same lesson as the index-fade salvage (CLAUDE.md Part 11).
+
+**OPEN QUESTION the user just raised — "we checked everything for 0.3 to 0.4?"** Configuration
+space: yes, exhaustively (geometry x target x stop x DTE x adaptive rules). **NOT** covered:
+(a) the band was POOLED — 0.30-0.35 vs 0.35-0.40 were never split, and CW_BUCKET_ANALYSIS says they
+differ a lot (77%/+9.2%w vs 78%/+1.1%w); (b) conditional filters — IV/VIX regime, breakout size,
+which Donchian window fired, per-name IV rank; (c) time-based exits; (d) intraday entry.
+**NEXT STEP IN FLIGHT:** re-run the OOS split by sub-band. This is CHEAP now — `/tmp/lowcw_legcache.pkl`
+holds the fetched legs, so it needs almost no API calls. Script to edit: `studies/ndte/stkfade_lowcw_oos2.py`
+(add 0.30-0.35 / 0.35-0.40 buckets to CONFIGS + the `pop` classifier).
+
+**Scripts (all committed):** `ndte/bhav_stk_parquet.py` (one-time compaction of the 1,500-file
+bhavcopy CSV cache -> /tmp/bhav_stk.pkl; the old per-row pd.to_datetime loader cost ~75 min PER RUN,
+this is 45 s once — reuse it in future studies), `ndte/stkfade_lowcw_geometry.py` (432-cell IS),
+`_controls.py` (faithfulness: harness reproduces the deployed book 82.9%/+24.6%w vs known
+84.1%/+25.7%w), `_matched.py`, `_dte.py`, `_adaptive.py`, `_robust.py`, `_oos2.py` (OOS, resumable),
+`lowcw_live_liquidity.py`.
+
+**GOTCHAS hit this session (read before re-running):**
+- `/tmp/bhav_cache_stk` (1.3 GB of raw CSVs) was DELETED to free disk — machine had only 5.3 GiB
+  free and swap was 8.75/10 GB. Re-download via `ndte/bhav_dl_stk.py` if needed; `/tmp/bhav_stk.pkl`
+  (486 MB, universe-filtered) is what every lowcw script actually reads.
+- **Machine is memory-starved.** A 12-worker OOS run was silently killed by macOS jetsam (no
+  traceback, process just gone). Use 6 workers. `_oos2.py` now checkpoints per stock to
+  `/tmp/lowcw_oos2_bysym.json` and resumes, and writes the leg cache ATOMICALLY (an earlier kill
+  mid-`pickle.dump` truncated it -> EOFError on next load).
+- The expired-instruments endpoint throttles to ~7 s/call; full 113-name OOS = ~30k legs = ~10 h.
+  Hence the 38-name subset. ~80% of calls go on pricing the reference geometry just to bucket a
+  signal — short leg is fetched first now so sub-Rs50 signals bail before paying for the long leg.
+- pyarrow is NOT installed -> use `to_pickle`, not `to_parquet`.
+- **Another Claude session (fable-5) is committing to this same repo concurrently** (e.g. 73e725c
+  "handoff: search loops stopped"). Check `git log` before pushing; a push carries its commits too.
+
+**NOT DONE / awaiting user:** push to both remotes (asked, not answered), STUDIES-tab card recording
+the rejection (repo convention documents rejections, cf. BANKNIFTY_0DTE_REJECTION.md).
+_Updated: 2026-07-31 by Claude Code_
+
 ## DONE (2026-07-30 night) — BOOK column · swing-MTM fix · UI renames · Saavi branding (653d3c9→1bb1f6d)
 Four commits, all pushed both remotes, viewer relaunched stable after each (final PID 58816), engine
 restarted once (57214):
