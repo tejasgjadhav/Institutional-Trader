@@ -804,3 +804,5 @@ proven, keep tiers separate, validate 2019-24 first, 1 lot is right sizing.
 ## /goal iter-2 (2026-07-31): SYNTHESIS SEARCH — cross the 53 real band-hold conditions × premium-richness gate (only sell when band-edge structure c/w rich), + EARNINGS IV-CRUSH book (sell rich spreads pre-results, exit post — nse_results_dates.csv on disk). Fable agent → studies/SIGNAL_GEOMETRY_OPT2.md
 
 ## iter-2 status: agent stopped w/ 4 DETACHED runs live (sg2x_dl_oos, sg2x_oos_upstox, stkfade_lowcw_geometry, stkfade_lowcw_oos; logs /tmp/lowcw*.log + scratchpad sg2x*). SIGNAL_GEOMETRY_OPT2.md partial (6.3KB). Watcher b43fr9vr5 armed — on completion: read tails, finish study, UI card, commit both repos.
+
+## SEARCH LOOPS STOPPED (user, 2026-07-31): diminishing returns confirmed — de-novo mining keeps re-deriving 'gated short premium is the edge'; real wins all came from optimizing proven books (universe +13, v1 TP-40, hybrid). Iter-2 detached runs finish free (watcher b43fr9vr5) — read earnings-crush verdict when it lands, write SIGNAL_GEOMETRY_OPT2 close-out, then NO further search iterations. Priority now: live forward test → 20-30-trade gates → lot scaling (the ₹1L path).
