@@ -36,7 +36,7 @@ premiums Oct'24→Jul'26 **with the ₹40k cap applied** (1 lot, scaled to 113 n
 **17 of v2's 43** OOS trades and only **2 of v0's**, so v0 fires MORE often live than v2 and adds
 ~+61% on top of it. Per rupee of margin v2 is still better (+41.2% vs +18.7%) — but it is
 signal-starved, so with spare margin v0 adds real money. Edges are validated; **magnitude is NOT** — v2 implies ~97%/mo on
-deployed capital, which is not credible. **Plan on ~50%, not the model figure, and keep lots at 1.**
+deployed capital, which is not credible. **Plan on 80% of the model figure (user, 2026-07-31 — was ~50%), and keep lots at 1.**
 
 **Structural exclusions deployed 2026-07-19** (risk limits, NOT edges):
 `ZERO_DTE_MULTI_MIN_CW=0.04` (SENSEX/BNF; NIFTY unchanged) and `ZERO_DTE_ELECTION_BLACKOUT`.

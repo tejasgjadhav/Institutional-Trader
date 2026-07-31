@@ -934,14 +934,14 @@ WITHOUT the live ₹40,000 exposure cap (<i>width × lot ≤ 40k</i>) and withou
 same OOS window re-measured WITH the cap, i.e. counting only trades the engine can actually take.</p>
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win in-sample</td><td>Win out-of-sample</td><td>Sig/mo</td><td>₹/mo (model, no cap)</td><td>₹/mo (cap-applied OOS)</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>84% · +ve every yr</td><td>87% · +ve every yr</td><td>~7.6 model → <b>3.5</b> capped</td><td>~₹20,000</td><td><b>~₹22,000</b> (₹6,267/trade)</td></tr>
-<tr><td>Stock v1 (TP-40)</td><td>85% · +ve every yr</td><td>86% · +ve every yr</td><td>~16</td><td>~₹13,000</td><td>not re-measured · cap blocks only ~10% of its names</td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>77% · +ve 4 of 6 yrs</td><td>91% · +ve every yr</td><td>~5.5</td><td>~₹13,300</td><td><b>~₹13,300</b> (₹2,408/trade)</td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>84% · +ve every yr</td><td>87% · +ve every yr</td><td>~7.6 model → <b>3.5</b> capped</td><td>~₹20,000</td><td><b>~₹22,000</b> (₹6,267/trade)</td></tr>
+<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>85% · +ve every yr</td><td>86% · +ve every yr</td><td>~16</td><td>~₹13,000</td><td>not re-measured · cap blocks only ~10% of its names</td></tr>
+<tr><td>Stock v0 (0.35–0.40) <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>77% · +ve 4 of 6 yrs</td><td>91% · +ve every yr</td><td>~5.5</td><td>~₹13,300</td><td><b>~₹13,300</b> (₹2,408/trade)</td></tr>
 <tr><td>Intraday NIFTY</td><td>88% · +ve 7 of 8 yrs</td><td>90% · +ve every yr</td><td>~4 (Tue)</td><td>~₹1,771</td><td>n/a — index book, stock cap does not apply</td></tr>
 <tr><td>Intraday SENSEX</td><td>n/a — data starts Oct'24</td><td>88.8% · 3 yrs only</td><td>~4 (Thu)</td><td>~₹3,153</td><td>n/a — index book</td></tr>
 <tr><td>Index swing fade</td><td colspan="2">regime-dependent · FAILED out-of-sample (−1.4% of width)</td><td>~2.5</td><td>₹0</td><td>₹0</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td>~33–39/mo</td><td><b>≈ ₹51,224</b></td><td><b>≈ ₹53,224</b></td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (50% haircut)</b></td><td></td><td></td><td></td><td><b>≈ ₹25,600</b></td><td><b>≈ ₹26,600</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (80% of model)</b></td><td></td><td></td><td></td><td><b>≈ ₹40,979</b></td><td><b>≈ ₹42,579</b></td></tr>
 </table>
 <p style="color:{TEXT_DIM};font-size:13px;">Why v2's model overstates it, structurally and not as a one-month fluke: v2 is short-2-OTM/<b>width 4</b>
 while v1 is short-1-OTM/<b>width 3</b>. The wider wing both lowers credit/width (so v2 clears the 0.40 gate less often — v1's live c/w sits at
@@ -1066,14 +1066,14 @@ still the best book (+41.2% vs v0's +18.7%) — it is simply signal-starved, whi
      "TIER B — the monthly-futures pair, kept SEPARATE: lower win rate, different capital base, "
      "the long-delta diversifier / higher-return-on-capital experiment.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>TIER A · ≥80% WIN</td><td>Win (IS / OOS)</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON</td></tr>
-<tr><td>★ Stock fade v2 UNION (swing)</td><td>85% / <b>88%</b></td><td>5–6 → <b>3.5</b> capped</td><td>₹20–23k</td><td>₹10–12k</td></tr>
-<tr><td>Stock credit v1 (TP-40, swing)</td><td>85% / <b>86%</b></td><td>~16</td><td>₹13,000</td><td>₹6.5k</td></tr>
-<tr><td>Stock credit v0 (0.35–0.40, swing)</td><td>77% / <b>91%</b></td><td>~5.5</td><td>₹13,300</td><td>₹6.6k</td></tr>
-<tr><td>NIFTY 0DTE (FLIP)</td><td><b>88.3%</b> measured</td><td>~3.2</td><td>₹1,771</td><td>₹0.9k</td></tr>
-<tr><td>SENSEX 0DTE (CE)</td><td><b>89.0%</b> measured</td><td>~4.1</td><td>₹3,153</td><td>₹1.6k</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>TIER A · ≥80% WIN</td><td>Win (IS / OOS)</td><td>Signals/mo</td><td>1 lot MODEL</td><td>1 lot PLAN-ON (80%)</td></tr>
+<tr><td>★ Stock fade v2 UNION (swing)</td><td>85% / <b>88%</b></td><td>5–6 → <b>3.5</b> capped</td><td>₹20–23k</td><td>₹16–18k</td></tr>
+<tr><td>Stock credit v1 (TP-40, swing)</td><td>85% / <b>86%</b></td><td>~16</td><td>₹13,000</td><td>₹10.4k</td></tr>
+<tr><td>Stock credit v0 (0.35–0.40, swing)</td><td>77% / <b>91%</b></td><td>~5.5</td><td>₹13,300</td><td>₹10.6k</td></tr>
+<tr><td>NIFTY 0DTE (FLIP)</td><td><b>88.3%</b> measured</td><td>~3.2</td><td>₹1,771</td><td>₹1.4k</td></tr>
+<tr><td>SENSEX 0DTE (CE)</td><td><b>89.0%</b> measured</td><td>~4.1</td><td>₹3,153</td><td>₹2.5k</td></tr>
 <tr style="color:{TEXT_DIM};"><td><s>BANKNIFTY monthly 0DTE</s> <span style="color:{RED};">REJECTED 07-19</span></td><td><s>91.3%</s> → 78.6%</td><td>~1</td><td><s>₹820</s> → ₹141</td><td>₹0</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td>TIER A TOTAL (~₹3–3.5L capital)</td><td><b>≈86% blended</b></td><td>~34</td><td>~₹51k</td><td>~₹26k</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td>TIER A TOTAL (~₹3–3.5L capital)</td><td><b>≈86% blended</b></td><td>~34</td><td>~₹51k</td><td>~₹41k</td></tr>
 <tr><td colspan="5" style="color:{TEXT_DIM};font-size:13px;">Signals/mo are MODEL figures from backtests with no ₹40k exposure cap. v2's model is the least reliable: the ₹40k cap blocks 33% of the universe for its width-4 geometry (vs 10% for v1's width-3) and 17 of its 43 OOS trades, so its true cadence is ~3.5/mo. v0's 77% in-sample leg is the weakest evidence in this tier; its 91% out-of-sample rests on 43 trades.</td></tr>
 <tr><td colspan="5" style="color:{BORDER};">———————————————————————————————————</td></tr>
 <tr style="color:{AMBER};font-weight:bold;"><td>TIER B · monthly futures pair (SEPARATE)</td><td>Win</td><td>Freq</td><td>Return on capital</td><td>Capital</td></tr>
