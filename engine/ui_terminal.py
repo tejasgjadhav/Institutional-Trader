@@ -845,6 +845,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "only worked in one regime cannot hide behind a blended average.")}
 {self._strategy_summary_table()}
 
+{res("SIGNAL×GEOMETRY OPTIMIZATION (2026-07-31, Fable, 1,572 cells) — the user-directed two-stage machine: "
+     "mine raw conditions ≥65% band-hold, THEN optimize payoff geometry (the v1/v2 recipe generalized). "
+     "Stage-1 found 53 REAL band-hold conditions (NIFTY calm-strength 75.3%, stock compression 75.2%). "
+     "Stage-2 IS star: RSI-band put spread 98.3% win / +9.7%w / 6-6 yrs — but OOS it went FLAT (−0.1%w; two "
+     "full-width wipeouts erased 36 wins; stops don&#39;t save it). Stock compression: real condition, only "
+     "+2.1%w — below the deployed fade. VERDICT: conditions are real, the MONEY is in the premium&#39;s "
+     "price — band-edge structures collect c/w 0.04-0.18 vs the books&#39; ≥0.40. The method independently "
+     "re-derived the house rule. Nothing deployable. File: studies/SIGNAL_GEOMETRY_OPTIMIZATION.md")}
+
 {res("CHAMPION-STRATEGY SWEEP (2026-07-31, 227k+ trades, NET of costs) — user asked: can ANY classic "
      "strategy beat 80% win with real profit? Tested: Connors RSI-2 (65-67% win, edge decayed to +0.02% "
      "OOS), Larry-Williams breakout (dead), Turtle/Donchian FOLLOW &amp; Supertrend (all profit was COVID "
