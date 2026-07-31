@@ -21,7 +21,7 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 |---|---|---|---|---|
 | ★ Stock fade v2 UNION (TP-50) | `STOCK_CREDIT_ENABLED` | 87% | ~₹20,000 | t=+13.78 · +ve 8/8 yrs |
 | Stock credit v1 (TP-40/no-stop, 07-30) | `STOCK_CREDIT_ENABLED` | 86% | ~₹13,000 | 85% IS / 86% OOS · same signals (V1_WINRATE_SWEEP) |
-| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 77% IS / 91% OOS | ~₹13,300 (5.5 sig/mo × ₹2,408) | IS +1.9% ROM, +ve only 4/6 yrs (n=310); OOS n=43. Adds ~9% net for ~99% capital — one more CORE lot returned 82% more. User-approved 2026-07-31 to build a live record. See LOWCW_BAND_RESCUE §7 |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 77% IS / 91% OOS | ~₹16,300 (5.8 sig/mo × ₹2,808) | IS +1.9% ROM, +ve only 4/6 yrs (n=310); OOS n=43. Adds ~9% net for ~99% capital — one more CORE lot returned 82% more. User-approved 2026-07-31 to build a live record. See LOWCW_BAND_RESCUE §7 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | `DTE_MULTI_BANKNIFTY_ENABLED=False` | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 |
@@ -31,9 +31,8 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 **MODEL vs LIVE-COMPARABLE — read both.** The old model (v2 ₹20,000 · v1 ₹13,000 · SENSEX ₹3,153 ·
 NIFTY ₹1,771) came from backtests with **no ₹40k exposure cap and no live liquidity gates**, and it
 overstates v2 badly: v2 fired **once** in July against a 7.6/mo model. Re-measured on real Upstox
-premiums Oct'24→Jul'26 **with the ₹40k cap applied** (1 lot, scaled to 113 names):
-**v2 core ₹6,267/trade × 3.5/mo ≈ ₹22,000 · v0 ₹2,408/trade × 5.5/mo ≈ ₹13,300.** The cap blocks
-**17 of v2's 43** OOS trades and only **2 of v0's**, so v0 fires MORE often live than v2 and adds
+premiums Oct'24→Jul'26 **with the exposure cap applied (that cap was REMOVED 31-Jul-2026)** (1 lot, scaled to 113 names):
+**v2 core ₹7,831/trade × 3.7/mo ≈ ₹28,600 · v0 ₹2,808/trade × 5.8/mo ≈ ₹16,300** (cap raised 40k→60k on 31-Jul-2026). At the old 40k cap it blocked **17 of v2's 43** OOS trades and **2 of v0's**; at 60k, 16 and 0, so v0 fires MORE often live than v2 and adds
 ~+61% on top of it. Per rupee of margin v2 is still better (+41.2% vs +18.7%) — but it is
 signal-starved, so with spare margin v0 adds real money. Edges are validated; **magnitude is NOT** — v2 implies ~97%/mo on
 deployed capital, which is not credible. **Plan on 80% of the model figure (user, 2026-07-31 — was ~50%), and keep lots at 1.**

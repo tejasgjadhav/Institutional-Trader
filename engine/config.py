@@ -280,6 +280,20 @@ STOCK_CREDIT_TAKE_PROFIT  = 0.40    # BOOK the win at 40% of credit (was 0.75). 
 STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
 STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)
 STOCK_CREDIT_MIN_OI       = 100     # live liquidity gate: short-leg OI >= 100
+# MAX EXPOSURE per spread: skip any trade whose width x lot exceeds this. 0 = NO CAP.
+# HISTORY: hardcoded 40,000 -> 60,000 -> 0 (NO CAP), all on 2026-07-31, user's call.
+# What no-cap admits TODAY: the largest width x lot in the 113-name universe at v2 geometry is
+# HEROMOTOCO Rs90,000 (max loss ~Rs45k at c/w 0.5); median Rs30,000. A 60k cap already allowed
+# 87 of 92 priced names, so removing it entirely adds only ~5 names — but it also removes the
+# ceiling for any FUTURE high-priced listing, which is the real open risk here.
+# MEASURED OOS Oct'24->Jul'26, v2 core at 1 lot: 40k -> 26 trades/Rs22.0k mo · 60k -> 27/Rs28.6k
+# · no cap -> 43 trades at Rs47,824 avg. DO NOT TRUST that last mo-figure (~Rs278k/mo): it implies
+# >100% monthly on deployed margin off a 43-trade sample and is a small-n artifact.
+# THE REAL TRADE-OFF: big-exposure trades won 95.3% of the time in this window, which is exactly the
+# whale profile the cap was written for — they nearly always win, and the one that does not cost
+# -Rs84.7k (worst MONTH -Rs2.28L) on the longer window that produced the original 40k limit.
+# On ~Rs5L capital a single -Rs85k trade is ~17% of the account. Keep lots at 1.
+STOCK_CREDIT_MAX_EXPOSURE = 0      # 0 = NO CAP (user, 2026-07-31)
 STOCK_CREDIT_MAX_NEW_PER_DAY = 5    # cap new entries/day (breakouts cluster -> avoid 1-day pile-on)
 STOCK_CREDIT_MAX_OPEN     = 20      # cap total concurrent positions (margin + correlated-gap risk)
 STOCK_CREDIT_LOTS         = 1       # paper sizing — KEEP AT 1 to forward-test

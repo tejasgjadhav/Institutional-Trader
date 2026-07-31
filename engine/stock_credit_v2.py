@@ -22,6 +22,7 @@ from datetime import datetime, date, timedelta
 from engine.config import (
     IST, DATA_DIR, UNIVERSE, STOCK_CREDIT_ENABLED, STOCK_CREDIT_DONCHIAN, STOCK_CREDIT_MIN_DTE,
     STOCK_CREDIT_SHORT_OFFSET, STOCK_CREDIT_WIDTH, STOCK_CREDIT_MIN_CW, STOCK_CREDIT_MIN_PREM,
+    STOCK_CREDIT_MAX_EXPOSURE,
     STOCK_CREDIT_STOP_MULT, STOCK_CREDIT_REENTRY_GAP_DAYS, STOCK_CREDIT_MAX_SPREAD_PCT,
     STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MAX_NEW_PER_DAY, STOCK_CREDIT_MAX_OPEN, STOCK_CREDIT_LOTS,
     STOCK_CREDIT_TAKE_PROFIT,
@@ -345,10 +346,11 @@ def scan_signals() -> list:
             if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
                 continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
-            # EXPOSURE CAP (v2): skip extreme-notional names — width x lot <= Rs40k. Backtest with the
-            # cap: win rate unchanged (85.7%), worst single loss -84.7k -> -21.6k, worst MONTH
-            # -2.28L -> -26.4k, monthly mean~median ~Rs16-17k/lot (clean distribution, no whale risk).
-            if lot > 0 and width_pts * lot > 40000:
+            # EXPOSURE CAP: skip extreme-notional names — width x lot <= STOCK_CREDIT_MAX_EXPOSURE
+            # (0 = NO CAP since 2026-07-31; was 40,000 then 60,000). At 40k the backtest showed win rate
+            # unchanged (85.7%), worst single loss -84.7k -> -21.6k, worst MONTH -2.28L -> -26.4k.
+            # See config for the 40k-vs-60k measurement and its caveats.
+            if STOCK_CREDIT_MAX_EXPOSURE and lot > 0 and width_pts * lot > STOCK_CREDIT_MAX_EXPOSURE:
                 continue
             if lot <= 0:                                            # no lot size -> not tradeable
                 continue
