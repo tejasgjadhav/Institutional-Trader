@@ -92,21 +92,33 @@ realised** (113% of model, one hot month). v0 = Rs0 so far, book empty. **v1 is 
 P&L.** Key sizing fact: v0 fires almost as often as v2 (6.8 vs 7.6/mo) for a TENTH of the money per
 trade (Rs276 vs Rs2,632).
 
-**IN FLIGHT (user's latest, 2026-07-31 night):**
-1. Re-send the v0 sample Telegram with the EXPERIMENTAL wording gone.
-2. **Cap displayed win rates at 80% MAX** — user has done LIVE FILLS and says the backtest win rates
-   are not achievable live. Implement as an honest cap (label it as live-fill-adjusted; do NOT silently
-   restate a measured 91% as "80%").
-3. **INVESTIGATE: why has v2 produced only ~1 fade in July?** Model says 7.6/mo, own IS measure says
-   4.9/mo, live gave 1. v1 got 17 positions vs v2's 1. PARTIAL EXPLANATION ALREADY KNOWN: v1 is
-   short-1-OTM/width-3 and v2 is short-2-OTM/width-4 — NARROWER width mechanically gives HIGHER c/w
-   (this is the same mechanism the band study proved), so v1 clears the 0.40 gate far more often than
-   v2. That is expected, but it does NOT explain 1 vs the 4.9-7.6/mo modelled. SUSPECTS to check, all
-   LIVE-ONLY filters the backtest never modelled: (a) the Rs40k exposure cap `width_pts*lot <= 40000`,
-   (b) live liquidity gates spread<=6% / OI>=100 (backtest used OI>=1, no spread gate), (c) the
-   two-sided-market requirement on BOTH legs (real bid AND ask — the MPHASIS strike-validation fix),
-   (d) live mid (bid+ask)/2 vs bhavcopy close. data/union_watchlist.json records per-gate flags
-   (cw_ok/prem_ok/liq_ok) and is the place to start; note it is OVERWRITTEN daily so there is no history.
+**V2 SIGNAL-SHORTFALL DIAGNOSED (2026-07-31 night) — the Rs20,000/mo v2 model is NOT reachable live.**
+July 2026: v1 fired 12 (model 16/mo, fine) but **v2 fired ONCE** (model 7.6/mo). Cause is structural,
+not luck — TWO live-only filters the backtest never modelled hit v2's wider geometry much harder:
+  (a) **c/w gate x geometry** — v1 is short-1-OTM/**width 3**, v2 is short-2-OTM/**width 4**. A wider
+      wing mechanically LOWERS credit/width (the same mechanism the band study proved), so v1 clears
+      0.40 far more often. v1's live c/w range is 0.40-0.47, i.e. it only just clears.
+  (b) **the Rs40k exposure cap** (`width_pts*lot <= 40000`, v2-only risk limit): measured live on the
+      113-name universe — blocks **33% of names for v2 vs 10% for v1**; 22 names blocked for v2 but
+      not v1 (ABB, AXISBANK, DIVISLAB, M&M, APOLLOHOSP, ...).
+OFFSET: v1 realised **Rs2,737/trade vs its Rs812 model** — fewer trades, much bigger ones.
+**NOT ACTIONED (needs user):** either correct v2's Rs20,000/mo in CLAUDE.md/README to the ~1/mo live
+cadence, or raise the exposure cap (a risk-appetite call — the cap cut worst single loss from
+-Rs84.7k to -Rs21.6k). Offered a cap-sensitivity run (60k/80k vs signal count and worst loss);
+user did NOT take it up.
+
+**IN FLIGHT (user's latest instruction, supersedes the 80% cap):**
+1. **REVERT the 80% win-rate cap — user wants the ACTUAL backtest number (91% OOS) shown.** The cap
+   was added one message earlier at his request, then reversed. Show measured figures.
+2. Report whether v0's net % is positive and, if so, **average net return PER LOT (in Rs) and the
+   trade COUNT**. Per-symbol OOS data is in `/tmp/lowcw_subband_bysym.json`; multiply net points by
+   lot size from the Upstox options master.
+3. **Make v1, v2, watchlist and v0 scan in PARALLEL and INDEPENDENTLY** — i.e. REMOVE v0's cross-book
+   exclusion so it no longer skips names v1/v2 already hold. User believes expected profit adds.
+   RISK TO FLAG: v0+v2 can never collide (same geometry, mutually exclusive c/w bands 0.35-0.40 vs
+   >=0.40), but v0+v1 CAN — different geometry (S1/W3 vs S2/W4) — giving two same-direction positions
+   on ONE stock. That doubles single-name exposure and is exactly what the cross-book rule (user's own
+   request 2026-07-08) was built to stop. Bounded by v0's 1 lot / max 10 open / max 3 per day.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
