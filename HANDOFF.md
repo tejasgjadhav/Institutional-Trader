@@ -78,9 +78,35 @@ Engine (pid 352) + viewer (pid 597) restarted, both alive, no errors. v0 snapsho
 empty until the next 15:10 scan. v1 (3 open: TCS/BAJAJFINSV/BAJAJ-AUTO) and v2 books verified
 unmodified. **v0 will skip those 3 names by design.**
 
-**IN FLIGHT:** user asked for a 🧪 DEMO v0 Telegram message (sample signal, not a real one). Use
-`load_dotenv(.env, override=True)` — the shell env can carry a STALE TELEGRAM_BOT_TOKEN for manual
-sends (launchd engine is unaffected). Prefix 🧪 and make clear it is a sample.
+**LABEL CHANGE (commit b0175ae, pushed):** user rejected "EXPERIMENTAL" on v0 — fair, since the OOS
+numbers (91%/+19.4% ROM/3-of-3 yrs) are decent and the word was framing not fact. Removed everywhere
+(0 occurrences). All numbers kept. Sizing argument MOVED OUT of the per-signal Telegram into the
+STUDIES card + CLAUDE.md (a signal states its own evidence, not portfolio allocation). UI dashed-red
+-> solid cyan. STUDIES tab gained 2 cards (v0 deployment + REJECTED width-1 re-cut). **All pushed to
+BOTH remotes (origin + private), 0 unpushed.**
+
+**EXPECTED MONTHLY FROM CADENCE (commit e14d590):** model **Rs39,799/mo at 1 lot across ~42 sig/mo** —
+v2 Rs20,000 (7.6/mo x Rs2,632) · v1 Rs13,000 (16/mo x Rs812) · SENSEX Rs3,153 · NIFTY Rs1,771 ·
+v0 Rs1,875 (6.8/mo x Rs276). Sober = half (~Rs19,900). LIVE July 2026 = 20W/4L, 83.3%, **Rs44,789
+realised** (113% of model, one hot month). v0 = Rs0 so far, book empty. **v1 is 86% of all realised
+P&L.** Key sizing fact: v0 fires almost as often as v2 (6.8 vs 7.6/mo) for a TENTH of the money per
+trade (Rs276 vs Rs2,632).
+
+**IN FLIGHT (user's latest, 2026-07-31 night):**
+1. Re-send the v0 sample Telegram with the EXPERIMENTAL wording gone.
+2. **Cap displayed win rates at 80% MAX** — user has done LIVE FILLS and says the backtest win rates
+   are not achievable live. Implement as an honest cap (label it as live-fill-adjusted; do NOT silently
+   restate a measured 91% as "80%").
+3. **INVESTIGATE: why has v2 produced only ~1 fade in July?** Model says 7.6/mo, own IS measure says
+   4.9/mo, live gave 1. v1 got 17 positions vs v2's 1. PARTIAL EXPLANATION ALREADY KNOWN: v1 is
+   short-1-OTM/width-3 and v2 is short-2-OTM/width-4 — NARROWER width mechanically gives HIGHER c/w
+   (this is the same mechanism the band study proved), so v1 clears the 0.40 gate far more often than
+   v2. That is expected, but it does NOT explain 1 vs the 4.9-7.6/mo modelled. SUSPECTS to check, all
+   LIVE-ONLY filters the backtest never modelled: (a) the Rs40k exposure cap `width_pts*lot <= 40000`,
+   (b) live liquidity gates spread<=6% / OI>=100 (backtest used OI>=1, no spread gate), (c) the
+   two-sided-market requirement on BOTH legs (real bid AND ask — the MPHASIS strike-validation fix),
+   (d) live mid (bid+ask)/2 vs bhavcopy close. data/union_watchlist.json records per-gate flags
+   (cw_ok/prem_ok/liq_ok) and is the place to start; note it is OVERWRITTEN daily so there is no history.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
