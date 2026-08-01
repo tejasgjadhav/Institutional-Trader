@@ -379,7 +379,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · STOP 3× credit is INERT at c/w≥0.40 (held to expiry, floor = max loss) · WIN 84% in-sample (2019–Sep'24) / 87% out-of-sample (Oct'24–now) at this target/stop · ~7.6/mo (113-name universe) · SELL ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · STOP 3× credit is INERT at c/w≥0.40 (held to expiry, floor = max loss) · WIN 84% over 2019–Sep 2024 / 87% over Oct 2024–now at this target/stop · ~7.6/mo (113-name universe) · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -398,8 +398,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # honest IS/OOS pair — see studies/LOWCW_BAND_RESCUE.md §7.
         pmv0 = QLabel("STOCK CREDIT v0 · c/w 0.35–0.40 (the band below the v2 gate) · same geometry as v2 "
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
-                      "WIN 77% in-sample (2019–Sep'24, positive only 4 of 6 yrs, +1.9% on margin = noise) / "
-                      "91% out-of-sample (Oct'24–now, only 43 trades) · adds ~9% net for ~99% more capital — "
+                      "WIN 77% over 2019–Sep 2024 (positive 4 of those 6 yrs, +1.9% on margin) / "
+                      "91% over Oct 2024–Jul 2026 (43 trades) · "
                       "one more CORE lot returned 82% more · 1 lot · max 3/day, 10 open · ~5.5 sig/mo · avg net ₹2,408/lot per trade · 1 lot · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
         pmv0.setWordWrap(True)
         pmv0.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -416,7 +416,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · WIN 85% in-sample (2019–Sep'24) / 86% out-of-sample (Oct'24–now) at this target · +ve every yr · TP-40/no-stop deployed 2026-07-30 (was TP-75/stop-2×: 64%/73%) · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · WIN 85% over 2019–Sep 2024 / 86% over Oct 2024–now at this target · +ve every yr · TP-40/no-stop deployed 2026-07-30 (was TP-75/stop-2×: 64%/73%) · ~16/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -444,7 +444,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # MONTHLY FUTURES PULLBACK — the 5th strategy (monthly cycle · BUY front-month futures).
         # Signals-only paper test; needs ~Rs 15L to trade for real. Earnings-skip applied live.
         v.addWidget(self._section_label(
-            "MONTHLY FUTURES PULLBACK · REV1-v2 · TARGET +2% (→+1% late) · STOP −5% on close · WIN 77.8% in-sample (2018–Sep'24) / 75.7% out-of-sample (Oct'24–now) at this target/stop · 5/cycle · BUY FUT (paper, ~₹15L)", AMBER))
+            "MONTHLY FUTURES PULLBACK · REV1-v2 · TARGET +2% (→+1% late) · STOP −5% on close · WIN 77.8% over 2018–Sep 2024 / 75.7% over Oct 2024–now at this target/stop · 5/cycle · BUY FUT (paper, ~₹15L)", AMBER))
         self.pm_monthly = QTableWidget(); self.pm_monthly.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_monthly.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_monthly)
@@ -572,7 +572,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_status.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
-        hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% in-sample (2019–Sep'24) / 90% out-of-sample (Oct'24–now) · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
+        hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% over 2019–Sep 2024 / 90% over Oct 2024–now · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
                      "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise · "
                      "HYBRID ADD (paper 07-31): the OPPOSITE side ~1% OTM is ALSO sold when it pays c/w ≥ 0.08 — "
                      "shared margin · IS 86.5%/+₹1.48L vs FLIP +₹1.04L · OOS 91.5%/+₹0.82L vs +₹0.64L · worst-case identical")
@@ -595,12 +595,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
         self.zdte_table.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.zdte_table, 1)
-        v.addWidget(self._section_label("SENSEX EXPIRY-DAY — THURSDAYS · WIN 88.8% out-of-sample only (Oct'24–now) · in-sample NOT available (SENSEX option data starts Oct'24) · +7.6%/margin "
+        v.addWidget(self._section_label("SENSEX EXPIRY-DAY — THURSDAYS · WIN 88.8% over Oct 2024–now · no earlier data (SENSEX option data starts Oct'24) · +7.6%/margin "
                                         "(89 expiries · 21-month history only · unfiltered)", AMBER))
         self.sdte_status = self._stats_label(); v.addWidget(self.sdte_status)
         self.sdte_stats = self._stats_label(); v.addWidget(self.sdte_stats)
         self.sdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sdte_table, 1)
-        v.addWidget(self._section_label("BANKNIFTY EXPIRY-DAY — MONTHLY (~1/mo) · WIN 79.5% in-sample (2019–Sep'24, weeklies, +7.4%m) / 91% out-of-sample (Oct'24–now, monthlies, +11%m)", PURPLE))
+        v.addWidget(self._section_label("BANKNIFTY EXPIRY-DAY — MONTHLY (~1/mo) · WIN 79.5% over 2019–Sep 2024 (weeklies, +7.4%m) / 91% over Oct 2024–now (Oct'24–now, monthlies, +11%m)", PURPLE))
         self.bdte_status = self._stats_label(); v.addWidget(self.bdte_status)
         self.bdte_stats = self._stats_label(); v.addWidget(self.bdte_stats)
         self.bdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.bdte_table, 1)
@@ -812,58 +812,82 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("<b>• Book early.</b> Taking 40–50% of the credit beats holding to expiry on every book measured.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">LIVE STRATEGIES — 1 lot · full-window backtest averages</p>
-<p style="color:{TEXT_DIM};font-size:13px;">Averages across ALL years of each window — in-sample 1-Jan-2019→30-Sep-2024, out-of-sample
-1-Oct-2024→31-Jul-2026. Single months are not evidence and are not quoted here. The <b>₹/mo (model)</b> column comes from backtests run
+<p style="color:{TEXT_DIM};font-size:13px;">Averages across ALL years of each window. The two windows are <b>1-Jan-2019 → 30-Sep-2024</b> (the years the strategy was built on) and
+<b>1-Oct-2024 → 31-Jul-2026</b> (later years it had never seen — the real test). Single months are not evidence and are not quoted here. The <b>₹/mo (model)</b> column comes from backtests run
 WITHOUT the live exposure cap (<i>width × lot</i>) — <b>REMOVED 31-Jul-2026</b>, was 40k then 60k and without the live spread/OI gates; the <b>cap-applied</b> column is the
-same OOS window re-measured WITH the cap, i.e. counting only trades the engine can actually take.</p>
+same 2024–2026 window re-measured WITH the cap, i.e. counting only trades the engine can actually take.</p>
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win in-sample</td><td>Win out-of-sample</td><td>Sig/mo</td><td>₹/mo (model, no cap)</td><td>₹/mo (cap-applied OOS)</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win 2019 – Sep 2024</td><td>Win Oct 2024 – Jul 2026</td><td>Sig/mo</td><td>₹/mo (model, no cap)</td><td>₹/mo (Oct 2024 – Jul 2026, cap applied)</td></tr>
 <tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>84% · +ve every yr</td><td>87% · +ve every yr</td><td>~7.6</td><td>~₹20,000</td><td>cap removed — see note below</td></tr>
 <tr><td>Stock v1 <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>85% · +ve every yr</td><td>86% · +ve every yr</td><td>~16</td><td>~₹13,000</td><td>not re-measured · cap blocks only ~10% of its names</td></tr>
-<tr><td>Stock v0 (0.35–0.40) <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>77% · +ve 4 of 6 yrs</td><td>91% · +ve every yr</td><td>~5.8</td><td>~₹16,300</td><td><b>~₹16,300</b> (₹2,808/trade)</td></tr>
+<tr><td>Stock v0 (0.35–0.40) <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>77% · +ve 4 of the 6 yrs</td><td>91% · +ve every yr</td><td>~5.8</td><td>~₹16,300</td><td><b>~₹16,300</b> (₹2,808/trade)</td></tr>
 <tr><td>Intraday NIFTY</td><td>88% · +ve 7 of 8 yrs</td><td>90% · +ve every yr</td><td>~4 (Tue)</td><td>~₹1,771</td><td>n/a — index book, stock cap does not apply</td></tr>
-<tr><td>Intraday SENSEX</td><td>n/a — data starts Oct'24</td><td>88.8% · 3 yrs only</td><td>~4 (Thu)</td><td>~₹3,153</td><td>n/a — index book</td></tr>
-<tr><td>Index swing fade</td><td colspan="2">regime-dependent · FAILED out-of-sample (−1.4% of width)</td><td>~2.5</td><td>₹0</td><td>₹0</td></tr>
+<tr><td>Intraday SENSEX</td><td>no data — SENSEX weeklies only exist from Oct 2024</td><td>88.8% · 3 yrs</td><td>~4 (Thu)</td><td>~₹3,153</td><td>n/a — index book</td></tr>
+<tr><td>Index swing fade</td><td colspan="2">regime-dependent · worked 2019–2024, FAILED on 2024–2026 data (−1.4% of width)</td><td>~2.5</td><td>₹0</td><td>₹0</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td>~33–39/mo</td><td><b>≈ ₹54,224</b></td><td>not re-stated — see note</td></tr>
 <tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (80% of model)</b></td><td></td><td></td><td></td><td><b>≈ ₹43,379</b></td><td>—</td></tr>
 </table>
 <p style="color:{TEXT_DIM};font-size:13px;">Why v2's model overstates it, structurally and not as a one-month fluke: v2 is short-2-OTM/<b>width 4</b>
 while v1 is short-1-OTM/<b>width 3</b>. The wider wing both lowers credit/width (so v2 clears the 0.40 gate less often — v1's live c/w sits at
-0.40–0.47, only just over) and inflates <i>width × lot</i>, so the exposure cap bites v2 hardest — at 40k it blocked <b>33% of the universe for v2 against 10% for v1</b> and 17 of its 43 out-of-sample trades; the cap was RAISED to 60k and then REMOVED entirely on 31-Jul-2026 (user's call).
+0.40–0.47, only just over) and inflates <i>width × lot</i>, so the exposure cap bites v2 hardest — at 40k it blocked <b>33% of the universe for v2 against 10% for v1</b> and 17 of its 43 trades in 2024–2026; the cap was RAISED to 60k and then REMOVED entirely on 31-Jul-2026 (user's call).
 <b>What no-cap admits:</b> the largest width × lot in the universe at v2 geometry is HEROMOTOCO ₹90,000 (max loss ~₹45k at c/w 0.5), median ₹30,000;
 60k already allowed 87 of 92 priced names, so removal adds ~5 — but it also removes the ceiling for any future high-priced listing.
-<b>The honest trade-off:</b> big-exposure trades won <b>95.3%</b> of the time in the OOS window, which is exactly the whale profile the cap was
+<b>The honest trade-off:</b> big-exposure trades won <b>95.3%</b> of the time across 2024–2026, which is exactly the whale profile the cap was
 written for — they nearly always win, and the one that does not cost <b>−₹84.7k</b> (worst MONTH <b>−₹2.28L</b>) on the longer window that produced
 the original 40k limit. On ~₹5L that single trade is ~17% of the account. The raw no-cap backtest figure (~₹278k/mo for v2) is
 <b>NOT credible</b> — it implies over 100% monthly on deployed margin off a 43-trade sample — so it is deliberately not carried into the totals above. Same mechanism the 0.30–0.40 band study proved. Per rupee of margin v2 is
 still the best book (+41.2% vs v0's +18.7%) — it is simply signal-starved, which is why v0 adds on top rather than competing.</p>
 
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
+{dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay. "
+     "Average win/loss are in rupees at 1 lot, measured on real Upstox fills Oct 2024 – Jul 2026.")}
+<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>609</td><td>84% / 87%</td><td>+₹50,749</td><td>−₹12,147</td><td><b>4.2 : 1</b></td></tr>
+<tr><td>Stock v1</td><td>25,978</td><td>997</td><td>85% / 86%</td><td colspan="3">not separately measured in ₹ — its geometry has not been run through the capped harness</td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>—</td><td>353</td><td>77% / 91%</td><td>+₹4,342</td><td>−₹12,145</td><td>0.4 : 1</td></tr>
+<tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td colspan="3">+5.9% of margin per trade · margin ≈ ₹14k/lot = the max loss</td></tr>
+<tr><td>Intraday SENSEX</td><td>89 expiry days</td><td>89</td><td>88.8%</td><td colspan="3">measured on Oct 2024 – Jul 2026 only</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Classic strategies (all rejected)</td><td>227,000 trades · 7 families</td><td>0 kept</td><td>—</td><td colspan="3">Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays, NR7</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL RESEARCH</b></td><td><b>~287,000 signals/trades</b></td><td><b>~2,500 analysed</b></td><td colspan="4"><b>56 written studies · 106 runnable scripts · 2019 → 2026</b></td></tr>
+</table>
+{dim("Read the win:loss column, not just the win rate. <b>v0 is the honest outlier</b> — it wins 90% of the time but its average winner "
+     "(₹4,342) is smaller than its average loser (₹12,145), so it only works while the win rate holds. v2 wins less often and still earns "
+     "far more per trade, because its winners are 4.2× its losers. A high win rate with a bad payoff ratio is the exact illusion the "
+     "227,000-trade sweep was run to expose: a 0.15%-target bot prints 83.6% win and still loses money.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">REJECTED / OFF</p>
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Status</td><td>Why</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Intraday BANKNIFTY</td><td style="color:{RED};">REJECTED 07-19</td><td>edge ≈ 0 (t=+0.10, CI spans 0) · studies/BANKNIFTY_0DTE_REJECTION.md</td></tr>
-<tr style="color:{TEXT_DIM};"><td>Index swing fade (NIFTY/FINNIFTY)</td><td style="color:{RED};">REMOVED 07-24</td><td>failed out-of-sample (−1.4%w) · regime-dependent</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Index swing fade (NIFTY/FINNIFTY)</td><td style="color:{RED};">REMOVED 07-24</td><td>failed on 2024–2026 data (−1.4%w) · regime-dependent</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Monthly futures (REV1-v2)</td><td>REGIME-OFF</td><td>needs ~₹15L · waits for NIFTY &gt; 200-DMA</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Monthly long-call</td><td>SHELVED 07-13</td><td>gap/luck-dependent, unreliable</td></tr>
 <tr style="color:{TEXT_DIM};"><td>3-Family + ORB+VWAP option-buying</td><td>OFF</td><td>direction is real but does not survive option-buying costs</td></tr>
 </table>
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">WHY THESE WORK — the results that survived</p>
-{res("<b>The exit sets the win rate, not the signal.</b> v1, on the IDENTICAL trade list: hold-to-expiry 54% · TP-75/stop-2× 64% IS / 73.6% OOS · <b>TP-40/no-stop 85.0% IS / 86.0% OOS</b>. Nothing about the entry changed. The 2× stop was realising losses that recover. File: V1_WINRATE_SWEEP.md")}
+{res("<b>The exit sets the win rate, not the signal.</b> v1, on the IDENTICAL trade list: hold-to-expiry 54% · TP-75/stop-2× 64% (2019–24) / 73.6% (2024–26) · <b>TP-40/no-stop 85.0% (2019–24) / 86.0% (2024–26)</b>. Nothing about the entry changed. The 2× stop was realising losses that recover. File: V1_WINRATE_SWEEP.md")}
 {res("<b>The credit/width gate is the whole edge.</b> 629 real trades bucketed: c/w ≥ 0.40 → 86% win, +34% of width. 0.30–0.35 → 78% win but only +1.1%. Win rate barely falls below the gate; the MONEY collapses ~10×, because the payoff turns lopsided. Never loosen it. File: CW_BUCKET_ANALYSIS.md")}
 {res("<b>Universe expansion worked.</b> Screened all 180 NSE F&amp;O underlyings → 13 names added (universe 100 → 113): 5.78 → 7.56 signals/mo, win 84.1 → 85.5%, net +25.7 → +27.6% of width. Additive, no dilution. File: UNIVERSE_EXPANSION.md")}
 {res("<b>0DTE NIFTY calm filter.</b> Skip the week when 5-day realised vol ≥ 0.9%: win 85.0 → 87.8%, avg +3.2 → +4.0% of margin, max drawdown −₹23.9k → −₹17.3k. File: studies/README.md")}
 {res("<b>0DTE entry time.</b> Swept 10 entry times across 92 weeklies: 09:16 gives 90.4% win and +₹49.5k/lot. Waiting until 10:00 buys ~4pp of win rate but gives away 35–45% of the profit — the opening IV crush IS the trade.")}
-{res("<b>v0, the 0.35–0.40 band.</b> Dead at v2's exits, positive at TP-40/no-stop: 77% win IS (+ve 4 of 6 yrs) · 91% OOS (+ve every yr, n=43) · ₹2,808 net per lot per trade. The weakest evidence of any live book — it is here to build a live record. File: LOWCW_BAND_RESCUE.md §7")}
+{res("<b>v0, the 0.35–0.40 band.</b> Dead at v2's exits, positive at TP-40/no-stop: 77% win over 2019–2024 (+ve 4 of those 6 yrs) · 91% over 2024–2026 (+ve every yr, 43 trades) · ₹2,808 net per lot per trade. The weakest evidence of any live book — it is here to build a live record. File: LOWCW_BAND_RESCUE.md §7")}
 
 <p style="color:{RED};font-size:17px;font-weight:bold;margin-top:18px;">TESTED AND REJECTED — do not re-mine these</p>
 {dim("• <b>Buying options / long gamma / straddles</b> — lose in both eras, every variant (33–34% win).")}
 {dim("• <b>Following the breakout</b> instead of fading it — ~40% win.")}
 {dim("• <b>Trading below c/w 0.40</b> without changing the exit — win rate holds, money does not.")}
-{dim("• <b>Re-cutting the 0.30–0.40 band to width 1</b> — 87.8% win and +18.1% on margin in-sample, 6 of 6 years, survived every in-regime guard, then died out-of-sample (74.3% / +1.4%, worse than doing nothing). File: LOWCW_BAND_RESCUE.md")}
-{dim("• <b>Index fade (NIFTY/FINNIFTY) direction gates</b> — 6 positive years in one regime, reversed out-of-sample.")}
+{dim("• <b>Re-cutting the 0.30–0.40 band to width 1</b> — 87.8% win and +18.1% on margin over 2019–2024, 6 of 6 years, survived every in-regime guard, then died on 2024–2026 data (74.3% / +1.4%, worse than doing nothing). File: LOWCW_BAND_RESCUE.md")}
+{dim("• <b>Index fade (NIFTY/FINNIFTY) direction gates</b> — 6 positive years in 2019–2024, then reversed on 2024–2026 data.")}
 {dim("• <b>BANKNIFTY 0DTE</b> — edge ≈ 0 (t = +0.10, confidence interval spans zero).")}
 {dim("• <b>Event/news avoidance for 0DTE</b> — RBI, Budget, FOMC, VIX, gaps, earnings: all tested, all cost money. This book is PAID for visible fear.")}
 {dim("• <b>Classic strategies</b> (Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays) — 227k trades: nothing beats the credit books after costs. A 0.15%-target bot prints 83.6% win with NEGATIVE expectancy — win rate alone proves nothing.")}
+
+<p style="color:{CYAN};font-size:15px;font-weight:bold;margin-top:18px;">FULL STUDIES — every backtest, script and result</p>
+{p('<a href="https://github.com/tejasgjadhav/Institutional-Trader/tree/main/studies" '
+   'style="color:#4fc3f7;">github.com/tejasgjadhav/Institutional-Trader/tree/main/studies</a>')}
+{dim("Each claim on this tab names its file. The folder holds the write-ups plus the runnable scripts in studies/ndte/ — "
+     "every number here can be reproduced from raw NSE bhavcopy and Upstox data.")}
 
 <p style="color:{TEXT_DIM};margin-top:14px;font-size:11px;">
 Every study above is reproducible from /studies on GitHub. Backtests are real but optimistic — live fills are the only honest judge.
