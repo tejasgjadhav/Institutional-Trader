@@ -11,7 +11,7 @@ from datetime import datetime
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QTableWidget, QTableWidgetItem, QLabel, QPushButton, QStatusBar,
-    QHeaderView, QStackedWidget, QTextEdit, QFrame, QScrollArea
+    QHeaderView, QStackedWidget, QTextEdit, QTextBrowser, QFrame, QScrollArea
 )
 from PySide6.QtCore import Qt, QTimer, Signal, QThread
 from PySide6.QtGui import QFont, QColor, QBrush, QIcon, QPixmap
@@ -759,7 +759,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_studies(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(12, 4, 12, 12)
         v.addWidget(self._panel_title("STUDIES  -  the research behind the strategy, in order"))
-        doc = QTextEdit(); doc.setReadOnly(True); doc.setFont(QFont("Menlo", 11))
+        doc = QTextBrowser(); doc.setReadOnly(True); doc.setFont(QFont("Menlo", 11))
+        doc.setOpenExternalLinks(True)   # make the studies/GitHub link actually clickable
         doc.setHtml(self._studies_html())
         v.addWidget(doc)
         return w
@@ -811,44 +812,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("<b>• Fade the breakout, never follow it.</b> The follow version wins ~40% of the time.")}
 {p("<b>• Book early.</b> Taking 40–50% of the credit beats holding to expiry on every book measured.")}
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;">LIVE STRATEGIES — 1 lot · full-window backtest averages</p>
-<p style="color:{TEXT_DIM};font-size:13px;">Averages across ALL years of each window. The two windows are <b>1-Jan-2019 → 30-Sep-2024</b> (the years the strategy was built on) and
-<b>1-Oct-2024 → 31-Jul-2026</b> (later years it had never seen — the real test). Single months are not evidence and are not quoted here. The <b>₹/mo (model)</b> column comes from backtests run
-WITHOUT the live exposure cap (<i>width × lot</i>) — <b>REMOVED 31-Jul-2026</b>, was 40k then 60k and without the live spread/OI gates; the <b>cap-applied</b> column is the
-same 2024–2026 window re-measured WITH the cap, i.e. counting only trades the engine can actually take.</p>
-<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win 2019 – Sep 2024</td><td>Win Oct 2024 – Jul 2026</td><td>Sig/mo</td><td>₹/mo (model, no cap)</td><td>₹/mo (Oct 2024 – Jul 2026, cap applied)</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>84% · +ve every yr</td><td>87% · +ve every yr</td><td>~7.6</td><td>~₹20,000</td><td>cap removed — see note below</td></tr>
-<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>85% · +ve every yr</td><td>86% · +ve every yr</td><td>~16</td><td>~₹13,000</td><td>not re-measured · cap blocks only ~10% of its names</td></tr>
-<tr><td>Stock v0 (0.35–0.40) <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>77% · +ve 4 of the 6 yrs</td><td>91% · +ve every yr</td><td>~5.8</td><td>~₹16,300</td><td><b>~₹16,300</b> (₹2,808/trade)</td></tr>
-<tr><td>Intraday NIFTY</td><td>88% · +ve 7 of 8 yrs</td><td>90% · +ve every yr</td><td>~4 (Tue)</td><td>~₹1,771</td><td>n/a — index book, stock cap does not apply</td></tr>
-<tr><td>Intraday SENSEX</td><td>no data — SENSEX weeklies only exist from Oct 2024</td><td>88.8% · 3 yrs</td><td>~4 (Thu)</td><td>~₹3,153</td><td>n/a — index book</td></tr>
-<tr><td>Index swing fade</td><td colspan="2">regime-dependent · worked 2019–2024, FAILED on 2024–2026 data (−1.4% of width)</td><td>~2.5</td><td>₹0</td><td>₹0</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td>~33–39/mo</td><td><b>≈ ₹54,224</b></td><td>not re-stated — see note</td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (80% of model)</b></td><td></td><td></td><td></td><td><b>≈ ₹43,379</b></td><td>—</td></tr>
-</table>
-<p style="color:{TEXT_DIM};font-size:13px;">Why v2's model overstates it, structurally and not as a one-month fluke: v2 is short-2-OTM/<b>width 4</b>
-while v1 is short-1-OTM/<b>width 3</b>. The wider wing both lowers credit/width (so v2 clears the 0.40 gate less often — v1's live c/w sits at
-0.40–0.47, only just over) and inflates <i>width × lot</i>, so the exposure cap bites v2 hardest — at 40k it blocked <b>33% of the universe for v2 against 10% for v1</b> and 17 of its 43 trades in 2024–2026; the cap was RAISED to 60k and then REMOVED entirely on 31-Jul-2026 (user's call).
-<b>What no-cap admits:</b> the largest width × lot in the universe at v2 geometry is HEROMOTOCO ₹90,000 (max loss ~₹45k at c/w 0.5), median ₹30,000;
-60k already allowed 87 of 92 priced names, so removal adds ~5 — but it also removes the ceiling for any future high-priced listing.
-<b>The honest trade-off:</b> big-exposure trades won <b>95.3%</b> of the time across 2024–2026, which is exactly the whale profile the cap was
-written for — they nearly always win, and the one that does not cost <b>−₹84.7k</b> (worst MONTH <b>−₹2.28L</b>) on the longer window that produced
-the original 40k limit. On ~₹5L that single trade is ~17% of the account. The raw no-cap backtest figure (~₹278k/mo for v2) is
-<b>NOT credible</b> — it implies over 100% monthly on deployed margin off a 43-trade sample — so it is deliberately not carried into the totals above. Same mechanism the 0.30–0.40 band study proved. Per rupee of margin v2 is
-still the best book (+41.2% vs v0's +18.7%) — it is simply signal-starved, which is why v0 adds on top rather than competing.</p>
-
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
-{dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay. "
-     "Average win/loss are in rupees at 1 lot, measured on real Upstox fills Oct 2024 – Jul 2026.")}
+{dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
+     "Sources, so every figure is traceable: <b>v2</b> and <b>v0</b> from their backtests on real Upstox fills Oct 2024 – Jul 2026; "
+     "<b>v1</b> from its 14 CLOSED live paper trades (real fills, small sample); <b>NIFTY</b> from the 73-trade FLIP sample and "
+     "<b>SENSEX</b> from the 89-expiry study, both with per-trade rupee P&amp;L. v2's 4.2:1 is unusual for a defined-risk spread — "
+     "its winners landed on much larger-lot names than its losers in the pre-cap study, so read it as lot-mix, not as a better payoff.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
 <tr><td>★ Stock v2 UNION</td><td>32,852</td><td>609</td><td>84% / 87%</td><td>+₹50,749</td><td>−₹12,147</td><td><b>4.2 : 1</b></td></tr>
-<tr><td>Stock v1</td><td>25,978</td><td>997</td><td>85% / 86%</td><td colspan="3">not separately measured in ₹ — its geometry has not been run through the capped harness</td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>—</td><td>353</td><td>77% / 91%</td><td>+₹4,342</td><td>−₹12,145</td><td>0.4 : 1</td></tr>
-<tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td colspan="3">+5.9% of margin per trade · margin ≈ ₹14k/lot = the max loss</td></tr>
-<tr><td>Intraday SENSEX</td><td>89 expiry days</td><td>89</td><td>88.8%</td><td colspan="3">measured on Oct 2024 – Jul 2026 only</td></tr>
-<tr style="color:{TEXT_DIM};"><td>Classic strategies (all rejected)</td><td>227,000 trades · 7 families</td><td>0 kept</td><td>—</td><td colspan="3">Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays, NR7</td></tr>
+<tr><td>Stock v1</td><td>25,978</td><td>997</td><td>85% / 86%</td><td>+₹5,874</td><td>−₹8,766</td><td>0.7 : 1</td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>353</td><td>77% / 91%</td><td>+₹4,342</td><td>−₹12,145</td><td>0.4 : 1</td></tr>
+<tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td>+₹1,202</td><td>−₹6,274</td><td>0.2 : 1</td></tr>
+<tr><td>Intraday SENSEX</td><td>89 expiry days</td><td>89</td><td>88.8%</td><td>+₹1,427</td><td>−₹4,549</td><td>0.3 : 1</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Classic strategies (all rejected)</td><td>227,000 trades · 7 families</td><td>0 kept</td><td>up to 83.6%</td><td colspan="3">every one negative after costs — Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays, NR7. The 83.6% is the illusion demo: a high win rate with negative expectancy.</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL RESEARCH</b></td><td><b>~287,000 signals/trades</b></td><td><b>~2,500 analysed</b></td><td colspan="4"><b>56 written studies · 106 runnable scripts · 2019 → 2026</b></td></tr>
 </table>
 {dim("Read the win:loss column, not just the win rate. <b>v0 is the honest outlier</b> — it wins 90% of the time but its average winner "
