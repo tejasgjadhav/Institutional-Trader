@@ -658,6 +658,11 @@ class EngineRunner:
         ("0DTE NIFTY (same-day)", "zero_dte_positions.json"),
         ("SENSEX 0DTE (same-day)", "sensex_dte_positions.json"),
         ("BANKNIFTY 0DTE", "bnf_dte_positions.json"),   # disabled 07-19; retained so any open pos still settles
+        # MONTHLY FUTURES was MISSING here (found in the 2026-08-01 bug sweep). It is REGIME_OFF today
+        # so nothing was lost, but the moment NIFTY clears its 200DMA it trades again and every WIN/LOSS
+        # would have resolved SILENTLY — no Telegram result and absent from the portfolio summary. The
+        # loop only fires on status WIN/LOSS, so this book's REGIME_OFF placeholder rows are ignored.
+        ("MONTHLY FUTURES PULLBACK", "monthly_fut_positions.json"),
     ]
 
     def _outcomes(self):
@@ -749,6 +754,7 @@ class EngineRunner:
         "zero_dte_positions.json": "0DTE NIFTY",
         "sensex_dte_positions.json": "0DTE SENSEX",
         "bnf_dte_positions.json": "0DTE BNF",
+        "monthly_fut_positions.json": "MONTHLY FUT",
     }
 
     @staticmethod

@@ -279,6 +279,34 @@ Rs38,312 live in July). Sanity anchor stated in the tab: July 2026 live = 24 clo
 BELOW Rs82,667 because live fired fewer trades than the signal rates assume, not because per-trade
 was wrong (v1 realised Rs2,737/trade live vs Rs3,601 modelled). Ceiling Rs66,134, floor one live month.
 
+**BUG SWEEP 2026-08-01 — 1 real bug found and FIXED, 1 counting error corrected, 15 assertions pass.**
+
+*BUG FIXED — monthly futures resolved SILENTLY.* `monthly_fut_positions.json` was in NEITHER
+`_OUTCOME_BOOKS` nor `_BOOK_TAG`. It is REGIME_OFF today (NIFTY under its 200DMA) so nothing was
+lost, but the moment the regime turns it trades again and every WIN/LOSS would have gone out with
+NO Telegram result and been ABSENT from the running portfolio summary. Added to both. Safe because
+the watcher only fires on status WIN/LOSS, so this book's REGIME_OFF placeholder rows are ignored.
+Engine restarted, alive.
+
+*COUNTING ERROR CORRECTED — July signals are 23, not 25.* The two "monthly futures" July rows
+(2026-07-10, 2026-07-31) are `status=REGIME_OFF` markers with null symbol/side/entry — they are the
+book recording that it STOOD ASIDE, not trades. July 2026 actual entries:
+    v1 12 · v2 1 · 0DTE SENSEX 4 · 0DTE NIFTY 3 · index swing 3 · v0 0  = **23 on 17 distinct days**
+(v0 was only deployed 31-Jul so zero is expected; index swing's 3 all predate its 07-24 disable.)
+
+*CHECKED AND CLEAN:* engine + viewer alive, no tracebacks; no stale/expired-but-OPEN positions (4
+open, all marked); v0 runs a genuinely separate module instance from v2 with separate book files,
+and v2's two hooks (`STOCK_CREDIT_MAX_CW`, `EXCLUDE_SYMBOLS`) verified no-ops for v2 itself; v0's
+EXCLUDE_SYMBOLS is set in a try/finally so a scan exception cannot leak the exclusion into the next
+run; exposure-cap guard short-circuits correctly at 0; v0 scans AFTER v1 in the runner (so the
+v1-wins tie-break actually sees v1's new entries); v0 does not re-export build_watchlist /
+notify_nearmiss (which own union_watchlist.json).
+
+*NOT a bug (checked, false alarm):* "0DTE BANKNIFTY" has no Telegram evidence block ON PURPOSE —
+`_analysis` deliberately excludes it so a REJECTED book cannot inherit NIFTY's 88/90% stats via the
+"NIFTY" substring. And the 0DTE/SWING labels look absent from the outcome watcher only because that
+list keys on FILES with its own display labels ("0DTE NIFTY (same-day)"), not on the _tg() labels.
+
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 
