@@ -359,6 +359,22 @@ There is a structural reason, not merely a fitted one: on an up-breakout the fad
 so the opposite side is a bull-put sold *below a rising stock* — the side least likely to be breached.
 The structure is paid twice against one-sided risk.
 
+### It works on the 0.35–0.40 band too — and better
+
+The same test on the half v0 actually trades (TP-40, same window):
+
+| band | one side | + opposite ≥0.10 | + opposite ≥0.20 | + opposite ≥0.30 |
+|---|---|---|---|---|
+| 0.30–0.35 (dead half) | 81.4% · **+3.5%** | 64.3% · +24.8% | 64.6% · +25.3% | 62.7% · **+34.6%** · 5/6 |
+| **0.35–0.40 (v0's band)** | 78.8% · **+11.0%** | 64.7% · +46.6% | 65.5% · +50.2% | 64.8% · **+65.7%** · **6/6** |
+
+Combined c/w on v0's band reaches **0.73**. Both bands respond, both improve monotonically as more is
+demanded of the opposite side, and the better band responds more — coherent behaviour rather than one
+lucky cell.
+
+**So the actionable version is not a new book for the dead band. It is upgrading v0 from one-sided to
+two-sided:** the same signals it already takes, roughly 6× the return on margin in-sample.
+
 ### Status: PROMISING, IN-SAMPLE ONLY. Not deployed, not recommended yet.
 
 Two hard caveats:
@@ -367,7 +383,11 @@ Two hard caveats:
    +18.1% ROM, 6/6 positive years, matched-sample clean and bootstrap p5 +26% — and returned +1.4%
    on held-out data. This condor result is *weaker* on years (5/6) than that one was. Per the
    pre-registered bar, a positive in-sample result buys the OOS run and nothing more.
-2. **The margin convention is load-bearing.** This is costed as one-sided risk (max loss = one width
+2. **These in-sample estimates are not stable.** On this rebuilt cache (108 symbols, through Jul 2024)
+   the 0.35–0.40 one-sided baseline reads **+11.0% ROM**; on the earlier cut (113 symbols, through
+   Sep 2024) the same band at the same config read **+1.9%**. Five symbols and two months moved it by
+   nine points. Treat every IS figure in this study as directional only.
+3. **The margin convention is load-bearing.** This is costed as one-sided risk (max loss = one width
    − total credit), which is correct for the structure and is what SPAN normally recognises. If the
    broker charges both sides separately, **ROM roughly halves to ~12–17%**. Verify in Upstox before
    this goes any further.

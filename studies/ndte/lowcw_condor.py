@@ -34,7 +34,8 @@ from datetime import date, timedelta
 PKL, UND = "/tmp/bhav_stk.pkl", "/tmp/lowcw_underlyings.json"
 MIN_DTE, REENTRY, MIN_PREM, MIN_OI = 10, 3, 50.0, 1
 S, W = 2, 4
-BAND = (0.30, 0.35)
+BANDS = [(0.30, 0.35), (0.35, 0.40)]   # dead half, and the half v0 actually trades
+BAND = BANDS[0]
 def spf(p): return min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
 
 print("loading…", flush=True)
@@ -148,11 +149,14 @@ def rep(t, lab):
     print(f"{lab:<40} n={n:>4}  win {sum(x['win'] for x in t)/n*100:5.1f}%  "
           f"ROM {nm/mg*100:+7.1f}%  +ve {pos}/{len(by)}  combined c/w {sum(x['cw'] for x in t)/n:.2f}")
 
-print("\n0.30-0.35 band — one side vs BOTH sides (condor), 2019 -> Jul 2024\n")
-for TP in (0.40, 0.50):
-    print(f"--- take profit at {TP:.0%} of total credit ---")
-    rep(run(None, TP), f"  ONE SIDE (baseline)")
-    for fl in (0.10, 0.15, 0.20, 0.25, 0.30):
-        rep(run(fl, TP), f"  CONDOR · opposite side c/w >= {fl:.2f}")
-    print()
+for b in BANDS:
+    BAND = b
+    globals()["BAND"] = b
+    print(f"\n{'='*78}\nBAND {b[0]:.2f}-{b[1]:.2f} — one side vs BOTH sides (condor), 2019 -> Jul 2024\n{'='*78}")
+    for TP in (0.40,):
+        print(f"--- take profit at {TP:.0%} of total credit ---")
+        rep(run(None, TP), f"  ONE SIDE (baseline)")
+        for fl in (0.10, 0.20, 0.30):
+            rep(run(fl, TP), f"  CONDOR · opposite side c/w >= {fl:.2f}")
+        print()
 print("DONE-CONDOR")

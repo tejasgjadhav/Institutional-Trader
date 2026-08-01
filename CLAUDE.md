@@ -198,6 +198,16 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
   (`origin` = Institutional-Trader public, `private` = Institutional-Trader-private-). Never leave
   the UI or the repos behind the studies/ files.
 
+- **CHECK THE STUDIES FIRST (standing rule, user 2026-08-01):** before running ANY backtest, search
+  `studies/` for whether the question has already been answered, and say so. This repo has 56+ written
+  studies and 100+ runnable scripts; several questions have been asked and settled more than once.
+  Practical steps: `ls studies/*.md`, grep the topic across `studies/`, and read `studies/README.md`
+  (the index + the house rules). If a study already covers it, quote its numbers and its verdict and
+  ask whether a re-run is actually wanted — do not silently re-spend hours of API-throttled compute.
+  If it is covered only PARTLY, say exactly which part is missing and test only that. Settled
+  questions are marked in this file and in `studies/README.md` — e.g. event/news avoidance for 0DTE
+  is closed and must NOT be re-mined.
+
 - **SECURITY:** `.env` holds the Upstox token + notification keys. It is **gitignored and must
   NEVER be committed/pushed.** Before every commit verify: `git diff --cached --name-only | grep -q "\.env$"` returns nothing.
 - **Restart after engine/UI code changes** (launchd does not hot-reload):
