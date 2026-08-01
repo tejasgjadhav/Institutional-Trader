@@ -827,26 +827,37 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (80% of model)</b></td><td></td><td></td><td></td><td><b>≈ ₹43,379</b></td></tr>
 </table>
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — what a winning and a losing trade actually pay</p>
-{dim("All five books measured on ONE basis so the rows compare: each at its own deployed geometry and exits, on NSE bhavcopy "
-     "1-Jan-2019 → Jul-2024 for the stock books and on their own per-trade backtests for the expiry-day books. Rupees at 1 lot "
-     "using current lot sizes, so absolute values are indicative — the win:loss RATIO is not affected by that, since both sides "
-     "scale with the same lot. Expectancy = win% × avg win − loss% × avg loss.")}
-<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Trades</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss</td><td>Expectancy / trade</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>346</td><td>83.2%</td><td style="color:{GREEN};">+₹13,219</td><td style="color:{RED};">−₹11,645</td><td>1.1 : 1</td><td style="color:{GREEN};"><b>+₹9,042</b></td></tr>
-<tr><td>Stock v1</td><td>871</td><td>85.1%</td><td style="color:{GREEN};">+₹5,557</td><td style="color:{RED};">−₹7,571</td><td>0.7 : 1</td><td style="color:{GREEN};"><b>+₹3,601</b></td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>293</td><td>76.5%</td><td style="color:{GREEN};">+₹3,986</td><td style="color:{RED};">−₹11,505</td><td>0.3 : 1</td><td style="color:{AMBER};"><b>+₹345</b></td></tr>
-<tr><td>Intraday NIFTY</td><td>73</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>0.2 : 1</td><td style="color:{GREEN};"><b>+₹693</b></td></tr>
-<tr><td>Intraday SENSEX</td><td>89</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>0.3 : 1</td><td style="color:{GREEN};"><b>+₹758</b></td></tr>
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the arithmetic, per book</p>
+{dim("Expectancy is worked out in full so it can be checked: <b>win% × average win − loss% × average loss</b>. "
+     "All five books measured on ONE basis, each at its own deployed geometry and exits — the stock books on NSE bhavcopy "
+     "1-Jan-2019 → Jul-2024, the expiry-day books on their own per-trade backtests. Rupees at 1 lot.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Trades<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>The calculation</td><td>Expectancy<br>per trade</td><td>× trades/mo</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>~7.6</td><td>83.2%</td><td style="color:{GREEN};">+₹13,219</td><td style="color:{RED};">−₹11,645</td><td>83.2% × ₹13,219 − 16.8% × ₹11,645<br><span style="color:{TEXT_DIM};">= ₹10,998 − ₹1,956</span></td><td style="color:{GREEN};"><b>+₹9,042</b></td><td>₹68,718</td></tr>
+<tr><td>Stock v1</td><td>~16</td><td>85.1%</td><td style="color:{GREEN};">+₹5,557</td><td style="color:{RED};">−₹7,571</td><td>85.1% × ₹5,557 − 14.9% × ₹7,571<br><span style="color:{TEXT_DIM};">= ₹4,729 − ₹1,128</span></td><td style="color:{GREEN};"><b>+₹3,601</b></td><td>₹57,615</td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>~5.8</td><td>76.5%</td><td style="color:{GREEN};">+₹3,986</td><td style="color:{RED};">−₹11,505</td><td>76.5% × ₹3,986 − 23.5% × ₹11,505<br><span style="color:{TEXT_DIM};">= ₹3,049 − ₹2,704</span></td><td style="color:{AMBER};"><b>+₹346</b></td><td>₹2,005</td></tr>
+<tr><td>Intraday NIFTY</td><td>~4 (Tue)</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274<br><span style="color:{TEXT_DIM};">= ₹1,120 − ₹427</span></td><td style="color:{GREEN};"><b>+₹694</b></td><td>₹2,775</td></tr>
+<tr><td>Intraday SENSEX</td><td>~4 (Thu)</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549<br><span style="color:{TEXT_DIM};">= ₹1,267 − ₹509</span></td><td style="color:{GREEN};"><b>+₹758</b></td><td>₹3,031</td></tr>
 </table>
-{dim("Read the win:loss column, not the win rate. Every one of these books except v2 loses MORE on a loser than it makes on a "
-     "winner — that is normal for selling credit spreads and is why the win rate has to stay high. <b>v0 is the fragile one:</b> "
-     "76.5% win with a 0.3:1 payoff leaves only <b>+₹345</b> a trade on these years, against +₹2,808 on 2024–2026 — that gap IS "
-     "its weak in-sample leg, stated plainly rather than averaged away. <b>CORRECTION (1-Aug-2026):</b> v2 previously showed "
-     "+₹50,749 / −₹12,147 and 4.2:1 here. That was wrong — a lot-size mix artifact, and structurally impossible for a "
-     "defined-risk spread, whose winner is capped at the credit and loser at width−credit. Re-measured on the same basis as "
-     "every other row it is 1.1:1.")}
+
+<p style="color:{AMBER};font-size:14px;font-weight:bold;">Why the last column does NOT match the ₹54,224 model above — read this before using it</p>
+{dim("Those rupees use <b>today's</b> lot sizes applied to trades from years when lot sizes were far smaller, so every book "
+     "measured on older years is inflated. The data proves it rather than asserting it — compare each book's implied ₹/mo "
+     "against its deployed model figure:")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Years measured on</td><td>Implied ₹/mo</td><td>Deployed model</td><td>Ratio</td></tr>
+<tr><td>Intraday SENSEX</td><td><b>Oct 2024 → now (current lots)</b></td><td>₹3,031</td><td>₹3,153</td><td style="color:{GREEN};"><b>1.0×</b></td></tr>
+<tr><td>Intraday NIFTY</td><td>2019 → Sep 2024</td><td>₹2,775</td><td>₹1,771</td><td>1.6×</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>2019 → Jul 2024</td><td>₹68,718</td><td>₹20,000</td><td style="color:{RED};">3.4×</td></tr>
+<tr><td>Stock v1</td><td>2019 → Jul 2024</td><td>₹57,615</td><td>₹13,000</td><td style="color:{RED};">4.4×</td></tr>
+<tr><td>Stock v0</td><td>2019 → Jul 2024</td><td>₹2,005</td><td>₹16,300</td><td style="color:{AMBER};">0.1×</td></tr>
+</table>
+{dim("<b>SENSEX is the control.</b> It is the only book measured entirely on post-Oct-2024 data — i.e. on the lot sizes in force "
+     "today — and it lands at 1.0× its model. Everything measured on older years runs 1.6× to 4.4× hot for exactly that reason. "
+     "<b>v0 is the mirror image at 0.1×:</b> its model figure comes from the 2024–2026 window where it earns ₹2,808 a trade, "
+     "while the table above shows the 2019–2024 window where it earns ₹346 — the same weak in-sample leg flagged elsewhere. "
+     "<b>Plan on the ₹54,224 model and its 80% figure of ₹43,379, not on this column.</b> What this table is for is the "
+     "ARITHMETIC and the win:loss shape — those are sound. The rupee levels are not forecasts.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "

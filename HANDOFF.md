@@ -229,6 +229,35 @@ conservative and the condor is worth revisiting. That evidence arrives free from
 running — **v0 has fired ZERO live trades so far**, which is also why no second unproven book should
 be added before the first produces evidence.
 
+**STUDIES TAB REBUILT (commits 7dd05a9 + this one).** LIVE STRATEGIES table restored with both
+windows NAMED IN FULL ("1-Jan-2019 -> 30-Sep-2024" / "1-Oct-2024 -> 1-Aug-2026") instead of
+in-sample/out-of-sample; SENSEX's first window says WHY it is empty (SENSEX weekly options only
+began Oct 2024). Below it a PROFIT AND LOSS table showing trades/month and the expectancy
+ARITHMETIC written out per the user's request (win% x avg win - loss% x avg loss):
+  v2      ~7.6/mo  83.2%  +Rs13,219 / -Rs11,645  = Rs10,998 - Rs1,956 = +Rs9,042/trade
+  v1      ~16/mo   85.1%  +Rs5,557  / -Rs7,571   = Rs4,729  - Rs1,128 = +Rs3,601/trade
+  v0      ~5.8/mo  76.5%  +Rs3,986  / -Rs11,505  = Rs3,049  - Rs2,704 = +Rs346/trade
+  NIFTY   ~4/mo    93.2%  +Rs1,202  / -Rs6,274   = Rs1,120  - Rs427   = +Rs694/trade
+  SENSEX  ~4/mo    88.8%  +Rs1,427  / -Rs4,549   = Rs1,267  - Rs509   = +Rs758/trade
+Source: `studies/ndte/book_win_loss_sizes.py` (local pickle, no API).
+
+**IMPORTANT — expectancy x cadence does NOT reconcile with the Rs54,224 model, and the tab now says
+why, with evidence rather than assertion.** Rupees use TODAY's lot sizes applied to old trades, so
+every book measured on older years runs hot:
+  SENSEX (measured Oct'24->now, i.e. CURRENT lots)  Rs3,031 vs model Rs3,153  = 1.0x  <-- the control
+  NIFTY  (2019->Sep'24)                             Rs2,775 vs Rs1,771        = 1.6x
+  v2     (2019->Jul'24)                             Rs68,718 vs Rs20,000      = 3.4x
+  v1     (2019->Jul'24)                             Rs57,615 vs Rs13,000      = 4.4x
+  v0     (2019->Jul'24)                             Rs2,005 vs Rs16,300       = 0.1x (mirror image:
+         its model comes from the 2024-26 window at Rs2,808/trade, the table shows 2019-24 at Rs346)
+SENSEX being the ONLY post-Oct-2024 book AND the only 1.0x is the proof. **Plan on Rs54,224 / 80% =
+Rs43,379, NOT on that column.** The table is for the ARITHMETIC and the win:loss shape, which are sound.
+
+**CORRECTION SHIPPED:** v2 previously showed +Rs50,749 / -Rs12,147 and 4.2:1 win:loss. WRONG — a
+lot-size mix artifact, and structurally impossible for a defined-risk spread (winner capped at the
+credit, loser at width-credit). Re-measured on the same basis as every other row: **1.1:1**. v1 and
+v0 rows moved to the same basis too.
+
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 
