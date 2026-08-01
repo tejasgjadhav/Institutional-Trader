@@ -279,6 +279,51 @@ which the OOS run says is neutral on the core book.
 n=43 out-of-sample and an in-sample leg inside noise of zero is not a deployment case. Nothing was
 changed in the engine.
 
+---
+
+## 8. The last untested lever — a calm-regime filter on 0.30–0.35 — also fails
+
+Everything structural had been tried: 432 configurations (geometry as strike-steps and as
+percent-of-spot, targets, stops), a DTE sweep, adaptive-width rules, and the sub-band split. The one
+lever left was a **conditional entry filter**, and there was a strong in-house prior for exactly one:
+the 0DTE book's **validated** calm-regime filter (skip when 5-day realized vol is elevated), which
+took it from 85.0% to 87.8% win. Same mechanism — a short-premium book is paid for fear already in
+the price, so it should do worst on a hot tape. Thin credit **plus** a hot tape is the natural
+suspect for why this band loses.
+
+Pre-registered before looking: *0.30–0.35 entries taken when the underlying's rv5 is LOW outperform
+high-rv5 entries, enough to turn the band positive.* Bar: positive in both windows, stable across a
+threshold neighbourhood, n ≥ ~100, IS first — and if IS does not clearly turn positive, the OOS run
+is not worth its 3–5 hours of throttled API calls.
+
+`ndte/lowcw_regime_filter.py`, 506 band trades, 2019 → Jul 2024:
+
+| rv5 cut | calm side (rv5 ≤ cut) | hot side (rv5 > cut) |
+|---|---|---|
+| 20th pct (0.79%) | 79.4% · +4.5% | 81.9% · +3.3% |
+| 30th pct (0.91%) | 77.0% · **−1.3%** | 83.3% · +5.8% |
+| 40th pct (1.07%) | 77.8% · +3.4% | 83.8% · +3.6% |
+| median (1.21%) | 79.4% · +5.3% | 83.4% · +1.1% |
+| 60th pct (1.42%) | 80.3% · +2.7% | 83.2% · +5.4% |
+
+Unfiltered baseline: 81.4% win, +3.5% ROM. **Refuted.** The calm side is not better, and the hot side
+carries the *higher* win rate at every single cut — the reverse of the hypothesis. ROM swings between
+−1.3% and +5.3% with no monotonic structure, which is what a variable with no relationship looks like.
+No threshold survives the neighbourhood test, so per the pre-registered bar the OOS run was not made.
+
+### The more important observation
+
+This run rebuilt the bhavcopy cache from scratch (the old one was lost when `/tmp` was cleared) and it
+ends **Jul 2024 rather than Sep 2024**, with 108 symbols instead of 113. On that slightly different
+data the SAME band at the SAME config reads **+3.5% ROM, positive 5 of 6 years** — against the
+**+0.2%, positive 3 of 6** measured earlier. Two months of data and five symbols moved the in-sample
+estimate by three points of margin and two positive years.
+
+That is the real lesson of this whole study, and it is worth more than the filter result: **the
+0.30–0.35 band's in-sample signal is not stable enough to lean on in either direction.** The binding
+evidence remains the held-out window, where the band returned **−5.2% on margin**. It stays rejected,
+and this closes the last open lever.
+
 ## Scripts
 
 | file | what it does |
@@ -292,3 +337,5 @@ changed in the engine.
 | `ndte/stkfade_lowcw_oos2.py` | focused OOS confirmation (resumable; per-stock checkpoints) |
 | `ndte/stkfade_lowcw_subband.py` | OOS 0.30-0.35 vs 0.35-0.40 split (reuses the leg cache) |
 | `ndte/stkfade_lowcw_subband_is.py` | in-sample twin of the split |
+| `ndte/lowcw_regime_filter.py` | the last lever: calm-regime entry filter on 0.30-0.35 (refuted) |
+| `ndte/book_win_loss_sizes.py` | avg win / avg loss in rupees per book, one consistent basis |
