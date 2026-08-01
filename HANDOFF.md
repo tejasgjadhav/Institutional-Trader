@@ -258,6 +258,27 @@ lot-size mix artifact, and structurally impossible for a defined-risk spread (wi
 credit, loser at width-credit). Re-measured on the same basis as every other row: **1.1:1**. v1 and
 v0 rows moved to the same basis too.
 
+**Rs20,000 vs Rs9,042 CONFUSION RESOLVED — there is now exactly ONE money table in the tab.**
+User was rightly confused: Rs9,042 is PER TRADE, Rs20,000 was PER MONTH, and they were computed on
+different signal rates. Rs20,000/mo assumed **7.6 signals/mo for v2, which this session already
+proved wrong** (v2 really fires ~3.5/mo — the width-4 geometry both clears the 0.40 gate less often
+than v1's width-3 AND used to be blocked 33% of the time by the exposure cap). The rupees were never
+the problem; the cadence was.
+FIX: the LIVE STRATEGIES table no longer carries a Rs/mo column at all (it shows modelled vs REAL
+signal rates only), and ALL rupees live in one PROFIT AND LOSS table that shows the arithmetic and
+multiplies by MEASURED cadence:
+  v2      ~3.5/mo  83.2%  +Rs13,219/-Rs11,645  exp +Rs9,042  = Rs31,646/mo
+  v1      ~12/mo   85.1%  +Rs5,557 /-Rs7,571   exp +Rs3,601  = Rs43,211/mo
+  v0      ~5.8/mo  76.5%  +Rs3,986 /-Rs11,505  exp +Rs346    = Rs2,005/mo
+  NIFTY   ~4/mo    93.2%  +Rs1,202 /-Rs6,274   exp +Rs694    = Rs2,775/mo
+  SENSEX  ~4/mo    88.8%  +Rs1,427 /-Rs4,549   exp +Rs758    = Rs3,031/mo
+  TOTAL   ~29/mo                                             = Rs82,667/mo · 80% = Rs66,134
+**The old Rs54,224 / Rs43,379 model figures are GONE from the tab** — they were built on smaller
+historic lot sizes and understate current economics (v1's model said Rs13,000/mo; v1 realised
+Rs38,312 live in July). Sanity anchor stated in the tab: July 2026 live = 24 closed, Rs44,789 —
+BELOW Rs82,667 because live fired fewer trades than the signal rates assume, not because per-trade
+was wrong (v1 realised Rs2,737/trade live vs Rs3,601 modelled). Ceiling Rs66,134, floor one live month.
+
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 

@@ -813,51 +813,45 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("<b>• Book early.</b> Taking 40–50% of the credit beats holding to expiry on every book measured.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">LIVE STRATEGIES — 1 lot</p>
-{dim("Both backtest windows are named in full. The first is the years each strategy was built on; the second is later "
-     "years it had never seen, which is the one that decides. Single months are never quoted here.")}
+{dim("Both windows named in full. The first is the years each strategy was built on; the second is later years it had never "
+     "seen, which is the one that decides. <b>Rupees are NOT in this table</b> — they are all in the PROFIT AND LOSS table "
+     "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td><td>₹/mo @1 lot</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>84% · positive every year</td><td>87% · positive every year</td><td>~7.6</td><td>~₹20,000</td></tr>
-<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>85% · positive every year</td><td>86% · positive every year</td><td>~16</td><td>~₹13,000</td></tr>
-<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>77% · positive 4 of the 6 years</td><td>91% · positive every year</td><td>~5.8</td><td>~₹16,300</td></tr>
-<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td><td>~₹1,771</td></tr>
-<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td><td>~₹3,153</td></tr>
-<tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td><td>₹0</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~39/mo</b></td><td><b>≈ ₹54,224</b></td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan-on (80% of model)</b></td><td></td><td></td><td></td><td><b>≈ ₹43,379</b></td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>84% · positive every year</td><td>87% · positive every year</td><td>~7.6 modelled · <b>~3.5 real</b></td></tr>
+<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(TP-40, no stop)</span></td><td>85% · positive every year</td><td>86% · positive every year</td><td>~16 modelled · <b>~12 real</b></td></tr>
+<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>77% · positive 4 of the 6 years</td><td>91% · positive every year</td><td>~5.8</td></tr>
+<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
+<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~29/mo</b></td></tr>
 </table>
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the arithmetic, per book</p>
-{dim("Expectancy is worked out in full so it can be checked: <b>win% × average win − loss% × average loss</b>. "
-     "All five books measured on ONE basis, each at its own deployed geometry and exits — the stock books on NSE bhavcopy "
-     "1-Jan-2019 → Jul-2024, the expiry-day books on their own per-trade backtests. Rupees at 1 lot.")}
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the only money table</p>
+{dim("<b>Per TRADE vs per MONTH — this is where the confusion was.</b> Expectancy is what one trade is worth; multiply by "
+     "signals per month to get monthly. An older figure of ₹20,000/mo for v2 assumed <b>7.6 signals a month, which is wrong</b> "
+     "— v2 really fires about 3.5. That mismatch, not the rupees, is what made the two numbers disagree. This table uses "
+     "MEASURED signal rates throughout, and it is now the only place rupees appear.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Trades<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>The calculation</td><td>Expectancy<br>per trade</td><td>× trades/mo</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>~7.6</td><td>83.2%</td><td style="color:{GREEN};">+₹13,219</td><td style="color:{RED};">−₹11,645</td><td>83.2% × ₹13,219 − 16.8% × ₹11,645<br><span style="color:{TEXT_DIM};">= ₹10,998 − ₹1,956</span></td><td style="color:{GREEN};"><b>+₹9,042</b></td><td>₹68,718</td></tr>
-<tr><td>Stock v1</td><td>~16</td><td>85.1%</td><td style="color:{GREEN};">+₹5,557</td><td style="color:{RED};">−₹7,571</td><td>85.1% × ₹5,557 − 14.9% × ₹7,571<br><span style="color:{TEXT_DIM};">= ₹4,729 − ₹1,128</span></td><td style="color:{GREEN};"><b>+₹3,601</b></td><td>₹57,615</td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>~5.8</td><td>76.5%</td><td style="color:{GREEN};">+₹3,986</td><td style="color:{RED};">−₹11,505</td><td>76.5% × ₹3,986 − 23.5% × ₹11,505<br><span style="color:{TEXT_DIM};">= ₹3,049 − ₹2,704</span></td><td style="color:{AMBER};"><b>+₹346</b></td><td>₹2,005</td></tr>
-<tr><td>Intraday NIFTY</td><td>~4 (Tue)</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274<br><span style="color:{TEXT_DIM};">= ₹1,120 − ₹427</span></td><td style="color:{GREEN};"><b>+₹694</b></td><td>₹2,775</td></tr>
-<tr><td>Intraday SENSEX</td><td>~4 (Thu)</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549<br><span style="color:{TEXT_DIM};">= ₹1,267 − ₹509</span></td><td style="color:{GREEN};"><b>+₹758</b></td><td>₹3,031</td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>~3.5</td><td>83.2%</td><td style="color:{GREEN};">+₹13,219</td><td style="color:{RED};">−₹11,645</td><td>83.2% × ₹13,219 − 16.8% × ₹11,645 = ₹10,998 − ₹1,956 = <b style="color:{GREEN};">+₹9,042</b></td><td><b>₹31,646</b></td></tr>
+<tr><td>Stock v1</td><td>~12</td><td>85.1%</td><td style="color:{GREEN};">+₹5,557</td><td style="color:{RED};">−₹7,571</td><td>85.1% × ₹5,557 − 14.9% × ₹7,571 = ₹4,729 − ₹1,128 = <b style="color:{GREEN};">+₹3,601</b></td><td><b>₹43,211</b></td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>~5.8</td><td>76.5%</td><td style="color:{GREEN};">+₹3,986</td><td style="color:{RED};">−₹11,505</td><td>76.5% × ₹3,986 − 23.5% × ₹11,505 = ₹3,049 − ₹2,704 = <b style="color:{AMBER};">+₹346</b></td><td>₹2,005</td></tr>
+<tr><td>Intraday NIFTY</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
+<tr><td>Intraday SENSEX</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>~29/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹82,667</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td><b>₹66,134</b></td></tr>
 </table>
-
-<p style="color:{AMBER};font-size:14px;font-weight:bold;">Why the last column does NOT match the ₹54,224 model above — read this before using it</p>
-{dim("Those rupees use <b>today's</b> lot sizes applied to trades from years when lot sizes were far smaller, so every book "
-     "measured on older years is inflated. The data proves it rather than asserting it — compare each book's implied ₹/mo "
-     "against its deployed model figure:")}
-<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Years measured on</td><td>Implied ₹/mo</td><td>Deployed model</td><td>Ratio</td></tr>
-<tr><td>Intraday SENSEX</td><td><b>Oct 2024 → now (current lots)</b></td><td>₹3,031</td><td>₹3,153</td><td style="color:{GREEN};"><b>1.0×</b></td></tr>
-<tr><td>Intraday NIFTY</td><td>2019 → Sep 2024</td><td>₹2,775</td><td>₹1,771</td><td>1.6×</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>2019 → Jul 2024</td><td>₹68,718</td><td>₹20,000</td><td style="color:{RED};">3.4×</td></tr>
-<tr><td>Stock v1</td><td>2019 → Jul 2024</td><td>₹57,615</td><td>₹13,000</td><td style="color:{RED};">4.4×</td></tr>
-<tr><td>Stock v0</td><td>2019 → Jul 2024</td><td>₹2,005</td><td>₹16,300</td><td style="color:{AMBER};">0.1×</td></tr>
-</table>
-{dim("<b>SENSEX is the control.</b> It is the only book measured entirely on post-Oct-2024 data — i.e. on the lot sizes in force "
-     "today — and it lands at 1.0× its model. Everything measured on older years runs 1.6× to 4.4× hot for exactly that reason. "
-     "<b>v0 is the mirror image at 0.1×:</b> its model figure comes from the 2024–2026 window where it earns ₹2,808 a trade, "
-     "while the table above shows the 2019–2024 window where it earns ₹346 — the same weak in-sample leg flagged elsewhere. "
-     "<b>Plan on the ₹54,224 model and its 80% figure of ₹43,379, not on this column.</b> What this table is for is the "
-     "ARITHMETIC and the win:loss shape — those are sound. The rupee levels are not forecasts.")}
+{dim("<b>Sanity-check it against the only real datapoint.</b> July 2026 came in at <b>24 closed trades and ₹44,789</b> "
+     "realised — below the ₹82,667 here, because live fired fewer trades than the signal rates assume, not because the "
+     "per-trade numbers were wrong (v1 realised ₹2,737 a trade live against ₹3,601 modelled). Treat ₹66,134 as a ceiling "
+     "and one live month as the floor. <b>Rupees use current lot sizes</b>, so they are what a trade is worth TODAY — the "
+     "older ₹54,224 model was built on smaller historic lots and understates it. "
+     "<b>Read the win:loss shape too:</b> every book except v2 loses more on a loser than it makes on a winner, which is "
+     "normal for selling credit spreads and is why the win rate has to stay high. <b>v0 is the fragile one</b> — 76.5% win "
+     "with a 0.3:1 payoff leaves only ₹346 a trade on 2019–2024, against ₹2,808 on 2024–2026; that gap is its weak "
+     "in-sample leg. <b>Correction 1-Aug-2026:</b> v2 previously showed 4.2:1 here — wrong, a lot-mix artifact and "
+     "impossible for a defined-risk spread. On a consistent basis it is 1.1:1.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
