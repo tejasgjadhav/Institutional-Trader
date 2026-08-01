@@ -146,13 +146,24 @@ replacing it -> ImportError that would have crashed the engine on next restart. 
 The "TP-40 no-stop" row in the earlier v2 comparison was v2 GEOMETRY with v1 EXITS (a hypothetical to
 isolate the stop) — NOT v1.
 
-**IN FLIGHT (user's latest): STRIP DOWN THE STUDIES TAB.** User says the first LIVE STRATEGY summary
-table is irrelevant and there is a second live-strategy backtest table he wants kept. Instructions:
-delete most cards, KEEP ONLY WHAT IS SUCCESSFUL, and add a simple POINT-WISE "how to execute each
-strategy" section on the STUDIES tab. NOTE: deleting UI cards is safe — every study remains in
-studies/*.md on disk. Keep a compact one-line REJECTED list though (repo convention documents
-rejections so they are not re-mined: BANKNIFTY 0DTE, index swing fade, width-1 band re-cut,
-long-gamma/non-fade intraday, hourly-vs-close entry).
+**STUDIES TAB REBUILT (commit 454768b, pushed).** Stripped to what works + a real execution guide.
+REMOVED: the stale auto-generated "THE LIVE STRATEGIES — SUMMARY" table (still said 4 live books /
+Rs37,924, no v0, no cap columns) and its orphaned builder `_strategy_summary_table()` (97 lines,
+nothing else called it), plus 646 tail lines (superseded 3-Family/ORB+VWAP gate studies, old worked
+example, per-study logs 1-9, duplicate 0DTE narrative, shelved long-call). NOTHING LOST — all of it
+still lives in studies/*.md and on GitHub; only the dashboard copy went. ui_terminal.py 2141 -> 2044.
+ADDED: "HOW TO EXECUTE — step by step" — stock books as 9 numbered steps (15:10 scan · fade not
+follow · exact strikes per book · liquidity floor · place before 15:30 · exits v2 TP-50 vs v1/v0
+TP-40-no-stop · settlement · the v1-wins rule) and expiry-day books as 5 steps (09:16 off the open ·
+0.5% OTM + 200pt wing · rv5 calm skip · hold to 3:30 · why entry time IS the edge), plus "THE FOUR
+RULES". KEPT: the full-window LIVE STRATEGIES table, REJECTED/OFF table, six surviving results, and
+a "do not re-mine these" list (kept deliberately against the user's "delete most" — it is the repo's
+guard against re-exploring dead ends; user was told and can still cut it).
+
+**IN FLIGHT (user's latest):** (1) in the LIVE STRATEGIES table, replace the "in-sample /
+out-of-sample" wording with ACTUAL YEARS — user does not want that jargon. Windows are
+1-Jan-2019→30-Sep-2024 and 1-Oct-2024→31-Jul-2026. (2) Add a GitHub link to the studies folder
+(https://github.com/tejasgjadhav/Institutional-Trader/tree/main/studies) on the STUDIES tab.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
