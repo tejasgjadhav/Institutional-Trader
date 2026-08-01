@@ -441,7 +441,33 @@ cache was lost when /tmp was cleared), then the broker-margin check, then a pape
    ratio and gives up win rate. Anyone reading a 64% win rate as "worse" has it backwards — but it
    must be stated, not buried.
 
-### Still not deployed. What gates it
+### VERDICT: NOT DEPLOYED — the edge is real but too small to be worth four legs
+
+The structure works. It is not worth trading. Cost sensitivity settles it (leg cache re-run at
+double cost, no new API calls):
+
+| condor ≥ 0.10, per trade | |
+|---|---|
+| avg margin (max loss) | ₹9,893 |
+| net at the modelled cost | **+₹805** |
+| the modelled 4-leg cost | ₹578 |
+| **breakeven if the real cost is** | **₹1,383** |
+| repo's MEASURED 4-leg stock cost (`STOCK_OPTIONS_NO_EDGE` Part 4) | **₹1,137** |
+| **net at that measured cost** | **+₹246/trade ≈ ₹1,400/mo at 1 lot** |
+
+At double the modelled cost it still returns +17.0% ROM with 3/3 positive years, so the edge is not
+fragile in the statistical sense. The problem is size: **breakeven sits only 21% above the cost this
+repo has already measured on 4-leg stock spreads** — and that ₹1,137 is the exact number that killed
+the previous 4-leg stock structure, which also looked good on ESTIMATED costs (+6.9% holdout →
+−4.7% net on real ones). ₹246 a lot does not pay for four legs of mid-cap fill risk.
+
+**User's call, 2026-08-01: ignore it, keep it in the studies.** Correct call — the money does not
+justify the complexity. Recorded here so nobody re-mines this band a fourth time.
+
+What would change the answer: if v0's live fills come in near model, the ₹246 floor is conservative
+and this is worth revisiting. That evidence arrives free from a book already running.
+
+### Other things that gate it, if it is ever revisited
 
 - **n = 46–47.** Thin, and one floor in the same neighbourhood already failed.
 - **The margin convention.** Costed as one-sided risk (one width − total credit), which is the true

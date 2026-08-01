@@ -205,11 +205,32 @@ shorter. It killed the whole ThreadPool, and the supervisor restarted straight b
 loop at 36/38 stocks). Fixed to min over BOTH legs, and the per-signal block is now try/guarded so one
 malformed series cannot take a multi-hour run down. Per-stock checkpoints meant zero work was lost.
 
-**NEXT — one thing, and it is the USER'S, not mine:** price a two-sided stock condor in Upstox
-(e.g. ALKEM 5850/6050 CE + the mirror put spread) and see whether blocked margin is ~ONE width or
-~TWO. One width -> build a small paper book, 1 lot, band 0.30-0.35, opposite-side floor 0.15,
-alongside v0. Two widths -> leave the band blocked. ASKED TWICE, not yet answered. No compute is
-running; nothing else is worth backtesting until that is known.
+**CONDOR REJECTED ON SIZE (user's call 2026-08-01: "246 is nothing per lot ignore it, keep it in
+studies"). CORRECT CALL — recorded, not deployed.** The edge is REAL and it is the only thing in this
+whole study to survive OOS, but it is too small to be worth four legs. Cost sensitivity (leg-cache
+re-run at 2x cost, no new API calls):
+    avg margin (max loss)                          Rs9,893/trade
+    net at modelled cost                           +Rs805/trade   (n=43)
+    the MODELLED 4-leg cost                        Rs578/trade
+    breakeven if real cost is                      Rs1,383/trade
+    repo's MEASURED 4-leg stock cost               Rs1,137/trade  (STOCK_OPTIONS_NO_EDGE Part 4)
+    => net at that measured cost                   +Rs246/trade ~ Rs1,400/mo at 1 lot
+At 2x modelled cost it STILL returns +17.0% ROM, 3/3 yrs — so it is not statistically fragile. It is
+just small, and breakeven sits only 21% above the cost that KILLED the previous 4-leg stock book
+(which also looked good on ESTIMATED cost: +6.9% holdout -> -4.7% net on real). Rs246/lot does not
+pay for four legs of mid-cap fill risk.
+**THE 0.30-0.40 BAND IS NOW CLOSED. Do NOT re-mine it a fourth time.** One-sided: dead (432 configs,
+DTE sweep, adaptive width, regime filter). Two-sided: works, too small. Only 0.35-0.40 one-sided
+(= v0, deployed) is worth trading.
+Recorded in studies/LOWCW_BAND_RESCUE.md §9-10 + a STUDIES-tab card. Viewer restarted.
+
+**WHAT WOULD REOPEN IT:** v0's live fills. If they come in near model, the Rs246 floor is
+conservative and the condor is worth revisiting. That evidence arrives free from a book already
+running — **v0 has fired ZERO live trades so far**, which is also why no second unproven book should
+be added before the first produces evidence.
+
+**STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
+margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
