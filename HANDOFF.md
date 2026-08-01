@@ -178,30 +178,38 @@ p5 +26%) and still died OOS, so IS only buys the OOS run; (2) costed as ONE-SIDE
 for the structure, normally what SPAN gives a condor) — if the broker charges both sides ROM roughly
 HALVES to ~12-17%; verify in Upstox.
 
-**CONDOR TESTED ON BOTH BANDS (commit 975a199, pushed).** User asked which band the first condor
-result was for: **0.30-0.35**. Ran 0.35-0.40 too. TP-40, IS 2019->Jul'24:
-    0.30-0.35  one side 81.4%/+3.5%   -> condor opp>=0.30  62.7%/+34.6%  5/6 yrs  c/w 0.68
-    0.35-0.40  one side 78.8%/+11.0%  -> condor opp>=0.30  64.8%/+65.7%  6/6 yrs  c/w 0.73
-Both respond, monotonically in the opposite-side floor, and the BETTER band responds MORE.
-**So the actionable idea is NOT a new book for the dead band — it is upgrading v0 from one-sided to
-TWO-sided on the signals it already takes (~6x ROM in-sample).** NOT DEPLOYED.
+**CONDOR OOS DONE — THE DEAD BAND IS RESCUED (commit ecd9192, pushed). First candidate in this
+entire study to survive the held-out window.** `ndte/lowcw_condor_oos.py`, real Upstox premiums
+Oct'24->Jul'26, 38 names, 1 lot, TP-40 of TOTAL credit.
+  BAND 0.30-0.35   one side          n=67  76.1% win   -4.1% ROM  1/3 yrs
+                   + opp >= 0.10     n=47  63.8% win  +18.4% ROM  3/3 yrs   (IS +24.8%)
+                   + opp >= 0.20     n=46  63.0% win  +18.2% ROM  3/3 yrs   (IS +25.3%)
+                   + opp >= 0.30     n=29  55.2% win   -5.2% ROM  1/2 yrs   (IS +34.6%)  <-- FAILS
+  BAND 0.35-0.40   one side (v0)     n=44  90.9% win  +20.5% ROM  3/3 yrs
+                   + opp 0.10/0.20   n=32/28  +25.9% / +19.4%     2/3 yrs
+CONCLUSIONS: (1) 0.30-0.35 IS tradeable as a condor at floors 0.10-0.20; IS+24.8% -> OOS+18.4% is
+consistent, unlike the width-1 re-cut (+18.1% -> +1.4%). Combined c/w 0.33 -> 0.64 clears the level
+that IS the edge. (2) The >=0.30 floor FAILS OOS despite being the BEST IS cell — the neighbourhood
+is NOT uniform, use 0.10-0.20. (3) **The "upgrade v0 to two-sided" claim is WITHDRAWN** — one-sided
+is +20.5%/3-of-3 there and the condor does not beat it. v0 stays one-sided. (4) It does NOT do what
+was literally asked: net -4.1% -> +18.4% but WIN RATE FALLS 76% -> 64%; it buys net by fixing the
+payoff ratio.
+**NOT DEPLOYED.** Gates: n=46-47 thin; one neighbouring floor already failed; four legs = double
+slippage/fill risk on mid-caps; and above all **the MARGIN CONVENTION — costed as one-sided risk
+(one width - total credit = true max loss, what SPAN normally grants a condor). If Upstox blocks
+both spreads separately, +18.4% becomes ~+9%.**
 
-**"MARGIN" MEANS MAX LOSS — user checked, confirmed from code.** Everywhere in this work
-`margin = width - credit`, and the engine stores the same as `max_loss_pts` / `capital`. So every
-"return on margin" figure is net / MAX LOSS, i.e. return on RISK, not on broker-blocked cash. For a
-single vertical SPAN blocks ~the max loss so they are close. **For the CONDOR the gap is material:**
-it is costed as `one width - total credit` (true max loss, only one side can finish ITM), but if
-Upstox SPAN does not grant that offset and blocks both spreads separately, cash deployed roughly
-DOUBLES and +65.7% ROM becomes ~+33% on actual capital. Also note Indian stock options carry SPAN +
-EXPOSURE margin and physical-settlement pressure in expiry week, so all quoted Rs/mo figures are
-return on max loss and real return on blocked capital runs somewhat below.
+**BUG FIXED mid-run (worth remembering):** `m = min(len(q["sp"]) ...)` took the min over SHORT legs
+only then indexed the LONG legs at the same k -> IndexError on any side whose long-leg series is
+shorter. It killed the whole ThreadPool, and the supervisor restarted straight back into it (a crash
+loop at 36/38 stocks). Fixed to min over BOTH legs, and the per-signal block is now try/guarded so one
+malformed series cannot take a multi-hour run down. Per-stock checkpoints meant zero work was lost.
 
-**NEXT, in priority order:**
- 1. **BROKER-MARGIN CHECK (minutes, user can do it)** — price a two-sided stock condor in Upstox and
-    see whether the blocked margin is ~one width or ~two. This gates whether the condor is worth the
-    OOS spend at all. ASKED, not yet answered.
- 2. OOS on real Upstox premiums for BOTH sides — fresh multi-hour run, leg cache lost with /tmp.
- 3. Only then a paper book / v0 upgrade.
+**NEXT — one thing, and it is the USER'S, not mine:** price a two-sided stock condor in Upstox
+(e.g. ALKEM 5850/6050 CE + the mirror put spread) and see whether blocked margin is ~ONE width or
+~TWO. One width -> build a small paper book, 1 lot, band 0.30-0.35, opposite-side floor 0.15,
+alongside v0. Two widths -> leave the band blocked. ASKED TWICE, not yet answered. No compute is
+running; nothing else is worth backtesting until that is known.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
