@@ -4,7 +4,10 @@
 Is there a configuration — geometry, target, anything — that makes them tradeable at a good win
 rate and real net?
 
-**Answer: no configuration rescues the band — but splitting it in half found one live cell.**
+**Answer: as a one-sided spread, no. As a TWO-sided one, in-sample yes — see section 9.** Selling the
+opposite side as well takes combined credit/width from 0.32 to 0.65 and the 0.30-0.35 band from
++3.5% to +24.8% ROM in-sample (5 of 6 years). That is IN-SAMPLE ONLY and the previous in-sample
+winner here died out-of-sample, so it is not deployed. Splitting the band also found one live cell:
 The 0.30-0.35 half (the names actually filling the watchlist) is dead in every test. The 0.35-0.40
 half at the DEPLOYED geometry with TP-40/no-stop is positive in both windows (+1.9% IS, +19.4% OOS,
 90.7% win, 3/3 OOS years) — the deferred two-tier gate, finally validated on 2019-24, and the
@@ -324,6 +327,54 @@ That is the real lesson of this whole study, and it is worth more than the filte
 evidence remains the held-out window, where the band returned **−5.2% on margin**. It stays rejected,
 and this closes the last open lever.
 
+---
+
+## 9. The one thing that DOES work on 0.30–0.35: sell BOTH sides
+
+Every earlier attempt changed *where* the single spread sits (offset, width, expiry) or *when* it is
+taken (regime filter). None addressed the actual defect: at c/w 0.30 the trade does not collect
+enough premium for the risk it carries. A condor attacks that directly — sell the fade side **and**
+the opposite side. Credit roughly doubles while width barely moves, because at expiry only ONE side
+can finish in the money when the wings do not overlap.
+
+Pre-registered, with in-house precedent: the FLIP-CONDOR HYBRID on 0DTE NIFTY was validated and
+deployed on exactly this reasoning. `ndte/lowcw_condor.py`, 2019 → Jul 2024:
+
+| 0.30–0.35, TP-40 of total credit | n | win | ROM | +ve yrs | combined c/w |
+|---|---|---|---|---|---|
+| one side (baseline) | 506 | 81.4% | **+3.5%** | 5/6 | 0.32 |
+| + opposite side, its c/w ≥ 0.10 | 336 | 64.3% | **+24.8%** | 5/6 | 0.65 |
+| + opposite side, its c/w ≥ 0.20 | 333 | 64.6% | +25.3% | 5/6 | 0.65 |
+| + opposite side, its c/w ≥ 0.30 | 236 | 62.7% | **+34.6%** | 5/6 | 0.68 |
+
+Combined credit/width goes **0.32 → 0.65**, i.e. the structure clears the 0.40 level that is the
+book's proven edge and the one-sided trade could never reach. Stable across the whole opposite-side
+floor (0.10 → 0.30), positive 5 of 6 years, n = 236–336. TP-50 shows the same shape (+20% to +34%).
+
+Note the direction of the change: **win rate FALLS 81% → 64% while net rises about sevenfold.** Every
+other candidate in this study did the reverse — flattering win rate, no money. This is the payoff
+ratio finally being right, which is the failure mode `CW_BUCKET_ANALYSIS` warned about, inverted.
+
+There is a structural reason, not merely a fitted one: on an up-breakout the fade side is a bear-call,
+so the opposite side is a bull-put sold *below a rising stock* — the side least likely to be breached.
+The structure is paid twice against one-sided risk.
+
+### Status: PROMISING, IN-SAMPLE ONLY. Not deployed, not recommended yet.
+
+Two hard caveats:
+
+1. **The last in-sample winner in this very study died out-of-sample.** The width-1 re-cut showed
+   +18.1% ROM, 6/6 positive years, matched-sample clean and bootstrap p5 +26% — and returned +1.4%
+   on held-out data. This condor result is *weaker* on years (5/6) than that one was. Per the
+   pre-registered bar, a positive in-sample result buys the OOS run and nothing more.
+2. **The margin convention is load-bearing.** This is costed as one-sided risk (max loss = one width
+   − total credit), which is correct for the structure and is what SPAN normally recognises. If the
+   broker charges both sides separately, **ROM roughly halves to ~12–17%**. Verify in Upstox before
+   this goes any further.
+
+Next step, in order: OOS on real Upstox premiums for BOTH sides (a fresh multi-hour run — the leg
+cache was lost when /tmp was cleared), then the broker-margin check, then a paper book if both hold.
+
 ## Scripts
 
 | file | what it does |
@@ -337,5 +388,6 @@ and this closes the last open lever.
 | `ndte/stkfade_lowcw_oos2.py` | focused OOS confirmation (resumable; per-stock checkpoints) |
 | `ndte/stkfade_lowcw_subband.py` | OOS 0.30-0.35 vs 0.35-0.40 split (reuses the leg cache) |
 | `ndte/stkfade_lowcw_subband_is.py` | in-sample twin of the split |
-| `ndte/lowcw_regime_filter.py` | the last lever: calm-regime entry filter on 0.30-0.35 (refuted) |
+| `ndte/lowcw_regime_filter.py` | calm-regime entry filter on 0.30-0.35 (refuted) |
+| `ndte/lowcw_condor.py` | sell BOTH sides on 0.30-0.35 — the one structure that works IS |
 | `ndte/book_win_loss_sizes.py` | avg win / avg loss in rupees per book, one consistent basis |
