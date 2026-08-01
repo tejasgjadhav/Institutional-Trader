@@ -178,11 +178,30 @@ p5 +26%) and still died OOS, so IS only buys the OOS run; (2) costed as ONE-SIDE
 for the structure, normally what SPAN gives a condor) — if the broker charges both sides ROM roughly
 HALVES to ~12-17%; verify in Upstox.
 
-**IN FLIGHT:** user asked which band the condor result was for. Answer: **0.30-0.35** (the dead half).
-Now running the same condor test on **0.35-0.40** (the band v0 actually trades) for comparison — if it
-lifts that too, v0 itself may be upgradeable from one-sided to two-sided.
-**NEXT, in order:** OOS on real Upstox premiums for BOTH sides (fresh multi-hour run, leg cache was
-lost with /tmp), then the broker-margin check, then a paper book only if both hold.
+**CONDOR TESTED ON BOTH BANDS (commit 975a199, pushed).** User asked which band the first condor
+result was for: **0.30-0.35**. Ran 0.35-0.40 too. TP-40, IS 2019->Jul'24:
+    0.30-0.35  one side 81.4%/+3.5%   -> condor opp>=0.30  62.7%/+34.6%  5/6 yrs  c/w 0.68
+    0.35-0.40  one side 78.8%/+11.0%  -> condor opp>=0.30  64.8%/+65.7%  6/6 yrs  c/w 0.73
+Both respond, monotonically in the opposite-side floor, and the BETTER band responds MORE.
+**So the actionable idea is NOT a new book for the dead band — it is upgrading v0 from one-sided to
+TWO-sided on the signals it already takes (~6x ROM in-sample).** NOT DEPLOYED.
+
+**"MARGIN" MEANS MAX LOSS — user checked, confirmed from code.** Everywhere in this work
+`margin = width - credit`, and the engine stores the same as `max_loss_pts` / `capital`. So every
+"return on margin" figure is net / MAX LOSS, i.e. return on RISK, not on broker-blocked cash. For a
+single vertical SPAN blocks ~the max loss so they are close. **For the CONDOR the gap is material:**
+it is costed as `one width - total credit` (true max loss, only one side can finish ITM), but if
+Upstox SPAN does not grant that offset and blocks both spreads separately, cash deployed roughly
+DOUBLES and +65.7% ROM becomes ~+33% on actual capital. Also note Indian stock options carry SPAN +
+EXPOSURE margin and physical-settlement pressure in expiry week, so all quoted Rs/mo figures are
+return on max loss and real return on blocked capital runs somewhat below.
+
+**NEXT, in priority order:**
+ 1. **BROKER-MARGIN CHECK (minutes, user can do it)** — price a two-sided stock condor in Upstox and
+    see whether the blocked margin is ~one width or ~two. This gates whether the condor is worth the
+    OOS spend at all. ASKED, not yet answered.
+ 2. OOS on real Upstox premiums for BOTH sides — fresh multi-hour run, leg cache lost with /tmp.
+ 3. Only then a paper book / v0 upgrade.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
