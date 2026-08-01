@@ -831,16 +831,18 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("<b>Per TRADE vs per MONTH — this is where the confusion was.</b> Expectancy is what one trade is worth; multiply by "
      "signals per month to get monthly. An older figure of ₹20,000/mo for v2 assumed <b>7.6 signals a month, which is wrong</b> "
      "— v2 really fires about 3.5. That mismatch, not the rupees, is what made the two numbers disagree. This table uses "
-     "MEASURED signal rates throughout, and it is now the only place rupees appear.")}
+     "MEASURED signal rates throughout, and it is now the only place rupees appear. <b>Signals measured</b> is how many "
+     "real trades each row's win rate and averages rest on — read it as the confidence in that row: v1 at 871 is the "
+     "solid one, NIFTY at 73 and SENSEX at 89 are thin.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>~3.5</td><td>83.2%</td><td style="color:{GREEN};">+₹13,219</td><td style="color:{RED};">−₹11,645</td><td>83.2% × ₹13,219 − 16.8% × ₹11,645 = ₹10,998 − ₹1,956 = <b style="color:{GREEN};">+₹9,042</b></td><td><b>₹31,646</b></td></tr>
-<tr><td>Stock v1</td><td>~12</td><td>85.1%</td><td style="color:{GREEN};">+₹5,557</td><td style="color:{RED};">−₹7,571</td><td>85.1% × ₹5,557 − 14.9% × ₹7,571 = ₹4,729 − ₹1,128 = <b style="color:{GREEN};">+₹3,601</b></td><td><b>₹43,211</b></td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>~5.8</td><td>76.5%</td><td style="color:{GREEN};">+₹3,986</td><td style="color:{RED};">−₹11,505</td><td>76.5% × ₹3,986 − 23.5% × ₹11,505 = ₹3,049 − ₹2,704 = <b style="color:{AMBER};">+₹346</b></td><td>₹2,005</td></tr>
-<tr><td>Intraday NIFTY</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
-<tr><td>Intraday SENSEX</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>~29/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹82,667</b></td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td><b>₹66,134</b></td></tr>
+<tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>measured</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>346</td><td>~3.5</td><td>83.2%</td><td style="color:{GREEN};">+₹13,219</td><td style="color:{RED};">−₹11,645</td><td>83.2% × ₹13,219 − 16.8% × ₹11,645 = ₹10,998 − ₹1,956 = <b style="color:{GREEN};">+₹9,042</b></td><td><b>₹31,646</b></td></tr>
+<tr><td>Stock v1</td><td>871</td><td>~12</td><td>85.1%</td><td style="color:{GREEN};">+₹5,557</td><td style="color:{RED};">−₹7,571</td><td>85.1% × ₹5,557 − 14.9% × ₹7,571 = ₹4,729 − ₹1,128 = <b style="color:{GREEN};">+₹3,601</b></td><td><b>₹43,211</b></td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>293</td><td>~5.8</td><td>76.5%</td><td style="color:{GREEN};">+₹3,986</td><td style="color:{RED};">−₹11,505</td><td>76.5% × ₹3,986 − 23.5% × ₹11,505 = ₹3,049 − ₹2,704 = <b style="color:{AMBER};">+₹346</b></td><td>₹2,005</td></tr>
+<tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
+<tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>1,672</b></td><td><b>~29/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹82,667</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹66,134</b></td></tr>
 </table>
 {dim("<b>Sanity-check it against the only real datapoint.</b> July 2026 came in at <b>24 closed trades and ₹44,789</b> "
      "realised — below the ₹82,667 here, because live fired fewer trades than the signal rates assume, not because the "
