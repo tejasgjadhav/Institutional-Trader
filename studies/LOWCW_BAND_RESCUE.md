@@ -1,4 +1,4 @@
-# The 0.30–0.40 credit/width band: REJECTED — the in-sample rescue failed out-of-sample
+# The 0.30–0.40 credit/width band: one-sided REJECTED, two-sided CONFIRMED out-of-sample
 
 **Question (user, 2026-07-31):** the union watchlist is full of blocked names sitting at c/w ≈ 0.30.
 Is there a configuration — geometry, target, anything — that makes them tradeable at a good win
@@ -395,6 +395,62 @@ Two hard caveats:
 Next step, in order: OOS on real Upstox premiums for BOTH sides (a fresh multi-hour run — the leg
 cache was lost when /tmp was cleared), then the broker-margin check, then a paper book if both hold.
 
+---
+
+## 10. OUT-OF-SAMPLE VERDICT on the condor — the dead band IS rescued, v0 is not
+
+`ndte/lowcw_condor_oos.py`, real Upstox expired-option premiums **Oct 2024 → Jul 2026**, 38 names,
+1 lot, TP-40 of total credit. This window picked none of the in-sample result.
+
+**Band 0.30–0.35 — the band the user asked about:**
+
+| config | n | win | ROM | +ve yrs | IS said |
+|---|---|---|---|---|---|
+| one side (blocked today) | 67 | 76.1% | **−4.1%** | 1/3 | +3.5% |
+| **+ opposite side ≥ 0.10** | 47 | 63.8% | **+18.4%** | **3/3** | +24.8% |
+| **+ opposite side ≥ 0.20** | 46 | 63.0% | **+18.2%** | **3/3** | +25.3% |
+| + opposite side ≥ 0.30 | 29 | 55.2% | **−5.2%** | 1/2 | +34.6% |
+
+**Band 0.35–0.40 — what v0 trades:**
+
+| config | n | win | ROM | +ve yrs | IS said |
+|---|---|---|---|---|---|
+| one side (v0, deployed) | 44 | 90.9% | **+20.5%** | **3/3** | +11.0% |
+| + opposite side ≥ 0.10 | 32 | 65.6% | +25.9% | 2/3 | +46.6% |
+| + opposite side ≥ 0.20 | 28 | 60.7% | +19.4% | 2/3 | +50.2% |
+| + opposite side ≥ 0.30 | 21 | 71.4% | +76.1% | 3/3 *(n=21)* | +65.7% |
+
+### What this establishes
+
+1. **The 0.30–0.35 band is tradeable as a CONDOR.** −4.1% → **+18.4% on margin, positive in all
+   three out-of-sample years**, at opposite-side floors 0.10 and 0.20. IS +24.8% → OOS +18.4% is a
+   consistent result, not a collapse — the first candidate in this entire study to survive the
+   held-out window. The mechanism is the one the study kept pointing at: combined credit/width
+   0.33 → 0.64, clearing the level that is the book's actual edge.
+
+2. **The ≥ 0.30 floor FAILS out-of-sample (−5.2%) despite being the BEST in-sample cell (+34.6%).**
+   The neighbourhood does not hold uniformly. Use 0.10–0.20 and treat the top floor as a live
+   reminder of how thin n=29 is.
+
+3. **v0 gains nothing — the in-sample "upgrade v0 to two-sided" claim is WITHDRAWN.** One-sided on
+   that band is +20.5% on 3/3 years; the condor is +19.4% to +25.9% on 2/3. The +76.1% cell rests on
+   21 trades. v0 stays one-sided.
+
+4. **It does not do what was literally asked.** Net goes −4.1% → +18.4%, but **win rate falls
+   76% → 64%.** The request was more net AND a higher win rate; this buys net by fixing the payoff
+   ratio and gives up win rate. Anyone reading a 64% win rate as "worse" has it backwards — but it
+   must be stated, not buried.
+
+### Still not deployed. What gates it
+
+- **n = 46–47.** Thin, and one floor in the same neighbourhood already failed.
+- **The margin convention.** Costed as one-sided risk (one width − total credit), which is the true
+  max loss and what SPAN normally grants a condor. **If Upstox blocks both spreads separately, cash
+  deployed roughly doubles and +18.4% becomes ~+9%.** Unresolved — check in the app before anything
+  is built. This single check decides whether the result is interesting or marginal.
+- **Four legs, not two.** Double the slippage surface and double the fill risk on mid-caps; entry
+  and exit costs on all four legs are already charged here, but live fills will be worse than modelled.
+
 ## Scripts
 
 | file | what it does |
@@ -409,5 +465,6 @@ cache was lost when /tmp was cleared), then the broker-margin check, then a pape
 | `ndte/stkfade_lowcw_subband.py` | OOS 0.30-0.35 vs 0.35-0.40 split (reuses the leg cache) |
 | `ndte/stkfade_lowcw_subband_is.py` | in-sample twin of the split |
 | `ndte/lowcw_regime_filter.py` | calm-regime entry filter on 0.30-0.35 (refuted) |
-| `ndte/lowcw_condor.py` | sell BOTH sides on 0.30-0.35 — the one structure that works IS |
+| `ndte/lowcw_condor.py` | sell BOTH sides — in-sample |
+| `ndte/lowcw_condor_oos.py` | the condor OOS run: 0.30-0.35 CONFIRMED, v0 upgrade withdrawn |
 | `ndte/book_win_loss_sizes.py` | avg win / avg loss in rupees per book, one consistent basis |
