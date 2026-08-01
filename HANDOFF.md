@@ -160,10 +160,29 @@ RULES". KEPT: the full-window LIVE STRATEGIES table, REJECTED/OFF table, six sur
 a "do not re-mine these" list (kept deliberately against the user's "delete most" — it is the repo's
 guard against re-exploring dead ends; user was told and can still cut it).
 
-**IN FLIGHT (user's latest):** (1) in the LIVE STRATEGIES table, replace the "in-sample /
-out-of-sample" wording with ACTUAL YEARS — user does not want that jargon. Windows are
-1-Jan-2019→30-Sep-2024 and 1-Oct-2024→31-Jul-2026. (2) Add a GitHub link to the studies folder
-(https://github.com/tejasgjadhav/Institutional-Trader/tree/main/studies) on the STUDIES tab.
+**BREAKTHROUGH — SELLING BOTH SIDES WORKS ON THE DEAD BAND (commit 91e437c, pushed).** After the
+calm-regime filter was refuted, the last untested idea was STRUCTURAL rather than parametric: every
+previous attempt moved WHERE the single spread sits or WHEN it is taken; none fixed the actual defect,
+which is that at c/w 0.30 one side does not collect enough premium for its risk. A condor fixes it —
+sell the fade side AND the opposite side, credit roughly doubles, width barely moves (only ONE side
+can finish ITM when wings do not overlap). Pre-registered on the in-house precedent of the DEPLOYED
+0DTE FLIP-CONDOR HYBRID. `ndte/lowcw_condor.py`, IS 2019->Jul'24, band 0.30-0.35, TP-40:
+    one side (baseline)              n=506  81.4% win   +3.5% ROM  5/6 yrs  c/w 0.32
+    + opposite side c/w >= 0.10      n=336  64.3% win  +24.8% ROM  5/6 yrs  c/w 0.65
+    + opposite side c/w >= 0.30      n=236  62.7% win  +34.6% ROM  5/6 yrs  c/w 0.68
+Combined c/w 0.32 -> 0.65 clears the 0.40 level that IS the edge. Stable across the whole floor
+0.10-0.30. Win rate FALLS 81->64% while net rises ~7x — every other candidate did the reverse, so
+this is the payoff ratio finally being right rather than a flattering win rate.
+**NOT DEPLOYED.** Caveats in study §9: (1) the width-1 re-cut looked STRONGER (6/6 yrs, bootstrap
+p5 +26%) and still died OOS, so IS only buys the OOS run; (2) costed as ONE-SIDED margin (correct
+for the structure, normally what SPAN gives a condor) — if the broker charges both sides ROM roughly
+HALVES to ~12-17%; verify in Upstox.
+
+**IN FLIGHT:** user asked which band the condor result was for. Answer: **0.30-0.35** (the dead half).
+Now running the same condor test on **0.35-0.40** (the band v0 actually trades) for comparison — if it
+lifts that too, v0 itself may be upgradeable from one-sided to two-sided.
+**NEXT, in order:** OOS on real Upstox premiums for BOTH sides (fresh multi-hour run, leg cache was
+lost with /tmp), then the broker-margin check, then a paper book only if both hold.
 
 **STILL NOT COVERED for the band** (conditional filters, not configs): IV/VIX regime at entry (most
 promising — the failure was regime-driven), breakout size, which Donchian window fired, per-name IV
