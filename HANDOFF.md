@@ -386,6 +386,20 @@ after the restart (TCS 29.33, BAJAJ-AUTO 139.03).
 15-min poll books at the next poll rather than at the touch. Both are inherent to polling a mid;
 neither is a correctness bug.
 
+**STATE 2026-08-03 ~11:50 — 3 COMMITS STILL UNPUSHED, VIEWER HAD DIED.**
+Unpushed (local only): `f079b61` Telegram fixes · `1351c03` handoff/mechanism · `6392c2b` market-hours
+gate + stale-quote booking guard. Push needs the user's own terminal for the PAT prompt (keychain
+returns nothing for github.com in this session; no gh CLI, no token env, no SSH key).
+
+**VIEWER DIED AND DID NOT COME BACK — restarted manually (pid 6590).** app.log shows only Upstox
+connection failures at 11:46 (Max retries exceeded) and NO traceback; memory was fine at the time
+(~350 MB free, swap 873 MB of 2 GB), so this was NOT the jetsam kill that took the backtests earlier
+— most likely a network blip. **ROOT ISSUE: the viewer's launchd job has NO KeepAlive** — it only
+auto-launches 9:00 on weekdays, so unlike the engine (KeepAlive=true) it never self-heals and a
+dashboard can sit stale until someone notices. Trading is unaffected (the engine is decoupled and
+kept marking throughout). OFFERED to add KeepAlive to `deploy/` + setup.sh plist for the viewer;
+awaiting the user.
+
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 
