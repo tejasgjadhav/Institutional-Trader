@@ -793,10 +793,14 @@ class EngineRunner:
                     b["w"] += 1; b["pl"] += rs
                 elif st == "LOSS":
                     b["l"] += 1; b["pl"] += rs
-                else:
+                elif st == "OPEN":
                     openn += 1; open_pl += rs
                     opens.append({"exp": p.get("expiry"), "tag": tag,
                                   "sym": p.get("symbol") or p.get("index") or "?"})
+                # ANY OTHER STATUS IS NEITHER OPEN NOR CLOSED — skip it. This used to be a bare
+                # `else`, so monthly futures' REGIME_OFF marker rows (the book recording that it
+                # STOOD ASIDE — null symbol, null expiry, no position) were counted as live trades
+                # and shown as "?: 2 trades — ? (MONTHLY FUT)". User-reported 2026-08-03.
         ic, mc = buck["i"], buck["m"]
         closed = ic["w"] + ic["l"] + mc["w"] + mc["l"]
         if closed == 0:

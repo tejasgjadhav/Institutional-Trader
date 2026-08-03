@@ -307,6 +307,36 @@ notify_nearmiss (which own union_watchlist.json).
 "NIFTY" substring. And the 0DTE/SWING labels look absent from the outcome watcher only because that
 list keys on FILES with its own display labels ("0DTE NIFTY (same-day)"), not on the _tg() labels.
 
+**TELEGRAM BUG FIXES 2026-08-03 (user sent screenshots) — 3 bugs, all fixed, engine restarted.**
+
+*BUG 1 — raw `<b>` tags in every watchlist digest. ROOT CAUSE FOUND.* `stock_credit_v2.py:261` built
+`prob = "<76%"` for c/w < 0.30 — a LITERAL '<'. Telegram's HTML parser reads it as an opening tag and
+returns 400, so the WHOLE digest fell through to the plain-text fallback with every `<b>` visible.
+Visible in the screenshot on the MARUTI line ("backtest win <76%"). Fixed to `&lt;76%`. Validated:
+the rebuilt digest now has ZERO stray `<`/`>`.
+
+*BUG 2 — the fallback made it worse, and silently.* `notifications.send_telegram` resent the body
+VERBATIM on a 400 ("so it still reaches the user, tags and all"), which is exactly why the reader saw
+markup; and because the retry succeeded it `continue`d WITHOUT LOGGING, so a broken message left no
+trace anywhere (that is why nothing appeared in the logs). Now: new `_strip_html()` removes tags and
+unescapes entities before the plain retry, AND a WARNING is logged naming the first 120 chars so the
+next escaping bug is visible immediately.
+
+*BUG 3 — phantom "2 futures trades" in the portfolio summary. THIS WAS MY REGRESSION from the
+2026-08-01 sweep.* `_portfolio_summary_text` used a bare `else: openn += 1`, so ANY status that was
+not WIN/LOSS counted as an open trade. Harmless until I added monthly_fut to `_BOOK_TAG`, which then
+surfaced its two REGIME_OFF marker rows (null symbol, null expiry — the book recording that it STOOD
+ASIDE) as "?: 2 trades — ? (MONTHLY FUT), ? (MONTHLY FUT)". Now only `st == "OPEN"` counts; any other
+status is neither open nor closed. Verified: summary now reads **Open: 3 trades** (NIFTY swing, TCS,
+BAJAJ-AUTO) — correct.
+
+*VERIFIED (user asked): targets tracked and results sent for ALL books.* Result/WIN-LOSS Telegram
+coverage is now 8/8 position files with NONE missing (v2, v1, v0, swing, 0DTE NIFTY, SENSEX, BNF,
+monthly fut). Take-profit is applied inside resolve_positions for v2 (50% of credit, stop 3x), v1
+(40%, no stop) and v0 (40%, no stop) — all three confirmed by source inspection. Every signal states
+its own target and stop: v2 "book at 50% of credit"/3x · v1 & v0 "book 40% of credit"/none ·
+swing "hold to expiry"/2x · 0DTE NIFTY & SENSEX "hold to same-day expiry"/none.
+
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 

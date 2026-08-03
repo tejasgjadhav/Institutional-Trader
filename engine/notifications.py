@@ -35,6 +35,13 @@ TWILIO_TO    = os.getenv("TWILIO_TO")
 
 # ── individual channels ───────────────────────────────────────────────────────
 
+def _strip_html(text: str) -> str:
+    """Turn the HTML body into readable plain text for the 400-fallback: drop tags, unescape
+    entities. Without this a stray '<' anywhere makes the reader see raw "<b>" markup."""
+    import re as _re, html as _html
+    return _html.unescape(_re.sub(r"<[^>]+>", "", text))
+
+
 def send_telegram(text: str) -> bool:
     """Free, reliable. Needs TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID.
     TELEGRAM_CHAT_ID may be a COMMA-SEPARATED list — fans out to every recipient
@@ -56,8 +63,15 @@ def send_telegram(text: str) -> bool:
             # message, resend it as PLAIN TEXT (no parse_mode) so it still reaches the user, tags and
             # all. Callers additionally html.escape dynamic fields so the HTML path normally succeeds.
             if r.status_code == 400:
-                r2 = requests.post(url, data={"chat_id": cid, "text": text}, timeout=10)
+                # STRIP the markup before retrying. The old fallback resent `text` verbatim, so a
+                # single stray '<' turned the whole message into visible "<b>" tags for the reader
+                # (user-reported 2026-08-03). Also LOG it — the retry used to succeed and `continue`,
+                # so a broken message left no trace anywhere.
+                plain = _strip_html(text)
+                r2 = requests.post(url, data={"chat_id": cid, "text": plain}, timeout=10)
                 if r2.status_code == 200:
+                    logger.warning(f"Telegram HTML rejected (400) — sent as plain text instead. "
+                                   f"Fix the escaping. First 120 chars: {text[:120]!r}")
                     any_ok = True; continue
                 logger.warning(f"Telegram failed for {cid}: {r.status_code} {r.text[:120]} "
                                f"(plain-text retry also failed: {r2.status_code})")
