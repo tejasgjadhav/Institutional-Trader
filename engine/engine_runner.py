@@ -474,6 +474,27 @@ class EngineRunner:
             except Exception as e:
                 logger.warning(f"monthly_call scan: {e}")
 
+    @staticmethod
+    def _stock_settlement_due() -> bool:
+        """True if any OPEN stock-credit position has reached its expiry.
+
+        Why this exists: the market-hours gate below must NOT apply to settlement. The expiry
+        branch inside resolve_positions only fires once the session is over (`now >= 15:30`),
+        while is_market_open() is 9:15-15:30 — so a naive "market hours only" gate would give
+        settlement a one-minute window against a 15-minute timer and expired positions would sit
+        OPEN forever. That is the same freeze that stranded the NIFTY bull-put in July (653d3c9).
+        """
+        today = datetime.now(IST).date().isoformat()
+        for fn in ("stock_credit_v2_positions.json", "stock_credit_positions.json",
+                   "stock_credit_v0_positions.json"):
+            try:
+                for p in json.load(open(os.path.join(DATA_DIR, fn))) or []:
+                    if p.get("status") == "OPEN" and (p.get("expiry") or "9999-99-99") <= today:
+                        return True
+            except Exception:
+                continue
+        return False
+
     def _stock_credit(self, now):
         """STOCK CREDIT SPREADS (the 4th strategy) — high-frequency fade on the stock universe.
         Once/day scan after the cutoff + periodic mark-to-market, same pattern as _swing."""
@@ -512,7 +533,12 @@ class EngineRunner:
                 logger.info(f"union watchlist Telegram sent (15:05): {nc} near-miss candidate(s)")
             except Exception as e:
                 logger.warning(f"watchlist 15:05: {e}")
-        if (time.time() - self._last_stockcr_resolve) >= config.STOCK_CREDIT_RESOLVE_INTERVAL:
+        # MARK-TO-MARKET / TARGET CHECK — MARKET HOURS ONLY (user, 2026-08-03). It used to run
+        # round the clock on the 15-min timer, so a target could be booked at e.g. 20:00 off
+        # post-close quotes. Settlement is exempt: an expired position must still be closed out
+        # after 15:30, so _stock_settlement_due() overrides the gate.
+        if ((time.time() - self._last_stockcr_resolve) >= config.STOCK_CREDIT_RESOLVE_INTERVAL
+                and (self.agent.is_market_open() or self._stock_settlement_due())):
             self._last_stockcr_resolve = time.time()
             try:
                 n = stock_credit.resolve_positions()

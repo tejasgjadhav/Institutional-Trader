@@ -360,17 +360,31 @@ running live prices").** For the stock credit books (v0/v1/v2), every 15 min
 Live-verified: both legs of both open v1 spreads (TCS 2420/2480, BAJAJ-AUTO 11400/11700) have real
 two-sided markets, so the fallback is not currently firing.
 
-**THREE KNOWN LIMITATIONS IN THAT MECHANISM (flagged to user, NOT yet fixed):**
- (a) the resolve loop is NOT gated by market hours — `cycle()` calls `_stock_credit` unconditionally
-     and the loop merely slows to a 5-min tick when closed, so a target can be stamped at e.g. 20:00
-     on post-close quotes (price is the close, so the outcome is right but the timestamp is late);
- (b) **the LTP fallback is the real risk** — ENTRY requires a two-sided market on both legs (the
-     MPHASIS fix) but RESOLVE does not, so a stale last-traded print on an illiquid strike could BOOK
-     a WIN/LOSS. Structurally the same bug class as the fabricated 0DTE wins fixed 07-21. RECOMMENDED
-     FIX (offered, awaiting user): require a two-sided market before a quote may BOOK a trade; let it
-     update MTM only otherwise;
- (c) mid-price is optimistic (closing means crossing the spread), and the 15-min poll books at the
-     next poll rather than at the touch.
+**TWO OF THE THREE LIMITATIONS ARE NOW FIXED (user: "keep it on only during market hours" then
+"do what is right, you are the decision maker"). Engine restarted, verified live.**
+
+*(a) MTM/TARGET LOOP IS NOW MARKET-HOURS ONLY.* `_stock_credit`'s resolve is gated on
+`is_market_open()`. **CRITICAL SUBTLETY — do not "simplify" this gate:** `is_market_open()` is
+9:15-15:30, but the expiry branch inside resolve_positions only fires once `now >= 15:30`. A naive
+market-hours gate therefore gives settlement a ONE-MINUTE window against a 15-MINUTE timer and
+expired positions would sit OPEN forever — the same freeze that stranded the NIFTY bull-put in July
+(653d3c9). So the gate is `is_market_open() OR _stock_settlement_due()`, where the new
+`EngineRunner._stock_settlement_due()` scans the three stock-credit books for any OPEN position whose
+expiry <= today. Verified: runs now (market open), idle after 15:30 when nothing is expiring,
+always allowed on an expiry day.
+
+*(b) A STALE QUOTE CAN NO LONGER BOOK A TRADE.* `_quote` falls back to last-traded price when a leg
+has no bid/ask, and on an illiquid strike that print can be hours old — booking a WIN/LOSS off it is
+the same defect class that once fabricated 0DTE wins. ENTRY already required a two-sided market (the
+MPHASIS fix); RESOLVE did not. Both resolvers (`stock_credit_v2.py` which v0 also runs, and
+`stock_credit.py` for v1) now compute `bookable` = BOTH legs returned bid>0 AND ask>0 THIS cycle, and
+skip the TP/stop decision unless it is True. **MTM still updates on a fallback quote — only the
+DECISION is gated.** Verified live: both open v1 spreads quote two-sided, and MTM marked correctly
+after the restart (TCS 29.33, BAJAJ-AUTO 139.03).
+
+*(c) STILL OPEN, accepted:* mid-price is optimistic (closing means crossing the spread) and the
+15-min poll books at the next poll rather than at the touch. Both are inherent to polling a mid;
+neither is a correctness bug.
 
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.

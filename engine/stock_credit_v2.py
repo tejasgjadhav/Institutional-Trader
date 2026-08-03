@@ -409,8 +409,16 @@ def resolve_positions() -> int:
             expired = (today > exp) or (today == exp and past_settle)
             # MTM current leg values for every non-expired position (open or closed) so the UI's
             # 'current' keeps running even after a WIN/LOSS is booked; realized P&L preserved below.
+            # `bookable` = BOTH legs returned a genuine two-sided market THIS cycle. _quote falls
+            # back to last-traded price when there is no bid/ask, and on an illiquid strike that
+            # print can be hours stale — booking a WIN/LOSS off it is the same defect that once
+            # fabricated 0DTE wins. Entry already demands a two-sided market (the MPHASIS fix);
+            # resolve did not. MTM still updates on a fallback quote; only the DECISION is gated.
+            bookable = False
             if not expired:
-                sm, *_ = _quote(p["short_key"]); lm, *_ = _quote(p["long_key"])
+                sm, sb, sa, _u1 = _quote(p["short_key"]); lm, lb, la, _u2 = _quote(p["long_key"])
+                bookable = bool(sm is not None and lm is not None
+                                and sb > 0 and sa > 0 and lb > 0 and la > 0)
                 if sm is not None and lm is not None:
                     p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
                     p["current_cost"] = round(sm - lm, 2); changed = True
@@ -447,6 +455,8 @@ def resolve_positions() -> int:
             cost = p.get("current_cost")
             if cost is None:
                 continue
+            if not bookable:
+                continue   # stale/one-sided quote: mark to market, but never book a target or stop
             p["pnl_pts"] = round(p["credit"] - cost, 2)
             tp = STOCK_CREDIT_TAKE_PROFIT
             if tp and tp > 0 and cost <= p["credit"] * (1 - tp):
