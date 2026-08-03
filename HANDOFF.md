@@ -337,6 +337,41 @@ monthly fut). Take-profit is applied inside resolve_positions for v2 (50% of cre
 its own target and stop: v2 "book at 50% of credit"/3x · v1 & v0 "book 40% of credit"/none ·
 swing "hold to expiry"/2x · 0DTE NIFTY & SENSEX "hold to same-day expiry"/none.
 
+**PUSH BLOCKED — 1 commit sits LOCAL ONLY: `f079b61` (the 3 Telegram fixes).** `git push` fails with
+`could not read Username for 'https://github.com': Device not configured`. Diagnosed: the osxkeychain
+helper returns NOTHING for github.com, `gh` CLI is not installed, no GH_TOKEN/GITHUB_TOKEN env, no
+SSH key. Earlier pushes THIS SAME DAY succeeded, so the credential was reachable before the session
+restarted and is not now, and git has no TTY to prompt on. Remotes are correct (origin =
+Institutional-Trader, private = Institutional-Trader-private-). **The user must run it themselves:**
+`cd ~/files/institutional-trader && git push origin main && git push private main` (GitHub needs a
+Personal Access Token, not an account password). NOTE: the fixes are LIVE in the running engine
+regardless — the push only affects the repos.
+
+**TARGET-TRACKING MECHANISM — verified from source + live quotes 2026-08-03 (user asked "are you
+running live prices").** For the stock credit books (v0/v1/v2), every 15 min
+(`STOCK_CREDIT_RESOLVE_INTERVAL = 900`):
+  1. fetch a LIVE Upstox quote for BOTH option legs — NOT the underlying;
+  2. price = MID of bid/ask (`_quote`), falling back to LTP if there is no two-sided market;
+  3. cost to close = short mid - long mid;
+  4. TARGET when `cost <= credit * (1 - TP)` -> WIN  (v2 TP-50, v1/v0 TP-40);
+  5. STOP when `cost >= credit * stop_mult` -> LOSS  (v2 3x; v1/v0 99x = never, wing caps it);
+  6. the UNDERLYING price is used ONLY at expiry (expiry day past 15:30) for intrinsic settlement,
+     via live spot then the expiry-day daily close — the 07-21 fix against fabricated wins.
+Live-verified: both legs of both open v1 spreads (TCS 2420/2480, BAJAJ-AUTO 11400/11700) have real
+two-sided markets, so the fallback is not currently firing.
+
+**THREE KNOWN LIMITATIONS IN THAT MECHANISM (flagged to user, NOT yet fixed):**
+ (a) the resolve loop is NOT gated by market hours — `cycle()` calls `_stock_credit` unconditionally
+     and the loop merely slows to a 5-min tick when closed, so a target can be stamped at e.g. 20:00
+     on post-close quotes (price is the close, so the outcome is right but the timestamp is late);
+ (b) **the LTP fallback is the real risk** — ENTRY requires a two-sided market on both legs (the
+     MPHASIS fix) but RESOLVE does not, so a stale last-traded print on an illiquid strike could BOOK
+     a WIN/LOSS. Structurally the same bug class as the fabricated 0DTE wins fixed 07-21. RECOMMENDED
+     FIX (offered, awaiting user): require a two-sided market before a quote may BOOK a trade; let it
+     update MTM only otherwise;
+ (c) mid-price is optimistic (closing means crossing the spread), and the 15-min poll books at the
+     next poll rather than at the touch.
+
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 
