@@ -112,6 +112,12 @@ MARKET_CLOSE = CASH_CLOSE   # kept as an alias so existing readers keep their ol
 # nothing and puts the RESULT + PORTFOLIO messages out immediately after settlement.
 SETTLE_GRACE_MIN = 6
 
+# When the UNION WATCHLIST is built and its digest sent. 15:17 is the first moment the continuous
+# session is complete (F&O stocks stop trading at 15:15) — it names the likely candidates ~19 min
+# before the 15:36 scan so there is time to pre-stage. Kept in config, not as a bare literal in
+# engine_runner, because the UI quotes it too and the two must never drift.
+WATCHLIST_AFTER = "15:17"
+
 # 3-FAMILY 5-MIN SCAN (the BUY-side scorer). Disabled 2026-07-07 (user-approved): it fed only
 # the hidden 3-Family paper book and caused options-flow 429 storms. The market snapshot/header
 # (_market) and the 15:10 credit scans + 9:16 0DTE scans are INDEPENDENT and unaffected.

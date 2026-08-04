@@ -344,6 +344,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """PM DECISIONS — every strategy book, each section sized to its content inside a scroll area."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
         v.addWidget(self._panel_title("LATEST PM DECISIONS  -  place manually in Upstox", AMBER))
+        self.pm_timings = self._timings_label()
+        v.addWidget(self.pm_timings)
 
         # Dynamic "where to look NOW" banner (updated each refresh from the IST clock).
         self.pm_now_hint = QLabel("—"); self.pm_now_hint.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
@@ -566,6 +568,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:40."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("INTRADAY DECISIONS  -  NIFTY expiry-day call credit spread", CYAN))
+        self.zdte_timings = self._timings_label()
+        v.addWidget(self.zdte_timings)
         # dynamic pre-market checker — engine refreshes data/zero_dte_status.json every ~2-5 min
         self.zdte_status = QLabel("checking today's status…")
         self.zdte_status.setWordWrap(True)
@@ -1234,6 +1238,52 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         except Exception as e:
             logger.warning(f"outcome refresh (log): {e}")
 
+    def _timings_label(self) -> QLabel:
+        """A SIGNAL TIMINGS strip. Every time comes from engine.config, never a literal — the whole
+        15:10->15:36 bug class this session was bare literals drifting out of sync with the engine."""
+        lb = QLabel("—"); lb.setWordWrap(True); lb.setFont(QFont("Menlo", 11))
+        lb.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 8px; background-color:{PANEL}; "
+                         f"border:1px solid {BORDER};")
+        return lb
+
+    def _update_timings(self):
+        """Refresh both SIGNAL TIMINGS strips, highlighting the step the clock is in right now."""
+        from engine import config as C
+        now = datetime.now(IST); m = now.hour * 60 + now.minute
+        def mins(hhmm):
+            h, mm = map(int, hhmm.split(":")); return h * 60 + mm
+        def strip(steps):
+            # steps = [(start_min, end_min_or_None, "time", "what happens"), ...]
+            out = []
+            for st, en, tm, what in steps:
+                live = st <= m and (en is None or m <= en)
+                if live:
+                    out.append(f'<span style="color:{CYAN};"><b>&#9654; {tm} {what}</b></span>')
+                else:
+                    out.append(f'<span style="color:{TEXT_DIM};">{tm} {what}</span>')
+            return "&nbsp;&nbsp;<b>SIGNAL TIMINGS</b> &nbsp; " + \
+                   f'<span style="color:{BORDER};"> &#8594; </span>'.join(out)
+
+        wl, scan = C.WATCHLIST_AFTER, C.STOCK_CREDIT_SCAN_AFTER
+        close, settle = C.FNO_CLOSE, C.SETTLE_AFTER
+        if hasattr(self, "pm_timings"):
+            self.pm_timings.setText(strip([
+                (mins(C.MARKET_OPEN), mins(wl) - 1, C.MARKET_OPEN, "market opens"),
+                (mins(wl), mins(scan) - 1, wl, "WATCHLIST + digest"),
+                (mins(scan), mins(close), f"{scan}-{close}",
+                 "SIGNALS fire &#183; v2 / v1 / v0 / swing &#183; PLACE the order"),
+                (mins(settle), 24 * 60, settle, "settle &#183; WIN/LOSS + Telegram"),
+            ]))
+        if hasattr(self, "zdte_timings"):
+            frac = getattr(C, "ZERO_DTE_EARLY_CLOSE_FRAC", 0) or 0
+            early = f"close early at {frac:.0%} of max profit" if frac else "hold to expiry"
+            self.zdte_timings.setText(strip([
+                (0, mins("09:15"), "09:00", "pre-market status posted"),
+                (mins("09:16"), mins("09:20"), "09:16", "ENTRY &#183; spread sold at the open"),
+                (mins("09:20"), mins(settle) - 1, "all day", f"live tracking &#183; {early}"),
+                (mins(settle), 24 * 60, settle, "settle &#183; WIN/LOSS + Telegram"),
+            ]))
+
     def _update_pm_now_hint(self):
         """Dynamic 'where to look NOW' banner on PM DECISIONS, driven by the IST clock."""
         if not hasattr(self, "pm_now_hint"):
@@ -1319,6 +1369,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
 
     def _refresh_pm(self):
         self._update_pm_now_hint()
+        self._update_timings()
         self._refresh_union_watch()
         self._ensure_fired_today()
         from engine.options import build_live_option_order

@@ -44,6 +44,13 @@ RESOLVE_INTERVAL = 20 # resolve OPEN trades every 20 s (low-latency win/loss boo
                       # decoupled from the 5-min scan; only runs while trades are open)
 
 
+def _watchlist_mins() -> int:
+    """config.WATCHLIST_AFTER as minutes-since-midnight. Was a bare `15 * 60 + 17` in two places."""
+    from engine import config as _cfg
+    h, m = map(int, _cfg.WATCHLIST_AFTER.split(":"))
+    return h * 60 + m
+
+
 class EngineRunner:
     def __init__(self):
         self.agent = Agent()
@@ -518,7 +525,7 @@ class EngineRunner:
         # split for slack is unnecessary — build and send in the same pass. (the slow ~100-stock sweep; on a throttled day it took
         # 17 min → the old combined 15:05 call landed at 15:22). Doing it at 14:45 gives ~20 min of
         # slack so it's always ready by 15:05. Near-close data (breakouts are close-based).
-        if (self.agent.is_market_open() and _mins >= 15 * 60 + 17
+        if (self.agent.is_market_open() and _mins >= _watchlist_mins()
                 and self._watchlist_build_day != now.date()):
             self._watchlist_build_day = now.date()
             try:
@@ -530,7 +537,7 @@ class EngineRunner:
         # figures are INDICATIVE (priced off the 15:15 print, before the auction) — that is fine,
         # this message is explicitly "DO NOT TRADE" and exists to pre-warn which names are in play
         # ~19 minutes before the 15:36 scan fires the real signals.
-        if (self.agent.is_market_open() and _mins >= 15 * 60 + 17
+        if (self.agent.is_market_open() and _mins >= _watchlist_mins()
                 and self._watchlist_tg_day != now.date()):
             self._watchlist_tg_day = now.date()
             try:
