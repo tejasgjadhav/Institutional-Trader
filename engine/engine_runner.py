@@ -869,6 +869,23 @@ class EngineRunner:
             lines.append("⏳ Open: <b>0 trades</b>")
         return "\n".join(lines)
 
+    def _in_settle_grace(self) -> bool:
+        """True for SETTLE_GRACE_MIN minutes after the F&O close, so the cycle that settles at
+        SETTLE_AFTER gets its RESULT + PORTFOLIO Telegrams out at once instead of waiting for the
+        next 300 s idle cycle. _outcomes() is throttled to 60 s and is_market_open() is inclusive
+        only to 15:40:00, so without this the day's results landed ~15:45."""
+        try:
+            from engine.config import FNO_CLOSE, SETTLE_GRACE_MIN
+            now = datetime.now(IST)
+            if now.weekday() >= 5:
+                return False
+            h, m = map(int, FNO_CLOSE.split(":"))
+            close_m = h * 60 + m
+            mins = now.hour * 60 + now.minute
+            return close_m <= mins <= close_m + SETTLE_GRACE_MIN
+        except Exception:
+            return False
+
     def cycle(self):
         now = datetime.now(IST)
         self._market(now)
@@ -880,8 +897,9 @@ class EngineRunner:
         self._monthly_fut(now)
         self._monthly_call(now)
         self._zero_dte(now)
-        self._outcomes()   # AFTER the book hooks: the cycle that settles ~15:35 notifies in the
-                           # same pass (was before -> results lagged one idle cycle to ~15:40)
+        self._outcomes()   # AFTER the book hooks: the cycle that settles at SETTLE_AFTER (15:40)
+                           # notifies in the same pass. _in_settle_grace() keeps the fast tick alive
+                           # past the close so the 60 s throttle cannot push results to ~15:45.
         from engine import config as _cfg
         if (getattr(_cfg, "SCAN_3FAMILY_ENABLED", True) and self.agent.is_market_open()
                 and (time.time() - self._last_scan) >= SCAN_INTERVAL):
@@ -900,7 +918,7 @@ class EngineRunner:
                 logger.error(f"cycle failed: {e}", exc_info=True)
             # tight loop during market hours; idle slowly when closed (still writes a
             # market snapshot every cycle and catches the 15:31-15:55 EOD window).
-            time.sleep(TICK if self.agent.is_market_open() else 300)
+            time.sleep(TICK if (self.agent.is_market_open() or self._in_settle_grace()) else 300)
 
 
 if __name__ == "__main__":

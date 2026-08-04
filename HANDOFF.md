@@ -1,5 +1,35 @@
 # Handoff — institutional-trader
 
+## IN PROGRESS (2026-08-04 evening) — verifying target-book → WIN/LOSS → Telegram sequence
+
+User ask: "ensure once targets are booked you close the trade with win/loss and do the telegram
+sequence". Checking every book's take-profit path end to end.
+
+### Settled this session (no action needed)
+
+**v0 is NOT broken.** It has never opened a position, so there is nothing in the trade log and no
+`data/stock_credit_v0_positions.json`. Proof it runs: `data/stock_credit_v0.json` written 15:26 on
+4-Aug with `rows: []`; zero `stock_credit_v0 scan/resolve` exceptions in the whole log. In 3 live
+sessions (31-Jul, 3-Aug, 4-Aug) at 5.8 sig/mo (~0.28/session) the expectation is 0.8 — zero is normal.
+Today's only band candidates were GRASIM 0.350 and HCLTECH 0.350; **GRASIM went to v1 at c/w 0.41 and
+v0 stood down** per the user's tie-break rule (working as designed).
+
+⚠ **Structural note worth revisiting:** v1 (1-OTM/width-3) produces HIGHER c/w than v0 (2-OTM/width-4)
+on the same underlying, so the names landing in v0's 0.35–0.40 band tend to clear v1's 0.40 gate and
+get taken by v1 first. v0 will therefore fire less than its 5.8/mo model. Not a bug — a consequence of
+the tie-break — but it means v0's live record will accumulate slowly.
+
+**Bug found and FIXED (pushed):** `_update_pm_now_hint` still pivoted on 15:10 after the scan moved to
+15:36, so the banner announced the scan 26 min early and then showed **"Market closed"** from 15:36 —
+during the only window in which a signal can be placed. Phases now 09:15 / 15:17 / 15:36 / 15:41.
+Also `MARKET_CLOSE` (cash 15:30) → `FNO_CLOSE` on the 3-Family hours line, plus 11 stale copy strings.
+
+**Engine health:** engine + viewer ALIVE. All 214 errors since 3-Aug are DNS/network
+(`Failed to resolve api.upstox.com`, Yahoo timeouts) — machine losing connectivity, not code. No
+tracebacks from any book.
+
+---
+
 ## DONE (2026-08-04) — NSE 3-Aug session change: engine retimed, pushed to both remotes
 
 **Nothing outstanding on this. It is deployed, committed and pushed (origin + private).**

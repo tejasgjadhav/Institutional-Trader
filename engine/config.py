@@ -104,6 +104,14 @@ FNO_CLOSE    = "15:40"   # equity derivatives — what every one of our books ac
 SETTLE_AFTER = "15:40"   # THE single settle knob: no position may settle before the F&O close
 MARKET_CLOSE = CASH_CLOSE   # kept as an alias so existing readers keep their old meaning
 
+# Grace window AFTER the F&O close during which the engine keeps its fast 5 s tick.
+# Without this the settle lands in a dead spot: is_market_open() is inclusive to 15:40:00, so the
+# cycle that actually settles (~15:40:0x) is the LAST fast cycle, and _outcomes() is throttled to
+# 60 s — it almost always ran seconds earlier, so it skips. The loop then sleeps 300 s and every
+# WIN/LOSS Telegram for the day lands ~15:45 instead of ~15:40. Six minutes of fast ticking costs
+# nothing and puts the RESULT + PORTFOLIO messages out immediately after settlement.
+SETTLE_GRACE_MIN = 6
+
 # 3-FAMILY 5-MIN SCAN (the BUY-side scorer). Disabled 2026-07-07 (user-approved): it fed only
 # the hidden 3-Family paper book and caused options-flow 429 storms. The market snapshot/header
 # (_market) and the 15:10 credit scans + 9:16 0DTE scans are INDEPENDENT and unaffected.
