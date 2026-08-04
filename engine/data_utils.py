@@ -17,6 +17,39 @@ from engine.instruments import to_instrument_key
 logger = logging.getLogger(__name__)
 
 
+def _batch_index_net_change(names: list) -> dict:
+    """One batched QUOTE call returning {name: net_change} straight from the exchange.
+
+    Why this exists: the % on the ticker used to be derived from the DAILY history feed —
+    "the last close not dated today". BSE publishes SENSEX's daily bar later than NSE
+    publishes NIFTY's, so on 2026-08-04 the reference was still FRIDAY's close and SENSEX
+    showed +0.88% when it was +0.19% (user-reported). net_change is the exchange's own
+    day-change and can never be a session stale, so prev_close = last_price - net_change.
+    """
+    out = {}
+    keymap = {}
+    for n in names:
+        k = to_instrument_key(n)
+        if k:
+            keymap[k] = n
+    if not keymap:
+        return out
+    try:
+        resp = SESSION.get(f"{UPSTOX_BASE}/v2/market-quote/quotes",
+                           params={"instrument_key": ",".join(keymap.keys())}, timeout=6)
+        resp.raise_for_status()
+        data = resp.json().get("data", {})
+        colon = {k.replace("|", ":"): name for k, name in keymap.items()}
+        for dk, q in data.items():
+            name = keymap.get(q.get("instrument_token")) or colon.get(dk)
+            nc = q.get("net_change")
+            if name and isinstance(nc, (int, float)) and nc != 0:
+                out[name] = float(nc)
+    except Exception as e:
+        logger.warning(f"Batch index net_change failed: {e}")
+    return out
+
+
 def _batch_index_ltp(names: list) -> dict:
     """
     One batched LTP call for several indices (NIFTY/BANKNIFTY/VIX) instead of one
@@ -199,7 +232,8 @@ def _reference_closes(index_name: str):
 
 def _index_live_or_close(index_name: str, live_price: float = None,
                          fetch_if_missing: bool = True,
-                         live_source: str = "Upstox (live)") -> dict:
+                         live_source: str = "Upstox (live)",
+                         net_change: float = None) -> dict:
     """
     Live price if market open, else last session close — change vs the *previous
     session* close (absolute + percent + direction).
@@ -210,6 +244,17 @@ def _index_live_or_close(index_name: str, live_price: float = None,
     to yesterday, never to today's own partial candle.
     """
     prev_close, last_close, last_date = _reference_closes(index_name)
+    # EXCHANGE-AUTHORITATIVE day change. Prefer it over anything derived from the daily
+    # history feed: BSE publishes SENSEX's daily bar later than NSE publishes NIFTY's, so the
+    # derived reference could still be the PREVIOUS session's close and the ticker showed
+    # SENSEX +0.88% when it was +0.19% (2026-08-04). net_change cannot be a session stale.
+    if net_change is not None and live_price:
+        prev = live_price - net_change
+        if prev > 0:
+            return {"price": float(live_price), "change": round(float(net_change), 2),
+                    "pct": round(net_change / prev * 100, 2),
+                    "direction": "UP" if net_change > 0 else ("DOWN" if net_change < 0 else "FLAT"),
+                    "source": live_source if _market_is_open() else "Upstox (last traded)"}
     today = datetime.now(IST).date()
     # previous-session close = last daily close NOT dated today
     prev_session = prev_close if last_date == today else last_close
@@ -306,9 +351,12 @@ def get_market_snapshot() -> dict:
             prices[n] = p
             src[n] = "Yahoo (~15m delay)"
 
+    netchg = _batch_index_net_change(names)
+
     def build(name, ticker):
         d = _index_live_or_close(name, prices.get(name), fetch_if_missing=False,
-                                 live_source=src.get(name, "Upstox (live)"))
+                                 live_source=src.get(name, "Upstox (live)"),
+                                 net_change=netchg.get(name))
         d["ticker"] = ticker
         return d
 

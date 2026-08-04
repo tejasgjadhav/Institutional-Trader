@@ -400,6 +400,22 @@ dashboard can sit stale until someone notices. Trading is unaffected (the engine
 kept marking throughout). OFFERED to add KeepAlive to `deploy/` + setup.sh plist for the viewer;
 awaiting the user.
 
+**TICKER % BUG FIXED 2026-08-04 (user: "sensex should be 0.18%-0.2% but showing so much more").**
+The top ticker on PM DECISIONS showed **SENSEX +0.88%** while NIFTY was −0.64% — impossible, they are
+~95% correlated. ROOT CAUSE: `_index_live_or_close` derived the % from the DAILY HISTORY feed ("the
+last close not dated today"). **BSE publishes SENSEX's daily bar later than NSE publishes NIFTY's**,
+so at snapshot time SENSEX's series still ended at FRIDAY 31-Jul (78,094.64) and the change was
+measured against a session-stale reference: 78,780.08 − 78,094.64 = +685.44 = +0.88%. NIFTY's NSE bar
+had already landed, so NIFTY was correct — which is why only SENSEX looked wrong.
+FIX: use the exchange's OWN day change. The raw Upstox quote carries `net_change` (the wrapper
+`fetch_upstox_quote` was discarding it — it only returns ask/bid/ltp/oi/volume). Added
+`_batch_index_net_change()` (one batched /v2/market-quote/quotes call for all four indices) and
+`_index_live_or_close(..., net_change=)`, which when present computes prev = price − net_change and
+returns that change/pct directly. net_change cannot be a session stale. Falls back to the old derived
+path if the field is missing. Verified: SENSEX ref is now **78,639.03 = Monday's close** (was Friday's)
+and reads +0.08…+0.19% through the session instead of +0.88%. Applies to ALL FOUR tickers, not just
+SENSEX — the same staleness could have hit any of them.
+
 **STILL OPEN (user's, ~5 min):** price a two-sided stock condor in Upstox and see whether blocked
 margin is ~ONE width or ~TWO. Only matters if the condor is ever revisited. Asked 3x, unanswered.
 
