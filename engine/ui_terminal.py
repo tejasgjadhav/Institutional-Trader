@@ -472,7 +472,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stock.setVisible(False)
 
 
-        self.pm_empty = QLabel("Credit-spread signals appear ~15:36; expiry-day books live on the INTRADAY DECISIONS tab.")
+        self.pm_empty = QLabel("Credit-spread signals appear ~15:36 (place by 15:40); expiry-day books live on the INTRADAY DECISIONS tab.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
         v.addWidget(self.pm_empty)
@@ -1028,7 +1028,7 @@ Paper forward-test only. For educational use. Not financial advice.
    "rejected. This is the 'why' behind every live strategy.")}
 
 {h("5 — SIGNAL TIMING (IST, trading days only)")}
-{p(f"<b>Stock options (3-Family):</b> {C.MARKET_OPEN}–{C.MARKET_CLOSE}, most active 10:30–11:00 · "
+{p(f"<b>Stock options (3-Family):</b> {C.MARKET_OPEN}–{C.FNO_CLOSE}, most active 10:30–11:00 · "
    f"<b>ORB+VWAP index:</b> before {C.ORB_VWAP_ENTRY_CUTOFF} · "
    f"<b>Stock &amp; Swing credit spreads:</b> once/day, ~{C.STOCK_CREDIT_SCAN_AFTER} (a daily breakout needs "
    f"the near-close) · <b>Monthly futures pullback:</b> once per expiry cycle, ~{C.MONTHLY_FUT_SCAN_AFTER} "
@@ -1246,12 +1246,17 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             txt, col = "Market holiday — no signals today. Next trading day ~09:15.", TEXT_DIM
         elif m < 9 * 60 + 15:
             txt, col = "Pre-open — scanning starts 09:15; intraday signals from ~09:30.", AMBER
-        elif m < 15 * 60 + 10:
+        elif m < 15 * 60 + 17:
             txt, col = ("● Market open. On expiry days the intraday spread posts right after the 09:16 open; "
-                        "the CREDIT books — ★v2 + v1 + index swing — all scan at ~15:36.", GREEN)
-        elif m <= 15 * 60 + 35:
-            txt, col = ("● NOW: ~15:36 CREDIT SCAN — check ★ STOCK CREDIT v2 (gold) first, then v1 + INDEX SWING. "
-                        "New spreads appear here to place before the close.", CYAN)
+                        "the CREDIT books — ★v2 + v1 + v0 + index swing — all scan at ~15:36, after the "
+                        "closing auction.", GREEN)
+        elif m < 15 * 60 + 36:
+            txt, col = ("● UNION WATCHLIST is up (built 15:17) — these are the likely candidates. Closing "
+                        "auction runs to 15:35; signals fire at 15:36. Pre-stage now, do not place yet.", AMBER)
+        elif m <= 15 * 60 + 40:
+            txt, col = ("● NOW: CREDIT SCAN IS IN — check ★ STOCK CREDIT v2 (gold) first, then v1 + v0 + INDEX "
+                        "SWING. Derivatives close 15:40, so this is the whole placement window. Use limit "
+                        "orders — spreads are ~2× wider here than mid-session.", CYAN)
         else:
             txt, col = "Market closed — today's signals are booked. Next session tomorrow ~09:15.", TEXT_DIM
         self.pm_now_hint.setText("  " + txt)
