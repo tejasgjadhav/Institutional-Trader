@@ -1,5 +1,49 @@
 # Handoff — institutional-trader
 
+## DONE (2026-08-04) — NSE 3-Aug session change: engine retimed, pushed to both remotes
+
+**Nothing outstanding on this. It is deployed, committed and pushed (origin + private).**
+
+NSE moved the equity-derivatives close to **15:40** and added a **Closing Auction Session
+15:15–15:35**. F&O stocks stop continuous trading at 15:15 and their official close is now the
+**auction equilibrium price**. Every name in `UNIVERSE` is an F&O stock.
+
+**What was broken:** the close was a bare literal in **seven** places (`agent.py` hardcoded 15:30 and
+ignored config entirely; `monthly_fut` at 15:25; `monthly_call` had **no time gate at all**), and
+swing/stock books preferred **live spot over the official close** — so every expiry settled on a
+guaranteed pre-auction print.
+
+**What changed:** one session model in `config.py` — `CASH_CLOSE` 15:30 · `CAS_END` 15:35 ·
+`FNO_CLOSE` 15:40 · **`SETTLE_AFTER` 15:40** (the single settle knob). Settlement inverted to
+official-close-first. Schedule: watchlist+digest **15:17**, scans **15:36**, kill switch 15:36, EOD
+15:40. 0DTE books close early at **95% of max profit** (`ZERO_DTE_EARLY_CLOSE_FRAC`), wired for all
+three expiries.
+
+**Evidence** (3-Aug replay, 113 names): 32 breakouts on the 15:10 price vs **46 on the official
+close = +44%**, 15 gained, 1 false signal (PNB) removed, median drift 0.68%. Post-auction book
+(4-Aug, 18 names): 17/18 two-sided, 15/17 clear the liquidity gate, c/w stable, but **spreads roughly
+double** (~1% → 2–4%).
+
+⚠ **The 95% early-close rule is UNMEASURED** — intraday option premium history does not exist, so it
+cannot be backtested. Set `ZERO_DTE_EARLY_CLOSE_FRAC = 0` to revert to hold-to-expiry.
+
+⚠ **Research caveat:** daily closes before 3-Aug-2026 are a 15:00–15:30 VWAP; after, auction
+equilibrium prices. Not the same construct — do not splice without noting it.
+
+Record: `studies/NSE_SESSION_CHANGE_2026_08_03.md`. STUDIES tab carries a notice; CLAUDE.md and
+studies/README.md carry the standing rule. "IMPORTANT NOTIFICATION" Telegram sent 4-Aug.
+
+**NEXT SESSION — the checks that actually prove it:**
+1. Watch the **15:36 scan fire** and compare its list against the 15:17 watchlist — names the auction
+   moved in or out are the whole point.
+2. On the next NIFTY (Tue) or SENSEX (Thu) expiry, confirm settlement lands **15:40–15:42** on the
+   published index close, not a 15:30 print.
+3. Confirm the 95% early close fires and sends its RESULT message.
+4. Instrument daily: log the breakout set at 15:10 vs the official close, and option bid-ask/OI at
+   15:36. After ~10 sessions that decides whether +44% holds and whether the window stays liquid.
+
+---
+
 ## DONE (2026-07-31 night) — 0.30-0.40 c/w BAND RESCUE: **REJECTED on OOS** (commits bc3801d, 6872345, 3da95c5 — LOCAL ONLY, not pushed)
 
 User goal: the union watchlist blocks a lot of names at c/w ~0.30 — can any config (geometry,
