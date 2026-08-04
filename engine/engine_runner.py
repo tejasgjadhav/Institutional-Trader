@@ -841,18 +841,31 @@ class EngineRunner:
         wr = wins / closed * 100
 
         def _row(c):
+            """One section, written as a sentence. No ticks or crosses (user, 2026-08-04) — a
+            column of ✅/❌ read as a scorecard of individual trades rather than a running total."""
             cc = c["w"] + c["l"]
-            w = (c["w"] / cc * 100) if cc else 0.0
-            return (f"   Trades <b>{cc}</b> · WIN ✅ <b>{c['w']}</b> · Loss ❌ <b>{c['l']}</b> · "
-                    f"Win-rate <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>")
+            if cc == 0:
+                return "   No closed trades yet."
+            w = c["w"] / cc * 100
+            return (f"   Trades <b>{cc}</b> out of which our system predicted "
+                    f"<b>{c['w']} Win{'s' if c['w'] != 1 else ''}</b> and "
+                    f"<b>{c['l']} Loss{'es' if c['l'] != 1 else ''}</b>.\n"
+                    f"   Win-rate <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>")
 
         lines = [
             f"📈 <b>Saavi Institutional Trader has till date delivered for live trade from {self._fmt_d(start, with_year=True)}-</b>",
+            "",
             "⚡ <b>INTRADAY</b> (0DTE · same-day expiry)",
             _row(ic),
+            "",
             "📅 <b>MONTH-END EXPIRY</b> (multi-day spreads)",
             _row(mc),
-            f"➕ <b>Overall</b>: {closed} closed · Win <b>{wr:.1f}%</b> · Realized <b>₹{realized:+,.0f}</b>",
+            "",
+            (f"➕ <b>OVERALL</b> — Trades <b>{closed}</b> out of which our system predicted "
+             f"<b>{wins} Win{'s' if wins != 1 else ''}</b> and "
+             f"<b>{losses} Loss{'es' if losses != 1 else ''}</b>.\n"
+             f"   Win-rate <b>{wr:.1f}%</b> · Realized <b>₹{realized:+,.0f}</b>"),
+            "",
         ]
         if openn:
             lines.append(f"⏳ Open: <b>{openn} trade{'s' if openn != 1 else ''}</b> · "
