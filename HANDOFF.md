@@ -1,5 +1,36 @@
 # Handoff — institutional-trader
 
+## DONE (2026-08-04 late) — target-book audit + Telegram summary reformat
+
+**Target → WIN/LOSS → Telegram sequence VERIFIED end to end.** Planted a booked target in all eight
+outcome books with `send_telegram` stubbed: **9 RESULT messages** (WIN and LOSS), **exactly 1**
+portfolio summary, **0** on a second pass. Books covered: v2, v1, v0, swing, 0DTE NIFTY, SENSEX,
+BANKNIFTY, monthly futures.
+
+**Non-bug, do not "fix" it again:** the TP and stop branches in the credit books do not set
+`changed = True`. It is unreachable — `bookable` requires the same fresh two-sided quote that sets
+`changed` in the MTM block above. A target can only fire on a quote that already marked the book
+dirty.
+
+**Real bug found and FIXED (pushed):** `is_market_open()` is inclusive only to 15:40:00, so the cycle
+that settles at `SETTLE_AFTER` was the LAST fast cycle, and `_outcomes()` (throttled 60 s) had almost
+always just run — so it skipped, the loop dropped to its 300 s idle sleep, and every WIN/LOSS RESULT
++ portfolio summary landed **~15:45 instead of ~15:40**. Introduced by moving settle to 15:40 (at the
+old 15:30 settle there were still 10 min of fast ticking). Fix: `SETTLE_GRACE_MIN = 6` in config +
+`_in_settle_grace()` in the runner keeps the 5 s tick alive 6 min past the F&O close. Boundary tested:
+15:39 F / 15:40–15:46 T / 15:47 F / weekend F.
+
+**Portfolio summary reformatted (user, twice):** no ticks/crosses in either the intraday or month-end
+block; each section is one sentence — **"Total trades = 8 out of which our system achieved 8 Wins and
+0 Losses."** (user corrected "predicted" → "achieved"); win-rate and money on their own indented line;
+OVERALL in the same form with wins, win-rate and realized in bold; blank lines between blocks.
+Singular/plural handled; empty section prints "No closed trades yet."
+
+⚠ **Still unverified LIVE:** no target has fired since any of this changed. First real test is the
+next 0DTE expiry — it exercises the 15:40 settle, the 95% early close and this message together.
+
+---
+
 ## IN PROGRESS (2026-08-04 evening) — verifying target-book → WIN/LOSS → Telegram sequence
 
 User ask: "ensure once targets are booked you close the trade with win/loss and do the telegram

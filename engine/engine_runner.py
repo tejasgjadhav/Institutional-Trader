@@ -847,7 +847,7 @@ class EngineRunner:
             if cc == 0:
                 return "   No closed trades yet."
             w = c["w"] / cc * 100
-            return (f"   Trades <b>{cc}</b> out of which our system predicted "
+            return (f"   Total trades = <b>{cc}</b> out of which our system achieved "
                     f"<b>{c['w']} Win{'s' if c['w'] != 1 else ''}</b> and "
                     f"<b>{c['l']} Loss{'es' if c['l'] != 1 else ''}</b>.\n"
                     f"   Win-rate <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>")
@@ -861,7 +861,7 @@ class EngineRunner:
             "📅 <b>MONTH-END EXPIRY</b> (multi-day spreads)",
             _row(mc),
             "",
-            (f"➕ <b>OVERALL</b> — Trades <b>{closed}</b> out of which our system predicted "
+            (f"➕ <b>OVERALL</b> — Total trades = <b>{closed}</b> out of which our system achieved "
              f"<b>{wins} Win{'s' if wins != 1 else ''}</b> and "
              f"<b>{losses} Loss{'es' if losses != 1 else ''}</b>.\n"
              f"   Win-rate <b>{wr:.1f}%</b> · Realized <b>₹{realized:+,.0f}</b>"),
