@@ -198,6 +198,16 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
   (`origin` = Institutional-Trader public, `private` = Institutional-Trader-private-). Never leave
   the UI or the repos behind the studies/ files.
 
+- **NSE SESSION, since 3-Aug-2026 (do not re-derive this):** equity **derivatives close 15:40**
+  (not 15:30). **F&O stocks** stop continuous cash trading at **15:15**, run a **Closing Auction
+  Session 15:15–15:35**, and their official close is the **auction equilibrium price**. Every name in
+  `UNIVERSE` is an F&O stock. The engine has ONE session model in `config.py` — `CASH_CLOSE` 15:30,
+  `CAS_END` 15:35, `FNO_CLOSE` 15:40, **`SETTLE_AFTER` 15:40** — and every settle site reads it; do
+  not reintroduce a bare time literal (there were seven). Schedule: watchlist+digest **15:17**, scans
+  **15:36**, place 15:36–15:40, EOD 15:40. Settlement takes the **official close first**, live spot
+  only as fallback. **Backtests before 3-Aug-2026 use 15:00–15:30 VWAP closes; after, auction
+  equilibrium prices — not the same construct.** See `studies/NSE_SESSION_CHANGE_2026_08_03.md`.
+
 - **CHECK THE STUDIES FIRST (standing rule, user 2026-08-01):** before running ANY backtest, search
   `studies/` for whether the question has already been answered, and say so. This repo has 56+ written
   studies and 100+ runnable scripts; several questions have been asked and settled more than once.

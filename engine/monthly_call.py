@@ -232,7 +232,13 @@ def resolve_call_positions() -> int:
                 p["last_mark"] = today.isoformat()
                 p["sessions"] = int(p.get("sessions", 0)) + 1
             tp_px = p["tp_late_px"] if p["sessions"] > MONTHLY_FUT_DECAY_DAY else p["tp_px"]
-            expired = today >= date.fromisoformat(p["expiry"])
+            # TIME GATE (added 2026-08-04). This was `today >= expiry` with no clock check, so it
+            # settled from 00:00 on expiry day — hours before any price existed. Same defect class
+            # that fabricated 0DTE wins in July. Now requires the derivatives close (SETTLE_AFTER).
+            from engine.config import SETTLE_AFTER
+            _past_settle = datetime.now(IST).strftime("%H:%M") >= SETTLE_AFTER
+            _exp = date.fromisoformat(p["expiry"])
+            expired = (today > _exp) or (today == _exp and _past_settle)
             reason = ("tp" if px >= tp_px else
                       "sl" if px <= p["sl_px"] else
                       "expiry" if expired else None)

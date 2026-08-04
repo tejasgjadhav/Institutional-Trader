@@ -405,7 +405,8 @@ def resolve_positions() -> int:
             # on expiry day, so a position could settle at midnight — hours early, with no live spot —
             # and fall back to the stale ENTRY spot, fabricating a WIN. Require the session to be over.
             from engine.config import IST
-            past_settle = datetime.now(IST).strftime("%H:%M") >= "15:30"
+            from engine.config import SETTLE_AFTER
+            past_settle = datetime.now(IST).strftime("%H:%M") >= SETTLE_AFTER
             expired = (today > exp) or (today == exp and past_settle)
             # MTM current leg values for every non-expired position (open or closed) so the UI's
             # 'current' keeps running even after a WIN/LOSS is booked; realized P&L preserved below.
@@ -428,15 +429,21 @@ def resolve_positions() -> int:
                 # NEVER settle on the ENTRY spot (that is what fabricated the fake WIN). Live spot,
                 # else the expiry-day daily close; if neither, leave OPEN and retry — a late settle
                 # is harmless, a wrong one is not.
-                spot = _spot(p["symbol"])
+                # OFFICIAL CLOSE FIRST, live spot only as fallback (inverted 2026-08-04).
+                # Since NSE's 3-Aug-2026 change the official close of an F&O stock is the AUCTION
+                # equilibrium struck by 15:35 — a live print is not that number. Preferring live
+                # spot meant settling every expiry on the wrong price. This now matches the safer
+                # ordering the 0DTE books already used.
+                spot = None
+                try:
+                    df = fetch_upstox_historical(p["symbol"] + ".NS", unit="days", interval=1,
+                                                 from_date=exp.isoformat(), to_date=exp.isoformat())
+                    if df is not None and not df.empty:
+                        spot = float(df["Close"].iloc[-1])
+                except Exception:
+                    pass
                 if not spot:
-                    try:
-                        df = fetch_upstox_historical(p["symbol"] + ".NS", unit="days", interval=1,
-                                                     from_date=exp.isoformat(), to_date=exp.isoformat())
-                        if df is not None and not df.empty:
-                            spot = float(df["Close"].iloc[-1])
-                    except Exception:
-                        pass
+                    spot = _spot(p["symbol"])
                 if not spot:
                     logger.warning(f"stock_credit_v2: {p.get('id')} expired but NO SPOT — leaving OPEN, will retry")
                     continue

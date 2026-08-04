@@ -15,7 +15,8 @@ import json
 import logging
 from datetime import datetime, date
 
-from engine.config import (IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW,
+from engine.config import (
+    ZERO_DTE_EARLY_CLOSE_FRAC,IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW,
                            DTE_MULTI_BANKNIFTY_ENABLED)
 from engine.data_fetcher import SESSION, UPSTOX_BASE, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
 from engine.instruments import to_instrument_key, encode_key
@@ -198,7 +199,7 @@ def _scan_book(bk):
         "stop_cost": None, "max_loss_pts": round(width - credit, 2),
         "capital": round((width - credit) * qty, 0),
         "order_label": (f"SELL {bk['name']} {int(short['strike'])} CE / BUY {int(long['strike'])} CE"
-                        f"  0DTE {today.isoformat()}  (bear-call, credit Rs{credit}, settles today 15:30)"),
+                        f"  0DTE {today.isoformat()}  (bear-call, credit Rs{credit}, settles today 15:40)"),
         "current_cost": credit, "short_cur": round(sm, 2), "long_cur": round(lm, 2),
         "pnl_pts": 0.0, "status": "OPEN", "closed_date": None, "exit_cost": None,
     }
@@ -260,6 +261,22 @@ def _resolve_book(bk, past_settle):
                     p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
                     p["current_cost"] = round(sm - lm, 2)
                     p["pnl_pts"] = round(p["credit"] - p["current_cost"], 2)
+                    # EARLY PROFIT CLOSE (user-approved 2026-08-04). Book the win once the spread
+                    # has given back most of its credit instead of holding to expiry. A credit
+                    # spread only pays FULL credit if both legs expire worthless, so this is a
+                    # THRESHOLD not an equality. Removes the tail where a late reversal turns a
+                    # winner into a full-width loser. NOT BACKTESTABLE — see config for why.
+                    _f = ZERO_DTE_EARLY_CLOSE_FRAC
+                    if _f and p["current_cost"] <= p["credit"] * (1 - _f):
+                        p["exit_cost"] = p["current_cost"]
+                        p["status"] = "WIN" if p["pnl_pts"] > 0 else "LOSS"
+                        p["closed_date"] = today.isoformat()
+                        closed += 1; changed += 1
+                        logger.info("dte_multi: EARLY CLOSE %s at %.0f%% of credit "
+                                    "(cost %.2f vs credit %.2f) pnl %+.1f",
+                                    p["id"], _f * 100, p["current_cost"], p["credit"], p["pnl_pts"])
+                        continue
+
                     changed += 1
         except Exception as e:
             logger.warning(f"dte_multi resolve {p.get('id')}: {e}")

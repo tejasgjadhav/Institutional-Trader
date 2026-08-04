@@ -79,10 +79,25 @@ class Agent:
         if weekday >= 5:  # Weekend
             return False
 
+        # Tracks the DERIVATIVES close (config.FNO_CLOSE = 15:40 since NSE's 3-Aug-2026 change).
+        # Every live book trades options, so 15:40 is the session that matters. This used to be a
+        # bare "15:30" literal that ignored config entirely — editing the constant did nothing.
+        from engine.config import FNO_CLOSE
         market_open = datetime.strptime(MARKET_OPEN, "%H:%M").time()
-        market_close_time = datetime.strptime("15:30", "%H:%M").time()
+        market_close_time = datetime.strptime(FNO_CLOSE, "%H:%M").time()
 
         return market_open <= now.time() <= market_close_time
+
+    def is_cash_open(self) -> bool:
+        """The CASH session (config.CASH_CLOSE = 15:30) — for anything that genuinely needs the
+        equity market rather than derivatives. Note F&O stocks stop trading continuously at 15:15
+        and settle in the auction by 15:35; this predicate is the plain non-F&O cash session."""
+        from engine.config import CASH_CLOSE
+        now = datetime.now(IST)
+        if now.weekday() >= 5:
+            return False
+        return (datetime.strptime(MARKET_OPEN, "%H:%M").time() <= now.time()
+                <= datetime.strptime(CASH_CLOSE, "%H:%M").time())
 
     def is_trading_window(self) -> bool:
         """Check if we're in the trading window (9:45-15:00 IST)"""

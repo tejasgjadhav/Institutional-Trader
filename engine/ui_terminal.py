@@ -472,7 +472,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.pm_stock.setVisible(False)
 
 
-        self.pm_empty = QLabel("Credit-spread signals appear ~15:10; expiry-day books live on the INTRADAY DECISIONS tab.")
+        self.pm_empty = QLabel("Credit-spread signals appear ~15:36; expiry-day books live on the INTRADAY DECISIONS tab.")
         self.pm_empty.setStyleSheet(f"color:{TEXT_DIM}; padding:6px 4px;")
         self.pm_empty.setFont(QFont("Menlo", 12))
         v.addWidget(self.pm_empty)
@@ -563,7 +563,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
     def _screen_zero_dte(self) -> QWidget:
         """INTRADAY DECISIONS — the 0DTE NIFTY expiry-day CE credit spread (5th strategy).
-        One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:30."""
+        One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:40."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
         v.addWidget(self._panel_title("INTRADAY DECISIONS  -  NIFTY expiry-day call credit spread", CYAN))
         # dynamic pre-market checker — engine refreshes data/zero_dte_status.json every ~2-5 min
@@ -585,7 +585,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                      "  9:16   SELL the chosen leg ~0.5% OTM · BUY the hedge 200 pts further out (same-day expiry)\n"
                      "  hybrid if the engine ALSO fires the opposite side (~1% OTM, c/w ≥ 0.08), place that spread too — margin is shared\n"
                      "  order  basket, wing (BUY) first, limit at mid · then NOTHING — no stop, no adjusting\n"
-                     "  15:30  settles automatically · wins ~9 weeks in 10 · the rare loss can cost the full margin\n"
+                     "  15:40  settles automatically (or earlier at 95% of max profit) · wins ~9 weeks in 10 · the rare loss can cost the full margin\n"
                      "FLIP edge: 87.1% win / +₹1.92L since 2019 vs 84.7% / +₹1.17L CE-only. Full research: STUDIES tab.")
         how.setWordWrap(True); how.setFont(QFont("Menlo", 11))
         how.setStyleSheet(f"color:{TEXT}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
@@ -780,11 +780,31 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return f"""
 <div style="color:{TEXT};">
 
+<p style="color:{AMBER};font-size:17px;font-weight:bold;">⚠ NSE SESSION CHANGED — 3-AUG-2026 · ALL OUR TIMINGS MOVED</p>
+{p("NSE moved the equity-<b>derivatives</b> close from <b>15:30 to 15:40</b> and introduced a <b>Closing Auction Session</b>. "
+   "F&amp;O stocks now stop continuous trading at <b>15:15</b>, auction 15:15–15:35, and their official closing price is the "
+   "<b>auction equilibrium price</b> — not the old 15:00–15:30 average. Every stock we trade is an F&amp;O stock, so this "
+   "applies to all of them.")}
+{res("<b>OUR NEW TIMINGS —</b> watchlist <b>15:17</b> · signals <b>15:36</b> · place by <b>15:40</b> · everything settles at "
+     "<b>15:40</b> · intraday books also close early at <b>95% of max profit</b>.")}
+{p("<b>Why it matters:</b> the old 15:10 scan read a price that no longer decides anything. Replaying 3-Aug across all 113 "
+   "names: <b>32 breakouts on the 15:10 price vs 46 on the official close</b> — <b>+44%</b>, 15 names gained, 1 false signal "
+   "(PNB) removed. The typical name drifts <b>0.68%</b> between 15:10 and the close, and 66 of 113 moved at least 0.5%. So "
+   "moving the scan later <b>gains</b> signals; it does not cost them.")}
+{p("<b>Is the 15:36–15:40 window tradeable?</b> Measured on 4-Aug across 18 watchlist names: <b>17 of 18</b> quote two-sided, "
+   "<b>15 of 17</b> clear our liquidity gate, and c/w barely moves across the auction (GRASIM 0.35 → 0.38). But bid-ask "
+   "roughly <b>doubles</b>, ~1% → 2–4%, so entry costs more than the model assumes.")}
+{dim("Also fixed: the close had been hardcoded in SEVEN separate places, and the swing/stock books preferred the live price "
+     "over the official close — so every expiry was settling on a pre-auction print. There is now one setting "
+     "(SETTLE_AFTER = 15:40) and settlement takes the official close first. <b>Caveat:</b> the 95% early-close rule cannot "
+     "be backtested — intraday option premium history does not exist — so it ships unmeasured and can be switched off. "
+     "Full record: studies/NSE_SESSION_CHANGE_2026_08_03.md")}
+
 <p style="color:{CYAN};font-size:18px;font-weight:bold;">HOW TO EXECUTE — step by step</p>
 {dim("Everything below is a paper forward-test. The engine only SIGNALS; you place the order yourself in Upstox. Keep lots at 1.")}
 
 <p style="color:{AMBER};font-size:15px;font-weight:bold;margin-top:14px;">THE STOCK BOOKS — v2, v1, v0 (one scan a day)</p>
-{p("<b>1.</b> The engine scans ONCE at <b>15:10</b>, after the daily close has formed. Nothing fires before that.")}
+{p("<b>1.</b> The engine scans ONCE at <b>15:36</b>, after the closing auction has struck the official close. Nothing fires before that. (It scanned at 15:10 until 4-Aug-2026 — NSE moved the close, see the notice at the top of this tab.)")}
 {p("<b>2.</b> A stock that closed ABOVE its Donchian high or BELOW its Donchian low is a breakout. You <b>FADE</b> it — you sell against the move, not with it.")}
 {p("<b>3.</b> Up-break → sell a <b>BEAR CALL</b> spread. Down-break → sell a <b>BULL PUT</b> spread. Nearest monthly expiry at least <b>10 days</b> out.")}
 {p("<b>4.</b> Which strikes, per book:")}
@@ -792,7 +812,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v1</b> — SELL 1 strike OTM, BUY 3 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v0</b> — same strikes as v2, but takes the band v2 rejects: credit ÷ width between <b>0.35 and 0.40</b>.")}
 {p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium, bid-ask ≤ 6%, OI ≥ 100. If it fails, skip it — thin options eat the edge.")}
-{p("<b>6.</b> Place it <b>before 15:30</b>. The signal is built on the close, so it goes stale overnight.")}
+{p("<b>6.</b> Place it <b>between 15:36 and 15:40</b> — derivatives now close at 15:40, so that is the whole window. The 15:17 watchlist names the likely candidates ~19 minutes ahead, so pre-stage from it and treat the 15:36 signal as confirmation. Spreads are roughly twice as wide in this window as at 14:45, so use limit orders.")}
 {p("<b>7.</b> Exit — this is what sets the win rate, more than the entry does:")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> — buy the spread back when it costs <b>50%</b> of the credit you collected. Stop at 3× credit (almost never reached).")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v1 and v0</b> — buy it back at <b>40%</b> of the credit. <b>No stop</b> — the wing you bought already caps the loss.")}
@@ -803,7 +823,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("<b>1.</b> Only on that index's expiry day. The engine posts a pre-market status strip by 9:00 telling you whether it expects a signal.")}
 {p("<b>2.</b> At <b>09:16</b>, off the opening price: SELL the call about <b>0.5% out of the money</b>, BUY the call <b>200 points</b> further out.")}
 {p("<b>3.</b> NIFTY skips the week when 5-day realised volatility is ≥ 0.9% — losses cluster when the tape is already hot. The engine applies this for you.")}
-{p("<b>4.</b> <b>Hold to the 3:30 settlement.</b> No target, no stop — the bought wing is the stop. Margin ≈ ₹14k/lot and that is also the worst case.")}
+{p("<b>4.</b> <b>Hold to the 15:40 settlement</b> — or until the spread has given back <b>95%</b> of its credit, whichever comes first. No stop — the bought wing is the stop. Margin ≈ ₹14k/lot and that is also the worst case.")}
 {p("<b>5.</b> Entry time is the edge: the opening theta and IV crush is what you are paid for. Entering at 11:00 or later turns it negative.")}
 
 <p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:14px;">THE FOUR RULES BEHIND ALL OF IT</p>
@@ -974,7 +994,7 @@ Paper forward-test only. For educational use. Not financial advice.
 
 {h("3 — HOW IT RUNS (engine vs viewer — two processes)")}
 {p(f"<b style='color:{GREEN}'>ENGINE</b> (headless, launchd job, always on): does ALL the work — scans "
-   "every 5 min in market hours, fires signals, resolves trades, books at the 15:30 close, and saves "
+   "every 5 min in market hours, fires signals, resolves trades, books at the 15:40 derivatives close, and saves "
    "everything to local files (engine.db, signals.db, trade_log.json, the credit-spread books). Wakes "
    "every 5 s while the market is open; idles when closed. Runs whether or not this window is open.")}
 {p(f"<b style='color:{PURPLE}'>VIEWER</b> (this app, read-only): never scans/fires/writes — it only reads "
@@ -1228,9 +1248,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             txt, col = "Pre-open — scanning starts 09:15; intraday signals from ~09:30.", AMBER
         elif m < 15 * 60 + 10:
             txt, col = ("● Market open. On expiry days the intraday spread posts right after the 09:16 open; "
-                        "the CREDIT books — ★v2 + v1 + index swing — all scan at ~15:10.", GREEN)
+                        "the CREDIT books — ★v2 + v1 + index swing — all scan at ~15:36.", GREEN)
         elif m <= 15 * 60 + 35:
-            txt, col = ("● NOW: ~15:10 CREDIT SCAN — check ★ STOCK CREDIT v2 (gold) first, then v1 + INDEX SWING. "
+            txt, col = ("● NOW: ~15:36 CREDIT SCAN — check ★ STOCK CREDIT v2 (gold) first, then v1 + INDEX SWING. "
                         "New spreads appear here to place before the close.", CYAN)
         else:
             txt, col = "Market closed — today's signals are booked. Next session tomorrow ~09:15.", TEXT_DIM
@@ -1511,7 +1531,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if not rows:
             table.setRowCount(1)
             self._set_row(table, 0, ["—", "no cycle yet — enters the first trading day after "
-                          "monthly expiry (NIFTY>200DMA), scan ~15:10", "—", "—", "—", "—", "WATCHING"],
+                          "monthly expiry (NIFTY>200DMA), scan ~15:36", "—", "—", "—", "—", "WATCHING"],
                           fg=QColor(TEXT_DIM))
             self._fit_table(table); return
         table.setRowCount(len(rows))
@@ -1545,7 +1565,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if not rows:
             table.setRowCount(1)
             self._set_row(table, 0, ["—", "no cycle yet — enters the first trading day after "
-                          "monthly expiry (NIFTY>200DMA), scan ~15:10", "—", "—", "—", "—", "WATCHING"],
+                          "monthly expiry (NIFTY>200DMA), scan ~15:36", "—", "—", "—", "—", "WATCHING"],
                           fg=QColor(TEXT_DIM))
             self._fit_table(table); return
         table.setRowCount(len(rows))
@@ -1576,9 +1596,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         # live in the SWING TRADES trade log.
         today = datetime.now(IST).date().isoformat()
         rows = [p for p in rows if p.get("entry_date") == today]
-        hint = ("no swing signal today — fires on a daily index breakout (fade), scan ~15:10"
+        hint = ("no swing signal today — fires on a daily index breakout (fade), scan ~15:36"
                 if kind == "index"
-                else "no signal today — fires on a stock breakout w/ rich credit (≥0.40), scan ~15:10")
+                else "no signal today — fires on a stock breakout w/ rich credit (≥0.40), scan ~15:36")
         if not rows:
             table.setRowCount(1)
             self._set_row(table, 0, ["—", hint, "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
@@ -2065,7 +2085,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             self.auto_lbl.setStyleSheet(f"color:{CYAN if is_open else AMBER}; padding:0 14px;")
         if hasattr(self, "mode_label"):
             mlbl = "MARKET HOLIDAY (no trading today)" if holiday else ("MARKET OPEN" if is_open else "MARKET CLOSED")
-            self.mode_label.setText(f"{mlbl}  -  engine runs 9:00-15:30 Mon-Fri")
+            self.mode_label.setText(f"{mlbl}  -  engine runs 9:00-15:40 Mon-Fri (F&O close moved to 15:40 on 3-Aug-2026)")
             self.mode_label.setStyleSheet(f"color:{GREEN if is_open else AMBER};")
         self.status.showMessage(
             f"  {now:%a %d %b %Y · %H:%M:%S} IST   ·   MARKET {mkt}   ·   MODE {mode}   ·   "

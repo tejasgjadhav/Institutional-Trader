@@ -85,8 +85,24 @@ TRADING_START = "09:45"  # Scanning/observation starts; trades fire from here to
 NO_NEW_TRADES_AFTER = "13:00"  # No new signals after 1 PM (wider 9:45-1PM window kept —
 # Run K showed 12:30-1PM is 77% vs 72% overall, but on only 13 trades = within noise,
 # so we keep the wider, less-overfit window. In practice nothing fires before ~11:30.)
-KILL_SWITCH_TIME = "15:10"  # Force close all positions
-MARKET_CLOSE = "15:30"
+KILL_SWITCH_TIME = "15:36"  # Force close all positions (moved 15:10 -> 15:36 with the scan)
+
+# === NSE SESSION MODEL — REWRITTEN FOR THE 3-AUG-2026 CHANGE ===
+# NSE moved the equity-derivatives close and introduced a Closing Auction Session (CAS):
+#   F&O stocks   continuous cash trading now ENDS 15:15, then CAS 15:15-15:35
+#                (orders 15:20-15:30, random cutoff 15:28-15:30, match 15:30-15:35).
+#                Their official close is the AUCTION EQUILIBRIUM price, struck by 15:35.
+#   other equity unchanged: continuous to 15:30, close = 15:00-15:30 VWAP.
+#   DERIVATIVES  now trade to 15:40 (was 15:30) and use their own closing price
+#                (VWAP window moved to 15:10-15:40), NOT the cash close.
+# EVERY name in UNIVERSE is an F&O stock, so all of them are auction-priced now.
+# Before this rewrite the close was a bare "15:30" literal in SEVEN separate places and
+# MARKET_CLOSE was honoured by almost nothing — that is what made this dangerous.
+CASH_CLOSE   = "15:30"   # non-F&O equities
+CAS_END      = "15:35"   # F&O-stock cash close (auction equilibrium struck by here)
+FNO_CLOSE    = "15:40"   # equity derivatives — what every one of our books actually trades
+SETTLE_AFTER = "15:40"   # THE single settle knob: no position may settle before the F&O close
+MARKET_CLOSE = CASH_CLOSE   # kept as an alias so existing readers keep their old meaning
 
 # 3-FAMILY 5-MIN SCAN (the BUY-side scorer). Disabled 2026-07-07 (user-approved): it fed only
 # the hidden 3-Family paper book and caused options-flow 429 storms. The market snapshot/header
@@ -213,7 +229,7 @@ SWING_TAKE_PROFIT      = 0.0     # 0 = HOLD TO EXPIRY (the validated backtest). 
                                  # (closes when cost-to-close <= credit×(1−TAKE_PROFIT)). De-risks
                                  # winners (locks gains, dodges expiry gamma) for a little less edge.
 SWING_REENTRY_GAP_DAYS = 3        # min days between entries on the same index
-SWING_SCAN_AFTER       = "15:10"  # scan once/day after this (a daily breakout needs ~the close)
+SWING_SCAN_AFTER     = "15:36"  # scan once/day after this (a daily breakout needs ~the close)
 SWING_RESOLVE_INTERVAL = 900      # mark-to-market open positions every 15 min (overnight carry)
 # Lots per spread (paper sizing for the forward-test P&L). KEEP AT 1 to forward-test — the edge is
 # +12%/trade but HIGH variance (a loss = ~full margin) on a thin sample; a 3-loss streak at many
@@ -235,7 +251,7 @@ MONTHLY_FUT_DECAY_DAY  = 12
 MONTHLY_FUT_SL         = 0.05    # stop -5% on close (gaps can exceed it — avg real stop ≈ -6.3%)
 MONTHLY_FUT_MIN_DTE    = 20      # only enter near cycle start (late/mid-cycle entries tested weak)
 MONTHLY_FUT_EARNINGS_SKIP = True # live-only rule: skip names with results before expiry
-MONTHLY_FUT_SCAN_AFTER = "15:10" # entry decision needs ~the close
+MONTHLY_FUT_SCAN_AFTER     = "15:36" # entry decision needs ~the close
 MONTHLY_FUT_RESOLVE_INTERVAL = 900
 
 # === MONTHLY LONG-CALL PULLBACK (the 6th — SAME signal as the futures book, expressed as a
@@ -297,7 +313,7 @@ STOCK_CREDIT_MAX_EXPOSURE = 0      # 0 = NO CAP (user, 2026-07-31)
 STOCK_CREDIT_MAX_NEW_PER_DAY = 5    # cap new entries/day (breakouts cluster -> avoid 1-day pile-on)
 STOCK_CREDIT_MAX_OPEN     = 20      # cap total concurrent positions (margin + correlated-gap risk)
 STOCK_CREDIT_LOTS         = 1       # paper sizing — KEEP AT 1 to forward-test
-STOCK_CREDIT_SCAN_AFTER   = "15:10" # once/day after this (a daily breakout needs ~the close)
+STOCK_CREDIT_SCAN_AFTER     = "15:36" # once/day after this (a daily breakout needs ~the close)
 STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight carry)
 
 # ── STOCK CREDIT v0 (0.35-0.40 c/w) — forward paper-test, user-approved 2026-07-31 ──
@@ -425,8 +441,26 @@ DTE_MULTI_BANKNIFTY_ENABLED = False
 
 ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
 ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day
-ZERO_DTE_SETTLE_AFTER = "15:30"  # book at expiry settlement (intrinsic vs spot)
+# Settlement uses the ONE knob (SETTLE_AFTER = 15:40). Index option expiry settles against the
+# INDEX CLOSING VALUE, which derives from constituent closes struck in the auction by 15:35 — that
+# value does not change after 15:35, so reading it at 15:40 gets the identical number with no race
+# against the auction match. Waiting costs nothing and removes a failure mode.
+ZERO_DTE_SETTLE_AFTER = SETTLE_AFTER
 ZERO_DTE_RESOLVE_INTERVAL = 120  # intraday mark-to-market cadence (s)
+# EARLY PROFIT CLOSE (user-approved 2026-08-04) — applies to ALL THREE intraday expiries:
+# NIFTY (Tue), SENSEX (Thu), BANKNIFTY (monthly, book currently disabled but wired).
+# Close the spread once it has captured this fraction of its credit, instead of holding to expiry.
+# A credit spread only pays FULL credit if both legs expire worthless; intraday it trades at
+# 0.05-0.50, never exactly 0 — so this is a threshold, not an equality test.
+#   close when  cost <= credit * (1 - ZERO_DTE_EARLY_CLOSE_FRAC)
+# WHY 0.95 and not lower: at 95% the outcome is near-identical to holding, so it barely perturbs the
+# validated hold-to-expiry distribution, while removing the tail where a late reversal turns a winner
+# into a full-width loser. Costs ~5% of credit on nearly every winner (~Rs45/trade on SENSEX).
+# ⚠️ CANNOT BE BACKTESTED. Both 0DTE books are validated AS HOLD-TO-EXPIRY (NIFTY 88.3%, SENSEX
+# 89.0%) and intraday option premium history does not exist beyond ~1 month (DATA_AVAILABILITY_LIMITS)
+# — unlike v1's TP-40 which was tested on 242 real trades, this ships UNMEASURED. Set to 0 to disable
+# and fall back to pure hold-to-expiry for a forward-test comparison.
+ZERO_DTE_EARLY_CLOSE_FRAC = 0.95
 
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own

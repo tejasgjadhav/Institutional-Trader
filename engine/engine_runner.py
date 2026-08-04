@@ -167,7 +167,7 @@ class EngineRunner:
         trade log is the critical record; no trade may be left unbooked once the day is done.
         """
         m = now.hour * 60 + now.minute
-        after_close = now.weekday() >= 5 or m >= 15 * 60 + 30
+        after_close = now.weekday() >= 5 or m >= 15 * 60 + 40   # FNO_CLOSE (NSE 3-Aug-2026)
         if not after_close:
             return
         pending = [t for t in self.agent.trade_log.trades if t.get("outcome") is None]
@@ -512,25 +512,30 @@ class EngineRunner:
             logger.warning(f"stock_credit import: {e}")
             return
         _mins = now.hour * 60 + now.minute
-        # 14:45 — BUILD the UNION watchlist (the slow ~100-stock sweep; on a throttled day it took
+        # 15:17 — BUILD the UNION watchlist. Moved from 14:45 on 2026-08-04: F&O stocks now stop
+        # trading continuously at 15:15 and settle in an auction by 15:35, so 15:17 is the first
+        # moment the continuous session is complete. The build takes 11-19 s, so the old 14:45/15:05
+        # split for slack is unnecessary — build and send in the same pass. (the slow ~100-stock sweep; on a throttled day it took
         # 17 min → the old combined 15:05 call landed at 15:22). Doing it at 14:45 gives ~20 min of
         # slack so it's always ready by 15:05. Near-close data (breakouts are close-based).
-        if (self.agent.is_market_open() and _mins >= 14 * 60 + 45
+        if (self.agent.is_market_open() and _mins >= 15 * 60 + 17
                 and self._watchlist_build_day != now.date()):
             self._watchlist_build_day = now.date()
             try:
                 w = stock_credit_v2.build_watchlist()
-                logger.info(f"union watchlist built (14:45): {w.get('breakouts',0)} breakouts")
+                logger.info(f"union watchlist built (15:17): {w.get('breakouts',0)} breakouts")
             except Exception as e:
                 logger.warning(f"watchlist build 14:45: {e}")
-        # 15:05 — SEND the digest INSTANTLY from the pre-built file (rebuild=False), so the Telegram
-        # message always lands ~15:05 regardless of API throttle.
-        if (self.agent.is_market_open() and _mins >= 15 * 60 + 5
+        # 15:17 — SEND the digest from the file built moments earlier in this same cycle. Its c/w
+        # figures are INDICATIVE (priced off the 15:15 print, before the auction) — that is fine,
+        # this message is explicitly "DO NOT TRADE" and exists to pre-warn which names are in play
+        # ~19 minutes before the 15:36 scan fires the real signals.
+        if (self.agent.is_market_open() and _mins >= 15 * 60 + 17
                 and self._watchlist_tg_day != now.date()):
             self._watchlist_tg_day = now.date()
             try:
                 nc = stock_credit_v2.notify_nearmiss(rebuild=False)
-                logger.info(f"union watchlist Telegram sent (15:05): {nc} near-miss candidate(s)")
+                logger.info(f"union watchlist Telegram sent (15:17): {nc} near-miss candidate(s)")
             except Exception as e:
                 logger.warning(f"watchlist 15:05: {e}")
         # MARK-TO-MARKET / TARGET CHECK — MARKET HOURS ONLY (user, 2026-08-03). It used to run

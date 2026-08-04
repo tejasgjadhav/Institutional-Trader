@@ -248,7 +248,8 @@ def resolve_swing_positions() -> int:
     # fabricated a "WIN" and Telegrammed it. Settlement now requires the expiry session to be OVER,
     # matching dte_multi's `(today > exp) or (today == exp and past_settle)`.
     from engine.config import IST
-    past_settle = datetime.now(IST).strftime("%H:%M") >= "15:30"
+    from engine.config import SETTLE_AFTER
+    past_settle = datetime.now(IST).strftime("%H:%M") >= SETTLE_AFTER
     closed = 0
     changed = False
     for p in book:
@@ -271,15 +272,19 @@ def resolve_swing_positions() -> int:
                 # live spot; if unavailable, fall back to the index DAILY CLOSE. If neither can be
                 # had, leave the position OPEN and retry next cycle: a late settle is harmless, a
                 # wrong one is not.
-                spot = _spot(p["index"])
+                # OFFICIAL CLOSE FIRST, live spot only as fallback (inverted 2026-08-04) — see the
+                # same change in stock_credit*.py. The index close now derives from constituent
+                # auction prices struck by 15:35, so a live print is not the settlement value.
+                spot = None
+                try:
+                    df = fetch_upstox_historical(p["index"], unit="days", interval=1,
+                                                 from_date=exp.isoformat(), to_date=exp.isoformat())
+                    if df is not None and not df.empty:
+                        spot = float(df["Close"].iloc[-1])
+                except Exception as e:
+                    logger.debug(f"swing settle close-fetch {p.get('id')}: {e}")
                 if not spot:
-                    try:
-                        df = fetch_upstox_historical(p["index"], unit="days", interval=1,
-                                                     from_date=exp.isoformat(), to_date=exp.isoformat())
-                        if df is not None and not df.empty:
-                            spot = float(df["Close"].iloc[-1])
-                    except Exception as e:
-                        logger.debug(f"swing settle close-fetch {p.get('id')}: {e}")
+                    spot = _spot(p["index"])
                 if not spot:
                     logger.warning(f"swing: {p.get('id')} expired but NO SPOT — leaving OPEN, will retry")
                     continue

@@ -10,7 +10,7 @@ import time
 import logging
 from datetime import datetime
 
-from engine.config import (IST, OPTION_STRIKE_OFFSET, PREMIUM_TARGET_PCT,
+from engine.config import (IST, FNO_CLOSE, OPTION_STRIKE_OFFSET, PREMIUM_TARGET_PCT,
                            PREMIUM_STOP_PCT, MARKET_CLOSE,
                            ORB_VWAP_EXIT_MODE, ORB_VWAP_STOP_PCT)
 from engine.data_fetcher import fetch_upstox_intraday, fetch_upstox_historical
@@ -48,7 +48,7 @@ def resolve_pending(trade_log) -> int:
     signal-date data (so yesterday's open trades close too). Returns count closed."""
     now = datetime.now(IST)
     today = now.date()
-    close_t = datetime.strptime(MARKET_CLOSE, "%H:%M").time()  # 15:30 — book at the close
+    close_t = datetime.strptime(FNO_CLOSE, "%H:%M").time()   # FNO close 15:40 (3-Aug-2026)  # 15:30 — book at the close
     resolved = 0
 
     for t in trade_log.trades:

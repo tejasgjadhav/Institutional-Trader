@@ -28,6 +28,7 @@ from datetime import datetime, date
 from engine.config import (
     IST, DATA_DIR, ZERO_DTE_ENABLED, ZERO_DTE_INDEX, ZERO_DTE_OTM_PCT, ZERO_DTE_WIDTH_PTS,
     ZERO_DTE_LOTS, ZERO_DTE_SETTLE_AFTER, ZERO_DTE_RV5_MAX, ZERO_DTE_STOP_MULT,
+    ZERO_DTE_EARLY_CLOSE_FRAC,
     ZERO_DTE_MIN_CREDIT_PCT, ZERO_DTE_FLIP_RET5, ZERO_DTE_ELECTION_BLACKOUT,
     ZERO_DTE_HYBRID_ENABLED, ZERO_DTE_HYBRID_OTM, ZERO_DTE_HYBRID_MIN_CW,
 )
@@ -270,7 +271,7 @@ def scan_signal() -> list:
         "capital": round((width_pts - credit) * qty, 0),
         "order_label": (f"SELL {ZERO_DTE_INDEX} {int(short['strike'])} {opt} / BUY {int(long['strike'])} {opt}"
                         f"  0DTE {today.isoformat()}  ({'bear-call' if opt=='CE' else 'bull-put (FLIP: 5d %+.1f%%)' % (ret5 or 0)}, credit Rs{credit}"
-                        f"{f' x{num_lots}' if num_lots != 1 else ''}, settles today 15:30)"),
+                        f"{f' x{num_lots}' if num_lots != 1 else ''}, settles today 15:40)"),
         "current_cost": credit, "short_cur": round(sm, 2), "long_cur": round(lm, 2),
         "pnl_pts": 0.0, "status": "OPEN",
         "closed_date": None, "exit_cost": None,
@@ -329,7 +330,7 @@ def scan_signal() -> list:
                                                 f"  (HYBRID ADD {'bear-call' if hopt == 'CE' else 'bull-put'},"
                                                 f" credit Rs{hcredit}, c/w {hcw:.2f}"
                                                 f"{f' x{num_lots}' if num_lots != 1 else ''},"
-                                                f" margin shared with FLIP side, settles today 15:30)"),
+                                                f" margin shared with FLIP side, settles today 15:40)"),
                                 "current_cost": hcredit, "short_cur": round(hsm, 2), "long_cur": round(hlm, 2),
                                 "pnl_pts": 0.0, "status": "OPEN",
                                 "closed_date": None, "exit_cost": None,
@@ -372,6 +373,21 @@ def resolve_positions() -> int:
                     p["current_cost"] = round(sm - lm, 2)
                     p["pnl_pts"] = round(p["credit"] - p["current_cost"], 2)
                     changed = True
+                    # EARLY PROFIT CLOSE (user-approved 2026-08-04). Book the win once the spread
+                    # has given back most of its credit instead of holding to expiry. A credit
+                    # spread only pays FULL credit if both legs expire worthless, so this is a
+                    # THRESHOLD not an equality. Removes the tail where a late reversal turns a
+                    # winner into a full-width loser. NOT BACKTESTABLE — see config for why.
+                    _f = ZERO_DTE_EARLY_CLOSE_FRAC
+                    if _f and p["current_cost"] <= p["credit"] * (1 - _f):
+                        p["exit_cost"] = p["current_cost"]
+                        p["status"] = "WIN" if p["pnl_pts"] > 0 else "LOSS"
+                        p["closed_date"] = today.isoformat()
+                        closed += 1; changed = True
+                        logger.info("zero_dte: EARLY CLOSE %s at %.0f%% of credit "
+                                    "(cost %.2f vs credit %.2f) pnl %+.1f",
+                                    p["id"], _f * 100, p["current_cost"], p["credit"], p["pnl_pts"])
+                        continue
                     # OPTIONAL short-leg stop (default OFF): buy back the spread intraday
                     if ZERO_DTE_STOP_MULT and sm >= ZERO_DTE_STOP_MULT * p["short_prem"]:
                         p["exit_cost"] = p["current_cost"]

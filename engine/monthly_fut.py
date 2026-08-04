@@ -245,7 +245,8 @@ def resolve_monthly_positions() -> int:
             # settle at EXPIRY only after the session closes (MOC-style, per this book's own rule),
             # never at 00:00 on expiry day — same guard applied to the other resolvers 2026-07-21.
             from engine.config import IST
-            _past_settle = datetime.now(IST).strftime("%H:%M") >= "15:25"
+            from engine.config import SETTLE_AFTER
+            _past_settle = datetime.now(IST).strftime("%H:%M") >= SETTLE_AFTER
             expired = (today > date.fromisoformat(p["expiry"])) or \
                       (today == date.fromisoformat(p["expiry"]) and _past_settle)
             reason = ("tp" if px >= tp_px else
