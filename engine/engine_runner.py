@@ -940,6 +940,11 @@ class EngineRunner:
         self._monthly_call(now)
         self._zero_dte(now)
         self._morning_recheck(now)
+        try:
+            from engine import session_observer
+            session_observer.observe(now)   # READ-ONLY recorder; cannot affect a trade
+        except Exception as e:
+            logger.warning(f"session observer: {e}")
         self._outcomes()   # AFTER the book hooks: the cycle that settles at SETTLE_AFTER (15:40)
                            # notifies in the same pass. _in_settle_grace() keeps the fast tick alive
                            # past the close so the 60 s throttle cannot push results to ~15:45.

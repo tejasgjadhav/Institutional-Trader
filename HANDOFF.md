@@ -1,5 +1,49 @@
 # Handoff — institutional-trader
 
+## ⚠️ OPEN / UNRESOLVED (2026-08-06) — third-party audit found a possible STALE-BAR bug. Nothing fixed yet.
+
+Two independent agents (auditor + adversarial critic) reviewed the 15:36 retiming. **No code was
+changed — user said report first.** Findings that matter:
+
+**1. THE SCAN MAY BE READING THE PREVIOUS SESSION'S CLOSE.** `engine/stock_credit_v2.py:113-121`
+takes `df["Close"].iloc[-1]` with **no check that the last daily bar is today's**; same in
+`stock_credit.py:100-102`, `swing_credit.py:106-108`; `data_fetcher.py` has no freshness check.
+Hard evidence: `data/union_watchlist.json` built **4-Aug 14:45 contains exactly the 46 breakouts of
+3-Aug's close (46/46 identical set)** and only 8 of 15 that broke out on 4-Aug; **14 of 19 live
+positions since June match the PRIOR day's close breakout**, 5 the same day's. Our own study note
+(no 4-Aug data in the feed at 18:15 on 4-Aug) supports it and was never connected to the scanner.
+**If true, the whole retiming analysis is moot and live has been trading day-old breakouts.**
+CHEAP TEST: log at 15:36:00 the DATE of the last daily bar the scanner reads + whether its close
+matches that day's bhavcopy.
+
+**2. My cost table was wrong (convention).** Compared a full quoted spread to a one-way charge.
+`spf()` charges 1.00% short / 1.51% long on the real GRASIM legs (blended 1.20%), NOT "~1%/leg".
+Corrected extra cost −₹51/+₹79/+₹210 at 2/3/4%, not ₹210/₹470/₹730. **The 2–4% spread figure has NO
+artifact in the repo** — no script, no data, no log. Only persisted sample: 14:45 4-Aug, median 1.20%.
+
+**3. +44% becomes ≈+20% after the live spread gate** (`STOCK_CREDIT_MAX_SPREAD_PCT=6`, rejects 3/18
+at 15:36) — right at v0's break-even. The break-even table omitted that gate.
+
+**4. PRO 2 may be backwards.** If the option daily `C` is a closing VWAP, fill-vs-VWAP variance is
+minimised at the window CENTRE: old 15:15 in 15:00–15:30 = centre; new 15:38 in 15:10–15:40 = tail,
+**2.6–3.3× the variance**. Never checked which construct `C` is.
+
+**5. "84–87% win rate" is v2 ONLY.** v1 OOS 73.4% (346 trades); v0 90.9% on n=44.
+
+**6. CLAIM 2 proved nothing.** Upstox==bhavcopy 113/113 on 3-Aug AND 4-Aug — but ALSO 113/113 on
+31-Jul (pre-change). Upstox always carried the official close.
+
+**SURVIVED:** settlement fix (pure correctness); the principle that backtests are close-based so a
+close-based scan is the faithful variant; CLAIM 3 reproduced exactly (32/46, PNB, 0.680% drift).
+
+**VERDICT (critic): NOT YET KNOWABLE, closer to break-even than claimed. Do not quote the
+₹39k/₹54k monthly figures.** Order of work: (a) settle the stale-bar question, (b) measure GATED
+FIRED SIGNALS/month before vs after (v2 3.7, v1 12, v0 5.8) over ~a quarter, not breakout counts.
+
+Agents (resumable): auditor `a3a815eeb581d0165`, critic `ab42b56aada679aee`.
+
+---
+
 ## VERIFIED (2026-08-05) — backtest granularity, and an honest read on the new timing
 
 **Every v0/v1/v2 backtest is END-OF-DAY, both legs of the discipline.** Checked in the scripts, not

@@ -126,6 +126,19 @@ WATCHLIST_AFTER = "15:17"
 SIGNAL_RECHECK_AT = "09:30"
 SIGNAL_RECHECK_ENABLED = True
 
+# ── SESSION OBSERVER (engine/session_observer.py) — read-only recorder, no trading effect ──
+# Records the option book through 15:15-15:40 every trading day, plus a 14:45 control. It exists
+# because the 15:36 retiming was argued on a "2-4% spreads" figure that had NO artifact in the repo,
+# and because nothing has ever verified that the scanner's daily bar carries TODAY's close by 15:36.
+# Structural reason to expect a thin book after 15:15: the underlying stops trading continuously
+# (auction to 15:35), so a market maker cannot delta-hedge and will quote wider or step away.
+SESSION_OBSERVER_ENABLED  = True
+SESSION_OBS_BASELINE      = "14:45"   # control sample: continuous session, underlying hedgeable
+SESSION_OBS_FROM          = "15:15"   # continuous trading in F&O stocks ends here
+SESSION_OBS_TO            = "15:40"   # derivatives close
+SESSION_OBS_INTERVAL_SEC  = 60
+SESSION_OBS_MAX_NAMES     = 25        # caps API load; watchlist is usually well under this
+
 # 3-FAMILY 5-MIN SCAN (the BUY-side scorer). Disabled 2026-07-07 (user-approved): it fed only
 # the hidden 3-Family paper book and caused options-flow 429 storms. The market snapshot/header
 # (_market) and the 15:10 credit scans + 9:16 0DTE scans are INDEPENDENT and unaffected.
