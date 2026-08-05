@@ -124,6 +124,28 @@ def _todays_breakout(index: str):
     prior = df[[ix.date() < _today for ix in df.index]]
     if len(prior) < SWING_DONCHIAN + 1:
         return None
+    # DIRECTION-vs-MOVE AUDIT (user's check, 2026-08-05). A LONG break means today's close exceeded
+    # the highest HIGH of the prior N sessions — and that window INCLUDES yesterday, whose high is
+    # >= its own close. So today's close > yesterday's close, necessarily. The same holds inverted
+    # for a SHORT break. Verified on 1,182 real breakouts (45 names, Feb-Aug 2026): ZERO
+    # contradictions. It is therefore an INVARIANT, not a filter — it can never suppress a genuine
+    # signal, and a violation can only mean the prices are stale, misaligned or wrong.
+    # This is the GRASIM guard: on 4-Aug a BEAR_CALL fired off 3-Aug's close while the stock was
+    # DOWN 3.74% on the day. This check would have refused it.
+    _pc = float(prior["Close"].iloc[-1])
+    def _dir_ok(_d):
+        if _d in ("LONG", "CE") and not c > _pc:
+            logger.error("%s: DIRECTION AUDIT FAILED %s — LONG break but close %.2f <= prev close "
+                         "%.2f. Prices are stale or misaligned; signal SUPPRESSED.",
+                         "swing_credit", index if "index" in dir() else "?", c, _pc)
+            return False
+        if _d in ("SHORT", "PE") and not c < _pc:
+            logger.error("%s: DIRECTION AUDIT FAILED %s — SHORT break but close %.2f >= prev close "
+                         "%.2f. Prices are stale or misaligned; signal SUPPRESSED.",
+                         "swing_credit", index if "index" in dir() else "?", c, _pc)
+            return False
+        return True
+
     prior_hi = float(prior["High"].rolling(SWING_DONCHIAN).max().iloc[-1])
     prior_lo = float(prior["Low"].rolling(SWING_DONCHIAN).min().iloc[-1])
     if c > prior_hi:

@@ -1,9 +1,44 @@
 # Handoff — institutional-trader
 
-> **IN FLIGHT (2026-08-06):** entry-time sweep on the ATM CALL for NIFTY + SENSEX over 3/4/5-Aug —
-> at which intraday entry time is call-side time decay minimum, and which entry times finish
-> profitable when exited into the 15:36 auction. Working files in the session scratchpad; results
-> to be written up under `studies/CAS_NIFTY_SENSEX_DATA/`. See the CAS recorder section below.
+## Strategy semantics — direction vs trigger (user asked 2026-08-05)
+
+**Direction: user's understanding is CORRECT.** Up-break → sell a BEAR CALL (fade the up-move).
+Down-break → sell a BULL PUT. The book always fades the breakout; it never follows it. (The follow
+version was tested and wins ~40% — see CLAUDE.md.)
+
+**Trigger: it is a LEVEL, not a percentage.** The gate is "today's close is beyond the prior N-day
+Donchian high/low", not "the stock moved X%". So a name can rise 3% and NOT signal (still inside the
+band), or rise 0.4% and signal (band was tight). There is **no minimum breakout size for stocks** —
+`SWING_MIN_BREAKOUT_PCT` is index-only and defaults 0.0, and the flush gate that used it FAILED
+out-of-sample (CLAUDE.md Part 11).
+
+GRASIM on Mon 03-Aug, the numbers behind the call:
+| | |
+|---|---|
+| previous close (31-Jul) | 3,100.80 |
+| D10 prior HIGH (the level) | 3,195.10 |
+| 03-Aug close | 3,260.00 |
+| daily move | **+5.13%** (not what the gate reads) |
+| distance beyond the band | **+2.03%** (this is the breakout) |
+
+So the BEAR CALL was the RIGHT call for Monday — a decisive 2% break on a 5% day. The only defect was
+delivery: it fired on Tuesday, by which point the move had given back 3.74%.
+
+**Open, untested:** whether breakout MAGNITUDE predicts fade quality for STOCKS. It was tested for the
+INDEX and failed OOS, but never for the stock books. Cheap to test on existing daily data.
+
+---
+
+> **DONE (2026-08-06):** entry-time sweep + call-side decay profile, NIFTY + SENSEX, 3/4/5-Aug →
+> [`studies/CAS_NIFTY_SENSEX_DATA/ENTRY_TIME_AND_DECAY.md`](studies/CAS_NIFTY_SENSEX_DATA/ENTRY_TIME_AND_DECAY.md).
+> Result: decay is flat noise 09:30–15:15 and the whole day's bleed (−72 premium points, 4 of 5
+> non-expiry sessions) lands in the 15:15→close auction window. **No entry time gained on any
+> non-expiry session**; best in the grid is +₹91/lot, negative after costs. Only the 4-Aug 0DTE
+> session paid. Discard the 09:15 row — the opening-auction print is recorded as the bar open and
+> sits at the bar low, so it is not transactable.
+>
+> **Two bugs found and FIXED in `engine/cas_recorder.py` while doing this** — see the CAS section
+> below. One had already corrupted a DB row; it is repaired and verified.
 
 ## 15:31 PROPOSAL — adjudicated by 3 agents (2026-08-05). Verdict: watchlist YES, scan move NO.
 
@@ -254,6 +289,21 @@ recorded in the `src` column: `expired-api` (4-Aug NIFTY, expiry-day contract), 
     to fetch premiums, retrying both steps. An earlier version that trusted `get_expiries()` fell
     through to the live master and silently produced no premium data.
   * NIFTY lot size is **65**, SENSEX **20** — read from the instrument master, never hardcoded.
+  * **BUG 1, FIXED 6-Aug — backfill resolved the WRONG EXPIRY.** `_resolve_atm` read only the live
+    master, which purges expired contracts *some days after* they expire. On 5-Aug the 4-Aug weekly
+    was still listed; by 6-Aug it was gone, so re-recording 4-Aug silently resolved to the 11-Aug
+    weekly (entry 182.05, 7DTE) instead of the 4-Aug 0DTE (entry 75.55) — **and overwrote a correct
+    row**. The answer depended on WHEN you backfilled. Now consults both masters and takes the
+    earliest expiry on/after the day, resolving strikes from `EO.get_contracts` when that expiry has
+    expired. Corrupted row re-recorded and verified byte-identical to the original.
+  * **BUG 2, FIXED 6-Aug — `from==to` loses the newest session.** `fetch_upstox_historical` returned
+    0 bars for NIFTY 5-Aug with `from=to=2026-08-05` on 6-Aug, while `from=05,to=06` returned all 25;
+    SENSEX served the same request fine. Instrument-specific and silent. All past-day fetches now go
+    through `_hist_day()`, which asks day..day+1 and filters to the day.
+  * **The 1-min and 5-min historical feeds lag ~1 session** (no 5-Aug 1-min data on 6-Aug); 15-min
+    and coarser publish sooner. This does NOT affect live recording (15:50 uses the intraday
+    endpoint) but it means **a 1-min backfill of yesterday will find nothing** — use 15-min for
+    recent-day studies, or wait a session.
   * The index goes dark after 15:30, so `mv_1515_close` is 15:15→15:30 only. Premium moves between
     15:30 and 15:40 track futures/the auction and have no index to explain them.
 
