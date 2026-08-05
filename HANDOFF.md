@@ -1,5 +1,29 @@
 # Handoff — institutional-trader
 
+## DONE (2026-08-05) — morning re-check: LAST TRADING DAY only, silent when that session had no call
+
+`engine/signal_recheck.py` used "the most recent entry_date in any book", which reaches back days —
+if yesterday produced nothing it would surface a call from three sessions ago as though it were
+fresh. Now it resolves the previous session explicitly and sends NOTHING when that session produced
+no signal (user, 2026-08-05).
+
+`_last_session()` takes the LATEST of three independent witnesses, because no single one is safe:
+  1. **NIFTY daily bar** before today — holiday-aware by construction (a bar exists only for a day
+     the exchange traded; this repo has no hardcoded holiday calendar on purpose). BUT the Upstox
+     feed publishes it late — at 18:15 on 4-Aug it still carried no 4-Aug data — so at 09:30 it can
+     be a session behind.
+  2. **newest entry_date in any book** before today — the engine opens positions on trading days
+     only, so such a date IS a trading day. Fails when the session produced no signal.
+  3. **mtime of union_watchlist.json** — rebuilt at WATCHLIST_AFTER every session, the only witness
+     that survives a session with NO signal.
+Max is safe both ways: a witness can only ever be a real session, and if the winner produced no call
+the caller sends nothing anyway. Holiday failure mode is benign for the same reason.
+
+Verified: with the last session at 04-Aug and every position dated 31-Jul, build_message() returns
+"" and nothing is sent.
+
+---
+
 ## DONE (2026-08-05) — 09:30 morning re-check LIVE (engine/signal_recheck.py)
 
 Read-only re-validation of the PREVIOUS session's stock-credit calls. Writes NO book, NO trade-log

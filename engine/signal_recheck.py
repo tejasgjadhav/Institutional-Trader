@@ -25,7 +25,7 @@ import os
 import json
 import html
 import logging
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 from engine import config
 from engine.config import DATA_DIR, IST
@@ -57,14 +57,63 @@ BOOKS = [
 ]
 
 
-def _prev_entry_date(books: list) -> str:
-    """The most recent entry_date across the three books that is BEFORE today — i.e. the last
-    session that actually produced a call. Using 'yesterday' literally would miss Monday, when
-    yesterday is Sunday."""
+def _prev_trading_day() -> str:
+    """The last session BEFORE today, holiday-aware.
+
+    Taken from NIFTY's daily bars: a bar exists only for a day the exchange traded, so the most
+    recent one dated before today IS the previous trading day. There is no hardcoded holiday
+    calendar in this repo on purpose (data_utils.market_is_trading_today infers it the same way),
+    and a plain weekday walk-back would call the day after a holiday 'yesterday' and re-check a
+    two-day-old call. Falls back to the last weekday only if the feed is unreachable.
+    """
+    today = date.today()
+    try:
+        from engine.data_fetcher import fetch_upstox_historical
+        df = fetch_upstox_historical("NIFTY", unit="days", interval=1,
+                                     from_date=(today - timedelta(days=12)).isoformat(),
+                                     to_date=today.isoformat())
+        if df is not None and not df.empty:
+            days = sorted({ix.date() for ix in df.index if ix.date() < today})
+            if days:
+                return days[-1].isoformat()
+    except Exception as e:
+        logger.warning("recheck: daily-bar lookup failed (%s) — falling back to weekday walk", e)
+    d = today - timedelta(days=1)
+    while d.weekday() >= 5:
+        d -= timedelta(days=1)
+    return d.isoformat()
+
+
+def _last_session(books: list) -> str:
+    """Previous trading day, taking the LATEST of three independent witnesses.
+
+    The daily bar alone is not safe: the Upstox feed publishes it late (at 18:15 on 4-Aug it still
+    carried no 4-Aug data at all), so at 09:30 it can still be one session behind and would send us
+    re-checking a two-day-old call. Two local witnesses close that gap, and both are only ever
+    written on a day the engine actually ran a session:
+      * the newest entry_date in any book before today — the engine opens positions on trading
+        days only, so such a date IS a trading day;
+      * the mtime of union_watchlist.json, rebuilt at WATCHLIST_AFTER every session, which is the
+        only witness that survives a session that produced NO signal.
+    Taking the max is safe in both directions: a witness can only ever be a real session, and if
+    the winner turns out to have produced no call the caller sends nothing — which is the wanted
+    behaviour anyway.
+    """
     today = date.today().isoformat()
-    dates = [p.get("entry_date") for _lbl, _f, ps in books for p in ps
-             if p.get("entry_date") and p["entry_date"] < today]
-    return max(dates) if dates else ""
+    cands = [_prev_trading_day()]
+    entries = [p.get("entry_date") for _l, _b, _t, _e, ps in books for p in ps
+               if p.get("entry_date") and p["entry_date"] < today]
+    if entries:
+        cands.append(max(entries))
+    try:
+        wl = os.path.join(DATA_DIR, "union_watchlist.json")
+        if os.path.exists(wl):
+            built = date.fromtimestamp(os.path.getmtime(wl)).isoformat()
+            if built < today:
+                cands.append(built)
+    except Exception:
+        pass
+    return max(cands)
 
 
 def _check(p: dict, lo: float, hi):
@@ -140,9 +189,10 @@ def build_message():
             continue
     if not books:
         return "", 0, []
-    day = _prev_entry_date([(l, None, ps) for l, _b, _t, _e, ps in books])
-    if not day:
-        return "", 0, []
+    # ONLY the last trading day counts (user, 2026-08-06). Taking "the most recent entry_date in
+    # the book" instead would reach back days: if yesterday produced nothing, it would surface a
+    # call from three sessions ago as though it were fresh. No signal that session -> no message.
+    day = _last_session(books)
 
     ok_rows, bad_rows = [], []
     for label, band, tp_get, eng, ps in books:
@@ -153,6 +203,7 @@ def build_message():
             good, d, why = _check(p, lo, hi)
             (ok_rows if good else bad_rows).append((label, p, d, why, tp_get, eng))
     if not ok_rows and not bad_rows:
+        logger.info("recheck: no stock-credit signal on %s (last trading day) — no message", day)
         return "", 0, []
 
     # the SCHEDULED hour, not the wall clock — a manual run must still read 09:30
