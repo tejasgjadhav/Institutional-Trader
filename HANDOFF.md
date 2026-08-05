@@ -1,5 +1,44 @@
 # Handoff — institutional-trader
 
+## ⚠ CONFIRMED BUG (2026-08-05 15:36) — the scan reads YESTERDAY's close. The retiming bought nothing.
+
+`engine/session_observer.py` ran its first live session and settled Q2 empirically. At **every** sample
+from 14:45 through 15:38, including 15:36 (the scan instant), the last daily bar the scanner would
+read was dated **2026-08-04** — the previous session. `stale=True` throughout.
+
+Root cause, verified: **the Upstox feed has no same-day daily bar during the session.** At 15:41 on
+5-Aug, `fetch_upstox_historical('RELIANCE.NS', unit='days')` returned bars ending 2026-08-04
+(close 1290.9), while the 5-min intraday series had 5-Aug data to 15:25 (close 1280.0).
+
+Consequences:
+1. **The 15:36 retiming achieved nothing on signal fidelity.** It reads the same stale bar 15:10 did.
+   The "+44% more breakouts" was a counterfactual the system never ran. The audit called this and it
+   is now confirmed on live data.
+2. **Moving the scan cannot fix it.** No time of day works — the bar does not exist intraday.
+3. **The system has been trading a 1-DAY-DELAYED strategy all along** — breakout computed on T-1's
+   close, traded on T. The backtests assume T's breakout entered at T's close. This is untested, and
+   it predates the session change; it is NOT caused by CAS.
+4. `stock_credit_v2.py:116-121` (+ `stock_credit.py:100-102`, `swing_credit.py:106-108`) take
+   `df["Close"].iloc[-1]` with no freshness check, so this failed silently and always has.
+
+**Options to fix (none implemented, user not yet consulted):**
+  (a) construct today's close from the intraday 5-min series (last bar ~15:25) — a PRE-auction price,
+      not the official close, but same-day;
+  (b) pull NSE bhavcopy after it publishes (~18:00) — the true official close, but too late to trade
+      that session, so it becomes a next-morning signal;
+  (c) accept the 1-day delay and RE-BACKTEST the strategy as T-1-signal/T-entry, which is what is
+      actually running.
+Whatever is chosen, add the freshness guard: a scan that cannot get today's close must refuse to fire
+and log loudly, not silently trade a day-old breakout.
+
+**Today 5-Aug: no calls, legitimately.** Watchlist built 15:17 held 15 breakout names, **0 passed
+c/w >= 0.40** (top SIEMENS 0.31). Nothing fired in any book.
+
+Also noted: `market_is_trading_today()` returns False after FNO_CLOSE, so the morning re-check logs
+"exchange holiday — no message" post-15:40. Misleading log text, not a gating bug.
+
+---
+
 ## ⚠️ OPEN / UNRESOLVED (2026-08-06) — third-party audit found a possible STALE-BAR bug. Nothing fixed yet.
 
 Two independent agents (auditor + adversarial critic) reviewed the 15:36 retiming. **No code was
