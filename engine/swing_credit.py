@@ -103,9 +103,24 @@ def _todays_breakout(index: str):
     if df is None or df.empty or len(df) < SWING_DONCHIAN + 2:
         return None
     df = df.sort_index()
-    prior_hi = float(df["High"].rolling(SWING_DONCHIAN).max().shift(1).iloc[-1])
-    prior_lo = float(df["Low"].rolling(SWING_DONCHIAN).min().shift(1).iloc[-1])
-    c = float(df["Close"].iloc[-1])
+    # TODAY'S close, verified as today's — NOT `df["Close"].iloc[-1]`. The Upstox DAILY endpoint has
+    # no current-day bar during the session, so that expression silently returned the PREVIOUS
+    # session's close and this book fired yesterday's breakout today (confirmed live 5-Aug-2026;
+    # GRASIM broke out 03-Aug and was traded 04-Aug, a day on which it was not a breakout at all).
+    # The band below therefore drops its .shift(1): `prior` already excludes today, so the last
+    # daily bar (yesterday) belongs IN the lookback, not outside it.
+    from engine.data_utils import todays_close
+    c, _src = todays_close(ticker)
+    if c is None:
+        logger.warning(f"swing: no CURRENT-day close for {ticker} — skipped, not scanned on a "
+                       f"stale bar")
+        return None
+    _today = date.today()
+    prior = df[[ix.date() < _today for ix in df.index]]
+    if len(prior) < SWING_DONCHIAN + 1:
+        return None
+    prior_hi = float(prior["High"].rolling(SWING_DONCHIAN).max().iloc[-1])
+    prior_lo = float(prior["Low"].rolling(SWING_DONCHIAN).min().iloc[-1])
     if c > prior_hi:
         # UP-break → fade with a bear-call. STRUCTURALLY loses (−5.0%, 48% win): fading the
         # index's upward drift. Gated OFF by default (SWING_FADE_DOWN_ONLY).

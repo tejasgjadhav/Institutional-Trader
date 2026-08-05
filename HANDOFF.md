@@ -1,5 +1,78 @@
 # Handoff — institutional-trader
 
+## THE GRASIM TIMELINE — user spotted the bug from the trade itself (2026-08-05)
+
+The user asked "why on earth would you give a bear call" when GRASIM had just fallen. He was right,
+and his trading instinct caught the stale-bar bug before any log did. Verified against bhavcopy:
+
+| | close | note |
+|---|---|---|
+| Mon 03-Aug | **3,260.00** | breaks the D10 prior high of 3,195.10 → **CE breakout. THIS was the signal.** |
+| Tue 04-Aug | **3,138.00** | −3.74% vs Monday. **NOT a breakout** — sits inside the D10 band [3,066.40, 3,260.00]. **We fired the bear call HERE.** |
+| Wed 05-Aug | 3,224.00 | +2.74%, back through the 3,140 short strike |
+
+So the engine faded Monday's up-move on Tuesday, by which point the move had already given back 3.74%.
+Selling a bear call into a stock that has just fallen is exactly what it looks like: wrong. The signal
+was a day old.
+
+**CORRECTION to an earlier note in this file:** I previously wrote that GRASIM "kept running" after
+entry. It did not — it FELL 3.74% on Tuesday, then rose 2.74% on Wednesday. The failure mode is not
+"the fade kept extending", it is "we faded a move that had already partly reverted, then it turned
+again". Same conclusion, wrong mechanism.
+
+**Scope: MOSTLY, not all.** The audit found 14 of 19 positions since June match the PRIOR day's close
+breakout, 5 the same day's. The 5 are likely days where the name broke out on both sessions
+(persistent breakouts), not evidence the bar was fresh. GRASIM is the clean proof: 04-Aug was not a
+breakout on any price, so its signal could ONLY have come from 03-Aug.
+
+**Not a configuration error.** Donchian windows, c/w gate, geometry, targets were all correct. The
+PRICE fed into them was one session stale. Fixing the price fixes the strategy; no tunable changes.
+
+---
+
+## IN PROGRESS (2026-08-05 eve) — stale-bar fix IMPLEMENTED, not yet restarted/committed
+
+Plan approved: `/Users/sayali/.claude/plans/there-is-a-change-sparkling-badger.md`.
+
+**Done so far:**
+- `engine/data_utils.todays_close(ticker) -> (price, source)` — intraday 5-min first (the ONLY source
+  carrying today during the session), daily as after-hours fallback, **never a bar not dated today**.
+  Verified live: RELIANCE 1280.0, GRASIM 3224.0, SIEMENS 3980.0, all source `intraday`, all equal to
+  the 15:25 auction print.
+- Wired into all three books (`stock_credit_v2._todays_breakout`, `stock_credit`, `swing_credit`).
+  Each now skips the name and logs a WARNING rather than falling back to a stale bar. **The
+  `.shift(1)` on the Donchian band was dropped** — `prior` now excludes today explicitly, so
+  yesterday's bar belongs IN the lookback, not outside it. v0 inherits via importlib.
+- Verified the fixed scan: 14 breakouts in the first 60 names on TODAY's close, a different set from
+  the stale watchlist (which had 15 across the whole universe on yesterday's close).
+
+**Still to do:** observer artifacts (§3: legs re-resolved per sample → contract switch; targets
+re-read per sample → names vanish at the 15:17 rebuild), study corrections (§4), CLAUDE.md
+track-record note (§5), restart, commit, push.
+
+## Settled — hourly vs daily (user asked 2026-08-05)
+
+**The breakout has ALWAYS been DAILY Donchian**, never hourly: all three books read
+`unit="days", interval=1` (lookbacks 5/10/15/20 for v2 union, 10 for v1 and swing).
+
+The hourly work the user remembers is `studies/HOURLY_VS_CLOSE_ENTRY.md` (2026-07-24), and it is about
+something else: whether to evaluate the **c/w gate on OPTION premiums** at hourly marks and enter on
+first touch of c/w>=0.40, instead of once at the close. **REJECTED — "NOISE, not edge. Keep the CLOSE
+rule."** +32.8%→+25.7% of width (v2), +16.9%→+11.2% (v1), every calendar year worse, and many extra
+signals unexecutable. Do not re-mine.
+
+Likely source of the confusion: that study calls the 15:10 evaluation "the 15:10 **close**", because
+pre-3-Aug the engine treated its 15:10 daily-bar read as the day's close.
+
+## Also settled — cash, not futures
+
+Signals read the **CASH** series (`GRASIM.NS -> NSE_EQ|INE047A01021`; NSE_EQ = cash segment), which is
+correct: the backtests use NSE bhavcopy cash closes. NEW SEAM since 3-Aug worth watching: we signal
+off a cash close struck by auction at 15:35, but execute in options that trade on to 15:40. Under the
+old session both were 15:30. Nothing measures that 4-minute gap yet; the observer captures it.
+
+---
+
 ## ⚠ CONFIRMED BUG (2026-08-05 15:36) — the scan reads YESTERDAY's close. The retiming bought nothing.
 
 `engine/session_observer.py` ran its first live session and settled Q2 empirically. At **every** sample
@@ -80,6 +153,72 @@ close-based scan is the faithful variant; CLAIM 3 reproduced exactly (32/46, PNB
 FIRED SIGNALS/month before vs after (v2 3.7, v1 12, v0 5.8) over ~a quarter, not breakout counts.
 
 Agents (resumable): auditor `a3a815eeb581d0165`, critic `ab42b56aada679aee`.
+
+---
+
+## DONE (2026-08-05 16:20) — CAS NIFTY AND SENSEX DATA recorder, built + deployed + backfilled
+
+**Goal:** nothing was capturing the new 15:15–15:40 close window, which is exactly where
+`KILL_SWITCH_TIME` (15:36) and the 15:36 scan operate. It is now recorded every session.
+
+**What it records**, per session per index (NIFTY, SENSEX):
+index OHLC, prev close, %chg, 15:15 spot, 15:15→close move, close-vs-high, last-60m move, India VIX
+at close · the **ATM CALL and ATM PUT** for the nearest expiry on/after the day, strike picked off
+the **15:15 spot** so both legs share it · premium marks at **15:15 / 15:30 / 15:36 / close** ·
+window hi/lo · **gross P&L per 1 lot** at each exit · traded volume before/after 15:30 · full 1-min
+OHLCV from 15:00 for the index and both legs.
+
+**Fill convention:** a mark at T is that minute bar's **OPEN** (what you'd pay entering at T); the
+closing mark is the last bar's **CLOSE**. P&L is GROSS — no brokerage/STT/exchange/spread. Budget
+~₹55–65 per round trip per lot on top.
+
+**Writes to BOTH:**
+  * `data/engine.db` → new tables `cas_index_close` (PK date,idx) and `cas_option_close`
+    (PK date,idx,opt_type). `INSERT OR REPLACE`, so re-running any day is safe — verified, a second
+    run left 6 index / 12 option rows unchanged, no duplicates.
+  * `studies/CAS_NIFTY_SENSEX_DATA/` → `cas_index.csv`, `cas_options.csv` (full-table dumps,
+    rewritten from the DB each run), `raw/<date>_<index>.json` (1-min series), `README.md`.
+
+**Deployed:** `com.sayali.cas-recorder` — weekdays **15:50** with a **16:20** retry pass. Plist in
+`deploy/`, copied to `~/Library/LaunchAgents/`, **loaded and force-run successfully under launchd**
+(so it does not fail on launchd's stripped environment). Logs `logs/cas_recorder.{out,err}.log`.
+Holidays return an empty intraday feed and it exits clean.
+
+**Backfilled 3/4/5-Aug-2026 — the entire regime.** There is no earlier CAS data to fetch; before
+3-Aug the derivatives close was 15:30 and 15:36 did not exist. All three fetch paths exercised and
+recorded in the `src` column: `expired-api` (4-Aug NIFTY, expiry-day contract), `historical`
+(SENSEX), `intraday` (same-day).
+
+**Gotchas baked in:**
+  * Same-day index/option data MUST come from `fetch_upstox_intraday` — the historical feed has no
+    same-session bar. This is the same stale-bar trap documented at the top of this file; the
+    recorder is a working instance of fix option (a) and confirms the intraday endpoint serves
+    same-day 1-min data reliably at 15:50.
+  * SENSEX options are **not** in `options._load_index()` (that master is NSE_FO only). They come
+    from `dte_multi._bse_sensex_options()`. `_master()` in the recorder handles the split.
+  * `EO.get_expiries()` rate-limits and returns [] silently — do **not** rely on it to resolve an
+    expiry. The recorder resolves strike/expiry off the live master and uses the expired API only
+    to fetch premiums, retrying both steps. An earlier version that trusted `get_expiries()` fell
+    through to the live master and silently produced no premium data.
+  * NIFTY lot size is **65**, SENSEX **20** — read from the instrument master, never hardcoded.
+  * The index goes dark after 15:30, so `mv_1515_close` is 15:15→15:30 only. Premium moves between
+    15:30 and 15:40 track futures/the auction and have no index to explain them.
+
+**Finding worth testing (n=3, NOT a result):** buying the ATM call at 15:15 and exiting 15:36 lost
+on 4 of 6 index-days, three of them with spot UP — theta/IV crush outran delta. On 5-Aug the PUT
+made money on both indices while the CALL lost (NIFTY −₹1,160 / +₹335, SENSEX −₹1,581 / +₹472),
+spot up on both. The only large winner was 4-Aug NIFTY 0DTE (+₹5,792), an expiry-day gamma payoff
+carrying 150% of the total P&L — strip it and the other five lose ₹1,983. **The recorder exists to
+settle this properly; do not act on the n=3.**
+
+**Next step if resumed:** the expired-instruments API reaches back months, so the same 15:15→15:36
+ATM study can be run over 6–12 months *for the OLD regime's 15:15→15:30 window* to get a baseline,
+splitting expiry-day from non-expiry-day. The CAS-specific 15:36 leg can only accumulate forward.
+
+Manual run: `./.venv/bin/python -m engine.cas_recorder [YYYY-MM-DD [YYYY-MM-DD]]`
+
+⚠ **Uncommitted.** `git status` also shows a pre-existing modified `engine/data_utils.py` and an
+untracked `assets/` that are NOT from this work — check them before staging anything.
 
 ---
 

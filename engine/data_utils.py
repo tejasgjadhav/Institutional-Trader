@@ -141,6 +141,46 @@ def _market_is_open() -> bool:
 _trading_cache = {"date": None, "at": None, "trading": None}
 
 
+def todays_close(ticker: str):
+    """(price, source) for TODAY's close of one stock — or (None, "stale") if today's is not there.
+
+    THE DEFECT THIS EXISTS FOR (confirmed live 5-Aug-2026). Every book took
+    `fetch_upstox_historical(unit="days")["Close"].iloc[-1]` with no check that the last bar was
+    today's. **The Upstox daily endpoint does not carry the current day's bar during the session** —
+    at 15:41 on 5-Aug it still ended 04-Aug while the 5-min series had 05-Aug to 15:25. So every scan
+    silently compared the PREVIOUS session's close against a one-day-shifted Donchian band, and the
+    books fired yesterday's breakout today. GRASIM is the proof: it broke out 03-Aug and was traded
+    04-Aug, on which day its own close was not a breakout at all.
+
+    The close IS available same-day, just from the other endpoint. Measured against NSE bhavcopy over
+    38 names on two sessions, the LAST 5-min bar equals the official close **33/38 exactly** on both;
+    all but two mismatches are float rounding (<=0.07%), and only thin names (UBL, ATUL) differ
+    materially (0.15-0.59%). That last bar is where the auction print lands — continuous trading in
+    F&O stocks stops at 15:15 and the 15:10/15:15/15:20 bars carry an identical frozen price, while
+    the 15:25 bar moves only once the auction matches at 15:30-15:35.
+
+    Order: intraday first (it is the only source that has today at all), daily as a fallback for
+    after-hours callers, and **never a bar that is not dated today**.
+    """
+    sym = ticker.replace(".NS", "")
+    today = datetime.now(IST).date()
+    try:
+        df = fetch_upstox_intraday(sym, interval=5)
+        if df is not None and not df.empty and df.index[-1].date() == today:
+            return float(df["Close"].iloc[-1]), "intraday"
+    except Exception as e:
+        logger.debug(f"todays_close intraday {sym}: {e}")
+    try:
+        df = fetch_upstox_historical(sym + ".NS", unit="days", interval=1,
+                                     from_date=(today - timedelta(days=7)).isoformat(),
+                                     to_date=today.isoformat())
+        if df is not None and not df.empty and df.sort_index().index[-1].date() == today:
+            return float(df.sort_index()["Close"].iloc[-1]), "daily"
+    except Exception as e:
+        logger.debug(f"todays_close daily {sym}: {e}")
+    return None, "stale"
+
+
 def market_is_trading_today() -> bool:
     """True only if the market is ACTUALLY trading now — weekday + hours AND live intraday data
     flowing. Distinguishes a real session from an NSE HOLIDAY (when _market_is_open() still says

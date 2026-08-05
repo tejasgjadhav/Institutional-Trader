@@ -959,6 +959,13 @@ class EngineRunner:
 
     def run(self):
         logger.info(f"Engine runner started. DB stats: {store.stats()}")
+        # Record any tunable that moved since the last start, before trading anything. Answers
+        # "did we change something?" from the record instead of from git archaeology.
+        try:
+            from engine import config_ledger
+            config_ledger.record("engine start")
+        except Exception as e:
+            logger.warning(f"config ledger: {e}")
         while True:
             try:
                 self.cycle()

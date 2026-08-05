@@ -118,14 +118,29 @@ def _todays_breakout(ticker: str):
     if df is None or df.empty or len(df) < max(UNION_DCS) + 2:
         return None
     df = df.sort_index()
-    c = float(df["Close"].iloc[-1])
+    # TODAY'S close, verified as today's — NOT `df["Close"].iloc[-1]`. The Upstox DAILY endpoint has
+    # no current-day bar during the session, so that expression silently returned the PREVIOUS
+    # session's close and this book fired yesterday's breakout today (confirmed live 5-Aug-2026;
+    # GRASIM broke out 03-Aug and was traded 04-Aug, a day on which it was not a breakout at all).
+    # The band below therefore drops its .shift(1): `prior` already excludes today, so the last
+    # daily bar (yesterday) belongs IN the lookback, not outside it.
+    from engine.data_utils import todays_close
+    c, _src = todays_close(ticker)
+    if c is None:
+        logger.warning(f"stock_credit_v2: no CURRENT-day close for {ticker} — skipped, not scanned "
+                       f"on a stale bar")
+        return None
+    _today = date.today()
+    prior = df[[ix.date() < _today for ix in df.index]]
+    if len(prior) < max(UNION_DCS) + 1:
+        return None
     # Return the STRONGEST window that broke, not the first. Longer Donchian highs/lows are
     # supersets of shorter ones, so break the largest consecutive window (D5→D10→D15→D20) and
     # report it — informational only, direction/signal logic is unchanged (any break fires).
     best = None
     for dcw in UNION_DCS:            # ascending 5,10,15,20
-        hi = float(df["High"].rolling(dcw).max().shift(1).iloc[-1])
-        lo = float(df["Low"].rolling(dcw).min().shift(1).iloc[-1])
+        hi = float(prior["High"].rolling(dcw).max().iloc[-1])
+        lo = float(prior["Low"].rolling(dcw).min().iloc[-1])
         if c > hi:
             best = ("LONG", dcw)
         elif c < lo:
