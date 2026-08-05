@@ -1,5 +1,58 @@
 # Handoff — institutional-trader
 
+> **IN FLIGHT (2026-08-06):** entry-time sweep on the ATM CALL for NIFTY + SENSEX over 3/4/5-Aug —
+> at which intraday entry time is call-side time decay minimum, and which entry times finish
+> profitable when exited into the 15:36 auction. Working files in the session scratchpad; results
+> to be written up under `studies/CAS_NIFTY_SENSEX_DATA/`. See the CAS recorder section below.
+
+## 15:31 PROPOSAL — adjudicated by 3 agents (2026-08-05). Verdict: watchlist YES, scan move NO.
+
+User proposed a 15:31 watchlist to pre-stage, then execute off the 15:36 scan. Ran a FOR agent, an
+adversarial critic, and an independent reviewer.
+
+**VERIFIED by two agents independently:** for all 14 observed names, the 15:29→15:39 spot equals the
+official NSE bhavcopy `ClsPric` **exactly**; 0/14 at 15:17–15:25 (median error 0.392%). The auction
+price flipped at **15:29** — inside the 15:28–15:30 random-close window, i.e. an EARLY draw.
+
+**THE HOLE IN MY OWN EVIDENCE (reviewer, confirmed).** The observer records `_spot()` →
+`get_cached_ltp` (stock_credit_v2.py:85-90) — that is the **strike-selection** feed. The breakout gate
+reads `todays_close()` → `fetch_upstox_intraday(5m)` (data_utils.py:168), a DIFFERENT pipeline.
+`_daily_bar_probe` deliberately hits the daily endpoint. **So nothing has ever observed what the
+scan's actual breakout input returns at 15:31.** My "spot equals the close at 15:31" validates strike
+selection only. Do not repeat this claim as support for moving the scan.
+
+**THE DECIDING ASYMMETRY.** `todays_close` accepts any 5-min bar dated today (data_utils.py:169) —
+trivially true during the session. On a LATE auction a 15:31 call returns the frozen ~15:15
+continuous price: a real number, dated today, ~0.39% off the close. `_todays_breakout` then evaluates
+the Donchian band against it and fires. **The failure is a silent WRONG signal, not a skipped scan** —
+the exact defect `todays_close` was written to kill. 15:36 risks a rushed fill; 15:31 risks trading a
+breakout that did not happen.
+
+**Also: the accuracy argument was measured on names that could not fire.** All 14 had c/w 0.109–0.273
+against a 0.40 gate. And the observer re-resolves legs each sample, so 4/14 carry different strikes
+at 15:17 vs 15:38 — same-strike only, the 15:17-vs-15:31 edge shrinks to 0.004 vs 0.002.
+
+**WHAT THE 15:31 WATCHLIST GENUINELY FIXES (this is the real win, and it is proven):** the current
+15:17 digest is built on pre-auction spot, so it **stages the WRONG STRIKES 29% of the time** (4/14).
+At 15:31 spot is final, so the ticket — symbol, expiry, both legs, lots — cannot change.
+
+**DECISION: keep `STOCK_CREDIT_SCAN_AFTER = "15:36"`; add a 15:31 watchlist.** Not yet implemented.
+
+**Before the scan could ever move, in order:**
+1. Log `todays_close()` price AND source minute-by-minute 15:25→15:40 vs bhavcopy, on names with c/w
+   near 0.40. Nothing else matters until this exists.
+2. Record the actual auction-match timestamp daily; ≥10 sessions to catch a LATE draw.
+3. Add a post-auction guard to `todays_close`: reject a bar whose close still equals the frozen 15:15
+   print. This de-risks any later move.
+4. Evidence of a signal actually lost to the 4-minute window. None exists.
+5. `KILL_SWITCH_TIME` (15:36) must move with the scan if it ever does.
+
+**SEPARATE BUG found by the critic:** `morning recheck: exchange holiday — no message` logs every
+~5 min through the afternoon on a TRADING day. `market_is_trading_today()` returns False once past
+FNO_CLOSE, so the message is misleading; harmless today but it is a safety net reporting nonsense.
+
+---
+
 ## THE GRASIM TIMELINE — user spotted the bug from the trade itself (2026-08-05)
 
 The user asked "why on earth would you give a bear call" when GRASIM had just fallen. He was right,

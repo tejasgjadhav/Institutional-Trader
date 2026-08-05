@@ -19,6 +19,11 @@ regime change and do not splice pre- and post-3-Aug closes without saying so. Th
 moved with it: watchlist 15:17, scans 15:36, settlement 15:40.
 See [`NSE_SESSION_CHANGE_2026_08_03.md`](NSE_SESSION_CHANGE_2026_08_03.md).
 
+The new 15:15–15:40 close window is now recorded every session by
+[`CAS_NIFTY_SENSEX_DATA/`](CAS_NIFTY_SENSEX_DATA/README.md) — index behaviour plus ATM call and put
+premiums for NIFTY and SENSEX, marked at 15:15 / 15:30 / 15:36 / close. Data starts 3-Aug-2026;
+there is no earlier CAS data to fetch. Use it before assuming anything about how this window behaves.
+
 ---
 
 ## Current state of the book (2026-07-19)

@@ -311,10 +311,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     ORBVWAP_COLS = ["TIME", "INDEX", "TYPE", "STRIKE", "EXPIRY", "ENTRY",
                     "EXIT RULE", "STOP -20%", "CURRENT", "LOT", "STATUS"]
     # Credit spreads on PM DECISIONS are shown TWO ROWS per trade (a SELL row + a BUY row).
-    PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "LOT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
+    # UNDERLYING added 2026-08-05: the price the signal was computed on -> the live price. GRASIM
+    # fired a bear-call the day AFTER its breakout off a stale bar; this column makes that visible.
+    PM_CREDIT_COLS = ["ACTION", "INSTRUMENT", "UNDERLYING", "LOT", "PREMIUM", "EXPIRY", "AMOUNT", "P&L / STATUS"]
     # BRK = the STRONGEST Donchian window that broke (D5/D10/D15/D20) — D10+ is a more durable
     # breakout than a bare D5 (see studies/DONCHIAN_D5_VS_D10.md).
-    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SELL / BUY", "EXPIRY", "LOT", "C/W", "PREM", "LIQ", "MAX ₹+", "MAX ₹−", "RESULT"]
+    # SIGNAL→LIVE added 2026-08-05: the price the breakout was computed on, next to the live price.
+    # A bear-call fired on GRASIM the day AFTER its breakout off a stale bar and nothing on screen
+    # could reveal it. A large gap here is that failure, visible.
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "PREM", "LIQ", "MAX ₹+", "MAX ₹−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -331,11 +336,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return l
 
     def _credit_cols(self, t):
-        """Fixed widths for the 7 PM_CREDIT_COLS (ACTION/INSTRUMENT/LOT/PREMIUM/EXPIRY/AMOUNT/
-        P&L·STATUS) summing ~1026px — same total as the watchlist. Stretch mode ballooned the
+        """Fixed widths for the 8 PM_CREDIT_COLS (ACTION/INSTRUMENT/UNDERLYING/LOT/PREMIUM/EXPIRY/
+        AMOUNT/P&L·STATUS) summing ~1026px — same total as the watchlist. Stretch mode ballooned the
         table past the window and clipped the last column; fixed widths keep it single-screen."""
         h = t.horizontalHeader()
-        for _c, _px in enumerate((100, 300, 88, 128, 120, 150, 140)):
+        for _c, _px in enumerate((96, 250, 170, 72, 112, 104, 140, 132)):
             h.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
             h.resizeSection(_c, _px)
         t.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -368,8 +373,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # ALL columns FIXED (no Stretch): the outer scroll widget is wider than the window
         # (the credit tables below force it), so a Stretch column balloons and pushes the last
         # columns off-screen. Fixed widths summing ~1030px keep the whole row on one screen.
-        for _c, _px in ((0, 120), (1, 72), (2, 52), (3, 300), (4, 92), (5, 60),
-                        (6, 80), (7, 96), (8, 84), (9, 116), (10, 116), (11, 104)):
+        for _c, _px in ((0, 118), (1, 66), (2, 46), (3, 150), (4, 248), (5, 84), (6, 54),
+                        (7, 74), (8, 88), (9, 78), (10, 104), (11, 104), (12, 96)):
             # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
@@ -1357,11 +1362,27 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 lot_s = str(_lot) if _lot else "—"
                 mp_s = f"₹{_mp:,}" if isinstance(_mp, (int, float)) else "—"
                 ml_s = f"₹{_ml:,}" if isinstance(_ml, (int, float)) else "—"
-                vals = [row.get("sym", "—"), side_s, f"D{row.get('dc','')}",
+                # SIGNAL price vs LIVE price. They should be close; a wide gap means the signal was
+                # computed on a price the market has left behind — the GRASIM failure, made visible.
+                _sig, _liv, _gap = row.get("signal_px"), row.get("live_px"), row.get("px_gap_pct")
+                # "AUC" = the signal price IS the closing-auction price, i.e. the official EOD
+                # close for an F&O stock and the exact field the backtests use. Anything else is a
+                # provisional intraday print and the official close does not exist yet.
+                _tag = " AUC" if row.get("signal_auction") else ""
+                if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)):
+                    sig_s = f"{_sig:,.0f}{_tag}→{_liv:,.0f}" + (f" {_gap:+.1f}%" if _gap is not None else "")
+                elif isinstance(_sig, (int, float)):
+                    sig_s = f"{_sig:,.0f}{_tag}"
+                else:
+                    sig_s = "—"
+                vals = [row.get("sym", "—"), side_s, f"D{row.get('dc','')}", sig_s,
                         legs, exp_s, lot_s, cwcell, premcell, liqcell, mp_s, ml_s, result]
                 self._set_row(self.pm_watch, i, vals)
-                self._color_cell(self.pm_watch, i, 11, GREEN if g == "PASS" else (AMBER if evaluable else RED))
-                for c in (2, 4, 5, 6, 7, 8, 9, 10, 11):    # centre everything except STOCK/SIDE/legs
+                self._color_cell(self.pm_watch, i, 12, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+                if isinstance(_gap, (int, float)):
+                    self._color_cell(self.pm_watch, i, 3,
+                                     RED if abs(_gap) >= 1.0 else (AMBER if abs(_gap) >= 0.5 else TEXT_DIM))
+                for c in (2, 3, 5, 6, 7, 8, 9, 10, 11, 12):   # centre everything except STOCK/SIDE/legs
                     it = self.pm_watch.item(i, c)
                     if it: it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
@@ -1657,7 +1678,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 else "no signal today — fires on a stock breakout w/ rich credit (≥0.40), scan ~15:36")
         if not rows:
             table.setRowCount(1)
-            self._set_row(table, 0, ["—", hint, "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
+            self._set_row(table, 0, ["—", hint, "—", "—", "—", "—", "—", "WATCHING"], fg=QColor(TEXT_DIM))
             self._fit_table(table); return
         table.setRowCount(len(rows) * 2)
         for i, p in enumerate(rows):
@@ -1681,19 +1702,39 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             lot = p.get("lot", 0) or 0
             num_lots = int(p.get("num_lots", 1) or 1)
             lot_str = f"{lot}" + (f"×{num_lots}" if num_lots > 1 else "")
+            # SIGNAL price -> LIVE price for the underlying. A wide gap means the breakout was read
+            # off a price the market has since left behind (the GRASIM failure), so it is shown on
+            # the trade itself rather than only in the log.
+            _sig = p.get("signal_px"); _liv = None
+            try:
+                from engine.data_utils import todays_close as _tc
+                _liv, _ = _tc((p.get("symbol") or p.get("index") or "") + ".NS")
+            except Exception:
+                pass
+            if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)) and _sig:
+                _gp = (_liv - _sig) / _sig * 100
+                und_s = f"{_sig:,.0f}→{_liv:,.0f} ({_gp:+.1f}%)"
+            elif isinstance(_sig, (int, float)):
+                und_s = f"sig {_sig:,.0f}"
+            else:
+                und_s = f"entry {p.get('entry_spot'):,.0f}" if p.get("entry_spot") else "—"
             rS, rB = 2 * i, 2 * i + 1
             # ACTION carries the option TYPE (CE/PE) so it's never truncated by a long stock name.
             # Row 1 — SELL the near leg (collect premium)
             self._set_row(table, rS,
-                          [f"SELL {verb}", f"{name} {p.get('short_strike','—')}", lot_str, sp_s, exp,
+                          [f"SELL {verb}", f"{name} {p.get('short_strike','—')}", und_s, lot_str, sp_s, exp,
                            f"credit Rs {credit*qty:,.0f}", status], fg=QColor(RED))
             # Row 2 — BUY the far leg (the hedge) — AMOUNT here = total MARGIN required (= max loss)
             self._set_row(table, rB,
-                          [f"BUY {verb}", f"{name} {p.get('long_strike','—')}  (hedge)", lot_str, lp_s, exp,
+                          [f"BUY {verb}", f"{name} {p.get('long_strike','—')}  (hedge)", "", lot_str, lp_s, exp,
                            f"margin Rs {cap:,.0f}", pnl], fg=QColor(GREEN))
-            self._color_cell(table, rS, 6, self._status_color(status))     # STATUS on the SELL row
+            self._color_cell(table, rS, 7, self._status_color(status))     # STATUS on the SELL row
+            if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)) and _sig:
+                _g = abs((_liv - _sig) / _sig * 100)
+                self._color_cell(table, rS, 2, QColor(RED) if _g >= 1.0 else
+                                 QColor(AMBER) if _g >= 0.5 else QColor(TEXT_DIM))
             if pnl != "—":
-                self._color_cell(table, rB, 6, QColor(GREEN) if pnl_pts > 0 else
+                self._color_cell(table, rB, 7, QColor(GREEN) if pnl_pts > 0 else
                                  QColor(RED) if pnl_pts < 0 else QColor(TEXT_DIM))   # P&L on the BUY row
         self._fit_table(table)
 
@@ -1813,6 +1854,22 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             net_pct = (net_rs / cap * 100) if cap else None
             def money(x): return f"Rs {x:+,.0f}" if x is not None else "—"
             def price(x): return f"Rs {x:.1f}" if x is not None else "—"
+            # SIGNAL price -> LIVE price for the underlying. A wide gap means the breakout was read
+            # off a price the market has since left behind (the GRASIM failure), so it is shown on
+            # the trade itself rather than only in the log.
+            _sig = p.get("signal_px"); _liv = None
+            try:
+                from engine.data_utils import todays_close as _tc
+                _liv, _ = _tc((p.get("symbol") or p.get("index") or "") + ".NS")
+            except Exception:
+                pass
+            if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)) and _sig:
+                _gp = (_liv - _sig) / _sig * 100
+                und_s = f"{_sig:,.0f}→{_liv:,.0f} ({_gp:+.1f}%)"
+            elif isinstance(_sig, (int, float)):
+                und_s = f"sig {_sig:,.0f}"
+            else:
+                und_s = f"entry {p.get('entry_spot'):,.0f}" if p.get("entry_spot") else "—"
             rS, rB = 2 * i, 2 * i + 1
             # LEG carries the option TYPE (CE/PE) so it's never truncated by a long stock name.
             # Row 1 — SELL leg (the short you sold)

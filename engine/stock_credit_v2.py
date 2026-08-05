@@ -19,6 +19,7 @@ import json
 import logging
 from datetime import datetime, date, timedelta
 
+from engine import config
 from engine.config import (
     IST, DATA_DIR, UNIVERSE, STOCK_CREDIT_ENABLED, STOCK_CREDIT_DONCHIAN, STOCK_CREDIT_MIN_DTE,
     STOCK_CREDIT_SHORT_OFFSET, STOCK_CREDIT_WIDTH, STOCK_CREDIT_MIN_CW, STOCK_CREDIT_MIN_PREM,
@@ -111,7 +112,13 @@ UNION_DCS = (5, 10, 15, 20)   # UNION scanner (user-approved 2026-07-09): all fo
                               # — +34% trades at DC10 quality. See UNION_DONCHIAN_FREQUENCY.md.
 
 def _todays_breakout(ticker: str):
-    """Returns (direction, dc_window) if ANY union window broke today, else None."""
+    """Returns (direction, dc_window, signal_price, price_source) if ANY union window broke today.
+
+    The last two are surfaced so the UI can SHOW which price the signal was computed on. On
+    4-Aug-2026 a bear-call fired on GRASIM the day AFTER its breakout, because the scan silently
+    read a stale bar; nothing on screen could have revealed that. Now the watchlist and PM
+    DECISIONS print the signal price beside the live price, so a mismatch is visible at a glance.
+    """
     start = (date.today() - timedelta(days=max(UNION_DCS) * 3 + 25)).isoformat()
     df = fetch_upstox_historical(ticker, unit="days", interval=1,
                                  from_date=start, to_date=date.today().isoformat())
@@ -142,9 +149,9 @@ def _todays_breakout(ticker: str):
         hi = float(prior["High"].rolling(dcw).max().iloc[-1])
         lo = float(prior["Low"].rolling(dcw).min().iloc[-1])
         if c > hi:
-            best = ("LONG", dcw)
+            best = ("LONG", dcw, round(c, 2), _src)
         elif c < lo:
-            best = ("SHORT", dcw)
+            best = ("SHORT", dcw, round(c, 2), _src)
         else:
             break                    # this window didn't break → no larger one will either
     return best
@@ -194,13 +201,25 @@ def build_watchlist() -> dict:
                 bk = None
             if not bk:
                 continue
-            bdir, dcw = bk
+            bdir, dcw, sig_px, sig_src = bk
             sym = tk.replace(".NS", "")
             opt = "CE" if bdir == "LONG" else "PE"
             side = "BEAR_CALL" if opt == "CE" else "BULL_PUT"
             row = {"sym": sym, "dir": bdir, "dc": dcw, "side": side,
-                   "cw": None, "prem": None, "spread": None, "oi": None, "gate": "BREAKOUT"}
+                   "cw": None, "prem": None, "spread": None, "oi": None, "gate": "BREAKOUT",
+                   # WHAT THE SIGNAL WAS COMPUTED ON, shown next to the live price so a
+                   # GRASIM-style stale-price signal is visible instead of silent.
+                   "signal_px": sig_px, "signal_src": sig_src,
+                   # Is that price the AUCTION close — the official EOD price for an F&O stock?
+                   # True once CAS matching is done (config.CAS_END) and the price came from the
+                   # intraday series, whose last bar is where the auction print lands. Before that
+                   # it is just the latest continuous print and the official close does not exist.
+                   "signal_auction": bool(sig_src == "intraday"
+                                          and datetime.now(IST).strftime("%H:%M") >= config.CAS_END)}
             spot = _spot(tk)
+            row["live_px"] = round(spot, 2) if spot else None
+            if spot and sig_px:
+                row["px_gap_pct"] = round((spot - sig_px) / sig_px * 100, 2)
             legs = _pick_legs(tk, spot, opt) if spot else None
             if not legs:
                 row["gate"] = "NO_STRIKE"; rows.append(row); continue
@@ -330,7 +349,7 @@ def scan_signals() -> list:
             bk = _todays_breakout(ticker)
             if not bk:
                 continue
-            bdir, dcw = bk
+            bdir, dcw, sig_px, sig_src = bk
             spot = _spot(ticker)
             if not spot:
                 continue
@@ -379,6 +398,10 @@ def scan_signals() -> list:
             pos = {
                 "id": f"{sym}-{today.isoformat()}", "symbol": sym, "breakout_dir": bdir, "dc": dcw, "side": side,
                 "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
+                # THE PRICE THE SIGNAL WAS COMPUTED ON, and where it came from. Recorded so the UI
+                # can show it beside the live price: on 4-Aug-2026 a bear-call fired on GRASIM the
+                # day after its breakout off a stale bar, and nothing on screen could reveal it.
+                "signal_px": sig_px, "signal_src": sig_src,
                 "short_key": short["key"], "short_strike": short["strike"],
                 "long_key": long["key"], "long_strike": long["strike"],
                 "width_pts": int(width_pts), "lot": lot, "num_lots": num_lots, "qty": qty,

@@ -39,9 +39,14 @@ from engine.config import DATA_DIR, IST
 logger = logging.getLogger(__name__)
 
 REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-SNAP_DIR = os.path.join(DATA_DIR, "config_snapshots")
+# ABSOLUTE paths, always. config.DATA_DIR is RELATIVE ("data/..."), so it resolves against the
+# caller's cwd — a ledger run from anywhere but the repo root silently wrote to a different
+# engine.db and its history vanished (observed 5-Aug-2026). A ledger that loses history is worse
+# than none, so anchor everything to the repo root regardless of where the process was started.
+_DATA = DATA_DIR if os.path.isabs(DATA_DIR) else os.path.join(REPO_ROOT, DATA_DIR)
+SNAP_DIR = os.path.join(_DATA, "config_snapshots")
 CHANGELOG = os.path.join(REPO_ROOT, "CONFIG_CHANGELOG.md")
-DB_PATH = os.path.join(DATA_DIR, "engine.db")
+DB_PATH = os.path.join(_DATA, "engine.db")
 
 # Values that are not tunables and would make every snapshot look "changed".
 _SKIP = {"IST", "DATA_DIR", "LOG_DIR", "BASE_DIR", "REPO_ROOT"}

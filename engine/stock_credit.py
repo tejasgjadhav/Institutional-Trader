@@ -29,6 +29,10 @@ from engine.instruments import to_instrument_key
 
 logger = logging.getLogger(__name__)
 
+# {ticker: (signal_price, source)} from the most recent breakout check — read by the UI so the
+# price a signal was computed on is visible next to the live price (GRASIM lesson, 2026-08-05).
+_LAST_SIGNAL_PX = {}
+
 BOOK_PATH = os.path.join(DATA_DIR, "stock_credit_positions.json")
 SNAP_PATH = os.path.join(DATA_DIR, "stock_credit.json")
 
@@ -105,6 +109,7 @@ def _todays_breakout(ticker: str):
     # daily bar (yesterday) belongs IN the lookback, not outside it.
     from engine.data_utils import todays_close
     c, _src = todays_close(ticker)
+    _LAST_SIGNAL_PX[ticker] = (c, _src)
     if c is None:
         logger.warning(f"stock_credit: no CURRENT-day close for {ticker} — skipped, not scanned "
                        f"on a stale bar")
