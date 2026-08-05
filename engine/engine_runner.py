@@ -897,6 +897,12 @@ class EngineRunner:
             from engine import config as _c
             if not getattr(_c, "SIGNAL_RECHECK_ENABLED", False) or now.weekday() >= 5:
                 return
+            # TRADING DAYS ONLY (user, 2026-08-05). A weekday check alone still fires on exchange
+            # holidays; market_is_trading_today() is the same holiday-aware predicate the scan uses.
+            from engine.data_utils import market_is_trading_today
+            if not market_is_trading_today():
+                logger.info("morning recheck: exchange holiday — no message")
+                return
             h, m = map(int, _c.SIGNAL_RECHECK_AT.split(":"))
             if (now.hour * 60 + now.minute) < h * 60 + m:
                 return
