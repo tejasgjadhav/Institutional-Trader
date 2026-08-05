@@ -34,16 +34,26 @@ logger = logging.getLogger(__name__)
 
 STATE_PATH = os.path.join(DATA_DIR, "recheck_notified.json")
 
+
+def _v2_tp() -> float:
+    """v2's take-profit lives in stock_credit_v2.py (0.50), not config — read it from the module
+    that owns it rather than restating the number here. Nothing in this file is a hardcoded
+    trading parameter: every threshold, time and level comes from config, the book, or a live
+    quote (user standard, 2026-08-05)."""
+    from engine import stock_credit_v2
+    return float(stock_credit_v2.STOCK_CREDIT_TAKE_PROFIT)
+
 # label -> (positions file, c/w band getter, take-profit getter). The TP differs per book — v2
 # books at 50% of credit, v1 and v0 at 40% — so it is read per book, never inferred from the label.
 BOOKS = [
     ("Stock Credit v2 UNION", "stock_credit_v2_positions.json",
-     lambda: (config.STOCK_CREDIT_MIN_CW, None), lambda: 0.50),
+     lambda: (config.STOCK_CREDIT_MIN_CW, None), lambda: _v2_tp(), "STOCK CREDIT v2 UNION"),
     ("Stock Credit v1", "stock_credit_positions.json",
-     lambda: (config.STOCK_CREDIT_MIN_CW, None), lambda: config.STOCK_CREDIT_TAKE_PROFIT),
+     lambda: (config.STOCK_CREDIT_MIN_CW, None), lambda: config.STOCK_CREDIT_TAKE_PROFIT,
+     "STOCK CREDIT v1"),
     ("Stock Credit v0", "stock_credit_v0_positions.json",
      lambda: (config.STOCK_CREDIT_V0_MIN_CW, config.STOCK_CREDIT_V0_MAX_CW),
-     lambda: config.STOCK_CREDIT_V0_TAKE_PROFIT),
+     lambda: config.STOCK_CREDIT_V0_TAKE_PROFIT, "STOCK CREDIT v0 (c/w 0.35-0.40)"),
 ]
 
 
@@ -84,42 +94,69 @@ def _check(p: dict, lo: float, hi):
     if cw < lo or (hi is not None and cw >= hi):
         band = f"{lo:.2f}-{hi:.2f}" if hi is not None else f"≥{lo:.2f}"
         return False, d, f"c/w {cw:.2f} outside {band}"
+    # INTRINSIC vs TIME VALUE. The c/w gate is a proxy for elevated post-breakout IV, and that is
+    # only what it measures while the short strike is OTM. Once spot trades through the strike the
+    # extra credit is INTRINSIC — money paid for a move that has already gone against the fade —
+    # and c/w climbs toward 1.0 with no edge in it at all. So the message must never quote a rising
+    # c/w without also quoting the time value, which is the part the edge actually lives in.
+    # (GRASIM, 5-Aug-2026: c/w 0.41 -> 0.486 while time value fell Rs24.85 -> Rs12.58.)
     if spot:
+        if p["side"] == "BEAR_CALL":
+            intr = max(0.0, spot - p["short_strike"]) - max(0.0, spot - p["long_strike"])
+        else:
+            intr = max(0.0, p["short_strike"] - spot) - max(0.0, p["long_strike"] - spot)
+        intr = max(0.0, intr)
+        d["intrinsic"] = round(intr, 2)
+        d["time_value"] = round(credit - intr, 2)
+        # at entry the strike was OTM by construction, so the entry credit was ALL time value
+        d["entry_tv"] = p.get("credit")
         otm = (spot < p["short_strike"]) if p["side"] == "BEAR_CALL" else (spot > p["short_strike"])
         if not otm:
-            return False, d, f"spot {spot:,.0f} through the short strike {p['short_strike']:,.0f}"
-    return True, d, ""
+            thru = abs(spot - p["short_strike"])
+            why = (f"spot {spot:,.2f} is ₹{thru:,.2f} THROUGH the short strike "
+                   f"{p['short_strike']:,.0f}. The higher c/w ({cw:.3f} vs "
+                   f"{p.get('credit_width')} at entry) is INTRINSIC, not vol — time value has "
+                   f"fallen from ₹{d['entry_tv']} to ₹{d['time_value']}")
+            return False, d, why
+    ok_why = "every gate still passes on the same strikes"
+    if spot:
+        side_word = "below" if p["side"] == "BEAR_CALL" else "above"
+        ok_why += (f" — spot {spot:,.2f} still {side_word} the short strike "
+                   f"{p['short_strike']:,.0f}, so the credit is still time value "
+                   f"(₹{d.get('time_value', credit):,.2f} of ₹{credit:,.2f})")
+    return True, d, ok_why
 
 
 def build_message():
     """(text, n_still_valid, dropped) — text is '' when nothing from the last session survives."""
     books = []
-    for label, fname, band, tp in BOOKS:
+    for label, fname, band, tp, eng in BOOKS:
         path = os.path.join(DATA_DIR, fname)
         if not os.path.exists(path):
             continue
         try:
-            books.append((label, band, tp, json.load(open(path)) or []))
+            books.append((label, band, tp, eng, json.load(open(path)) or []))
         except Exception:
             continue
     if not books:
         return "", 0, []
-    day = _prev_entry_date([(l, None, ps) for l, _b, _t, ps in books])
+    day = _prev_entry_date([(l, None, ps) for l, _b, _t, _e, ps in books])
     if not day:
         return "", 0, []
 
     ok_rows, bad_rows = [], []
-    for label, band, tp_get, ps in books:
+    for label, band, tp_get, eng, ps in books:
         lo, hi = band()
         for p in ps:
             if p.get("entry_date") != day or p.get("status") != "OPEN":
                 continue
             good, d, why = _check(p, lo, hi)
-            (ok_rows if good else bad_rows).append((label, p, d, why, tp_get))
+            (ok_rows if good else bad_rows).append((label, p, d, why, tp_get, eng))
     if not ok_rows and not bad_rows:
         return "", 0, []
 
-    stamp = datetime.now(IST).strftime("%H:%M")
+    # the SCHEDULED hour, not the wall clock — a manual run must still read 09:30
+    stamp = getattr(config, "SIGNAL_RECHECK_AT", "09:30")
     fmt_d = lambda s: datetime.strptime(s, "%Y-%m-%d").strftime("%d-%b-%Y") if s else "?"
     g = lambda x: ("%g" % x) if isinstance(x, (int, float)) else "?"
 
@@ -141,42 +178,34 @@ def build_message():
         f"on the SAME strikes as the {fmt_d(day)} signal.",
         "",
     ]
-    # ---- the ones you should NOT buy today, and why ----
-    for label, p, d, why, _tp in bad_rows:
+    # ONE template for every row (user, 2026-08-05). The five lines are identical whichever way
+    # the re-check lands; only the VERDICT line and the "Reason:" text change, and both of those
+    # come straight from the scan output. Do-not-buys list first so they are read first.
+    def _row(verdict, label, p, d, why, tp_get=None):
         h1, h2 = _head(label, p)
-        lines += [f"⛔ <b>PLEASE DO NOT BUY TODAY</b> — {h1}", h2,
-                  f"<b>Reason: {html.escape(why)}.</b>"]
-        if d.get("cw") is not None:
-            lines.append(f"Now: credit ₹{d['credit']} (c/w {d['cw']}) · premium ₹{d['short_prem']:.0f}"
-                         f" · bid-ask {d['spread']}% · OI {int(d['oi']):,}"
-                         + (f" · spot {d['spot']:,.0f}" if d.get("spot") else ""))
-        lines.append(f"<i>Yesterday it was credit ₹{p.get('credit')} (c/w {p.get('credit_width')}) — "
-                     f"that entry no longer exists at these levels.</i>")
-        lines.append("")
-    # ---- the ones that still fit ----
-    for label, p, d, _why, tp_get in ok_rows:
-        h1, h2 = _head(label, p)
-        w = p.get("width_pts") or 0
-        lot = p.get("lot") or 0
-        lines += [f"✅ <b>STILL FITS — you can go ahead</b> — {h1}", h2,
-                  f"Credit yesterday ₹{p.get('credit')} (c/w {p.get('credit_width')}) · "
-                  f"now ₹{d['credit']} (c/w {d['cw']})",
-                  f"Every gate passes: premium ₹{d['short_prem']:.0f} · bid-ask {d['spread']}% · "
-                  f"OI {int(d['oi']):,}"
-                  + (f" · spot {d['spot']:,.0f}, short strike still OTM" if d.get("spot") else "")]
-        if isinstance(w, (int, float)) and lot:
-            tp = tp_get()
-            lines += [f"🎯 Target: book {tp*100:.0f}% of credit ≈ +₹{tp*d['credit']*lot:,.0f}/lot",
-                      f"Max profit/lot ₹{d['credit']*lot:,.0f} · "
-                      f"Max loss/lot ₹{(w-d['credit'])*lot:,.0f}"]
-        lines.append("")
-    lines += [
-        "<i>Reminder only. The paper book already holds yesterday's fill at yesterday's price — "
-        "nothing here is written to the trade log or any book, and the tracked result will follow "
-        "the original signal either way.</i>",
-        "⚠️ Tejas Jadhav is NOT a SEBI-registered research analyst/investment advisor. "
-        "Educational signals · invest at your own risk · consult a SEBI-registered advisor.",
-    ]
+        out = [f"{verdict} — {h1}", h2, f"<b>Reason: {html.escape(why)}.</b>"]
+        # The "Now:", "Of that credit:" and "Yesterday it was" lines were dropped (user,
+        # 2026-08-05) — every number that mattered is already in the Reason line above, so they
+        # only repeated it.
+        if tp_get:
+            w, lot = p.get("width_pts") or 0, p.get("lot") or 0
+            if isinstance(w, (int, float)) and lot:
+                tp = tp_get()
+                out.append(f"🎯 Target: book {tp*100:.0f}% of credit ≈ +₹{tp*d['credit']*lot:,.0f}/lot"
+                           f" · Max profit/lot ₹{d['credit']*lot:,.0f}"
+                           f" · Max loss/lot ₹{(w-d['credit'])*lot:,.0f}")
+        out.append("")
+        return out
+
+    for label, p, d, why, _tp, _e in bad_rows:
+        lines += _row("⛔ <b>PLEASE DO NOT BUY TODAY</b>", label, p, d, why)
+    for label, p, d, why, tp_get, _e in ok_rows:
+        lines += _row("✅ <b>YOU CAN BUY TODAY</b>", label, p, d, why, tp_get)
+    # Only the standing disclaimer closes this message (user, 2026-08-05). The "Reminder only"
+    # note and the "Why this signal" evidence block were dropped as noise — this is a re-check of a
+    # call already sent, not a new signal, so the evidence was a repeat of yesterday's message.
+    from engine.engine_runner import EngineRunner as _ER
+    lines.append(_ER._TG_DISCLAIMER)
     return "\n".join(lines), len(ok_rows), bad_rows
 
 

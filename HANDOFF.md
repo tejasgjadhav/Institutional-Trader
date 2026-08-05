@@ -1,5 +1,33 @@
 # Handoff — institutional-trader
 
+## DONE (2026-08-05) — 09:30 morning re-check LIVE (engine/signal_recheck.py)
+
+Read-only re-validation of the PREVIOUS session's stock-credit calls. Writes NO book, NO trade-log
+row — only `data/recheck_notified.json` (per-day de-dup). Fires from `engine_runner._morning_recheck`
+in `cycle()`, gated on `config.SIGNAL_RECHECK_AT` (09:30), `SIGNAL_RECHECK_ENABLED`, weekday AND
+`market_is_trading_today()` (holiday gate added on user note — weekday alone was not enough).
+
+**Gates re-run live on the SAME strikes:** two-sided market both legs · premium ≥ ₹50 · bid-ask ≤ 6% ·
+OI ≥ 100 · c/w inside that book's band · **short strike still OTM vs live spot** (new; no scan
+counterpart — overnight a gap through the strike turns the fade into an already-losing trade).
+
+**ONE template for both verdicts** (user): same 5 lines, only the verdict line + "Reason:" text
+change, both from scan output; buy case gets one extra target line. Closes with the SAME separator +
+"📚 Why this signal" block (pulled from `EngineRunner._TG_ANALYSIS`, so it cannot drift) + disclaimer.
+Stamp reads `SIGNAL_RECHECK_AT`, not the wall clock.
+
+⚠ **KNOWN: today's 09:30 send went out in the OLD template** — the engine fired at 09:30 before the
+restart picked up the unified template, and the de-dup then blocked a resend. User was offered a
+resend and said do not push. From 6-Aug it uses the unified template automatically.
+
+**Why c/w ALONE is not enough (the GRASIM lesson, 5-Aug):** c/w rose 0.41 → 0.486 and looked better,
+but spot had gone ₹16.60 THROUGH the 3,140 short strike. Of the ₹29.17 credit only ₹12.58 was time
+value vs ₹24.85 at entry — **c/w rose 18% while the actual edge input halved**. Deeper ITM drives c/w
+toward 1.0 with no edge at all. The gate is a proxy for elevated IV *on an OTM strike*; it stops
+meaning that the moment the strike is ITM. This is why the OTM gate exists — do not remove it.
+
+---
+
 ## IN PROGRESS (2026-08-05) — 09:30 morning re-check: message covers BUY *and* DON'T-BUY
 
 `engine/signal_recheck.py` (read-only; never writes the trade log or any book). Re-runs every gate
