@@ -122,3 +122,51 @@ that caused the SENSEX ticker bug the same morning.
 - [Business Standard — NSE F&O market timing change from 3 Aug 2026](https://www.business-standard.com/markets/news/nse-f-o-market-timing-change-here-s-what-new-timings-are-from-august-3-2026-126060101006_1.html)
 - [Closing Auction Session (CAS) explained — NSE/BSE closing price rules 2026](https://www.sahi.com/blogs/closing-auction-session-cas-explained-nse-bse-closing-price-rules-2026)
 - [Outlook Business — SEBI closing auction session, new timings from August 3](https://www.outlookbusiness.com/markets/sebi-closing-auction-session-new-stock-market-timings-from-august-3)
+
+## VERIFIED 5-Aug-2026 — the price the 15:36 scan reads IS the official close
+
+The open question this change rested on: does the daily bar our scan reads at 15:36 carry the CAS
+equilibrium price, or a pre-auction print? If the latter, the breakout input would not be the close
+the backtests were built on and the whole retiming would be built on sand. Settled empirically.
+
+**Test 1 — the feed's daily-close construction changed on 3-Aug.** Daily close vs the last 5-min
+intraday print, same day, 6 liquid names:
+
+| session | daily close == last intraday print |
+|---|---|
+| 30-Jul (pre) | **0 / 6** |
+| 31-Jul (pre) | **0 / 6** |
+| 3-Aug (post) | **5 / 6** |
+| 4-Aug (post) | **6 / 6** |
+
+Before the change the official close was a 15:00–15:30 VWAP, so it necessarily differed from any
+single print. After, it is a single auction crossing — which for liquid names lands on the last
+continuous price. The change is visible in the data on exactly the right date.
+
+**Test 2 — against the authority.** NSE bhavcopy (`BhavCopy_NSE_CM_..._20260804_F_0000.csv.zip`)
+for 4-Aug vs the Upstox daily bar we scan:
+
+| | Upstox daily | NSE bhavcopy | diff |
+|---|---|---|---|
+| GRASIM | 3,138.00 | 3,138.00 | 0.00 |
+| TCS | 2,460.00 | 2,460.00 | 0.00 |
+| RELIANCE | 1,290.90 | 1,290.90 | 0.00 |
+| SBIN | 1,042.70 | 1,042.70 | 0.00 |
+| INFY | 1,167.50 | 1,167.50 | 0.00 |
+| ICICIBANK | 1,454.60 | 1,454.60 | 0.00 |
+
+**Exact to the paisa, 6/6.** The number the 15:36 scan reads is the official close — the same field
+the bhavcopy backtests were built on. The Donchian input is unchanged in kind.
+
+**Consequence — the retiming CLOSED a gap, it did not open one.** The old 15:10 scan read a price
+that was NOT the close and disagreed with it on about a third of names (32 vs 46 breakouts, median
+drift 0.68%). Live had silently drifted from the backtest; 15:36 restores the match.
+
+**What remains genuinely open, and is NOT resolved by the above:**
+1. **The close's construction changed mid-series** — VWAP before 3-Aug, auction after. Test 1 shows
+   these are different objects. Whether post-breakout reversion behaves identically on auction
+   closes is untested and, on 3 sessions, untestable. Monitor; do not assume.
+2. **Execution is dearer.** Spreads at 15:36–15:40 run 2–4% against the ~1% the cost model assumes,
+   so realised net per trade should come in below backtest even with the signal set correct.
+3. **+44% more signals at worse fills** — the net of (1) more trades and (2) costlier entry is not
+   yet measured either way.
