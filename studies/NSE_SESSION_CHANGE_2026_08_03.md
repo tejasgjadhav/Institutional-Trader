@@ -170,3 +170,123 @@ drift 0.68%). Live had silently drifted from the backtest; 15:36 restores the ma
    so realised net per trade should come in below backtest even with the signal set correct.
 3. **+44% more signals at worse fills** — the net of (1) more trades and (2) costlier entry is not
    yet measured either way.
+
+---
+
+# PROS AND CONS OF THE 15:36 RETIMING — a fair accounting (5-Aug-2026)
+
+Written because the retiming was justified on signal fidelity alone, and the cost side had been
+noted but never priced. Both are quantified here. The honest summary is that the change is
+**probably net positive and clearly correct in principle, but the size of the gain is unmeasured
+and v0 is close enough to break-even to matter.**
+
+## PRO 1 — the extra signals are not a new population. They are the one the backtest measured.
+
+This is the strongest argument and it was missed in the original write-up.
+
+Every v0/v1/v2 backtest defines a breakout on the **daily close**:
+
+```python
+c = cl[i]                                     # the DAILY CLOSE
+typ = "CE" if c > hi[i-dc:i].max() else ("PE" if c < lo[i-dc:i].min() else None)
+```
+
+and takes its entry premium from the option's **daily close** (`P["C"][di, si]` in-sample,
+`sp[0]` out-of-sample). So the population behind 84–87% win rates is *names that broke out on the
+close* — the "46" set, not the "32" set a 15:10 scan saw.
+
+**The old timing traded a biased ~70% subset of the validated population, and included one name
+(PNB) the close contradicted.** The +44% is therefore not new risk being taken on; it is recovery of
+signals the edge was measured on. That reframes the whole change: 15:36 is a *correction*, and the
+burden of proof runs the other way — 15:10 was the untested variant.
+
+*Limit:* the c/w ≥ 0.40 gate sits on top of the breakout, and whether the recovered names clear it
+at the same rate is unmeasured. Measured across the auction on 18 names, c/w moved only a point or
+two either way, which is weak evidence that the pass-rate is roughly stable.
+
+## PRO 2 — entry premium is now priced off the right underlying
+
+The backtest enters at the option's daily close, i.e. a premium corresponding to the **closing**
+underlying. A 15:15 fill was priced off an underlying a median **0.68%** away from where it closed,
+so the premium paid did not correspond to the premium the backtest assumed. A 15:36–15:40 fill is
+priced off the settled close. Strictly more faithful — though "enter at the daily close" remains an
+idealisation nobody can actually transact at, under either timing.
+
+## PRO 3 — settlement is now on the right price
+
+Independent of signals: the books had preferred live spot over the official close, so every expiry
+settled on a guaranteed pre-auction print. Now official-close-first. This is a pure correctness gain
+with no offsetting cost.
+
+## CON 1 — entry costs roughly double, and it is priced
+
+Spreads at 15:36–15:40 run **2–4%** against the **~1%/leg** the cost model `spf()` charges. On the
+4-Aug GRASIM trade (short ₹64.50, long ₹39.65, lot 250):
+
+| real spread | entry cost | model charged | extra per trade |
+|---|---|---|---|
+| 2% | ₹521 | ₹311 | **₹210** |
+| 3% | ₹781 | ₹311 | **₹470** |
+| 4% | ₹1,042 | ₹311 | **₹730** |
+
+At 3% that is **6% of v2's measured net per trade, 17% of v0's**.
+
+## The two effects together — how much signal gain is needed to break even
+
+| book | net/trade | at 2% spread | at 3% | at 4% |
+|---|---|---|---|---|
+| v2 | ₹7,831 | +2.8% | **+6.4%** | +10.3% |
+| v1 | ₹3,601 | +6.2% | **+15.0%** | +25.4% |
+| v0 | ₹2,808 | +8.1% | **+20.1%** | +35.1% |
+
+Against a measured **+44%** breakout gain, all three clear their break-even at every spread
+assumption. Modelled monthly, at a 3% spread:
+
+| book | before | +0% signals | +20% | +44% (measured) |
+|---|---|---|---|---|
+| v2 | ₹28,975 | ₹27,236 | ₹32,683 | **₹39,219** |
+| v1 | ₹43,212 | ₹37,572 | ₹45,086 | **₹54,104** |
+| v0 | ₹16,286 | ₹13,560 | ₹16,272 | **₹19,527** |
+
+Read the `+0%` column as the downside case: **if the extra breakouts do not survive the c/w gate,
+the retiming is a net LOSS** — −6% on v2, −13% on v1, −17% on v0. The whole benefit rests on the
+signal gain being real after gating.
+
+## CON 2 — the placement window is 3.5 minutes and unhedgeable
+
+Signals land ~15:36:30; derivatives shut 15:40. The underlying's cash session ended at 15:15, so
+between the signal and the close there is no way to hedge or leg in against stock. Mitigated by the
+15:17 watchlist naming candidates ~19 minutes ahead, and by the 09:30 re-check that re-validates a
+missed call the next morning — but a missed fill is a real, recurring cost that no backtest models.
+
+## CON 3 — the closing price changed construction mid-series
+
+Pre-3-Aug closes are a 15:00–15:30 VWAP; after, a single auction crossing. Visible in the data:
+daily close equalled the last intraday print **0/6** before the change and **11/12** after. Donchian
+bands built from VWAP closes and fed auction closes are not strictly the same object. Untested, and
+on a handful of sessions untestable.
+
+## CON 4 — the headline number is one day
+
+**+44% is a single session (3-Aug), 113 names.** It is a breakout count, not a fired-signal count.
+Everything above scales off it, so everything above inherits its fragility.
+
+## Verdict
+
+Keep the retiming. It is right in principle regardless of the arithmetic — the old scan was
+demonstrably unfaithful to the validated construct, and PRO 3 is a pure correctness fix. On the
+numbers it also looks net positive for all three books, with a comfortable margin on v2 and a
+thinner one on v0.
+
+**But do not bank the +39k/+54k figures.** They rest on a one-day breakout count surviving the c/w
+gate at an unchanged rate, which is exactly the thing not yet measured. The `+0%` column is the
+scenario that must be ruled out, and only forward data can do it.
+
+**What to measure, in priority order:**
+1. **Fired signals per month, before vs after.** The single number that decides this. Baseline: v2
+   3.7/mo, v1 12/mo, v0 5.8/mo.
+2. **Realised entry slippage vs the `spf()` model**, per leg, on every fill. Confirms which column
+   of the cost table is real.
+3. **Missed fills** — signals that fired but could not be placed inside 15:36–15:40.
+4. Win rate of close-only breakouts (the recovered 15) vs those already broken by 15:10 — tests
+   whether the recovered population behaves like the rest.
