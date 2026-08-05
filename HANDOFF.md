@@ -31,11 +31,19 @@ INDEX and failed OOS, but never for the stock books. Cheap to test on existing d
 
 > **DONE (2026-08-06):** entry-time sweep + call-side decay profile, NIFTY + SENSEX, 3/4/5-Aug →
 > [`studies/CAS_NIFTY_SENSEX_DATA/ENTRY_TIME_AND_DECAY.md`](studies/CAS_NIFTY_SENSEX_DATA/ENTRY_TIME_AND_DECAY.md).
-> Result: decay is flat noise 09:30–15:15 and the whole day's bleed (−72 premium points, 4 of 5
-> non-expiry sessions) lands in the 15:15→close auction window. **No entry time gained on any
-> non-expiry session**; best in the grid is +₹91/lot, negative after costs. Only the 4-Aug 0DTE
-> session paid. Discard the 09:15 row — the opening-auction print is recorded as the bar open and
-> sits at the bar low, so it is not transactable.
+> Result: **No entry time gained on any non-expiry session**; best in the grid is +₹91/lot, negative
+> after costs. Only the 4-Aug 0DTE session paid. Discard the 09:15 row — the opening-auction print
+> is recorded as the bar open and sits at the bar low, so it is not transactable.
+>
+> ⚠ **The first version of that study over-stated auction decay (−72 pts) by measuring against the
+> INDEX. Corrected in-place the same day.** The index is unusable as an underlying after 15:15: it
+> freezes at its last continuous value, then prints the auction equilibrium as one tick at 15:29.
+> On NIFTY 3-Aug that print (24774.30) sat **190 points above the put-call-parity forward**
+> (24583.7) — the options never priced it. 4-Aug and 5-Aug the print did match the forward.
+> **Always derive the post-15:15 underlying from parity on the recorded CE/PE pair, never the
+> index.** Correct answer: ATM time value is FLAT 09:30→15:00 (96–105% of the 09:30 level), bottoms
+> at **15:30 at 83%**, recovers to 88% by 15:40 — about −21 premium points, not −72. All P&L numbers
+> were computed from traded premiums and are unaffected.
 >
 > **Two bugs found and FIXED in `engine/cas_recorder.py` while doing this** — see the CAS section
 > below. One had already corrupted a DB row; it is repaired and verified.

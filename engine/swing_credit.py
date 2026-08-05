@@ -114,10 +114,10 @@ def _todays_breakout(index: str):
     # The band below therefore drops its .shift(1): `prior` already excludes today, so the last
     # daily bar (yesterday) belongs IN the lookback, not outside it.
     from engine.data_utils import todays_close
-    c, _src = todays_close(ticker)
-    _LAST_SIGNAL_PX[ticker] = (c, _src)
+    c, _src = todays_close(index)
+    _LAST_SIGNAL_PX[index] = (c, _src)
     if c is None:
-        logger.warning(f"swing: no CURRENT-day close for {ticker} — skipped, not scanned on a "
+        logger.warning(f"swing: no CURRENT-day close for {index} — skipped, not scanned on a "
                        f"stale bar")
         return None
     _today = date.today()
@@ -148,6 +148,10 @@ def _todays_breakout(index: str):
 
     prior_hi = float(prior["High"].rolling(SWING_DONCHIAN).max().iloc[-1])
     prior_lo = float(prior["Low"].rolling(SWING_DONCHIAN).min().iloc[-1])
+    if c > prior_hi and not _dir_ok("LONG"):
+        return None
+    if c < prior_lo and not _dir_ok("SHORT"):
+        return None
     if c > prior_hi:
         # UP-break → fade with a bear-call. STRUCTURALLY loses (−5.0%, 48% win): fading the
         # index's upward drift. Gated OFF by default (SWING_FADE_DOWN_ONLY).
@@ -250,6 +254,11 @@ def scan_swing_signals() -> list:
                 "id": f"{index}-{today.isoformat()}",
                 "index": index, "breakout_dir": bdir, "side": side,
                 "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
+                # The price the breakout was computed on, so the UI can show it next to the live
+                # price. v1 is the book GRASIM actually sits in — the guard-rail was missing on
+                # precisely the book the incident happened in (found in the 5-Aug bug sweep).
+                "signal_px": (_LAST_SIGNAL_PX.get(index) or (None, None))[0],
+                "signal_src": (_LAST_SIGNAL_PX.get(index) or (None, None))[1],
                 "short_key": short["key"], "short_strike": int(short["strike"]),
                 "long_key": long["key"], "long_strike": int(long["strike"]),
                 "width_pts": int(width_pts), "lot": lot, "num_lots": num_lots, "qty": qty,

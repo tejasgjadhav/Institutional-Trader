@@ -265,6 +265,11 @@ def scan_signals() -> list:
             pos = {
                 "id": f"{sym}-{today.isoformat()}", "symbol": sym, "breakout_dir": bdir, "side": side,
                 "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
+                # The price the breakout was computed on, so the UI can show it next to the live
+                # price. v1 is the book GRASIM actually sits in — the guard-rail was missing on
+                # precisely the book the incident happened in (found in the 5-Aug bug sweep).
+                "signal_px": (_LAST_SIGNAL_PX.get(ticker) or (None, None))[0],
+                "signal_src": (_LAST_SIGNAL_PX.get(ticker) or (None, None))[1],
                 "short_key": short["key"], "short_strike": short["strike"],
                 "long_key": long["key"], "long_strike": long["strike"],
                 "width_pts": int(width_pts), "lot": lot, "num_lots": num_lots, "qty": qty,

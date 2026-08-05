@@ -171,7 +171,10 @@ def todays_close(ticker: str):
     except Exception as e:
         logger.debug(f"todays_close intraday {sym}: {e}")
     try:
-        df = fetch_upstox_historical(sym + ".NS", unit="days", interval=1,
+        # Use the ticker AS GIVEN, not sym+".NS": stock callers pass "GRASIM.NS", index callers
+        # pass "NIFTY". Re-appending ".NS" produced "NIFTY.NS", which has no instrument key, and
+        # logged a warning on every index call (found 5-Aug).
+        df = fetch_upstox_historical(ticker, unit="days", interval=1,
                                      from_date=(today - timedelta(days=7)).isoformat(),
                                      to_date=today.isoformat())
         if df is not None and not df.empty and df.sort_index().index[-1].date() == today:

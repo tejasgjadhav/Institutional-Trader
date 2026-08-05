@@ -34,7 +34,11 @@ from engine.config import DATA_DIR, IST
 logger = logging.getLogger(__name__)
 
 OBS_DIR = os.path.join(DATA_DIR, "session_obs")
-_state = {"day": None, "done": set()}
+# `targets` is resolved ONCE per session and held. It used to be rebuilt every sample, which
+# broke the measurement two ways (found 5-Aug): when spot moved the ATM shifted and the series
+# silently switched to a DIFFERENT contract, and the 15:17 watchlist rebuild made names vanish
+# mid-window. Neither is a market event; both are the instrument changing under the measurement.
+_state = {"day": None, "done": set(), "targets": None}
 
 
 def _mins(hhmm: str) -> int:
@@ -148,7 +152,9 @@ def _targets() -> list:
 
 def sample(tag: str) -> int:
     """Take ONE snapshot of the whole candidate book and append it. Returns rows written."""
-    targets = _targets()
+    if _state.get("targets") is None:
+        _state["targets"] = _targets()
+    targets = _state["targets"]
     if not targets:
         logger.info("session_observer[%s]: no watchlist candidates to observe", tag)
         return 0
@@ -202,21 +208,21 @@ def observe(now) -> None:
             return
         today = date.today().isoformat()
         if _state["day"] != today:
-            _state.update(day=today, done=set())
+            _state.update(day=today, done=set(), targets=None)
         m = now.hour * 60 + now.minute
         base = _mins(getattr(config, "SESSION_OBS_BASELINE", "14:45"))
         lo = _mins(getattr(config, "SESSION_OBS_FROM", "15:15"))
         hi = _mins(getattr(config, "SESSION_OBS_TO", "15:40"))
         step = max(1, int(getattr(config, "SESSION_OBS_INTERVAL_SEC", 60)) // 60)
         if m == base and "baseline" not in _state["done"]:
-            _state["done"].add("baseline")
-            sample("baseline")                     # mid-session control: hedgeable, tight book
+            if sample("baseline"):                 # mid-session control: continuous, tight book
+                _state["done"].add("baseline")
             return
         if lo <= m <= hi and (m - lo) % step == 0:
             slot = f"w{m}"
             if slot not in _state["done"]:
-                _state["done"].add(slot)
-                sample(now.strftime("%H:%M"))
+                if sample(now.strftime("%H:%M")):
+                    _state["done"].add(slot)   # only on success — a transient quote failure retries
     except Exception as e:
         logger.warning("session_observer: %s", e)
 

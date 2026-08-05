@@ -901,7 +901,13 @@ class EngineRunner:
             # holidays; market_is_trading_today() is the same holiday-aware predicate the scan uses.
             from engine.data_utils import market_is_trading_today
             if not market_is_trading_today():
-                logger.info("morning recheck: exchange holiday — no message")
+                # market_is_trading_today() is TIME-gated 09:15-15:40 as well as calendar-gated, so
+                # it is False all evening on a perfectly normal trading day. Calling that "exchange
+                # holiday" logged nonsense every 5 minutes after the close (found 5-Aug). Only claim
+                # a holiday when the clock says we should be trading and the data says we are not.
+                _mkt_hours = self.agent.is_market_open()
+                logger.info("morning recheck: %s — no message",
+                            "exchange holiday" if _mkt_hours else "outside market hours")
                 return
             h, m = map(int, _c.SIGNAL_RECHECK_AT.split(":"))
             if (now.hour * 60 + now.minute) < h * 60 + m:

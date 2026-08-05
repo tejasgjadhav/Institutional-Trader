@@ -1608,14 +1608,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if not rows:
             table.setRowCount(1)
             self._set_row(table, 0, ["—", "no cycle yet — enters the first trading day after "
-                          "monthly expiry (NIFTY>200DMA), scan ~15:36", "—", "—", "—", "—", "WATCHING"],
+                          "monthly expiry (NIFTY>200DMA), scan ~15:36", "—", "—", "—", "—", "—", "WATCHING"],
                           fg=QColor(TEXT_DIM))
             self._fit_table(table); return
         table.setRowCount(len(rows))
         for i, p in enumerate(rows):
             status = p.get("status", "OPEN")
             if status in ("REGIME_OFF", "NO_CANDIDATES"):
-                self._set_row(table, i, ["—", p.get("order_label", ""), "—", "—",
+                self._set_row(table, i, ["—", p.get("order_label", ""), "—", "—", "—",
                                           p.get("expiry", "—"), "—", status], fg=QColor(TEXT_DIM))
                 continue
             pnl = p.get("pnl_pct")
@@ -1624,7 +1624,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             entry = p.get("entry_px")
             cur = p.get("cur_px")
             prem = f"in {entry} now {cur}" if entry and cur else (f"{entry}" if entry else "—")
-            vals = ["BUY FUT", p.get("order_label", p.get("symbol", "—")), "1 lot",
+            vals = ["BUY FUT", p.get("order_label", p.get("symbol", "—")), "—", "1 lot",
                     prem, p.get("expiry", "—"),
                     f"TP {p.get('tp_px','—')} / SL {p.get('sl_px','—')}",
                     stat_s if status != "OPEN" else f"OPEN {pnl_s} · d{p.get('sessions',0)}"]
@@ -1642,14 +1642,14 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if not rows:
             table.setRowCount(1)
             self._set_row(table, 0, ["—", "no cycle yet — enters the first trading day after "
-                          "monthly expiry (NIFTY>200DMA), scan ~15:36", "—", "—", "—", "—", "WATCHING"],
+                          "monthly expiry (NIFTY>200DMA), scan ~15:36", "—", "—", "—", "—", "—", "WATCHING"],
                           fg=QColor(TEXT_DIM))
             self._fit_table(table); return
         table.setRowCount(len(rows))
         for i, p in enumerate(rows):
             status = p.get("status", "OPEN")
             if status in ("REGIME_OFF", "NO_CANDIDATES"):
-                self._set_row(table, i, ["—", p.get("order_label", ""), "—", "—",
+                self._set_row(table, i, ["—", p.get("order_label", ""), "—", "—", "—",
                                           p.get("expiry", "—"), "—", status], fg=QColor(TEXT_DIM))
                 continue
             pnl = p.get("pnl_pct")
@@ -1708,7 +1708,16 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             _sig = p.get("signal_px"); _liv = None
             try:
                 from engine.data_utils import todays_close as _tc
-                _liv, _ = _tc((p.get("symbol") or p.get("index") or "") + ".NS")
+                # STOCKS ONLY. Index books (0DTE NIFTY/SENSEX, swing) carry the index under
+                # "symbol" too, and "NIFTY.NS" has no NSE_EQ instrument key — the lookup failed and
+                # spammed ~430 warnings/minute from the GUI thread (found 5-Aug). Checking
+                # p["index"] was not enough; gate on membership of the stock UNIVERSE instead,
+                # which is the only set of names that can resolve. Index rows fall back to the
+                # entry spot below.
+                from engine.config import UNIVERSE as _UNI
+                _nm = p.get("symbol") or ""
+                if _nm and f"{_nm}.NS" in _UNI:
+                    _liv = _tc(_nm + ".NS")[0]
             except Exception:
                 pass
             if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)) and _sig:
@@ -1854,22 +1863,6 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             net_pct = (net_rs / cap * 100) if cap else None
             def money(x): return f"Rs {x:+,.0f}" if x is not None else "—"
             def price(x): return f"Rs {x:.1f}" if x is not None else "—"
-            # SIGNAL price -> LIVE price for the underlying. A wide gap means the breakout was read
-            # off a price the market has since left behind (the GRASIM failure), so it is shown on
-            # the trade itself rather than only in the log.
-            _sig = p.get("signal_px"); _liv = None
-            try:
-                from engine.data_utils import todays_close as _tc
-                _liv, _ = _tc((p.get("symbol") or p.get("index") or "") + ".NS")
-            except Exception:
-                pass
-            if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)) and _sig:
-                _gp = (_liv - _sig) / _sig * 100
-                und_s = f"{_sig:,.0f}→{_liv:,.0f} ({_gp:+.1f}%)"
-            elif isinstance(_sig, (int, float)):
-                und_s = f"sig {_sig:,.0f}"
-            else:
-                und_s = f"entry {p.get('entry_spot'):,.0f}" if p.get("entry_spot") else "—"
             rS, rB = 2 * i, 2 * i + 1
             # LEG carries the option TYPE (CE/PE) so it's never truncated by a long stock name.
             # Row 1 — SELL leg (the short you sold)
