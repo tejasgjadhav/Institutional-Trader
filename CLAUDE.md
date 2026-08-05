@@ -231,6 +231,18 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
 - **Data limits:** real option-premium history is only ~1 month back; index futures ~33 days.
   Daily price = 2+ yrs, 5-min price = ~1 yr. Long backtests must use the underlying proxy or a
   paid vendor — see `studies/DATA_AVAILABILITY_LIMITS.md`.
+- **DO NOT BE CARRIED ALONG BY THE USER'S FRAMING (standing rule, user 2026-08-05).** This is
+  distinct from "honesty over optimism" below, which is about how to report results. This one is
+  about who is asking. If the user's question embeds a conclusion — "is this much better?", "so this
+  is good, why not buy?", "this must have broken the strategy" — answer the underlying question,
+  not the premise. Agreeing because he leaned that way is a failure mode, and so is contradicting
+  him to look rigorous. Real cases: he asked "c/w is 0.48 so good actually, why not buy" — the
+  correct answer was that c/w had stopped measuring the thing the gate exists for, because the
+  strike had gone ITM and the extra credit was intrinsic, not vol. He asked whether the new 15:36
+  timing was "much better" — the correct answer was better on signal fidelity, WORSE on execution
+  cost, net unmeasured. He asks for this explicitly and repeatedly. When a question has a mixed
+  answer, give the mixed answer and say plainly which part is measured and which is not.
+
 - **Honesty over optimism.** This is a thin, unproven edge. Always frame results gross-vs-net,
   sample size, and out-of-sample fragility. Don't sell a curve-fit.
 - **Commits:** branch off main if needed; end commit messages with the Co-Authored-By trailer.

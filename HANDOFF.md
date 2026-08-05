@@ -1,5 +1,32 @@
 # Handoff — institutional-trader
 
+## VERIFIED (2026-08-05) — backtest granularity, and an honest read on the new timing
+
+**Every v0/v1/v2 backtest is END-OF-DAY, both legs of the discipline.** Checked in the scripts, not
+from memory:
+  * IS (bhavcopy 2019→Sep'24): `pivot_table(values="CLOSE")`, entry premium `P["C"][di, si]` — the
+    option's DAILY CLOSE on the signal day.
+  * OOS (Upstox Oct'24→Jul'26): `/expired-instruments/historical-candle/.../day/...`, entry `sp[0]`
+    = the option's daily close; underlying `unit="days", interval=1`.
+So the backtest assumes **entry at the option's closing price on the breakout day** — an
+idealisation you cannot actually transact at, under either the old or the new timing.
+
+**Is the new timing better? Mixed — do not report it as a clean win.**
+  * BETTER, signal fidelity: 15:36 reads the official close (verified == NSE bhavcopy, 6/6 exact).
+    15:10 did not, and disagreed on ~1/3 of names. This is the big one.
+  * BETTER, entry premium: the backtest prices entry off the CLOSING underlying. A 15:15 fill was
+    priced off a pre-drift underlying (median 0.68% away); a 15:36–15:40 fill is priced off the
+    close. More faithful.
+  * WORSE, cost: spreads 2–4% vs the ~1%/leg the `spf()` cost model charges. On the GRASIM trade
+    that is **₹470/trade extra at a 3% spread — 6% of v2's measured net, 17% of v0's.**
+  * UNMEASURED: whether the +44% extra breakouts clear the c/w gate; the net of more trades at
+    worse fills. +44% is also ONE day (3-Aug).
+
+Added to CLAUDE.md: a standing rule not to be carried along by the user's framing (distinct from
+"honesty over optimism", which is about reporting results).
+
+---
+
 ## DONE (2026-08-05) — morning re-check: LAST TRADING DAY only, silent when that session had no call
 
 `engine/signal_recheck.py` used "the most recent entry_date in any book", which reaches back days —
