@@ -118,6 +118,14 @@ SETTLE_GRACE_MIN = 6
 # engine_runner, because the UI quotes it too and the two must never drift.
 WATCHLIST_AFTER = "15:17"
 
+# Morning re-check of the PREVIOUS session's stock-credit calls (engine/signal_recheck.py).
+# 09:30, not 09:16: the first 15 minutes are the noisiest part of the day and the re-check's
+# OTM gate reads live spot, so an opening spike would flip its verdict spuriously. By ~09:22
+# option bid-ask is already back to 0.8-1.7% (measured 5-Aug on the open v1 legs) — as tight as
+# mid-session and far better than the 2-4% at the 15:36 close. Read-only: it only notifies.
+SIGNAL_RECHECK_AT = "09:30"
+SIGNAL_RECHECK_ENABLED = True
+
 # 3-FAMILY 5-MIN SCAN (the BUY-side scorer). Disabled 2026-07-07 (user-approved): it fed only
 # the hidden 3-Family paper book and caused options-flow 429 storms. The market snapshot/header
 # (_market) and the 15:10 credit scans + 9:16 0DTE scans are INDEPENDENT and unaffected.

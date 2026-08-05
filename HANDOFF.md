@@ -1,5 +1,44 @@
 # Handoff — institutional-trader
 
+## IN PROGRESS (2026-08-05) — 09:30 morning re-check: message covers BUY *and* DON'T-BUY
+
+`engine/signal_recheck.py` (read-only; never writes the trade log or any book). Re-runs every gate
+live on yesterday's SAME strikes. User revision: it must ALWAYS send — "Good morning, in case you are
+buying yesterday's calls … please don't buy today" WITH the reason when a gate fails, not just stay
+silent. Naming the signals either way.
+
+First live run 05-Aug: v1 GRASIM 3140/3200 DROPPED — spot 3,150.30 through the 3,140 short strike
+(all premium gates passed: c/w 0.488, spread 1.7%, OI 89,000). The OTM gate is doing real work.
+
+TODO: verify 09:30 is the right hour (opening spreads are widest), wire the trigger into
+engine_runner.cycle(), commit + push.
+
+---
+
+## IN PROGRESS (2026-08-05 morning) — 09:30 morning re-check engine (AWAITING USER APPROVAL TO SEND)
+
+New module `engine/signal_recheck.py`. Purpose: the signal fires 15:36 and the window shuts 15:40; if
+the user missed it, at 09:30 next morning **re-run every gate live on the SAME strikes** and only if
+they ALL still pass, send ONE reminder. **Read-only** — never opens/closes/edits a position, never
+touches the trade log, writes only `data/recheck_notified.json` (per-day de-dup).
+
+Gates re-run: two-sided market both legs · short prem ≥ ₹50 · bid-ask ≤ 6% · OI ≥ 100 · c/w still in
+THAT BOOK's band (v2/v1 ≥0.40, v0 0.35–0.40) · **short strike still OTM vs live spot** (new gate — no
+scan counterpart, because overnight a gap through the short strike turns the fade into an
+already-losing trade).
+
+**First live run (05-Aug 09:18) correctly sent NOTHING.** Yesterday's only call was v1 GRASIM BEAR_CALL
+3140/3200. Spot 3,150.30 had gone **through** the 3,140 short strike, so it was dropped. Every other
+gate passed (c/w 0.488, spread 1.7%, OI 89,000) — proof the OTM gate is doing real work.
+
+**NOT YET DONE — next steps:**
+1. User must approve the message format (shown in chat, nothing sent).
+2. Wire the 09:30 daily trigger. Decide: a hook in `engine_runner.cycle()` (preferred — the engine is
+   already KeepAlive) vs a separate launchd job. NOT wired yet.
+3. Commit + push both remotes.
+
+---
+
 ## DONE (2026-08-04 late) — target-book audit + Telegram summary reformat
 
 **Target → WIN/LOSS → Telegram sequence VERIFIED end to end.** Planted a booked target in all eight

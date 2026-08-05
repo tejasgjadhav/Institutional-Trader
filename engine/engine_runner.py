@@ -889,6 +889,22 @@ class EngineRunner:
             lines.append("⏳ Open: <b>0 trades</b>")
         return "\n".join(lines)
 
+    def _morning_recheck(self, now):
+        """09:30 — re-run every gate on the PREVIOUS session's stock-credit calls and say plainly
+        whether to buy them today or not. Read-only: signal_recheck writes no book and no trade-log
+        row, it only sends one Telegram (de-duped per day inside the module)."""
+        try:
+            from engine import config as _c
+            if not getattr(_c, "SIGNAL_RECHECK_ENABLED", False) or now.weekday() >= 5:
+                return
+            h, m = map(int, _c.SIGNAL_RECHECK_AT.split(":"))
+            if (now.hour * 60 + now.minute) < h * 60 + m:
+                return
+            from engine import signal_recheck
+            signal_recheck.run(send=True)
+        except Exception as e:
+            logger.warning(f"morning recheck: {e}")
+
     def _in_settle_grace(self) -> bool:
         """True for SETTLE_GRACE_MIN minutes after the F&O close, so the cycle that settles at
         SETTLE_AFTER gets its RESULT + PORTFOLIO Telegrams out at once instead of waiting for the
@@ -917,6 +933,7 @@ class EngineRunner:
         self._monthly_fut(now)
         self._monthly_call(now)
         self._zero_dte(now)
+        self._morning_recheck(now)
         self._outcomes()   # AFTER the book hooks: the cycle that settles at SETTLE_AFTER (15:40)
                            # notifies in the same pass. _in_settle_grace() keeps the fast tick alive
                            # past the close so the 60 s throttle cannot push results to ~15:45.
