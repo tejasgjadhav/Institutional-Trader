@@ -1,5 +1,25 @@
 # Handoff — institutional-trader
 
+## Post-mortem note (2026-08-06): why repeated bug sweeps missed the stale-bar bug
+
+User asked directly. Honest answer recorded for future sessions:
+1. The defect was in the DATA, not the code — `df["Close"].iloc[-1]` is correct-looking code; the
+   Upstox daily endpoint simply omits the current day's bar during the session. No amount of code
+   reading can reveal what an external feed returns at 15:36.
+2. Every verification ran OUTSIDE the window that matters. Checks made after hours or next day saw
+   the bar present and matching bhavcopy, and concluded the feed was fine (the 5-Aug "Test 2" did
+   exactly this).
+3. The evidence WAS captured and not connected — the study's own data-feed note (18:15 on 4-Aug, no
+   4-Aug data) was written down by the model without joining it to the scan path. The adversarial
+   critic flagged the connection; the session observer then proved it.
+4. Long-standing behaviour read as baseline. The bug predates every change; sweeps focused on what
+   had just changed. The user's domain instinct ("why a bear call after a fall?") was the detector.
+LESSON (binding): code review finds code bugs; only RUNTIME observation at the actual decision time
+finds data bugs. The fix-class is instrumentation + invariants (session observer, stale guard,
+direction audit, SIGNAL→LIVE column) — all now in place; any recurrence is visible same-day.
+
+---
+
 ## CONFIRMED from the books (2026-08-06): EVERY live trade was a previous-day breakout
 
 User asked whether the old 15:10 scan represented the same day or the previous day. Reconstructed the
