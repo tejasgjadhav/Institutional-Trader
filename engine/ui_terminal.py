@@ -1321,15 +1321,16 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         """Populate the always-on UNION WATCHLIST panel from data/union_watchlist.json (breakout
         stocks only, each with a per-gate tick-bar). Read-only; failures never disturb the UI."""
         import json as _json
+        from engine import config as C   # times READ config — a hardcoded '3:05 PM' outlived two retimings here
         try:
             path = _os.path.join(DATA_DIR, "union_watchlist.json")
             if not _os.path.exists(path):
-                self.pm_watch_hdr.setText("UNION WATCHLIST — no scan yet today (engine builds it at 3:05 PM, near the close)")
+                self.pm_watch_hdr.setText(f"UNION WATCHLIST — no scan yet today (engine builds it at {C.WATCHLIST_AFTER}, once the auction has struck the close)")
                 self.pm_watch.setRowCount(0); return
             d = _json.load(open(path)); rows = d.get("rows", []); ts = d.get("ts", "")
             # clear a stale (prior-day) watchlist — only ever show TODAY's scan
             if not ts.startswith(datetime.now(IST).date().isoformat()):
-                self.pm_watch_hdr.setText("UNION WATCHLIST — no scan yet today (engine builds it at 3:05 PM, near the close)")
+                self.pm_watch_hdr.setText(f"UNION WATCHLIST — no scan yet today (engine builds it at {C.WATCHLIST_AFTER}, once the auction has struck the close)")
                 self.pm_watch.setRowCount(0); return
             hhmm = ts[11:16] if len(ts) >= 16 else "—"
             self.pm_watch_hdr.setText(f"UNION WATCHLIST · today's breakout stocks only — last scan {hhmm} · "

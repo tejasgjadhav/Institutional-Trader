@@ -1,5 +1,15 @@
 # Handoff — institutional-trader
 
+## IN PROGRESS (2026-08-06 early) — bug sweep round 2 + stale UI time strings
+
+All of round 1's 8 fixes are COMMITTED AND PUSHED (see git log). Engine + viewer ALIVE, zero
+tracebacks, open positions marking. Now: (a) fresh bug sweep, (b) purge stale time literals from the
+UI — known offenders: "engine builds it at 3:05 PM" in _refresh_union_watch (twice; real time is
+config.WATCHLIST_AFTER = 15:17), and any other hardcoded session time that survived the NSE retiming.
+Rule: UI times must READ config, never restate it.
+
+---
+
 ## Strategy semantics — direction vs trigger (user asked 2026-08-05)
 
 **Direction: user's understanding is CORRECT.** Up-break → sell a BEAR CALL (fade the up-move).
