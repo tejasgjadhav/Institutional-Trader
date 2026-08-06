@@ -231,6 +231,22 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
 - **Data limits:** real option-premium history is only ~1 month back; index futures ~33 days.
   Daily price = 2+ yrs, 5-min price = ~1 yr. Long backtests must use the underlying proxy or a
   paid vendor — see `studies/DATA_AVAILABILITY_LIMITS.md`.
+- **A BUG CHECK IS FOUR LAYERS, NOT CODE REVIEW (standing rule, user 2026-08-06).** Born from the
+  stale-bar incident: repeated code sweeps missed that the Upstox daily endpoint publishes NO
+  current-day bar during the session, so `df["Close"].iloc[-1]` — correct-looking code — silently
+  traded the PREVIOUS day's breakout for weeks (all 19 booked positions reconstructed as T-1). The
+  decisive evidence was even recorded ("18:15, no same-day data") and not connected. Therefore,
+  when asked to "check for bugs", ALL FOUR, every time:
+  1. **DATA** — verify what each external source actually returns AT THE MOMENT the code reads it
+     (a check after hours saw the bar present and wrongly cleared the feed);
+  2. **TIME** — run the check at the real decision times (15:31/15:36 here), not whenever convenient;
+  3. **INVARIANTS** — prefer runtime guards that refuse to act and log loudly (freshness guard,
+     direction-vs-move audit) plus permanent instrumentation (session observer) over more review —
+     review finds code bugs, only runtime observation finds data bugs;
+  4. **UI** — surface the inputs a decision used next to live values (SIGNAL→LIVE), so a wrong input
+     is visible to the user rather than silent; his instinct, not a sweep, caught GRASIM.
+  Reporting: state which layers were checked; a code-only sweep is never reported as "no bugs".
+
 - **DO NOT BE CARRIED ALONG BY THE USER'S FRAMING (standing rule, user 2026-08-05).** This is
   distinct from "honesty over optimism" below, which is about how to report results. This one is
   about who is asking. If the user's question embeds a conclusion — "is this much better?", "so this
