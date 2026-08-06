@@ -1,5 +1,74 @@
 # Handoff — institutional-trader
 
+## ✅ VERIFIED vs bhavcopy (06-Aug 18:18) — the first corrected session checks out
+
+**HAL (the day's only fired call, v1 BEAR_CALL 4950/5100):** scan's signal_px 4,920.00 == official
+bhavcopy ClsPric 4,920.00, EXACT. Breakout genuine on today's close (+4.28% over the D10 band),
+direction right (HAL +5.92% on the day — bear call ON the up-day, the GRASIM inverse). The scan read
+the AUCTION print (bars 15:10/15:15/15:20 frozen at 4,934; last bar 4,920 = the auction crossing).
+
+**Whole 15:31 watchlist vs bhavcopy: 19/20 exact.** One mismatch: NAVINFLUOR scan 8,619 vs official
+8,650 (-0.36%) — consistent with a thin name whose auction print landed after the 15:31 rebuild
+sampled it (UBL/ATUL showed the same pattern on 3-4 Aug). The 15:36 SCAN itself fired nothing off
+NAVINFLUOR, so no trade was affected. Watch whether the same names recur; if so, thin names may need
+a later read or a tolerance note in the digest.
+
+Also proven live today: the stale guard fired for RELIANCE at 15:36:40 (skipped, not scanned stale) —
+first production firing; 15:31 digest went out on time (20 breakouts, 2 candidates).
+
+Remaining cosmetic: signal_auction field is v2-only, shows None on v1 positions — extend to v1/swing.
+
+**The verification chain the plan demanded is now CLOSED: same-day close -> genuine breakout ->
+correct direction -> exact official-close match, on the first corrected session.**
+
+---
+
+> **DONE (2026-08-06 ~12:10):** (a) NIFTY live-mismatch diagnosed: **~75% was day-old weights**
+> (yday-weights −1.31 pts vs today-weights −0.30 at 12:00); server now **auto-refits every 30 min**
+> in market hours. Verified after fix: NIFTY diff +0.10…+0.88 pts, SENSEX −0.36…+0.71 (from −2/+3).
+> Per-stock weight-shift table is COLLINEARITY NOISE, not corporate actions — documented in
+> CROSS_EXCHANGE_AUCTION_GAP.md Addendum 2; do not read single-name lstsq weights as real weights.
+> Minor: TMPV/ETERNAL LTPs lag ~0.2%. (b) Desktop app shipped: launchd agent
+> **`com.sayali.cas-calc`** (RunAtLoad+KeepAlive, all-day, logs `logs/cas_calc_server.*.log`) +
+> **`~/Applications/CAS Calculator.app`** (kickstarts agent, opens http://localhost:8787;
+> Desktop shortcut symlinked at `~/Desktop/CAS Calculator`).
+> `.claude/launch.json` `cas-live` entry is now ATTACH-ONLY (url) so preview can't double-start
+> the server. The live calc is pure Σ(wᵢ·LTPᵢ) over the 80 stocks — the index print is only used
+> once a day to calibrate weights, never in the live number.
+>
+> **ADDED (2026-08-06 ~13:20): daily calc-vs-print record.**
+> `studies/CAS_NIFTY_SENSEX_DATA/calc_vs_print_recorder.py` → engine.db table
+> **`cas_calc_vs_print`** (date, idx, print_1515, calc_1515, calc_1518, official_close,
+> auction_gap, fit_rmse, recorded_at; upsert on date+idx) + `cas_calc_vs_print.csv`.
+> Scheduled by CHAINING into `com.sayali.cas-recorder` (bash -c runs engine.cas_recorder then
+> this, 15:50 + 16:20 retry — plist reloaded). Backfilled 3/4/5-Aug, values match the study
+> exactly. UI summary table now fetches **/summary** from the live server (falls back to embedded
+> data in static-file mode) and shows the recorded_at timestamp — grows a row per index per
+> trading day, starting with today 6-Aug at 15:50.
+
+> **DONE (2026-08-06 ~11:45):** "Calculated Constituents" UI shipped and VERIFIED LIVE in-market.
+> `studies/CAS_NIFTY_SENSEX_DATA/live_calc_server.py` (stdlib HTTP, port 8787) serves
+> `calculated_constituents.html`: replay tabs (SENSEX/NIFTY × 3/4/5-Aug, close window
+> calc-vs-published chart) + a **LIVE tab polling /live every 5s** — one batched Upstox LTP call
+> for 82 instruments, calc = lstsq weights (fit on latest session 09:20–15:09, POST /refit to
+> refit) dotted with live prices. Live at 11:44 IST 6-Aug: SENSEX live−calc **+3.0 pts (0.004%)**,
+> NIFTY **−2.0 pts (0.008%)**. Out-of-sample 15:10–15:15 match (fit ends 15:09): NIFTY ≤2.1 pts,
+> SENSEX ≤11.3 pts (≤0.014%) across the 3 sessions. Launch: `.claude/launch.json` entry
+> `cas-live` (worktree), or
+> `cd ~/files/institutional-trader && ./.venv/bin/python studies/CAS_NIFTY_SENSEX_DATA/live_calc_server.py`.
+> Gotcha fixed: livePanel div was nested inside replayPanel (hidden in live mode) — moved out.
+
+## Alignment summary (2026-08-06, user confirmation request)
+
+Signal input now aligns with the full 2019-2026 backtest series: IS used bhavcopy official closes,
+OOS used Upstox daily closes (verified == bhavcopy 113/113), live now reads the auction close
+(verified == bhavcopy exactly). Two residual gaps, stated: (1) close CONSTRUCTION changed 3-Aug
+(VWAP -> auction) — same field, different mechanism, untested; (2) entry premium — backtest fills at
+the option's daily close, live fills at 15:36-40 quotes. Alignment of inputs is now true; alignment
+of RESULTS is what the forward record starting today measures.
+
+---
+
 ## Post-mortem note (2026-08-06): why repeated bug sweeps missed the stale-bar bug
 
 User asked directly. Honest answer recorded for future sessions:
@@ -113,6 +182,19 @@ INDEX and failed OOS, but never for the stock books. Cheap to test on existing d
 > freezes at its last continuous value, then prints the auction equilibrium as one tick at 15:29.
 > On NIFTY 3-Aug that print (24774.30) sat **190 points above the put-call-parity forward**
 > (24583.7) — the options never priced it. 4-Aug and 5-Aug the print did match the forward.
+>
+> ✅ **RESOLVED 2026-08-06 by constituent test →
+> [`studies/CAS_NIFTY_SENSEX_DATA/CROSS_EXCHANGE_AUCTION_GAP.md`](studies/CAS_NIFTY_SENSEX_DATA/CROSS_EXCHANGE_AUCTION_GAP.md).
+> The NIFTY index print was NOT wrong — I called that wrong.** Pulled all 50 NIFTY and 30 SENSEX
+> constituents at 15:16 vs their official closes on both NSE_EQ and BSE_EQ keys. NIFTY's move
+> matches its NSE constituents to **0.006pp**; SENSEX matches its BSE constituents to 0.046pp. Both
+> indices are internally correct. **The dislocation is between the EXCHANGES: BSE's closing auction
+> barely moves prices (median SENSEX-30 stock 0.00% on all three days) while NSE's repriced the same
+> names +0.79% on 3-Aug** — TITAN closed 5000 on NSE and 4900 on BSE, a 2.04% gap on the same share.
+> SENSEX then opened +0.63% the next day, closing most of the gap, so BSE's auction looks like the
+> stale one. **Consequence for the option work: the post-15:15 divergence is CASH vs DERIVATIVES,
+> not an index error.** Anything settling on a cash close and anything settling on a derivatives
+> VWAP can differ ~0.8% the same day.
 > **Always derive the post-15:15 underlying from parity on the recorded CE/PE pair, never the
 > index.** Correct answer: ATM time value is FLAT 09:30→15:00 (96–105% of the 09:30 level), bottoms
 > at **15:30 at 83%**, recovers to 88% by 15:40 — about −21 premium points, not −72. All P&L numbers
