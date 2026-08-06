@@ -1,5 +1,30 @@
 # Handoff — institutional-trader
 
+## TODAY 6-Aug-2026 — FIRST LIVE RUN of the corrected chain. Watch these checkpoints.
+
+Everything from 5-Aug is committed+pushed. Today is the first session where the scan reads TODAY's
+close (todays_close via intraday), the direction audit gates every signal, and the UI shows the
+signal price with the AUC tag.
+
+Timeline + what PROVES each piece:
+1. **09:30 re-check → must send NOTHING.** 5-Aug produced zero calls (0/15 passed c/w). Silence is
+   the correct output; a message today = bug in _last_session/no-signal gating.
+2. **14:45 observer baseline**, then **15:15–15:40 sampling** — legs must now stay the SAME contract
+   all window (fixed), targets constant.
+3. **15:17 watchlist + digest** — rows must carry signal_px with src=intraday and SIGNAL→LIVE col
+   filled. Breakout set must be TODAY's, not 5-Aug's (under the old bug they'd be identical).
+4. **15:36 scan** — log must show current-day closes; any DIRECTION AUDIT FAILED line = data bug
+   caught (good), but investigate. New positions must carry signal_px/signal_src/signal_auction.
+5. **15:40 settle + grace window** — RESULT telegrams land ~15:40-15:42, not 15:45.
+6. **~18:00 bhavcopy check** — compare what todays_close returned at 15:36 vs official ClsPric
+   (expect exact for most, ≤0.3% thin names). THE decisive verification, plan §Verification-2.
+7. TCS + BAJAJ-AUTO + GRASIM (v1, exp 25-Aug) keep marking, no early settle.
+
+If something misfires mid-session: engine restart is `launchctl kickstart -k
+gui/$(id -u)/com.sayali.institutionaltrader.engine` — config_ledger records any tunable change.
+
+---
+
 ## IN PROGRESS (2026-08-06 early) — bug sweep round 2 + stale UI time strings
 
 All of round 1's 8 fixes are COMMITTED AND PUSHED (see git log). Engine + viewer ALIVE, zero

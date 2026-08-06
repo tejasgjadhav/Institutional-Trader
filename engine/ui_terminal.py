@@ -1270,11 +1270,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                    f'<span style="color:{BORDER};"> &#8594; </span>'.join(out)
 
         wl, scan = C.WATCHLIST_AFTER, C.STOCK_CREDIT_SCAN_AFTER
+        dg = getattr(C, "WATCHLIST_DIGEST_AT", "15:31")
         close, settle = C.FNO_CLOSE, C.SETTLE_AFTER
         if hasattr(self, "pm_timings"):
             self.pm_timings.setText(strip([
                 (mins(C.MARKET_OPEN), mins(wl) - 1, C.MARKET_OPEN, "market opens"),
-                (mins(wl), mins(scan) - 1, wl, "WATCHLIST + digest"),
+                (mins(wl), mins(dg) - 1, wl, "WATCHLIST (UI)"),
+                (mins(dg), mins(scan) - 1, dg, "digest &#183; FINAL strikes + prices"),
                 (mins(scan), mins(close), f"{scan}-{close}",
                  "SIGNALS fire &#183; v2 / v1 / v0 / swing &#183; PLACE the order"),
                 (mins(settle), 24 * 60, settle, "settle &#183; WIN/LOSS + Telegram"),

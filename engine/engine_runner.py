@@ -533,18 +533,25 @@ class EngineRunner:
                 logger.info(f"union watchlist built (15:17): {w.get('breakouts',0)} breakouts")
             except Exception as e:
                 logger.warning(f"watchlist build 14:45: {e}")
-        # 15:17 — SEND the digest from the file built moments earlier in this same cycle. Its c/w
-        # figures are INDICATIVE (priced off the 15:15 print, before the auction) — that is fine,
-        # this message is explicitly "DO NOT TRADE" and exists to pre-warn which names are in play
-        # ~19 minutes before the 15:36 scan fires the real signals.
-        if (self.agent.is_market_open() and _mins >= _watchlist_mins()
+        # 15:31 — REBUILD the watchlist and SEND the digest (user decision, 2026-08-06; 3-agent
+        # adjudication 5-Aug). By 15:31 the CAS random close (15:28-15:30) has passed, so spot is
+        # the auction value and the STRIKES ARE FINAL — the 15:17 build priced off the frozen 15:15
+        # print and staged the wrong strikes on 4/14 names. The rebuild takes ~11-19 s, landing the
+        # message ~15:31:30 with final strikes + live option prices, ~4.5 min before the 15:36 scan.
+        # The 15:17 build above stays for the UI heads-up; this is the actionable message.
+        def _digest_mins():
+            h, m = map(int, getattr(config, "WATCHLIST_DIGEST_AT", "15:31").split(":"))
+            return h * 60 + m
+        if (self.agent.is_market_open() and _mins >= _digest_mins()
                 and self._watchlist_tg_day != now.date()):
             self._watchlist_tg_day = now.date()
             try:
+                w2 = stock_credit_v2.build_watchlist()   # fresh, post-auction strikes
                 nc = stock_credit_v2.notify_nearmiss(rebuild=False)
-                logger.info(f"union watchlist Telegram sent (15:17): {nc} near-miss candidate(s)")
+                logger.info(f"union watchlist rebuilt at {config.WATCHLIST_DIGEST_AT} "
+                            f"({w2.get('breakouts', 0)} breakouts) · digest sent: {nc} candidate(s)")
             except Exception as e:
-                logger.warning(f"watchlist 15:05: {e}")
+                logger.warning(f"watchlist digest {config.WATCHLIST_DIGEST_AT}: {e}")
         # MARK-TO-MARKET / TARGET CHECK — MARKET HOURS ONLY (user, 2026-08-03). It used to run
         # round the clock on the 15-min timer, so a target could be booked at e.g. 20:00 off
         # post-close quotes. Settlement is exempt: an expired position must still be closed out

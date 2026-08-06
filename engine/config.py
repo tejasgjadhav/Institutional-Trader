@@ -118,6 +118,14 @@ SETTLE_GRACE_MIN = 6
 # engine_runner, because the UI quotes it too and the two must never drift.
 WATCHLIST_AFTER = "15:17"
 
+# When the watchlist DIGEST goes to Telegram — separate from the 15:17 build (user, 2026-08-06).
+# 15:31 is after the CAS random close (15:28-15:30): spot is the auction value and does not move
+# again, so the strikes in the message are FINAL. The 15:17 build priced off the frozen 15:15 print
+# and staged the WRONG strikes on 4 of 14 names (measured 5-Aug). The watchlist is REBUILT at this
+# hour before sending, so the message carries final strikes + live option prices, ~5 min before the
+# 15:36 scan.
+WATCHLIST_DIGEST_AT = "15:31"
+
 # Morning re-check of the PREVIOUS session's stock-credit calls (engine/signal_recheck.py).
 # 09:30, not 09:16: the first 15 minutes are the noisiest part of the day and the re-check's
 # OTM gate reads live spot, so an opening spike would flip its verdict spuriously. By ~09:22
