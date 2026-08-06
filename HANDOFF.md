@@ -1,5 +1,23 @@
 # Handoff — institutional-trader
 
+## CONFIRMED from the books (2026-08-06): EVERY live trade was a previous-day breakout
+
+User asked whether the old 15:10 scan represented the same day or the previous day. Reconstructed the
+Donchian verdict for all 19 v1+v2 positions ever booked, on T (entry day) and T-1, from daily bars:
+
+**PREV-DAY only: 14 · both days (consecutive breakouts, ambiguous): 5 · SAME-DAY only: 0 · neither: 0**
+
+All 19 are consistent with the signal being T-1's close; ZERO require T's. The 5 "both" cases are
+names that broke out two days running — exactly what a stale bar would also book. So the old system
+traded the PREVIOUS day's breakout every single time; 15:10 never represented the current day.
+
+Consequence for the record: the 15 closed v1 trades (11W/4L, 73%) are a sample of the T-1-DELAYED
+strategy, not the backtested one. Do not compare them to the 84-87% backtest figures. Interesting
+honest note: even delayed a day, the fade still went 11/4 — the edge may be forgiving of delay, but
+that is an observation, not a measurement (n=15). The T-vs-T+1 backtest remains the way to answer it.
+
+---
+
 ## TODAY 6-Aug-2026 — FIRST LIVE RUN of the corrected chain. Watch these checkpoints.
 
 Everything from 5-Aug is committed+pushed. Today is the first session where the scan reads TODAY's
