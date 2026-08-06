@@ -1,0 +1,241 @@
+<!-- Calculated Constituents -->
+<style>
+.viz-root{color-scheme:light;
+  --surface-1:#fcfcfb;--surface-2:#f1f0ee;--line:#e3e2de;
+  --text-primary:#0b0b0b;--text-secondary:#52514e;--text-muted:#8a897f;
+  --series-1:#2a78d6;--series-2:#eb6834;
+  font-family:ui-sans-serif,-apple-system,'Segoe UI',sans-serif;
+  background:var(--surface-1);color:var(--text-primary);
+  max-width:960px;margin:0 auto;padding:20px 16px 40px}
+@media (prefers-color-scheme: dark){:root:where(:not([data-theme="light"])) .viz-root{
+  color-scheme:dark;--surface-1:#1a1a19;--surface-2:#252523;--line:#3a3936;
+  --text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#8a897f;
+  --series-1:#3987e5;--series-2:#d95926}}
+:root[data-theme="dark"] .viz-root{
+  color-scheme:dark;--surface-1:#1a1a19;--surface-2:#252523;--line:#3a3936;
+  --text-primary:#fff;--text-secondary:#c3c2b7;--text-muted:#8a897f;
+  --series-1:#3987e5;--series-2:#d95926}
+.viz-root h1{font-size:20px;margin:0 0 2px}
+.viz-root .sub{color:var(--text-secondary);font-size:13px;margin:0 0 16px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 14px}
+.tabs button{border:1px solid var(--line);background:var(--surface-2);color:var(--text-secondary);
+  border-radius:8px;padding:6px 14px;font-size:13px;cursor:pointer}
+.tabs button.on{background:var(--text-primary);color:var(--surface-1);border-color:var(--text-primary)}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:0 0 16px}
+.tile{background:var(--surface-2);border-radius:10px;padding:10px 12px}
+.tile .k{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em}
+.tile .v{font-size:19px;font-weight:600;font-variant-numeric:tabular-nums;margin-top:2px}
+.tile .d{font-size:11px;color:var(--text-secondary);margin-top:1px}
+.legend{display:flex;gap:16px;font-size:12.5px;color:var(--text-secondary);margin:0 0 6px;align-items:center}
+.legend .sw{display:inline-block;width:14px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.chartwrap{position:relative;background:var(--surface-2);border-radius:12px;padding:10px}
+#tip{position:absolute;pointer-events:none;background:var(--surface-1);border:1px solid var(--line);
+  border-radius:8px;padding:6px 9px;font-size:12px;display:none;white-space:nowrap;
+  box-shadow:0 2px 8px rgba(0,0,0,.15);z-index:3}
+#tip b{font-variant-numeric:tabular-nums}
+.note{background:var(--surface-2);border-left:3px solid var(--series-1);border-radius:8px;
+  padding:10px 14px;font-size:13px;color:var(--text-secondary);margin:16px 0}
+details{margin-top:14px;font-size:13px}
+details summary{cursor:pointer;color:var(--text-secondary)}
+table{border-collapse:collapse;width:100%;margin-top:8px;font-size:12.5px;font-variant-numeric:tabular-nums}
+th,td{text-align:right;padding:4px 8px;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--text-muted);font-weight:500}
+</style>
+<div class="viz-root">
+  <h1>Calculated Constituents</h1>
+  <p class="sub">Index rebuilt live from its member stocks (weights recovered by least squares on
+  09:20&ndash;15:09, so 15:10 onward is out-of-sample) vs the exchange&rsquo;s published index. Close window 15:00&rarr;15:29.</p>
+  <div class="tabs" id="idxTabs"></div>
+  <div class="tabs" id="dayTabs"></div>
+  <div id="replayPanel"><div class="tiles" id="tiles"></div>
+  <div class="legend">
+    <span><span class="sw" style="background:var(--series-1)"></span>Calculated (from stocks)</span>
+    <span><span class="sw" style="background:var(--series-2)"></span>Published index</span>
+    <span><span class="sw" style="background:var(--text-muted);height:0;border-top:2px dashed var(--text-muted)"></span>Official close (bhavcopy)</span>
+  </div>
+  <div class="chartwrap"><svg id="ch" width="100%" height="360" role="img" aria-label="Calculated vs published index, close window"></svg><div id="tip"></div></div>
+  <div class="note" id="note"></div>
+  <details><summary>Table view</summary><div id="tbl"></div></details>
+  </div><!-- /replayPanel -->
+  <div id="livePanel" style="display:none">
+    <div class="tiles" id="liveTiles"></div>
+    <div class="chartwrap"><svg id="liveCh" width="100%" height="220" role="img" aria-label="Live minus calculated, difference history"></svg></div>
+    <div class="note" id="liveNote"></div>
+  </div>
+  <div id="summary"></div>
+</div>
+<script>
+const DATA = {"SENSEX": {"name": "SENSEX", "members": ["ADANIPORTS", "ASIANPAINT", "AXISBANK", "BAJAJFINSV", "BAJFINANCE", "BEL", "BHARTIARTL", "ETERNAL", "HCLTECH", "HDFCBANK", "HINDUNILVR", "ICICIBANK", "INDIGO", "INFY", "ITC", "KOTAKBANK", "LT", "M&M", "MARUTI", "NTPC", "POWERGRID", "RELIANCE", "SBIN", "SUNPHARMA", "TATASTEEL", "TCS", "TECHM", "TITAN", "TRENT", "ULTRACEMCO"], "days": {"2026-08-03": {"rmse": 1.39, "maxerr": 10.16, "win_maxerr": 2.75, "calc1518": 78676.6, "idx1518": 78677.13, "calc_close": 78641.59, "official": 78639.03, "times": ["15:00", "15:01", "15:02", "15:03", "15:04", "15:05", "15:06", "15:07", "15:08", "15:09", "15:10", "15:11", "15:12", "15:13", "15:14", "15:15", "15:16", "15:17", "15:18", "15:19", "15:20", "15:21", "15:22", "15:23", "15:24", "15:25", "15:26", "15:27", "15:28", "15:29"], "calc": [78740.05, 78742.58, 78749.69, 78738.92, 78723.29, 78681.54, 78684.51, 78668.3, 78650.43, 78675.25, 78653.99, 78678.86, 78698.76, 78700.11, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78676.6, 78641.59, 78641.59], "index": [78739.77, 78742.32, 78748.88, 78738.84, 78725.89, 78678.69, 78684.03, 78668.52, 78651.22, 78675.21, 78652.4, 78678.92, 78698.07, 78702.86, 78676.1, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78677.13, 78639.03, 78639.03], "top": [["HDFCBANK", 9819.2], ["ICICIBANK", 8547.6], ["RELIANCE", 7220.6], ["BHARTIARTL", 4866.8], ["LT", 3901.6], ["SBIN", 3619.8], ["INFY", 3507.5], ["AXISBANK", 2928.4], ["KOTAKBANK", 2606.0], ["BAJFINANCE", 2591.3]]}, "2026-08-04": {"rmse": 1.33, "maxerr": 5.9, "win_maxerr": 11.28, "calc1518": 78325.18, "idx1518": 78324.56, "calc_close": 78430.97, "official": 78428.95, "times": ["15:00", "15:01", "15:02", "15:03", "15:04", "15:05", "15:06", "15:07", "15:08", "15:09", "15:10", "15:11", "15:12", "15:13", "15:14", "15:15", "15:16", "15:17", "15:18", "15:19", "15:20", "15:21", "15:22", "15:23", "15:24", "15:25", "15:26", "15:27", "15:28", "15:29"], "calc": [78311.82, 78270.95, 78273.73, 78263.97, 78245.88, 78241.28, 78251.57, 78271.48, 78275.5, 78272.38, 78255.48, 78258.27, 78251.42, 78265.7, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78325.18, 78430.97], "index": [78311.77, 78270.75, 78273.34, 78263.57, 78246.15, 78240.88, 78251.25, 78270.95, 78274.6, 78272.67, 78253.73, 78259.94, 78262.7, 78266.0, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78324.56, 78428.95], "top": [["HDFCBANK", 9596.4], ["ICICIBANK", 8780.0], ["RELIANCE", 7372.3], ["BHARTIARTL", 4913.1], ["LT", 3957.9], ["SBIN", 3646.1], ["INFY", 3443.7], ["AXISBANK", 2942.9], ["BAJFINANCE", 2616.8], ["M&M", 2518.8]]}, "2026-08-05": {"rmse": 2.69, "maxerr": 26.92, "win_maxerr": 8.1, "calc1518": 78501.19, "idx1518": 78501.85, "calc_close": 78586.02, "official": 78581.0, "times": ["15:00", "15:01", "15:02", "15:03", "15:04", "15:05", "15:06", "15:07", "15:08", "15:09", "15:10", "15:11", "15:12", "15:13", "15:14", "15:15", "15:16", "15:17", "15:18", "15:19", "15:20", "15:21", "15:22", "15:23", "15:24", "15:25", "15:26", "15:27", "15:28", "15:29"], "calc": [78367.6, 78360.22, 78381.52, 78395.25, 78395.39, 78357.74, 78378.33, 78429.0, 78418.23, 78404.93, 78401.15, 78422.87, 78422.08, 78431.86, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78501.19, 78586.02], "index": [78366.94, 78359.11, 78382.91, 78393.21, 78394.89, 78357.71, 78379.81, 78428.96, 78418.23, 78404.18, 78399.35, 78419.54, 78418.55, 78429.27, 78509.29, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78501.85, 78581.0], "top": [["HDFCBANK", 9859.5], ["ICICIBANK", 8596.3], ["RELIANCE", 7167.7], ["BHARTIARTL", 4879.2], ["INFY", 3829.8], ["LT", 3701.0], ["SBIN", 3580.6], ["AXISBANK", 2966.0], ["M&M", 2651.5], ["KOTAKBANK", 2495.4]]}}}, "NIFTY": {"name": "NIFTY", "members": ["ADANIENT", "ADANIPORTS", "APOLLOHOSP", "ASIANPAINT", "AXISBANK", "BAJAJ-AUTO", "BAJAJFINSV", "BAJFINANCE", "BEL", "BHARTIARTL", "CIPLA", "COALINDIA", "DRREDDY", "EICHERMOT", "ETERNAL", "GRASIM", "HCLTECH", "HDFCBANK", "HDFCLIFE", "HINDALCO", "HINDUNILVR", "ICICIBANK", "INDIGO", "INFY", "ITC", "JIOFIN", "JSWSTEEL", "KOTAKBANK", "LT", "M&M", "MARUTI", "MAXHEALTH", "NESTLEIND", "NTPC", "ONGC", "POWERGRID", "RELIANCE", "SBILIFE", "SBIN", "SHRIRAMFIN", "SUNPHARMA", "TATACONSUM", "TATASTEEL", "TCS", "TECHM", "TITAN", "TMPV", "TRENT", "ULTRACEMCO", "WIPRO"], "days": {"2026-08-03": {"rmse": 0.42, "maxerr": 2.57, "win_maxerr": 2.11, "calc1518": 24573.2, "idx1518": 24573.35, "calc_close": 24771.95, "official": 24774.3, "times": ["15:00", "15:01", "15:02", "15:03", "15:04", "15:05", "15:06", "15:07", "15:08", "15:09", "15:10", "15:11", "15:12", "15:13", "15:14", "15:15", "15:16", "15:17", "15:18", "15:19", "15:20", "15:21", "15:22", "15:23", "15:24", "15:25", "15:26", "15:27", "15:28", "15:29"], "calc": [24593.09, 24593.58, 24593.39, 24589.3, 24584.81, 24571.49, 24577.16, 24570.36, 24566.49, 24570.9, 24564.25, 24573.49, 24578.23, 24575.26, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24573.2, 24771.95], "index": [24593.55, 24591.4, 24593.1, 24590.25, 24583.9, 24572.15, 24577.3, 24570.75, 24566.35, 24571.05, 24565.75, 24575.6, 24578.05, 24575.3, 24573.55, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24573.35, 24774.3], "top": [["HDFCBANK", 2474.4], ["ICICIBANK", 2188.0], ["RELIANCE", 1958.1], ["BHARTIARTL", 1386.8], ["LT", 1068.4], ["SBIN", 1020.8], ["INFY", 928.7], ["AXISBANK", 782.1], ["M&M", 660.6], ["BAJFINANCE", 656.1]]}, "2026-08-04": {"rmse": 0.29, "maxerr": 1.41, "win_maxerr": 1.86, "calc1518": 24463.19, "idx1518": 24463.45, "calc_close": 24613.69, "official": 24614.9, "times": ["15:00", "15:01", "15:02", "15:03", "15:04", "15:05", "15:06", "15:07", "15:08", "15:09", "15:10", "15:11", "15:12", "15:13", "15:14", "15:15", "15:16", "15:17", "15:18", "15:19", "15:20", "15:21", "15:22", "15:23", "15:24", "15:25", "15:26", "15:27", "15:28", "15:29"], "calc": [24464.23, 24455.16, 24454.35, 24454.09, 24450.56, 24449.09, 24451.64, 24453.73, 24452.59, 24452.24, 24448.04, 24452.67, 24447.85, 24453.02, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24463.19, 24613.66, 24613.66], "index": [24463.9, 24454.9, 24455.2, 24453.6, 24450.35, 24448.85, 24451.9, 24454.0, 24452.15, 24452.3, 24449.9, 24454.05, 24449.55, 24453.55, 24462.95, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24463.45, 24614.9, 24614.9], "top": [["HDFCBANK", 2495.3], ["ICICIBANK", 2253.1], ["RELIANCE", 1895.0], ["BHARTIARTL", 1326.6], ["LT", 992.3], ["SBIN", 896.6], ["INFY", 849.3], ["AXISBANK", 790.8], ["BAJFINANCE", 682.3], ["M&M", 675.4]]}, "2026-08-05": {"rmse": 0.13, "maxerr": 0.92, "win_maxerr": 0.32, "calc1518": 24570.52, "idx1518": 24570.2, "calc_close": 24624.74, "official": 24624.65, "times": ["15:00", "15:01", "15:02", "15:03", "15:04", "15:05", "15:06", "15:07", "15:08", "15:09", "15:10", "15:11", "15:12", "15:13", "15:14", "15:15", "15:16", "15:17", "15:18", "15:19", "15:20", "15:21", "15:22", "15:23", "15:24", "15:25", "15:26", "15:27", "15:28", "15:29"], "calc": [24522.6, 24521.9, 24528.33, 24532.07, 24532.84, 24526.14, 24531.43, 24543.78, 24544.77, 24540.94, 24532.56, 24539.36, 24544.36, 24549.31, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24570.52, 24624.74, 24624.74], "index": [24522.5, 24521.95, 24528.45, 24532.05, 24533.3, 24526.1, 24531.35, 24543.75, 24544.65, 24540.75, 24532.75, 24539.25, 24544.4, 24549.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24570.2, 24624.65, 24624.65], "top": [["HDFCBANK", 2435.0], ["ICICIBANK", 2253.3], ["RELIANCE", 1891.0], ["BHARTIARTL", 1309.9], ["LT", 1022.1], ["SBIN", 972.9], ["INFY", 886.4], ["AXISBANK", 812.1], ["M&M", 681.2], ["BAJFINANCE", 663.1]]}}}};
+let idx = "SENSEX", day = "2026-08-03", mode = "REPLAY", liveTimer = null, hist = {SENSEX:[], NIFTY:[]};
+const $ = id => document.getElementById(id);
+const fmt = v => v.toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2});
+
+function tabs(el, items, cur, cb){
+  el.innerHTML = "";
+  items.forEach(it=>{
+    const b=document.createElement("button");
+    b.textContent = it.label; if(it.value===cur) b.className="on";
+    b.onclick=()=>cb(it.value); el.appendChild(b);
+  });
+}
+function render(){
+  tabs($("idxTabs"), [{label:"SENSEX (30)",value:"SENSEX"},{label:"NIFTY (50)",value:"NIFTY"},{label:"● LIVE",value:"LIVE"}],
+       mode==="LIVE"?"LIVE":idx, v=>{ if(v==="LIVE"){mode="LIVE";} else {mode="REPLAY"; idx=v;} render(); });
+  if(mode==="LIVE"){ $("dayTabs").innerHTML=""; $("replayPanel").style.display="none"; $("livePanel").style.display="block"; startLive(); drawSummary(); return; }
+  $("replayPanel").style.display="block"; $("livePanel").style.display="none"; stopLive();
+  const days = Object.keys(DATA[idx].days);
+  const dn = {"2026-08-03":"Mon 3 Aug","2026-08-04":"Tue 4 Aug","2026-08-05":"Wed 5 Aug"};
+  tabs($("dayTabs"), days.map(d=>({label:dn[d],value:d})), day, v=>{day=v;render();});
+  const D = DATA[idx].days[day];
+  const gap = D.official - D.calc1518, gp = 100*gap/D.calc1518;
+  $("tiles").innerHTML = `
+    <div class="tile"><div class="k">Calc @15:18</div><div class="v">${fmt(D.calc1518)}</div><div class="d">index printed ${fmt(D.idx1518)}</div></div>
+    <div class="tile"><div class="k">Official close</div><div class="v">${fmt(D.official)}</div><div class="d">calc from stock closes ${fmt(D.calc_close)}</div></div>
+    <div class="tile"><div class="k">Auction gap</div><div class="v">${gap>=0?"+":""}${fmt(gap)}</div><div class="d">${gp>=0?"+":""}${gp.toFixed(3)}% after 15:15</div></div>
+    <div class="tile"><div class="k">15:10&ndash;15:15 match</div><div class="v">&le; ${D.win_maxerr.toFixed(1)} pts</div><div class="d">max |calc &minus; index|, out-of-sample</div></div>`;
+  $("note").innerHTML = `Fit quality ${day}: RMSE <b>${D.rmse}</b> pts over the continuous session. In the
+    15:10&ndash;15:15 window the calculated index stays within <b>${D.win_maxerr}</b> pts of the published print
+    (${(100*D.win_maxerr/D.idx1518).toFixed(3)}%) &mdash; the two match; the published index then freezes while the
+    auction moves stocks to the official close.`;
+  drawChart(D); drawTable(D); drawSummary();
+}
+let SUMROWS = null;
+async function loadSummary(){
+  try{ const j = await (await fetch("/summary",{cache:"no-store"})).json();
+       if(j.status==="ok" && j.rows.length) SUMROWS = j.rows; }
+  catch(e){ /* static-file mode: fall back to embedded data */ }
+  renderSummary();
+}
+function renderSummary(){
+  let out = "";
+  (mode==="LIVE" ? ["SENSEX","NIFTY"] : [idx]).forEach(ix=>{ out += summaryTable(ix); });
+  $("summary").innerHTML = out;
+}
+function summaryTable(idx){
+  const wd = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+  let h = `<div class="note" style="border-left-color:var(--series-2)"><b>${idx} — print vs calculated, daily record</b>
+    <table><tr><th>day</th><th>print @15:15</th><th>calc @15:15</th><th>&Delta;</th>
+    <th>official close (15:30)</th><th>calc @15:18</th><th>&Delta; (auction gap)</th><th>recorded at</th></tr>`;
+  let rows;
+  if(SUMROWS){
+    rows = SUMROWS.filter(r=>r.idx===idx).map(r=>({d:r.date, p15:r.print_1515, c15:r.calc_1515,
+      off:r.official_close, c18:r.calc_1518, gap:r.auction_gap,
+      ts:(r.recorded_at||"").replace("T"," ").slice(0,16)}));
+  } else {
+    rows = Object.keys(DATA[idx].days).map(d=>{
+      const D = DATA[idx].days[d]; const i15 = D.times.indexOf("15:15");
+      return {d:d, p15:D.index[i15], c15:D.calc[i15], off:D.official, c18:D.calc1518,
+              gap:+(D.official-D.calc1518).toFixed(2), ts:"(embedded)"};
+    });
+  }
+  rows.forEach(r=>{
+    const dt = new Date(r.d+"T00:00:00");
+    h += `<tr><td>${wd[dt.getDay()]} ${r.d.slice(8,10)} ${dt.toLocaleString("en",{month:"short"})}</td>
+      <td>${fmt(r.p15)}</td><td>${fmt(r.c15)}</td><td>${(r.c15-r.p15).toFixed(2)}</td>
+      <td>${fmt(r.off)}</td><td>${fmt(r.c18)}</td><td><b>${r.gap>=0?"+":""}${r.gap.toFixed(2)}</b></td>
+      <td style="color:var(--text-muted)">${r.ts}</td></tr>`;
+  });
+  h += `</table><div style="margin-top:6px;font-size:12px;color:var(--text-muted)">&Delta; @15:15 is fit error
+    (calculated vs the still-live print). The last column is the auction: the index is frozen from
+    15:15, so official close &minus; calc@15:18 is the move struck in the closing auction. A new row
+    is recorded every trading day at 15:50 IST.</div></div>`;
+  return h;
+}
+function drawSummary(){ if(SUMROWS===null){ loadSummary(); } else { renderSummary(); } }
+function drawChart(D){
+  const svg=$("ch"), W=svg.clientWidth||920, H=360, L=64, R=16, T=14, B=30;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`); svg.innerHTML="";
+  const n=D.times.length;
+  const all=[...D.calc,...D.index,D.official];
+  let lo=Math.min(...all), hi=Math.max(...all); const pad=(hi-lo)*0.08||1; lo-=pad; hi+=pad;
+  const X=i=>L+(W-L-R)*i/(n-1), Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  let g="";
+  const yt=5; for(let i=0;i<=yt;i++){const v=lo+(hi-lo)*i/yt,y=Y(v);
+    g+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`+
+       `<text x="${L-8}" y="${y+4}" text-anchor="end" font-size="11" fill="var(--text-muted)">${Math.round(v).toLocaleString("en-IN")}</text>`;}
+  for(let i=0;i<n;i+=5){g+=`<text x="${X(i)}" y="${H-8}" text-anchor="middle" font-size="11" fill="var(--text-muted)">${D.times[i]}</text>`;}
+  const auc=D.times.indexOf("15:15");
+  if(auc>=0) g+=`<rect x="${X(auc)}" y="${T}" width="${W-R-X(auc)}" height="${H-T-B}" fill="var(--text-muted)" opacity="0.07"/>`+
+    `<text x="${X(auc)+6}" y="${T+14}" font-size="11" fill="var(--text-muted)">auction</text>`;
+  const oy=Y(D.official);
+  g+=`<line x1="${L}" x2="${W-R}" y1="${oy}" y2="${oy}" stroke="var(--text-muted)" stroke-width="2" stroke-dasharray="6 5"/>`+
+     `<text x="${W-R}" y="${oy-6}" text-anchor="end" font-size="11" fill="var(--text-secondary)">official ${fmt(D.official)}</text>`;
+  const path=a=>a.map((v,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(v).toFixed(1)).join(" ");
+  g+=`<path d="${path(D.index)}" fill="none" stroke="var(--series-2)" stroke-width="2"/>`;
+  g+=`<path d="${path(D.calc)}" fill="none" stroke="var(--series-1)" stroke-width="2"/>`;
+  const li=n-1;
+  g+=`<text x="${X(li)-4}" y="${Y(D.calc[li])-8}" text-anchor="end" font-size="11.5" fill="var(--text-primary)">calculated</text>`;
+  g+=`<circle cx="${X(li)}" cy="${Y(D.calc[li])}" r="4" fill="var(--series-1)" stroke="var(--surface-2)" stroke-width="2"/>`;
+  g+=`<circle cx="${X(li)}" cy="${Y(D.index[li])}" r="4" fill="var(--series-2)" stroke="var(--surface-2)" stroke-width="2"/>`;
+  g+=`<line id="xh" y1="${T}" y2="${H-B}" stroke="var(--text-muted)" stroke-width="1" opacity="0"/>`;
+  svg.innerHTML=g;
+  const tip=$("tip"), xh=svg.querySelector("#xh");
+  svg.onmousemove=e=>{
+    const r=svg.getBoundingClientRect(), mx=(e.clientX-r.left)*W/r.width;
+    let i=Math.round((mx-L)/(W-L-R)*(n-1)); i=Math.max(0,Math.min(n-1,i));
+    xh.setAttribute("x1",X(i)); xh.setAttribute("x2",X(i)); xh.setAttribute("opacity",.5);
+    tip.style.display="block";
+    tip.innerHTML=`<span style="color:var(--text-muted)">${D.times[i]}</span><br>calc <b>${fmt(D.calc[i])}</b><br>index <b>${fmt(D.index[i])}</b><br>diff <b>${(D.calc[i]-D.index[i]).toFixed(2)}</b>`;
+    const wrap=svg.parentElement.getBoundingClientRect();
+    let tx=e.clientX-wrap.left+14; if(tx>wrap.width-150) tx=e.clientX-wrap.left-150;
+    tip.style.left=tx+"px"; tip.style.top=(e.clientY-wrap.top-10)+"px";
+  };
+  svg.onmouseleave=()=>{tip.style.display="none"; xh.setAttribute("opacity",0);};
+}
+function drawTable(D){
+  let h="<table><tr><th>time</th><th>calculated</th><th>published index</th><th>diff (pts)</th></tr>";
+  D.times.forEach((t,i)=>{h+=`<tr><td>${t}</td><td>${fmt(D.calc[i])}</td><td>${fmt(D.index[i])}</td><td>${(D.calc[i]-D.index[i]).toFixed(2)}</td></tr>`;});
+  h+=`<tr><td>official close</td><td>${fmt(D.calc_close)}</td><td>${fmt(D.official)}</td><td>${(D.calc_close-D.official).toFixed(2)}</td></tr></table>`;
+  $("tbl").innerHTML=h;
+}
+function stopLive(){ if(liveTimer){clearInterval(liveTimer); liveTimer=null;} }
+function startLive(){
+  if(liveTimer) return;
+  pollLive();
+  liveTimer=setInterval(pollLive,5000);
+}
+async function pollLive(){
+  let j;
+  try{ j = await (await fetch("/live",{cache:"no-store"})).json(); }
+  catch(e){ $("liveNote").innerHTML = "Server not reachable. Start it with:<br><code>cd ~/files/institutional-trader && ./.venv/bin/python studies/CAS_NIFTY_SENSEX_DATA/live_calc_server.py</code> then open <code>http://localhost:8787</code>"; return; }
+  if(j.status!=="ok"){ $("liveNote").textContent = j.status==="warming" ? "Warming up — fitting weights from the latest session (1–2 min)…" : ("Server status: "+j.status); return; }
+  let tiles="";
+  j.rows.forEach(r=>{
+    if(r.diff!==null) hist[r.idx].push({t:j.ts, d:r.diff});
+    if(hist[r.idx].length>240) hist[r.idx].shift();
+    const pos = r.diff>=0;
+    tiles += `
+    <div class="tile"><div class="k">${r.idx} live</div><div class="v">${r.live?fmt(r.live):"–"}</div><div class="d">exchange print</div></div>
+    <div class="tile"><div class="k">${r.idx} calculated</div><div class="v">${r.calc?fmt(r.calc):"–"}</div><div class="d">from ${r.idx==="SENSEX"?30:50} constituents${r.missing.length?` (missing ${r.missing.length})`:""}</div></div>
+    <div class="tile"><div class="k">${r.idx} diff</div><div class="v">${r.diff===null?"–":(pos?"+":"")+fmt(r.diff)}</div><div class="d">${r.diff_pct===null?"":(pos?"+":"")+r.diff_pct.toFixed(3)+"% live − calc"}</div></div>`;
+  });
+  $("liveTiles").innerHTML = tiles;
+  $("liveNote").innerHTML = `Updated <b>${j.ts}</b> IST · polling every 5s · weights fit on <b>${j.fit_day}</b>`+
+    (j.market_open?"" : " · <b>market closed</b> — prices are last session's, diff is not meaningful")+
+    ` · <button onclick="fetch('/refit',{method:'POST'})" style="font-size:11px;margin-left:6px">refit weights</button>`;
+  drawLive();
+}
+function drawLive(){
+  const svg=$("liveCh"), W=svg.clientWidth||920, H=220, L=56, R=12, T=12, B=24;
+  svg.setAttribute("viewBox",`0 0 ${W} ${H}`);
+  const A=hist.SENSEX, N=hist.NIFTY;
+  if(!A.length&&!N.length){svg.innerHTML="";return;}
+  const all=[...A.map(x=>x.d),...N.map(x=>x.d),0];
+  let lo=Math.min(...all), hi=Math.max(...all); const pad=(hi-lo)*0.15||1; lo-=pad; hi+=pad;
+  const n=Math.max(A.length,N.length,2);
+  const X=i=>L+(W-L-R)*i/(n-1), Y=v=>T+(H-T-B)*(1-(v-lo)/(hi-lo));
+  let g=`<line x1="${L}" x2="${W-R}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="4 4"/>`;
+  [[A,"var(--series-1)","SENSEX"],[N,"var(--series-2)","NIFTY"]].forEach(([a,c,lbl])=>{
+    if(!a.length) return;
+    g+=`<path d="${a.map((p,i)=>(i?"L":"M")+X(i).toFixed(1)+" "+Y(p.d).toFixed(1)).join(" ")}" fill="none" stroke="${c}" stroke-width="2"/>`;
+    g+=`<text x="${X(a.length-1)-4}" y="${Y(a[a.length-1].d)-8}" text-anchor="end" font-size="11" fill="var(--text-primary)">${lbl} ${a[a.length-1].d.toFixed(1)}</text>`;
+  });
+  g+=`<text x="${L-8}" y="${Y(0)+4}" text-anchor="end" font-size="11" fill="var(--text-muted)">0</text>`;
+  g+=`<text x="${L-8}" y="${T+8}" text-anchor="end" font-size="11" fill="var(--text-muted)">${hi.toFixed(0)}</text>`;
+  g+=`<text x="${L-8}" y="${H-B}" text-anchor="end" font-size="11" fill="var(--text-muted)">${lo.toFixed(0)}</text>`;
+  svg.innerHTML=g;
+}
+render();
+window.addEventListener("resize",()=>{ if(mode==="REPLAY") drawChart(DATA[idx].days[day]); else drawLive(); });
+</script>

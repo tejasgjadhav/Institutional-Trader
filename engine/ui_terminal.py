@@ -789,6 +789,24 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return f"""
 <div style="color:{TEXT};">
 
+<p style="color:{RED};font-size:17px;font-weight:bold;">⚠ THE STALE-BAR INCIDENT — FOUND 5-AUG · FIXED · VERIFIED 6-AUG. THE FORWARD RECORD RESTARTS 6-AUG-2026</p>
+{p("For six weeks the scan <b>never read the current day's close</b>: the Upstox daily feed carries no same-day bar "
+   "during the session, so every signal was computed on the <b>PREVIOUS session's close</b> against a one-day-shifted "
+   "Donchian band. Reconstructing all 19 booked positions: <b>every one matches a T-1 breakout, zero require the same "
+   "day</b>. GRASIM was the tell — it broke out Monday (+5.1%), and the bear call arrived Tuesday after it had already "
+   "fallen 3.7%. The user's question — <i>why on earth a bear call?</i> — found what repeated code sweeps could not: "
+   "the bug was in the DATA, not the code, and only shows up at the real read-time.")}
+{res("<b>FIXED (5-Aug):</b> today's close now comes from the intraday series, where the auction print lands "
+     "(todays_close) · a scan that cannot get TODAY's close refuses to fire · a DIRECTION AUDIT suppresses any signal "
+     "contradicting the day's move (an invariant — verified on 1,182 real breakouts, zero legitimate conflicts) · and "
+     "every signal's price is shown on screen next to the live price (SIGNAL→LIVE, AUC = auction close).")}
+{res("<b>VERIFIED (6-Aug, first corrected session):</b> HAL bear call fired ON its up-day (+5.9%), signal price "
+     "<b>4,920.00 = official bhavcopy close, EXACT</b> · 15:31 watchlist 19/20 exact vs bhavcopy · the stale guard "
+     "fired in production (RELIANCE) and correctly refused to scan. The system now trades the same close-based signal "
+     "the 2019-2026 backtests measured — for the first time.")}
+{dim("Honest consequences: the pre-6-Aug live record (11W/4L) belongs to the DELAYED strategy and must not be compared "
+     "to the 84-87% backtest figures. The forward record starts 6-Aug. Full record: studies/STALE_BAR_INCIDENT.md")}
+
 <p style="color:{AMBER};font-size:17px;font-weight:bold;">⚠ NSE SESSION CHANGED — 3-AUG-2026 · ALL OUR TIMINGS MOVED</p>
 {p("NSE moved the equity-<b>derivatives</b> close from <b>15:30 to 15:40</b> and introduced a <b>Closing Auction Session</b>. "
    "F&amp;O stocks now stop continuous trading at <b>15:15</b>, auction 15:15–15:35, and their official closing price is the "

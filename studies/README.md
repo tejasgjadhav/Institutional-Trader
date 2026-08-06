@@ -9,6 +9,17 @@ things that were tested and deliberately **not** deployed — those are as impor
 
 ---
 
+## ⚠ THE STALE-BAR INCIDENT (read first — it reframes the live record)
+
+Discovered 5-Aug-2026: **the live scan never read the current day's close** — the Upstox daily
+endpoint carries no same-day bar during the session, so every signal from June onward was computed
+on the PREVIOUS session's close (all 19 booked positions reconstruct as T-1 breakouts; 0 same-day).
+The live record before 6-Aug tested a strategy no backtest covers. Fixed 5-Aug (intraday-sourced
+`todays_close`, freshness guard, direction-vs-move invariant, SIGNAL→LIVE UI); first corrected
+session verified against bhavcopy 6-Aug (HAL exact, watchlist 19/20). **The forward record restarts
+6-Aug-2026.** Full record: [`STALE_BAR_INCIDENT.md`](STALE_BAR_INCIDENT.md). This also supersedes the
+"+44% more breakouts" framing in the session-change study below — that counterfactual never ran.
+
 ## ⚠ READ BEFORE COMPARING ANY NUMBERS — NSE session changed 3-Aug-2026
 
 Equity **derivatives** now close at **15:40** (was 15:30), and F&O stocks stop continuous trading at

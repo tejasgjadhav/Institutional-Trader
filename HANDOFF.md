@@ -1,5 +1,15 @@
 # Handoff — institutional-trader
 
+## DONE (6-Aug eve): stale-bar incident recorded per RESULTS→STUDIES→UI→GITHUB
+
+studies/STALE_BAR_INCIDENT.md (full record: defect, GRASIM proof, 19/19 T-1 reconstruction, 4-layer
+lesson, fixes, bhavcopy-verified first session, restart of the forward record). studies/README.md
+banner points to it and flags the superseded "+44%" claim; NSE_SESSION_CHANGE study carries a
+CORRECTION header (audit findings: cost-table convention, spf 1.2%, v1 OOS 73.4%, bhavcopy match
+proved nothing). STUDIES tab card added in the same format; viewer restarted. All pushed.
+
+---
+
 ## ✅ VERIFIED vs bhavcopy (06-Aug 18:18) — the first corrected session checks out
 
 **HAL (the day's only fired call, v1 BEAR_CALL 4950/5100):** scan's signal_px 4,920.00 == official

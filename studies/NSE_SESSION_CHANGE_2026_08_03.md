@@ -1,5 +1,13 @@
 # NSE session change, 3-Aug-2026 — what moved, what it broke, what we changed
 
+> **CORRECTION (6-Aug-2026).** Measurement 1 below ("moving the scan GAINS signals, +44%") priced a
+> counterfactual the system never ran: the scan read a STALE daily bar at any hour, so both 15:10 and
+> 15:36 saw the previous session's close. The retiming was still right in principle, but the gain was
+> unrealisable until the stale-bar fix landed (5-Aug). A third-party audit also found: the cost table
+> mixes a full-spread quote against a one-way charge; `spf()` charges ~1.2% blended (not "~1%/leg");
+> "84–87% win rates" is v2 only (v1 OOS is 73.4%); and the bhavcopy match proved nothing about 3-Aug
+> (it matched 113/113 pre-change too). See `STALE_BAR_INCIDENT.md` for the corrected record.
+
 On **3 August 2026** NSE changed the equity-derivatives session and how closing prices are struck.
 The engine had the old session hardcoded in ~20 places, so several books were settling and signalling
 against prices that no longer exist. This records the change, the measurements, and the fix.
