@@ -1055,12 +1055,21 @@ Paper forward-test only. For educational use. Not financial advice.
    "rejected. This is the 'why' behind every live strategy.")}
 
 {h("5 — SIGNAL TIMING (IST, trading days only)")}
-{p(f"<b>Stock options (3-Family):</b> {C.MARKET_OPEN}–{C.FNO_CLOSE}, most active 10:30–11:00 · "
-   f"<b>ORB+VWAP index:</b> before {C.ORB_VWAP_ENTRY_CUTOFF} · "
-   f"<b>Stock &amp; Swing credit spreads:</b> once/day, ~{C.STOCK_CREDIT_SCAN_AFTER} (a daily breakout needs "
-   f"the near-close) · <b>Monthly futures pullback:</b> once per expiry cycle, ~{C.MONTHLY_FUT_SCAN_AFTER} "
-   "on the first trading day after the monthly expiry — only when NIFTY &gt; its 200DMA (stands aside "
-   "otherwise, and says so). Signals are selective — many days few or none; that's the point, not a fault.")}
+{p(f"<b>The daily credit-spread flow (v2 / v1 / v0 / swing):</b> "
+   f"<b>{C.WATCHLIST_AFTER}</b> watchlist preview on this screen (names ~70% settled, strikes provisional — the "
+   f"auction is still running) → <b>{getattr(C, 'WATCHLIST_DIGEST_AT', '15:31')}</b> Telegram digest with FINAL "
+   f"strikes and live option prices (the auction close is struck by then — pre-stage from this) → "
+   f"<b>{C.STOCK_CREDIT_SCAN_AFTER}</b> the scan fires on TODAY'S OFFICIAL CLOSE → place by <b>{C.FNO_CLOSE}</b> "
+   f"(derivatives close) → settles {C.SETTLE_AFTER}.")}
+{p(f"<b>Every signal shows the price it was computed on</b> (SIGNAL→LIVE on the watchlist, UNDERLYING on PM "
+   "DECISIONS). 'AUC' means that price IS the closing-auction price — the official close, the exact field the "
+   "2019–2026 backtests used. A red gap between signal and live price means the market has left the signal behind: "
+   "ask before placing. This exists because for six weeks the scan silently read the PREVIOUS day's close "
+   "(studies/STALE_BAR_INCIDENT.md); now a stale price refuses to fire and a wrong-direction signal is suppressed.")}
+{p(f"<b>Intraday 0DTE:</b> entry 09:16 on expiry days, settles {C.SETTLE_AFTER} or earlier at 95% of max profit · "
+   f"<b>Monthly futures pullback:</b> once per expiry cycle, ~{C.MONTHLY_FUT_SCAN_AFTER} on the first trading day "
+   "after the monthly expiry, only when NIFTY &gt; its 200DMA. Signals are selective — many days few or none; "
+   "that's the point, not a fault.")}
 
 {h("6 — HOW TO PLACE AN ORDER")}
 {p("<b>BUY strategies:</b> the PM row gives the exact BUY — e.g. 'BUY RELIANCE 1400 CE @ Rs X'. Place it in "
