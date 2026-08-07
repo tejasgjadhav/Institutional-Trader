@@ -231,6 +231,15 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
 - **Data limits:** real option-premium history is only ~1 month back; index futures ~33 days.
   Daily price = 2+ yrs, 5-min price = ~1 yr. Long backtests must use the underlying proxy or a
   paid vendor — see `studies/DATA_AVAILABILITY_LIMITS.md`.
+- **DEPLOYMENT FREEZE IN THE SIGNAL WINDOW (standing rule, user 2026-08-07).** On trading days, do
+  NOT deploy code/config or restart the engine between **15:15 and 15:40** (auction start to
+  derivatives close) unless fixing an active failure the user knows about. Mechanism: the engine's
+  once-a-day markers (watchlist built, digest sent, scan done) are IN-MEMORY, so a mid-window
+  restart resets them and RE-RUNS the daily scans under whatever was just deployed — a late or
+  wrong signal then lands in the trade log after the close, when nothing can be done about it.
+  Deploy after 15:40 or before 09:00. The 7-Aug v0-rule deploy at 15:44 was safe by four minutes,
+  not by design — hence this rule. Restarting after 15:40 is safe (scans are market-hours gated).
+
 - **A BUG CHECK IS FOUR LAYERS, NOT CODE REVIEW (standing rule, user 2026-08-06).** Born from the
   stale-bar incident: repeated code sweeps missed that the Upstox daily endpoint publishes NO
   current-day bar during the session, so `df["Close"].iloc[-1]` — correct-looking code — silently
