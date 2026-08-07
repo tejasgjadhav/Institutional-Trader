@@ -209,6 +209,8 @@ def scan_signals() -> list:
     except Exception as e:
         logger.warning(f"stock_credit v2-dedup read: {e}")
     new = []
+    from engine.data_utils import recent_entry_symbols
+    _cross_gap = recent_entry_symbols()
     for ticker in UNIVERSE:
         if len(open_now) + len(new) >= STOCK_CREDIT_MAX_OPEN:
             break
@@ -220,6 +222,8 @@ def scan_signals() -> list:
                 continue
             if any(p["symbol"] == sym and p["status"] == "OPEN" for p in book):
                 continue
+            if sym in _cross_gap:           # ANY book entered this name within the 3-day gap
+                continue                    # (cross-book rule, user 2026-08-07 — matches REENTRY=3)
             entries = [p["entry_date"] for p in book if p["symbol"] == sym]
             if entries and (today - max(date.fromisoformat(d) for d in entries)).days < STOCK_CREDIT_REENTRY_GAP_DAYS:
                 continue

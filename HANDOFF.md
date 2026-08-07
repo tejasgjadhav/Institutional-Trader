@@ -1,5 +1,27 @@
 # Handoff — institutional-trader
 
+## DEPLOYED 7-Aug 16:15 (after close, per freeze rule): 3-day gap is now CROSS-BOOK, all of v0/v1/v2
+
+User rule: the re-entry gap applies across ALL books — no book fires on a name ANY book entered
+within STOCK_CREDIT_REENTRY_GAP_DAYS (3). `data_utils.recent_entry_symbols()` is the one source of
+truth (reads all three book files); v2's scan consults it (v0 inherits via importlib) and v1's scan
+gained the same check beside its own gap. Same-day tie-break preserved (v1 scans first; its entry is
+in the file when v0 scans, 0 < 3 blocks). Matches the backtests' per-symbol REENTRY=3, which never
+had separate books. Current gap set: {HAL} (entered 6-Aug). Engine restarted after close; pushed.
+
+---
+
+## 7-Aug close-out: freeze rule pushed · NO backfill of the missed GRASIM v0
+
+Deployment-freeze rule (15:15-15:40) pushed to both remotes after the close. User confirmed the
+missed GRASIM v0 signal (7-Aug D20 breakout, c/w 0.38, blocked by the old exclusion rule) is NOT to
+be backfilled into PM DECISIONS or the trade log — the paper book records what the engine actually
+signalled, never what it would have signalled; a retroactive entry on day 2 of the restarted forward
+record would corrupt it. The 4-Aug GRASIM v1 position stays as-is (real, still OPEN). The new 3-day
+gap rule takes first live effect at the next session's 15:36 scan.
+
+---
+
 ## DEPLOYED 7-Aug ~15:45 (user decision): v0 cross-book exclusion is now the 3-DAY GAP, not OPEN
 
 User's reasoning, confirmed correct: a repeat signal at NEW levels is a different trade; only

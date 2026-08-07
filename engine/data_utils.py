@@ -184,6 +184,41 @@ def todays_close(ticker: str):
     return None, "stale"
 
 
+def recent_entry_symbols(gap_days: int = None) -> frozenset:
+    """Names entered by ANY stock-credit book (v0/v1/v2) within the last N days.
+
+    The 3-day re-entry gap is now CROSS-BOOK (user rule, 2026-08-07): a repeat signal at new levels
+    is a fine trade, but no book may fire on a name any book entered in the last
+    STOCK_CREDIT_REENTRY_GAP_DAYS — firing on consecutive days of one continuing move is just
+    playing the same breakout daily. This matches the backtests, whose REENTRY=3 is per symbol
+    with no notion of separate books. Same-day tie-break (v1 scans before v0) is preserved: a
+    same-cycle v1 entry is already in its book file when v0 scans, so 0 < gap blocks it.
+    """
+    from datetime import date as _date
+    from engine import config as _c
+    gap = int(gap_days if gap_days is not None else
+              getattr(_c, "STOCK_CREDIT_REENTRY_GAP_DAYS", 3))
+    today = _date.today()
+    syms = set()
+    for fname in ("stock_credit_positions.json", "stock_credit_v2_positions.json",
+                  "stock_credit_v0_positions.json"):
+        try:
+            import json as _json
+            with open(os.path.join(DATA_DIR, fname)) as f:
+                for p in _json.load(f) or []:
+                    sym, ed = p.get("symbol"), p.get("entry_date")
+                    if not sym or not ed:
+                        continue
+                    try:
+                        if (today - _date.fromisoformat(ed)).days < gap:
+                            syms.add(sym)
+                    except ValueError:
+                        continue
+        except Exception:
+            continue
+    return frozenset(syms)
+
+
 def market_is_trading_today() -> bool:
     """True only if the market is ACTUALLY trading now — weekday + hours AND live intraday data
     flowing. Distinguishes a real session from an NSE HOLIDAY (when _market_is_open() still says
