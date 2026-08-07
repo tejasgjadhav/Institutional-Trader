@@ -59,21 +59,38 @@ BAND_LABEL = f"c/w {_impl.STOCK_CREDIT_MIN_CW:.2f}-{_impl.STOCK_CREDIT_MAX_CW:.2
 WIN_LABEL  = "77% IS (2019-Sep'24, +ve 4/6 yrs) / 91% OOS (Oct'24-Jul'26, n=43)"
 
 
-def _v1_open_symbols() -> frozenset:
-    """Symbols v1 currently holds OPEN — including anything it opened in this same 15:10 cycle,
-    because v1 scans before v0 in engine_runner._stock_credit.
+def _v1_recent_symbols() -> frozenset:
+    """Symbols v1 has ENTERED within the last STOCK_CREDIT_REENTRY_GAP_DAYS (3) — the user's rule,
+    2026-08-07, replacing the old 'any v1 OPEN name' exclusion.
 
-    Deliberately v1 ONLY. v0 does NOT defer to v2: the two share a geometry and their c/w bands are
-    mutually exclusive (v2 takes >= 0.40, v0 takes 0.35-0.40), so one stock can never qualify for
-    both on the same day, and for a name v2 opened on an earlier day the user wants the books
-    independent.
+    Why the change: the old rule blocked v0 for as long as v1 held a name, which is STRICTER than
+    anything backtested — the backtests (REENTRY=3 in every lowcw/stkfade script) allow the same
+    name to re-enter after 3 days even with the earlier position still open, because a NEW breakout
+    at a NEW close sells different strikes and is a different trade. What the gap protects against
+    is the real failure mode the user named: firing on CONSECUTIVE days of one continuing move,
+    which is just playing the same breakout daily. GRASIM 7-Aug was the case that exposed it — a
+    fresh D20 breakout at 3,323 in v0's band (c/w 0.38), blocked only because v1 still held the
+    4-Aug position at strikes 200 points lower.
+
+    A same-day clash stays blocked automatically (gap 0 < 3), so the original 2026-07-31 tie-break
+    — v1 wins the same stock on the same day — is preserved. v2 remains not consulted: its band and
+    v0's are mutually exclusive on the same day, and cross-day independence is intended.
     """
+    from datetime import date
+    gap = int(getattr(config, "STOCK_CREDIT_REENTRY_GAP_DAYS", 3))
+    today = date.today()
     syms = set()
     try:
         with open(os.path.join(DATA_DIR, "stock_credit_positions.json")) as f:
             for p in json.load(f) or []:
-                if p.get("status") == "OPEN" and p.get("symbol"):
-                    syms.add(p["symbol"])
+                sym, ed = p.get("symbol"), p.get("entry_date")
+                if not sym or not ed:
+                    continue
+                try:
+                    if (today - date.fromisoformat(ed)).days < gap:
+                        syms.add(sym)
+                except ValueError:
+                    continue
     except Exception:
         pass
     return frozenset(syms)
@@ -93,7 +110,7 @@ def scan_signals() -> list:
     Everything else stays independent — v0 is NOT blocked by names v2 holds, and not by v1 names
     that are already closed.
     """
-    _impl.EXCLUDE_SYMBOLS = _v1_open_symbols()
+    _impl.EXCLUDE_SYMBOLS = _v1_recent_symbols()
     try:
         return _impl.scan_signals()
     finally:

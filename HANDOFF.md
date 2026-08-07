@@ -1,5 +1,65 @@
 # Handoff — institutional-trader
 
+## DEPLOYED 7-Aug ~15:45 (user decision): v0 cross-book exclusion is now the 3-DAY GAP, not OPEN
+
+User's reasoning, confirmed correct: a repeat signal at NEW levels is a different trade; only
+CONSECUTIVE-day repeats are chasing one continuing move. This exactly matches the backtests —
+REENTRY=3 per symbol in every lowcw/stkfade script, with NO open-position blocking — so the old
+"blocked while v1 holds the name OPEN" rule was stricter than anything validated.
+
+`stock_credit_v0._v1_recent_symbols()` now excludes v1 names ENTERED within
+STOCK_CREDIT_REENTRY_GAP_DAYS (3). Same-day tie-break (v1 wins) preserved automatically (0 < 3).
+Effect at deploy time: exclusion shrank from {BAJAJ-AUTO, GRASIM, HAL, TCS} to {HAL}. GRASIM's fresh
+7-Aug breakout (D20, 3,323, c/w 0.38) would have fired under the new rule — today's 15:36 scan had
+already run on the old rule, so first effect is the NEXT session.
+
+---
+
+## 7-Aug: GRASIM in watchlist at c/w 0.38, no signal — WORKING AS DESIGNED, rule question open
+
+GRASIM broke out fresh on 7-Aug (LONG D20, signal_px 3,323 = live, fresh close). c/w 0.38 → v2/v1
+gate (>=0.40) blocks. v0's band (0.35-0.40) would take it, BUT v0 excludes v1's OPEN names and
+GRASIM is OPEN in v1 (4-Aug bear call 3140/3200, cost 43.05 vs credit 24.85 — losing). So v0 stood
+down per the user's tie-break rule (2026-07-31). NOT a bug.
+
+OPEN QUESTION for the user: the tie-break was designed for same-DAY clashes; here a 3-day-old v1
+position blocked a fresh v0 entry. Trade-off if relaxed: v0 would sell a NEW bear call at higher
+strikes (spot 3,323) on a name already moving against the v1 position — doubles same-name
+same-direction exposure. Do not change without his call (approval-first rule).
+
+---
+
+> **ADDED (2026-08-07 ~11:15): replay is now self-extending.** calc_vs_print_recorder also dumps
+> each day's minute path to `replay_days.json` (upsert, sorted); server serves it at **/replay**;
+> UI merges it over the embedded data and builds day tabs dynamically (falls back to embedded
+> 3 days without the server). 6-Aug backfilled — 4 tabs verified. Each 15:50 run adds the day.
+>
+> **ARMED (2026-08-07 ~11:05):** who prints first at 15:28–29, the exchange index or our
+> constituent calc? Not answerable from 1-min bars (both land in the same bar; no poll logs
+> existed). Added `race_logger()` to live_calc_server: 15:26–15:34 weekdays it samples /live
+> once a second → `studies/CAS_NIFTY_SENSEX_DATA/race_log.jsonl`. Server restarted, thread
+> armed. **Read the jsonl after today's 15:34** — first ts where each side leaves its frozen
+> level answers it. Expectation to verify, not assert: exchange index likely leads (internal ms
+> feed vs our 5s-cadence REST LTPs); our only possible lead is stocks' auction prints reaching
+> LTP before the index recomputes.
+
+> **DONE (2026-08-07 ~10:55):** auction-print model trained Mon–Wed, tested Thu — **every model
+> lost to naive**. The NIFTY auction lift DECAYED +201→+152→+54→+8 pts: a regime-change transient,
+> gone by day 4. Naive (calc@15:15) was −8 pts on Thursday's print; trained models +133…+145 off.
+> SENSEX exception: +168-pt auction jump on its OWN EXPIRY day after 3 inert days. Exact CAS price
+> is order-book-determined (max executable volume) — not reproducible from public feeds, ever.
+> → CROSS_EXCHANGE_AUCTION_GAP.md Addendum 4. **Ops fix:** scheduled calc-vs-print failed 6-Aug
+> (no same-day daily bar → no official close at 15:50); now uses intraday last print for today +
+> default run re-records the prior session (self-healing). Thu row backfilled: NIFTY gap +8.33,
+> SENSEX +167.63.
+
+> **DONE (2026-08-06 ~13:50):** stock futures do NOT predict the cash auction print —
+> corr −0.017 (n=100 train Mon+Tue), futures-implied predictor loses to naive out-of-sample on
+> Wed (22/50, MAE 0.319% vs 0.292%); futures stayed FLAT while auctions moved +0.74%, and don't
+> converge even after the print (+0.21% gap at 15:39). Regression fitted on Mon+Tue only learns
+> the mean lift and does WORSE on Wed — magnitude unstable, only the positive SIGN persists.
+> → CROSS_EXCHANGE_AUCTION_GAP.md Addendum 3. Thursday scores itself once today's data lands.
+
 ## DONE (6-Aug eve): stale-bar incident recorded per RESULTS→STUDIES→UI→GITHUB
 
 studies/STALE_BAR_INCIDENT.md (full record: defect, GRASIM proof, 19/19 T-1 reconstruction, 4-layer
