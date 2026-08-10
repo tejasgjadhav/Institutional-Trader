@@ -319,7 +319,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     # SIGNAL→LIVE added 2026-08-05: the price the breakout was computed on, next to the live price.
     # A bear-call fired on GRASIM the day AFTER its breakout off a stale bar and nothing on screen
     # could reveal it. A large gap here is that failure, visible.
-    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "PREM", "LIQ", "MAX ₹+", "MAX ₹−", "RESULT"]
+    # CREDIT added 2026-08-10 (user): the premium DIFFERENCE — what the short leg pays minus what
+    # the hedge costs, in points. It is the numerator of C/W and what you actually collect.
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "CREDIT", "PREM", "LIQ", "MAX ₹+", "MAX ₹−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -340,7 +342,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         AMOUNT/P&L·STATUS) summing ~1026px — same total as the watchlist. Stretch mode ballooned the
         table past the window and clipped the last column; fixed widths keep it single-screen."""
         h = t.horizontalHeader()
-        for _c, _px in enumerate((96, 250, 170, 72, 112, 104, 140, 132)):
+        for _c, _px in enumerate((96, 232, 168, 70, 110, 124, 138, 130)):
             h.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
             h.resizeSection(_c, _px)
         t.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -376,8 +378,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # Rebalanced 2026-08-10 (user screenshot): C/W truncated to "✗ …", LOT to "15…", BRK to
         # "D…", SIGNAL→LIVE cut on 4-digit prices. Space came out of STOCK/SELL-BUY/MAX columns —
         # the ones with headroom — so the row still fits one screen (sum 1288px < ~1400 window).
-        for _c, _px in ((0, 108), (1, 60), (2, 52), (3, 172), (4, 226), (5, 70), (6, 64),
-                        (7, 88), (8, 92), (9, 70), (10, 96), (11, 96), (12, 94)):
+        for _c, _px in ((0, 104), (1, 58), (2, 52), (3, 168), (4, 214), (5, 84), (6, 62),
+                        (7, 86), (8, 76), (9, 88), (10, 66), (11, 92), (12, 92), (13, 90)):
             # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
@@ -1408,14 +1410,16 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     sig_s = f"{_sig:,.0f}{_tag}"
                 else:
                     sig_s = "—"
+                _cr = row.get("credit")
+                crcell = f"₹{_cr:.1f}" if isinstance(_cr, (int, float)) else "—"
                 vals = [row.get("sym", "—"), side_s, f"D{row.get('dc','')}", sig_s,
-                        legs, exp_s, lot_s, cwcell, premcell, liqcell, mp_s, ml_s, result]
+                        legs, exp_s, lot_s, cwcell, crcell, premcell, liqcell, mp_s, ml_s, result]
                 self._set_row(self.pm_watch, i, vals)
-                self._color_cell(self.pm_watch, i, 12, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+                self._color_cell(self.pm_watch, i, 13, GREEN if g == "PASS" else (AMBER if evaluable else RED))
                 if isinstance(_gap, (int, float)):
                     self._color_cell(self.pm_watch, i, 3,
                                      RED if abs(_gap) >= 1.0 else (AMBER if abs(_gap) >= 0.5 else TEXT_DIM))
-                for c in (2, 3, 5, 6, 7, 8, 9, 10, 11, 12):   # centre everything except STOCK/SIDE/legs
+                for c in (2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13):   # centre everything except STOCK/SIDE/legs
                     it = self.pm_watch.item(i, c)
                     if it: it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
