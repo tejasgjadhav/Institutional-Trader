@@ -378,8 +378,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # Rebalanced 2026-08-10 (user screenshot): C/W truncated to "✗ …", LOT to "15…", BRK to
         # "D…", SIGNAL→LIVE cut on 4-digit prices. Space came out of STOCK/SELL-BUY/MAX columns —
         # the ones with headroom — so the row still fits one screen (sum 1288px < ~1400 window).
-        for _c, _px in ((0, 104), (1, 58), (2, 52), (3, 168), (4, 214), (5, 84), (6, 62),
-                        (7, 86), (8, 76), (9, 88), (10, 66), (11, 92), (12, 92), (13, 90)):
+        # SELL/BUY needs 25 chars for decimal strikes ("SELL 277.5 / BUY 267.5 PE") — 236px.
+        # Paid from STOCK, the MAX columns and RESULT, all of which have slack. Sum 1332px.
+        for _c, _px in ((0, 100), (1, 58), (2, 52), (3, 168), (4, 236), (5, 84), (6, 62),
+                        (7, 86), (8, 76), (9, 88), (10, 66), (11, 86), (12, 86), (13, 84)):
             # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
