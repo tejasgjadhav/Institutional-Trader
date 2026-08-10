@@ -373,8 +373,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # ALL columns FIXED (no Stretch): the outer scroll widget is wider than the window
         # (the credit tables below force it), so a Stretch column balloons and pushes the last
         # columns off-screen. Fixed widths summing ~1030px keep the whole row on one screen.
-        for _c, _px in ((0, 118), (1, 66), (2, 46), (3, 150), (4, 248), (5, 84), (6, 54),
-                        (7, 74), (8, 88), (9, 78), (10, 104), (11, 104), (12, 96)):
+        # Rebalanced 2026-08-10 (user screenshot): C/W truncated to "✗ …", LOT to "15…", BRK to
+        # "D…", SIGNAL→LIVE cut on 4-digit prices. Space came out of STOCK/SELL-BUY/MAX columns —
+        # the ones with headroom — so the row still fits one screen (sum 1288px < ~1400 window).
+        for _c, _px in ((0, 108), (1, 60), (2, 52), (3, 172), (4, 226), (5, 70), (6, 64),
+                        (7, 88), (8, 92), (9, 70), (10, 96), (11, 96), (12, 94)):
             # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)

@@ -1,5 +1,25 @@
 # Handoff — institutional-trader
 
+## 10-Aug: v0 GRASIM fired under the cross-book gap rule · watchlist column widths rebalanced
+
+Screenshot from the user (10-Aug 15:51): v0 fired GRASIM 3420/3500 CE (new levels vs the 4-Aug v1
+3140/3200) — the 7-Aug cross-book 3-day-gap rule working as designed on its first opportunity.
+UI issue reported: watchlist columns truncate (C/W shows "✗ …", LOT "15…", BRK "D…", SIGNAL→LIVE
+cut on 4-digit prices). Fix: rebalance the 13 fixed widths — C/W must show tick+value fully
+(user: premium column is fine as is). Deploying after close.
+
+---
+
+## ✅ 7-Aug verified vs bhavcopy: watchlist 14/14 EXACT, GRASIM exact (3,323.00)
+
+Second consecutive session verified against the exchange. The 15:31 watchlist's signal_px matched
+official ClsPric on ALL 14 names, zero mismatches (6-Aug was 19/20; the one thin-name miss did not
+recur). GRASIM specifically: signal_px 3,323.00 == official close 3,323.00, LONG D20, c/w 0.38,
+gate=BLOCKED (below v2/v1's 0.40; v0 was blocked by the old exclusion rule, since replaced by the
+cross-book 3-day gap). Forward verification record: 2 sessions, 33/34 exact, GRASIM+HAL both exact.
+
+---
+
 ## DEPLOYED 7-Aug 16:15 (after close, per freeze rule): 3-day gap is now CROSS-BOOK, all of v0/v1/v2
 
 User rule: the re-entry gap applies across ALL books — no book fires on a name ANY book entered
