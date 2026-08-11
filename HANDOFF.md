@@ -1,5 +1,22 @@
 # Handoff — institutional-trader
 
+## 11-Aug verification: no trade legitimate · index closes EXACT · swing is DISABLED (flag it)
+
+**No trade today is real:** 23 breakouts, top c/w 0.31 — below even v0's 0.35 floor, so 0 passed.
+Yesterday (10-Aug) v0 DID fire GRASIM 3420/3500 c/w 0.39 — the cross-book gap rule working.
+
+**Index closes verified against NSE's official index file** (NOT the CM bhavcopy — that is EQUITIES
+only, no NIFTY row; index closes live at nsearchives.nseindia.com/content/indices/ind_close_all_
+DDMMYYYY.csv). All three EXACT to the paisa: NIFTY 24,471.70 · FINNIFTY 26,432.40 · BANKNIFTY
+57,446.25. So `todays_close()` is correct for indices as well as stocks.
+
+⚠ **SWING_CREDIT_ENABLED = False** — the swing book has been OFF. Its 3 positions are all from July
+(NIFTY WIN, FINNIFTY LOSS, NIFTY WIN) and predate the stale-bar fix, so they carry signal_px=None
+and are T-1-era trades. No swing signal can fire until the flag flips; the index fade also failed
+OOS (-1.4% of width), so leaving it off is defensible — but the user should know it is off.
+
+---
+
 ## IN PROGRESS 10-Aug eve: Telegram wording — outcome line + "intraday" not "0DTE"
 
 User spec: RESULT messages must read "This is the outcome of the Signal we gave for execution on
