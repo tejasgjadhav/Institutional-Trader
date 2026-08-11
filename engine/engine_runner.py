@@ -780,16 +780,24 @@ class EngineRunner:
                         rs = f" ₹{pnl_pts*qty:+,.0f}" if isinstance(pnl_pts, (int, float)) and qty else ""
                         g = lambda x: ("%g" % x) if isinstance(x, (int, float)) else "?"
                         verb = "CE" if "CALL" in side else ("PE" if "PUT" in side else "")
+                        # INTRADAY books settle the same session they fire, so their outcome line
+                        # says "Today" (user, 2026-08-11). Guarded on the entry date actually being
+                        # today: if a result goes out late — a retry the next morning, say — the
+                        # word would be a lie, so it silently drops back to the plain wording.
+                        _today_bit = ""
+                        if fname in self._INTRADAY_BOOKS and \
+                                p.get("entry_date") == datetime.now(IST).date().isoformat():
+                            _today_bit = "<b>Today</b> "
                         ok = send_telegram(
                             f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}\n"
-                            f"This is the outcome of the Signal we gave for execution on "
+                            f"This is the outcome of the Signal we gave for execution {_today_bit}on "
                             f"<b>{self._ord_date(p.get('entry_date'))}</b>: "
                             f"SELL {g(p.get('short_strike'))} {verb} / BUY {g(p.get('long_strike'))} {verb} "
                             f"(exp {p.get('expiry','?')})\n"
                             f"pts {pnl_pts:+.1f} × qty {qty} · closed {p.get('closed_date','?')}"
                             if isinstance(pnl_pts, (int, float)) else
                             f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}\n"
-                            f"This is the outcome of the Signal we gave for execution on "
+                            f"This is the outcome of the Signal we gave for execution {_today_bit}on "
                             f"{self._ord_date(p.get('entry_date'))} · closed {p.get('closed_date','?')}")
                     except Exception as e:
                         logger.warning(f"outcome notify {label}: {e}")
