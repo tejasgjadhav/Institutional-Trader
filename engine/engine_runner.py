@@ -303,6 +303,7 @@ class EngineRunner:
             return
         try:
             from engine.notifications import send_telegram
+            from engine import config   # used by the intraday expiry/target lines below
             kind = ("MULTIDAY" if book in self._MULTIDAY_BOOKS
                     else ("INTRADAY" if ("0DTE" in book or "INTRADAY" in book) else "MULTIDAY"))
             items = signals if isinstance(signals, list) else []
