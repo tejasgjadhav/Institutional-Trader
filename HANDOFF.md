@@ -1,5 +1,14 @@
 # Handoff — institutional-trader
 
+## IN PROGRESS 10-Aug eve: Telegram wording — outcome line + "intraday" not "0DTE"
+
+User spec: RESULT messages must read "This is the outcome of the Signal we gave for execution on
+24th July." (ordinal date, not ISO); and NIFTY/SENSEX books must say INTRADAY, never 0DTE, in all
+user-facing messages. Implement for future messages, send nothing now; show samples in chat
+(result-swing, result-intraday, intraday signal).
+
+---
+
 ## 10-Aug: v0 GRASIM fired under the cross-book gap rule · watchlist column widths rebalanced
 
 Screenshot from the user (10-Aug 15:51): v0 fired GRASIM 3420/3500 CE (new levels vs the 4-Aug v1

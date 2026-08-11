@@ -236,7 +236,7 @@ class EngineRunner:
             return self._TG_TGT_STOP[book]
         if book.startswith("SENSEX") or "SENSEX" in book:
             return self._TG_TGT_STOP["0DTE SENSEX"]
-        if "NIFTY" in book and "0DTE" in book:
+        if "NIFTY" in book and ("0DTE" in book or "INTRADAY" in book) and "BANKNIFTY" not in book:
             return self._TG_TGT_STOP["0DTE NIFTY"]
         return None
     # Books that HOLD to expiry (days→weeks) — the message must say so, or an index credit spread
@@ -288,7 +288,7 @@ class EngineRunner:
             a = self._TG_ANALYSIS["0DTE SENSEX"]
         # NB "NIFTY" is a substring of "BANKNIFTY" — must exclude it or BANKNIFTY (a REJECTED
         # book) would inherit NIFTY's 88/90% stats (bug caught in path test 2026-07-30).
-        if a is None and "0DTE" in book and "NIFTY" in book and "BANKNIFTY" not in book:
+        if a is None and ("0DTE" in book or "INTRADAY" in book) and "NIFTY" in book and "BANKNIFTY" not in book:
             a = self._TG_ANALYSIS["0DTE NIFTY"]
         if a:
             a = a.replace("{TODAY}", datetime.now(IST).strftime("%-d-%b-%Y"))
@@ -303,7 +303,8 @@ class EngineRunner:
             return
         try:
             from engine.notifications import send_telegram
-            kind = "MULTIDAY" if book in self._MULTIDAY_BOOKS else ("INTRADAY" if "0DTE" in book else "MULTIDAY")
+            kind = ("MULTIDAY" if book in self._MULTIDAY_BOOKS
+                    else ("INTRADAY" if ("0DTE" in book or "INTRADAY" in book) else "MULTIDAY"))
             items = signals if isinstance(signals, list) else []
             if not items:
                 send_telegram(f"🟢 <b>EXECUTE NOW — {kind} SIGNAL</b>\n{book} · new signal(s) — "
@@ -338,7 +339,8 @@ class EngineRunner:
                     lines.append(f"{leg1}  /  {leg2}")
                     exp = self._fmt_d(s.get("expiry") or "")
                     if kind == "INTRADAY":
-                        expbit = "Expires TODAY at 3:30 PM"
+                        _fc = config.FNO_CLOSE   # 15:40 since 3-Aug-2026 — never a literal again
+                        expbit = f"Expires TODAY at {int(_fc[:2])-12}:{_fc[3:]} PM"
                     else:
                         expbit = f"Expiry {exp}" if exp else ""
                     extra = " · ".join(x for x in (expbit,
@@ -348,7 +350,10 @@ class EngineRunner:
                     have_nums = isinstance(credit, (int, float)) and isinstance(w, (int, float)) and lot
                     exit_ = self._TG_EXIT.get(book)
                     if kind == "INTRADAY":
-                        lines.append("🎯 Hold to settle · no stop — bought wing caps the loss")
+                        _f = getattr(config, "ZERO_DTE_EARLY_CLOSE_FRAC", 0) or 0
+                        lines.append(f"🎯 Books early at {_f:.0%} of max profit, else holds to settle · "
+                                     "no stop — bought wing caps the loss" if _f else
+                                     "🎯 Hold to settle · no stop — bought wing caps the loss")
                     elif exit_ and have_nums:
                         tp_frac, stop_mult = exit_
                         binds = stop_mult * credit < w   # a vertical can't cost > width to close
@@ -658,7 +663,7 @@ class EngineRunner:
                 if new:
                     for p_ in new:   # may be 2: FLIP side + the hybrid add (2026-07-31)
                         logger.info(f"zero_dte: opened {p_['order_label']}")
-                    self._tg("0DTE NIFTY", new)
+                    self._tg("INTRADAY NIFTY", new)
             except Exception as e:
                 logger.warning(f"zero_dte scan: {e}")
             try:
@@ -667,8 +672,8 @@ class EngineRunner:
                 if n:
                     logger.info(f"dte_multi: opened {len(n)} spread(s)")
                     # each index gets its OWN clearly-labelled message (user: never combined)
-                    self._tg("0DTE SENSEX", [p for p in n if p.get("symbol") == "SENSEX"])
-                    self._tg("0DTE BANKNIFTY", [p for p in n if p.get("symbol") == "BANKNIFTY"])
+                    self._tg("INTRADAY SENSEX", [p for p in n if p.get("symbol") == "SENSEX"])
+                    self._tg("INTRADAY BANKNIFTY", [p for p in n if p.get("symbol") == "BANKNIFTY"])
             except Exception as e:
                 logger.warning(f"dte_multi scan: {e}")
 
@@ -700,15 +705,29 @@ class EngineRunner:
         ("STOCK CREDIT v1", "stock_credit_positions.json"),
         ("STOCK CREDIT v0 (c/w 0.35-0.40)", "stock_credit_v0_positions.json"),
         ("SWING CREDIT · multi-day", "swing_positions.json"),
-        ("0DTE NIFTY (same-day)", "zero_dte_positions.json"),
-        ("SENSEX 0DTE (same-day)", "sensex_dte_positions.json"),
-        ("BANKNIFTY 0DTE", "bnf_dte_positions.json"),   # disabled 07-19; retained so any open pos still settles
+        ("INTRADAY NIFTY (same-day)", "zero_dte_positions.json"),
+        ("INTRADAY SENSEX (same-day)", "sensex_dte_positions.json"),
+        ("INTRADAY BANKNIFTY", "bnf_dte_positions.json"),   # disabled 07-19; retained so any open pos still settles
         # MONTHLY FUTURES was MISSING here (found in the 2026-08-01 bug sweep). It is REGIME_OFF today
         # so nothing was lost, but the moment NIFTY clears its 200DMA it trades again and every WIN/LOSS
         # would have resolved SILENTLY — no Telegram result and absent from the portfolio summary. The
         # loop only fires on status WIN/LOSS, so this book's REGIME_OFF placeholder rows are ignored.
         ("MONTHLY FUTURES PULLBACK", "monthly_fut_positions.json"),
     ]
+
+    @staticmethod
+    def _ord_date(iso: str) -> str:
+        """'2026-07-24' -> '24th July' (year appended only when it is not the current year).
+        User wording, 2026-08-10: outcome messages name the day a person would say it, not ISO."""
+        try:
+            from datetime import date as _d
+            d = _d.fromisoformat(iso)
+            n = d.day
+            suf = "th" if 11 <= n % 100 <= 13 else {1: "st", 2: "nd", 3: "rd"}.get(n % 10, "th")
+            out = f"{n}{suf} {d.strftime('%B')}"
+            return out if d.year == _d.today().year else f"{out} {d.year}"
+        except Exception:
+            return iso or "?"
 
     def _outcomes(self):
         """Telegram every trade RESULT: when a paper position's status turns WIN/LOSS, send the
@@ -762,13 +781,15 @@ class EngineRunner:
                         verb = "CE" if "CALL" in side else ("PE" if "PUT" in side else "")
                         ok = send_telegram(
                             f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}\n"
-                            f"This is the result of the <b>{p.get('entry_date','?')}</b> call: "
+                            f"This is the outcome of the Signal we gave for execution on "
+                            f"<b>{self._ord_date(p.get('entry_date'))}</b>: "
                             f"SELL {g(p.get('short_strike'))} {verb} / BUY {g(p.get('long_strike'))} {verb} "
                             f"(exp {p.get('expiry','?')})\n"
                             f"pts {pnl_pts:+.1f} × qty {qty} · closed {p.get('closed_date','?')}"
                             if isinstance(pnl_pts, (int, float)) else
                             f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}\n"
-                            f"This is the result of the {p.get('entry_date','?')} call · closed {p.get('closed_date','?')}")
+                            f"This is the outcome of the Signal we gave for execution on "
+                            f"{self._ord_date(p.get('entry_date'))} · closed {p.get('closed_date','?')}")
                     except Exception as e:
                         logger.warning(f"outcome notify {label}: {e}")
                     if ok:
@@ -869,7 +890,7 @@ class EngineRunner:
         lines = [
             f"📈 <b>Saavi Institutional Trader has till date delivered for live trade from {self._fmt_d(start, with_year=True)}-</b>",
             "",
-            "⚡ <b>INTRADAY</b> (0DTE · same-day expiry)",
+            "⚡ <b>INTRADAY</b> (same-day expiry)",
             _row(ic),
             "",
             "📅 <b>MONTH-END EXPIRY</b> (multi-day spreads)",
