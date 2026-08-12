@@ -1,5 +1,32 @@
 # Handoff — institutional-trader
 
+## T-1 CLOSE 2019->2026 SETTLED (11-Aug): NIFTY REJECTED · BANKNIFTY is the real candidate
+
+1,405 trades. IS = bhavcopy 2019->Sep-24 (1,359 sessions, has BULL regimes), OOS = Upstox Oct-24->
+Aug-26. BEAR CALL 0.5% w6.
+NIFTY: +Rs72/tr IS vs +Rs556 OOS · 71.5% IS win (not 87%) · **-Rs39,007 in 2020** · and the DIRECTION
+FLIPS (puts +226 IS / -176 OOS). Regime artifact — CLAUDE.md Part 11 repeating. REJECT.
+BANKNIFTY: +Rs801/tr over 293 IS trades, +Rs2,137 over 25 OOS, positive 5 of 6 IS years, and the sign
+does NOT flip (calls + in both, puts - in both). Its 0DTE book was rejected, so this slot is EMPTY =
+genuinely additive. THE candidate.
+Still unmodelled: spreads are spf()-MODELLED not real; no live liquidity/c-w gate; 2020 shows what
+clustered gaps do. NOT DEPLOYED — approval-first.
+
+---
+
+## RUNNING 11-Aug: T-1 close entry over 2019->2026, IS + OOS, year by year
+
+Downloading NSE F&O bhavcopy 2019->Sep-2024 (OPTIDX NIFTY/BANKNIFTY closes per strike) -> /tmp/
+bhav_opt_idx.pkl, then a full T-1 close backtest. TRUE IS/OOS this time: IS = 2019->Sep-2024
+(bhavcopy, contains BULL regimes), OOS = Oct-2024->Aug-2026 (Upstox, the falling regime already
+tested). This is the test that decides it — the earlier "IS/OOS" split was two halves of one
+downtrend. GAP RISK quantified: a 0.5% OTM short call is breached AT THE OPEN on 9.8% of NIFTY
+sessions (12.5% BANKNIFTY), worst +4.86%; 0DTE enters 09:16 AFTER the open and knows the gap, T-1
+wears it blind. Spreads are spf()-MODELLED, not real — P&L shown is optimistic by an unmeasured
+amount.
+
+---
+
 ## ⚠ T-1 CLOSE ENTRY — DO NOT DEPLOY. It is a directional bet on a falling market.
 
 Follow-up check (11-Aug) overturns the earlier optimism. EVERY surviving cell is BEAR_CALL; the put

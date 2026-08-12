@@ -91,6 +91,54 @@ are the same falling regime: splitting a downtrend in half gives two downtrends.
 halves of one regime. It cannot prove the result survives a rising market — and the put-side numbers
 say plainly what happens when direction runs the other way.
 
+## FULL PERIOD 2019 -> 2026, TRUE IS/OOS — the test that settles it
+
+IS = NSE F&O bhavcopy 2019 -> Sep-2024 (1,359 sessions, real option closes per strike, contains BULL
+regimes). OOS = Upstox Oct-2024 -> Aug-2026. **1,405 trades.** BEAR CALL 0.5% OTM width 6, 1 lot.
+
+| year | NIFTY win | NIFTY Rs/YEAR | | BANKNIFTY win | BNF Rs/YEAR |
+|---|---|---|---|---|---|
+| 2019 IS | 76.6% | +5,684 | | 80.8% | +44,387 |
+| **2020 IS** | **64.2%** | **-39,007** | | **66.0%** | **-3,236** |
+| 2021 IS | 67.3% | +8,237 | | 76.9% | +50,661 |
+| 2022 IS | 75.0% | +32,082 | | 73.1% | +30,967 |
+| 2023 IS | 82.4% | +31,325 | | 88.2% | +68,614 |
+| 2024 IS | 68.9% | +2,419 | | 85.0% | +61,786 |
+| 2025 OOS | 86.8% | +392 | | 90.9% | +19,191 |
+| 2026 OOS | 86.7% | +32,349 | | 85.7% | +15,739 |
+
+**NIFTY survives, but barely and unevenly: +Rs72/trade IS versus +Rs556 OOS, and a -Rs39,007 year in
+2020.** Two of six in-sample years are near zero (2021 +8k, 2024 +2.4k). The 87% win rate seen in the
+Oct-24 window is a *falling-market* number: across 2019-2024 the same geometry wins only **71.5%**.
+
+**BANKNIFTY is the real finding: +Rs801/trade over 293 in-sample trades and +Rs2,137 over 25 OOS,
+positive in 5 of 6 IS years.** That is a genuine, regime-spanning result on a real sample — not the
+n=25 anecdote the earlier run showed.
+
+### The direction asymmetry INVERTS out of sample — exactly as feared
+
+| index | side | IS Rs/trade | OOS Rs/trade |
+|---|---|---|---|
+| NIFTY | BEAR_CALL | +72 | **+556** |
+| NIFTY | BULL_PUT | **+226** | **-176** |
+| BANKNIFTY | BEAR_CALL | +801 | +2,137 |
+| BANKNIFTY | BULL_PUT | -95 | -943 |
+
+**On NIFTY the better side FLIPS**: puts earn +226 in-sample and lose -176 out-of-sample; calls earn
++72 in-sample and +556 out. This is the `CLAUDE.md` Part 11 failure repeating precisely — a direction
+edge that is a regime artifact, not structure. Any NIFTY T-1 book would have been fitted to whichever
+window was looked at last.
+
+**BANKNIFTY does NOT flip**: calls positive in both (+801 / +2,137), puts negative in both (-95 /
+-943). A consistent sign across two different regimes is what an edge looks like.
+
+### 2020 is the risk case, and it is the one to plan for
+
+NIFTY -Rs39,007 in a single year at 1 lot, win rate collapsing to 64.2%. That is the COVID-crash
+regime: gaps every session, and a T-1 position wears every one of them blind. Combined with the
+measured gap frequency (a 0.5% OTM call breached AT THE OPEN on 9.8% of NIFTY sessions, worst
++4.86%), 2020 is not a tail — it is what this structure does when gaps cluster.
+
 ## Recommendation
 
 If this is taken forward, take **SENSEX first**: it is the only index positive and consistent in BOTH
