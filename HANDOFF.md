@@ -1,5 +1,36 @@
 # Handoff — institutional-trader
 
+## T-1 EXPIRY-EVE: REJECTED (11-Aug) — 95-100% win rates, but Rs3.7 credits · studies/T1_EXPIRY_EVE.md
+
+4,000+ trades, Oct-24->Aug-26. Win target smashed (NIFTY 97.7%, SENSEX 97.8%, BANKNIFTY 100%) and
+MEANINGLESS: avg credit Rs3.7 at NIFTY 2.5% OTM, c/w 0.01-0.10 vs the proven >=0.40 gate. User's
+"much larger premiums" premise REFUTED at 2%+ OTM. Money: best SENSEX T-1 Rs1,768/mo vs the LIVE
+0DTE SENSEX book's Rs3,153 — 44% less for double the risk window. Nothing beats what is deployed.
+Only 1.0-1.5% OTM holds real premium (and 88-92% win) — the opposite of the hypothesis — still
+inferior on money. BANKNIFTY n=25 monthlies, book already rejected on t=+0.10; 100% is noise.
+NOT deployed, no engine file touched.
+
+---
+
+## T-1 backtest RUNNING (11-Aug 07:09): NIFTY done, SENSEX 50/96, BANKNIFTY pending
+
+studies/ndte/t1_expiry_eve.py · log /tmp/t1_run.log · results /tmp/t1_expiry_eve_results.json ·
+leg cache /tmp/t1_leg_cache.json (resumable — rerun picks up cached legs). 4,033 trades priced so
+far. Rate ~13s/expiry (API-throttled). ETA ~10-15 min for SENSEX remainder + BANKNIFTY monthlies.
+Report on completion: win rate FIRST (user), ROM + avg credit + c/w beside it, per index/geometry,
+benchmarked against deployed 0DTE (NIFTY 88.3%, SENSEX 89.0%).
+
+---
+
+## RESEARCH LOOP started 11-Aug (/loop, dynamic pacing): T-1 EXPIRY-EVE ENTRY
+
+User hypothesis: enter NIFTY/SENSEX/BANKNIFTY credit spreads at 09:16 on the day BEFORE expiry
+(T-1), ~2% OTM, holding through expiry — bigger premium to harvest across two days. Target: maximise
+WIN RATE, 80%+. Data: Upstox expired-options OOS, Oct-2024 -> date. Goal is a validated config or an
+honest rejection, written to studies/ either way.
+
+---
+
 ## 11-Aug verification: no trade legitimate · index closes EXACT · swing is DISABLED (flag it)
 
 **No trade today is real:** 23 breakouts, top c/w 0.31 — below even v0's 0.35 floor, so 0 passed.
