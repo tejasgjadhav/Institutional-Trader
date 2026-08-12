@@ -380,8 +380,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # the ones with headroom — so the row still fits one screen (sum 1288px < ~1400 window).
         # SELL/BUY needs 25 chars for decimal strikes ("SELL 277.5 / BUY 267.5 PE") — 236px.
         # Paid from STOCK, the MAX columns and RESULT, all of which have slack. Sum 1332px.
-        for _c, _px in ((0, 100), (1, 58), (2, 52), (3, 168), (4, 236), (5, 84), (6, 62),
-                        (7, 86), (8, 76), (9, 88), (10, 66), (11, 86), (12, 86), (13, 84)):
+        # SIDE 58->98 for "BEAR CALL"; SELL/BUY 236->268 for CE/PE on both legs. Paid from the
+        # MAX columns and RESULT only — no other column narrowed (user, 2026-08-11).
+        for _c, _px in ((0, 100), (1, 98), (2, 52), (3, 168), (4, 268), (5, 84), (6, 62),
+                        (7, 86), (8, 76), (9, 88), (10, 66), (11, 78), (12, 78), (13, 76)):
             # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
@@ -1386,9 +1388,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 fmtk = lambda x: ("%g" % x) if isinstance(x, (int, float)) else None
                 ss, ls = fmtk(row.get("short_strike")), fmtk(row.get("long_strike"))
                 verb = "CE" if "CALL" in str(row.get("side", "")) else "PE"
-                legs = f"SELL {ss} / BUY {ls} {verb}" if ss and ls else "—"
+                legs = f"SELL {ss} {verb} / BUY {ls} {verb}" if ss and ls else "—"
                 sd = row.get("side", "")
-                side_s = "BEAR" if "CALL" in sd else ("BULL" if "PUT" in sd else (sd or "—"))
+                # "BEAR"/"BULL" alone never said CALL or PUT, and the SELL/BUY cell carried the
+                # CE/PE only once at the end (user, 2026-08-11). Spell the structure out.
+                side_s = ("BEAR CALL" if "CALL" in sd else
+                          "BULL PUT" if "PUT" in sd else (sd or "—"))
                 _e = str(row.get("expiry", "") or "")     # 2026-07-28 -> "28-Jul" (fits the column)
                 _MON = ("Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec")
                 try:
