@@ -143,6 +143,13 @@ class H(BaseHTTPRequestHandler):
         if self.path in ("/", "/index.html"):
             with open(os.path.join(HERE, "calculated_constituents.html"), "rb") as f:
                 self._send(200, f.read(), "text/html; charset=utf-8")
+        elif self.path == "/replay":
+            p = os.path.join(HERE, "replay_days.json")
+            if os.path.exists(p):
+                with open(p, "rb") as f:
+                    self._send(200, f.read())
+            else:
+                self._send(404, "{}")
         elif self.path == "/summary":
             try:
                 import sqlite3
@@ -175,6 +182,29 @@ class H(BaseHTTPRequestHandler):
         pass
 
 
+def race_logger():
+    """WHO PRINTS FIRST at the auction — the exchange index or our constituent calc?
+    1-min bars can't resolve it, so during 15:26-15:34 sample /live once a second and append
+    to race_log.jsonl. After the close, the file shows second-by-second which side moved off
+    the frozen level first and by how much."""
+    import time
+    path = os.path.join(HERE, "race_log.jsonl")
+    while True:
+        now = datetime.now(IST)
+        in_window = now.weekday() < 5 and (15, 26) <= (now.hour, now.minute) <= (15, 34)
+        if in_window and STATE["status"] == "ok":
+            try:
+                snap = live_snapshot()
+                with open(path, "a") as f:
+                    f.write(json.dumps({"ts": datetime.now(IST).isoformat(timespec="milliseconds"),
+                                        "rows": snap.get("rows")}) + "\n")
+            except Exception as e:
+                print(f"[race] {e}", flush=True)
+            time.sleep(1)
+        else:
+            time.sleep(20)
+
+
 def auto_refit():
     """Refit every 30 min during market hours so live weights come from TODAY's session,
     not yesterday's. Measured 6-Aug ~12:00: yesterday-weights diff −1.31 pts, today-weights
@@ -193,5 +223,6 @@ def auto_refit():
 if __name__ == "__main__":
     threading.Thread(target=fit_weights, daemon=True).start()
     threading.Thread(target=auto_refit, daemon=True).start()
+    threading.Thread(target=race_logger, daemon=True).start()
     print(f"Calculated Constituents server on http://localhost:{PORT} (warming weights…)", flush=True)
     ThreadingHTTPServer(("127.0.0.1", PORT), H).serve_forever()

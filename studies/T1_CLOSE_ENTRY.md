@@ -169,6 +169,30 @@ that no longer exist.
 the geometry to revisit: zero negative years in six, and the strike wide enough that the gap
 frequency (3.9% at 1.0% vs 12.5% at 0.5%) is survivable.
 
+## Entry time within T-1: 09:15 beats the close, and 09:45 was already settled
+
+Measured on the same Oct-24 -> Aug-26 window, BEAR CALL, 1 lot:
+
+| index · geometry | 09:16 win | 09:16 Rs/tr | CLOSE win | CLOSE Rs/tr |
+|---|---|---|---|---|
+| NIFTY 1.0% w6 | 89.4% | **262** | 93.5% | 232 |
+| NIFTY 1.5% w6 | 94.6% | **335** | 95.7% | 82 |
+| SENSEX 1.0% w6 | 88.2% | **418** | 93.5% | 198 |
+| BANKNIFTY 1.0% w6 | 92.0% | **1,620** | 96.0% | 1,460 |
+
+Consistent: the close entry wins MORE OFTEN but earns LESS — a day of decay has already been given
+away by 15:30. So within T-1, the open is the better entry.
+
+**09:45 needs no new test — `ZERO_DTE_ENTRY_TIME.md` (9-Jul-2026) settled it** on 92 expiries with
+real 1-min premiums: 09:45 raises win rate to 93.2% but costs **35-45% of total profit** (Rs49,527 ->
+Rs31,378), and **the tail is not reduced** (worst trade -Rs11,771 at 10:00 vs -Rs11,703 at the open).
+The mechanism is time-of-day, not expiry-day-specific: the edge IS the opening theta/IV crush, median
+credit decaying 13.2 -> 11.1 pts by 10:00. It applies identically to a T-1 09:45 entry. Never enter
+later than ~10:15 — credits stop clearing costs.
+
+*(Correction: intraday option premiums DO exist from Oct-2024 via 1-min expired-contract data, as
+that study used. The hard limit is pre-Oct-2024, not "no intraday data at all".)*
+
 ## Recommendation
 
 If this is taken forward, take **SENSEX first**: it is the only index positive and consistent in BOTH

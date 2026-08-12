@@ -41,6 +41,17 @@ WIPRO""".split()
 CFG = {"SENSEX": (SENSEX30, lambda s: BKEY.get(s), "BSE_INDEX|SENSEX"),
        "NIFTY": (NIFTY50, to_instrument_key, "NSE_INDEX|Nifty 50")}
 
+REPLAY = os.path.join(HERE, "replay_days.json")
+
+
+def _upsert_replay(idx, day_iso, payload):
+    j = json.load(open(REPLAY)) if os.path.exists(REPLAY) else {}
+    j.setdefault(idx, {"name": idx, "days": {}})["days"][day_iso] = payload
+    # keep days sorted
+    j[idx]["days"] = dict(sorted(j[idx]["days"].items()))
+    json.dump(j, open(REPLAY, "w"))
+
+
 _SCHEMA = """
 CREATE TABLE IF NOT EXISTS cas_calc_vs_print (
     date           TEXT,
@@ -68,6 +79,12 @@ def _minutes(key, day):
 
 
 def _official_close(key, day):
+    # Same day: the daily bar DOES NOT EXIST yet (stale-bar trap) — at 15:50 the 6-Aug run
+    # failed with "missing official close". The intraday series' last print IS the auction
+    # close (verified == bhavcopy on 3/4/5-Aug), so use it for today.
+    if day == datetime.now(IST).date():
+        m = fetch_upstox_intraday(key, interval=1)
+        return float(m.Close.iloc[-1]) if not m.empty else None
     d = fetch_upstox_historical(key, unit="days", interval=1,
                                 from_date=(day - timedelta(days=5)).isoformat(),
                                 to_date=(day + timedelta(days=1)).isoformat())
@@ -106,11 +123,25 @@ def record_one(name, day):
         return (float(pred[b][0]), float(y.values[b][0])) if b.any() else (None, None)
 
     c1515, p1515 = at((15, 15))
-    c1518, _ = at((15, 18))
+    c1518, i1518 = at((15, 18))
     off = _official_close(idx_key, day)
     if c1518 is None or off is None:
         print(f"  {name} {day}: missing 15:18 bar or official close")
         return None
+
+    # replay payload for the UI (same shape as the embedded calc_ui.json days)
+    wm = (mins >= 15 * 60 + 10) & (mins <= 15 * 60 + 15)
+    tail = (mins >= 15 * 60) & (mins <= 15 * 60 + 29)
+    replay = dict(rmse=round(rmse, 2),
+                  maxerr=round(float(np.abs(pred[fm] - y.values[fm]).max()), 2),
+                  win_maxerr=round(float(np.abs(pred[wm] - y.values[wm]).max()), 2) if wm.any() else None,
+                  calc1518=round(c1518, 2), idx1518=round(i1518, 2),
+                  calc_close=round(float(pred[-1]), 2),      # calc on the stocks' closing prints
+                  official=round(off, 2),
+                  times=[str(t.time())[:5] for t in P.index[tail]],
+                  calc=[round(float(v), 2) for v in pred[tail]],
+                  index=[round(float(v), 2) for v in y.values[tail]])
+    _upsert_replay(name, day.isoformat(), replay)
     return dict(date=day.isoformat(), idx=name,
                 print_1515=round(p1515, 2), calc_1515=round(c1515, 2),
                 calc_1518=round(c1518, 2), official_close=round(off, 2),
@@ -150,6 +181,14 @@ if __name__ == "__main__":
                 print(d)
                 record_day(d)
             d += timedelta(days=1)
+    elif args:
+        record_day(date.fromisoformat(args[0]))
     else:
-        day = date.fromisoformat(args[0]) if args else datetime.now(IST).date()
-        record_day(day)
+        # default (scheduled) run: today + prior trading day. Upserts are idempotent, so the
+        # catch-up is free and self-heals any missed session.
+        today = datetime.now(IST).date()
+        prev = today - timedelta(days=1)
+        while prev.weekday() >= 5:
+            prev -= timedelta(days=1)
+        record_day(prev)
+        record_day(today)

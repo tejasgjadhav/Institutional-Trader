@@ -160,3 +160,71 @@ calc is meaningful (RMSE 0.13–0.23 pts). Do not read single-name weight change
 **Residual ~0.3 pt after refit** is sampling asynchrony (50 LTP timestamps vs the index tick are
 not simultaneous) plus fit residual. That is the floor for this method; it is well under the
 ±3-pt jitter already documented for the live view.
+
+---
+
+# Addendum 3 — do stock FUTURES predict the cash auction print? (learn Mon+Tue, test Wed)
+
+**Question:** futures trade 15:15→15:40 while cash sits in auction. Does the futures move
+15:15→15:27 anticipate the cash auction print at ~15:28? (`scratchpad/fut_predict.py`,
+all 50 NIFTY names, nearest-expiry futures, 1-min bars.)
+
+**NO — on every test.**
+
+| | corr(fut move, auction move) | futures-implied beats naive? | direction hit rate |
+|---|---:|---|---:|
+| Mon+Tue (train, n=100) | **−0.017** | 49/100 — coin flip | — |
+| Wed (test, n=50) | — | 22/50, MAE 0.319% vs 0.292% naive | 23/40 (57%, ns) |
+
+Futures were FLAT through the window (mean move +0.000%) while the cash auction moved +0.74% on
+average. The six largest Wednesday auction moves (+0.71% to +0.87%) had futures moves of −0.15%
+to +0.34% — no anticipation, sometimes the wrong sign.
+
+**The "fitted" predictor is a cautionary tale.** Regressing on Mon+Tue just learns the constant
+(+0.74% mean auction lift, b≈0). Applied to Wednesday, where the mean lift was only +0.29%, it
+scored WORSE than doing nothing (0.519% vs 0.292% MAE). The auction lift's magnitude is not
+stable enough to trade on three days of history; only its SIGN (positive on NSE, all 3 days,
+mean +0.81/+0.67/+0.23%) is suggestive, and that needs the daily recorder to accumulate.
+
+**Futures don't even converge AFTER the print.** Wednesday's futures-vs-auction gap was +0.207%
+just before the print and +0.216% at 15:39 — the futures market simply ignores the cash auction,
+consistent with Monday's index-level finding (parity forward 190 pts below the NIFTY close).
+Cash-auction price and derivatives price are two coexisting prices for the same stock; neither
+converges to the other intraday. Whatever settles on one vs the other inherits that gap.
+
+---
+
+# Addendum 4 — modelling the auction print itself (train Mon–Wed, test Thu 6-Aug)
+
+**The exact CAS price cannot be recomputed from public data.** NSE strikes the equilibrium from
+the auction ORDER BOOK: the price that maximises executable volume, ties broken by minimum order
+imbalance, then proximity to the reference (15:15 last-traded) price. No retail feed carries those
+orders. Anything buildable is a statistical model of the LIFT, not the mechanism.
+
+**Thursday broke the pattern before any model could use it.** NIFTY auction lift by day:
+**+201 → +152 → +54 → +8 pts** — monotone decay to nothing. Per-stock mean lift: train (Mon–Wed)
++0.571%, test (Thu) +0.059%. And SENSEX, inert for three days, jumped **+168 pts on its own
+expiry day** (6-Aug) — the "BSE auction is dead" reading has an expiry-day exception.
+
+**Every trained model lost to doing nothing** (`scratchpad/auction_model.py`, n=150 train /
+50 test, features: 14:15→15:15 momentum, 15:00→15:15 momentum, day return — none correlate,
+|r|≤0.24):
+
+| model | train MAE | Thu MAE | Thu NIFTY index error |
+|---|---:|---:|---:|
+| naive (lift = 0) | 0.605% | **0.201%** | **−8.05 pts** |
+| constant (train mean) | 0.395% | 0.533% | +132.5 pts |
+| momentum r60 | 0.388% | 0.555% | +138.7 pts |
+| full linear | 0.369% | 0.577% | +145.2 pts |
+
+**Conclusion:** the Mon–Wed lift was a TRANSIENT of the regime change (institutional flow finding
+the new auction), already decayed by day 4. With it gone, the live calculated index at 15:15 IS
+the best available estimate of the 15:29 print — Thursday it was 8 pts off on NIFTY. Models
+trained on the transient days actively mispredict (+133 to +145 pts). Do not deploy an auction
+model on this history; let the daily recorder accumulate a real sample, and re-examine only if
+the lift re-emerges with a stable driver (watch expiry days on BOTH exchanges separately).
+
+**Ops note (fixed 7-Aug):** the scheduled 15:50 calc-vs-print run failed on 6-Aug — the official
+close needs the DAILY bar, which does not exist same-day (stale-bar trap). Now uses the intraday
+last print (== auction close, verified) for today, and the default run also re-records the prior
+session (idempotent), so any miss self-heals next day.

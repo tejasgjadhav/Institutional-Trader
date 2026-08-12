@@ -37,6 +37,21 @@ there is no earlier CAS data to fetch. Use it before assuming anything about how
 
 ---
 
+## T-1 (expiry-eve) entry — CLOSED, do not re-mine
+
+Two studies, both rejections, kept because they map a whole region of the search space:
+[`T1_EXPIRY_EVE.md`](T1_EXPIRY_EVE.md) — entry 09:16 on expiry eve at 2%+ OTM: 95-100% win rates on
+Rs3.7 credits, c/w 0.01-0.10 against the proven >=0.40 gate. The win-rate illusion in miniature.
+[`T1_CLOSE_ENTRY.md`](T1_CLOSE_ENTRY.md) — entry at the expiry-eve CLOSE, 1,405 trades, true IS/OOS
+(bhavcopy 2019->Sep-24 + Upstox Oct-24->Aug-26). NIFTY fails: Rs6,180/yr at 1% OTM, 3 of 8 years
+negative, and the DIRECTION INVERTS out of sample. SENSEX is untestable (BSE index, weeklies only
+from Oct-2024, entire history one falling regime). BANKNIFTY had the only regime-spanning edge and
+it was priced on ~52 expiries/yr that **no longer exist** — weeklies ended, 12/yr now, so
+Rs38,446/yr becomes Rs9,612/yr. Within T-1, 09:15 beats the close; 09:45 was already settled by
+`ZERO_DTE_ENTRY_TIME.md`. **Re-open only if BANKNIFTY weeklies return.**
+
+---
+
 ## Current state of the book (2026-07-19)
 
 | Book | Status | Win | ₹/mo @1 lot | Evidence |
