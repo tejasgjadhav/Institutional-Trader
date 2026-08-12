@@ -1,5 +1,22 @@
 # Handoff — institutional-trader
 
+## ⚠ T-1 CLOSE ENTRY — DO NOT DEPLOY. It is a directional bet on a falling market.
+
+Follow-up check (11-Aug) overturns the earlier optimism. EVERY surviving cell is BEAR_CALL; the put
+side loses on all three indices (NIFTY -176, SENSEX -233, BANKNIFTY -943 Rs/trade). The tape: NIFTY
+-4.1% then -1.1%, SENSEX -4.2% then -3.2% — the WHOLE sample is a falling market. Selling calls into
+a one-way decline is short delta in a credit-spread costume; the 87% win rate is the market going
+down, not premium harvested.
+
+The IS/OOS split does NOT save it: both windows are the SAME falling regime, so splitting a downtrend
+gives two downtrends. This is precisely the failure recorded in CLAUDE.md Part 11 (down-only fade
+gate: +15.1%/78%/6 positive years, then FAILED OOS when the asymmetry reversed).
+
+NEXT STEP if pursued: test on a RISING regime — bhavcopy 2019->Sep-2024 has both. Until a bull window
+is tested, this is unproven. studies/T1_CLOSE_ENTRY.md carries the finding.
+
+---
+
 ## T-1 CLOSE ENTRY — IS/OOS VALIDATED on 3 indices · studies/T1_CLOSE_ENTRY.md · NOT DEPLOYED
 
 BEAR CALL 0.5% OTM w6 is the ONLY geometry holding in both windows on all three:

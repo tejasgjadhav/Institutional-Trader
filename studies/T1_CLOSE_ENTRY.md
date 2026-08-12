@@ -66,6 +66,31 @@ occupies it. T-1 BANKNIFTY is new capacity, not an overlay.
    window the v2/v1/v0 scan already occupies, on the same 3.5-minute placement budget.
 5. **One regime.** Oct-2024 -> Aug-2026 is 22 months of a single market character.
 
+## ⚠ THE FINDING THAT CHANGES THE VERDICT — it is a DIRECTIONAL bet, not a premium edge
+
+Every surviving cell is BEAR_CALL. The put side is negative on all three indices:
+
+| index | BEAR_CALL Rs/tr | BULL_PUT Rs/tr | BULL_PUT IS | BULL_PUT OOS |
+|---|---|---|---|---|
+| NIFTY | **+556** | **-176** | +6 | -391 |
+| SENSEX | **+549** | **-233** | -532 | +122 |
+| BANKNIFTY | **+2,137** | **-943** | -490 | -1,623 |
+
+And the tape explains it: **NIFTY fell 4.1% then 1.1%; SENSEX fell 4.2% then 3.2%.** The entire
+sample is a falling market. Selling calls into a market that only went down is not an edge — it is
+a short-delta position wearing a credit-spread costume, and the "87% win rate" is the market
+declining, not premium being harvested.
+
+**This repo has already been destroyed by exactly this pattern once.** `CLAUDE.md` Part 11: a
+down-only fade gate looked like +15.1%/78% win, positive all six years, bootstrap p5 +4.1% — and
+FAILED out of sample when the direction asymmetry reversed. The lesson recorded then was "6 positive
+years in ONE regime != out-of-sample". Here the IS/OOS split does NOT rescue us, because BOTH windows
+are the same falling regime: splitting a downtrend in half gives two downtrends.
+
+**So the IS/OOS test above is weaker than it looks.** It proves the result is stable across two
+halves of one regime. It cannot prove the result survives a rising market — and the put-side numbers
+say plainly what happens when direction runs the other way.
+
 ## Recommendation
 
 If this is taken forward, take **SENSEX first**: it is the only index positive and consistent in BOTH
