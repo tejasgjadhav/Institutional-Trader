@@ -1,5 +1,31 @@
 # Handoff — institutional-trader
 
+## T-1 CLOSE ENTRY — IS/OOS VALIDATED on 3 indices · studies/T1_CLOSE_ENTRY.md · NOT DEPLOYED
+
+BEAR CALL 0.5% OTM w6 is the ONLY geometry holding in both windows on all three:
+NIFTY 84.6%IS/90.7%OOS · SENSEX 85.7%/85.7% · BANKNIFTY 93.3%/90.0%. Rs/yr at 1 lot: NIFTY 28,827 ·
+SENSEX 27,249 · BANKNIFTY 29,143 = Rs85,219 vs deployed 0DTE Rs59,088.
+COMPLEMENTARY IN TIME (T-1 = overnight-gap risk; 0DTE = intraday drift) but CORRELATED IN RISK —
+both open simultaneously on expiry morning, same index, same direction; worst case is the SUM.
+BANKNIFTY is the only truly additive slot (its 0DTE book was rejected).
+WEAKNESSES: BANKNIFTY n=25 (~2 losses); NIFTY IS leg is +Rs32/trade ~= zero, carried by OOS; no live
+liquidity/c-w gate applied; entry collides with the 15:36-15:40 stock-scan window; one regime.
+RECOMMENDATION: SENSEX first (only index with a real sample consistent in both windows), NIFTY small,
+BANKNIFTY last. Approval-first rule — nothing deployed, no engine file touched.
+
+---
+
+## T-1 CLOSE ENTRY (11-Aug) — the promising variant. NIFTY: Rs30,140/yr vs live 0DTE Rs21,252
+
+Selling at the T-1 CLOSE (not 09:16) beats both the deployed 0DTE book (+42%) and the 09:16 T-1
+entry, with a far healthier shape: BEAR 0.5% OTM w6, 87.5% win, credit Rs32.9, 6.5 losses/yr, one
+loss erases 5 wins (vs 30 at 09:16 2.5%). Mechanism: closer strikes hold real premium, and the close
+entry skips the day of drift the 09:16 entry sits through while keeping the overnight gap.
+CAVEAT: NIFTY only, n=96, ONE window, no IS/OOS split. Script /tmp/t1_close.py, rows
+/tmp/t1close_nifty.json. NOW RUNNING: IS/OOS split + SENSEX + BANKNIFTY monthly.
+
+---
+
 ## T-1 loss profile (11-Aug) — the payoff shape is why it is rejected, not the win rate
 
 1 lot, Oct-24->Aug-26 annualised. ONE loss erases: **30 wins** (NIFTY 2.5% w4), 10 (SENSEX 2.0% w6),
