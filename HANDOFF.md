@@ -1,5 +1,37 @@
 # Handoff — institutional-trader
 
+## ⛔ T-1 CLOSE ENTRY — REJECTED IN FULL (11-Aug). Cadence killed it; user caught it.
+
+BANKNIFTY weeklies are GONE. Expiries/yr in the data: 2019-2023 ~52-58, 2024 40, then **12**. The
+Rs575-801/trade edge was priced on ~52 expiries/yr; at 12 it is Rs6,900-9,612/yr — against deployed
+0DTE SENSEX Rs37,836 and NIFTY Rs21,252, with extra margin and overnight gap risk they do not carry.
+NIFTY: rejected (Rs6,180/yr at 1%, 3 of 8 years negative, direction flips IS->OOS).
+SENSEX: untestable — BSE index, absent from NSE bhavcopy, weeklies only from Oct-2024, entire history
+is one falling regime.
+DO NOT RE-MINE unless BANKNIFTY weeklies return; then revisit BEAR CALL 0.75-1.0% w6 (0 negative
+years in 6). studies/T1_CLOSE_ENTRY.md carries the full record. Nothing was ever deployed.
+
+---
+
+## 1% OTM BEATS 0.5% (11-Aug) · SENSEX CANNOT be tested pre-Oct-2024 — hard data limit
+
+**SENSEX: no in-sample window exists.** It is a BSE index — absent from NSE's F&O bhavcopy entirely
+(confirmed: only NIFTY/BANKNIFTY present) — and SENSEX weekly options only began Oct-2024. So its
+ENTIRE history is the falling regime, and the regime-artifact criticism that killed NIFTY cannot be
+tested away. Treat any SENSEX T-1 number as single-regime and unproven, permanently, until more time
+passes.
+
+**1% OTM is materially better than 0.5% on NIFTY** (IS 2019-2024, 288 trades):
+ 0.5% w6: 71.5% win · Rs72/tr · worst year -39,007
+ 1.0% w6: **89.6% win · Rs123/tr · worst year -15,816** — better win, better money, 60% smaller worst
+ year. The user's gap intuition was right: gaps breach 0.5% on 9.8% of sessions but 1.0% on 3.3%.
+BANKNIFTY 0.75% w6 is the standout: 81.4% · Rs575/tr · **0 negative years of 6** (0.5% has 1).
+
+REVISED CANDIDATE: BANKNIFTY 0.75-1.0% w6, not 0.5%. NIFTY at 1.0% is no longer an outright reject —
+re-examine, but its direction still flipped IS->OOS, which 1% does not fix.
+
+---
+
 ## T-1 CLOSE 2019->2026 SETTLED (11-Aug): NIFTY REJECTED · BANKNIFTY is the real candidate
 
 1,405 trades. IS = bhavcopy 2019->Sep-24 (1,359 sessions, has BULL regimes), OOS = Upstox Oct-24->

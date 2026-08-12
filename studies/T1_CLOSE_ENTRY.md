@@ -139,6 +139,36 @@ regime: gaps every session, and a T-1 position wears every one of them blind. Co
 measured gap frequency (a 0.5% OTM call breached AT THE OPEN on 9.8% of NIFTY sessions, worst
 +4.86%), 2020 is not a tail — it is what this structure does when gaps cluster.
 
+## ⛔ FINAL VERDICT — the cadence kills it. BANKNIFTY is now MONTHLY.
+
+The in-sample result rests on a cadence that no longer exists. BANKNIFTY expiries per year in the
+data: **2019: 52 · 2020: 53 · 2021: 52 · 2022: 52 · 2023: 58 · 2024: 40 — then 12.** Weeklies were
+discontinued; from late 2024 BANKNIFTY has ~12 expiries a year, and the OOS window confirms it
+(2025: 12, 2026: 7 so far).
+
+Rs/trade is unaffected — a T-1 entry is a 1-DTE trade whether the contract is weekly or monthly. But
+income is Rs/trade x cadence, and the cadence fell 4x:
+
+| geometry | Rs/trade | at the WEEKLY cadence it was measured on | at the MONTHLY cadence that now exists |
+|---|---|---|---|
+| BEAR 0.5% w6 | 801 | 38,446 | **9,612** |
+| BEAR 0.75% w6 | 575 | 27,598 | **6,900** |
+| BEAR 1.0% w6 | 520 | 24,967 | **6,242** |
+
+Against the deployed books — 0DTE SENSEX Rs37,836/yr, 0DTE NIFTY Rs21,252/yr — the best surviving
+T-1 configuration earns **Rs9,612/yr**, needs its own margin, and carries overnight gap risk the
+0DTE books do not (a 0.5% OTM call is breached AT THE OPEN on 12.5% of BANKNIFTY sessions).
+
+**T-1 close entry is REJECTED in full.** NIFTY fails on money and on a direction that flips
+out-of-sample (Rs6,180/yr at 1% OTM; 3 of 8 years negative). SENSEX cannot be tested at all — a BSE
+index absent from NSE bhavcopy, with weekly options only from Oct-2024, so its entire history is one
+falling regime. BANKNIFTY had the only regime-spanning edge and it was priced on ~52 expiries a year
+that no longer exist.
+
+**Do not re-mine T-1 unless BANKNIFTY weeklies return.** If they do, BEAR CALL 0.75-1.0% width 6 is
+the geometry to revisit: zero negative years in six, and the strike wide enough that the gap
+frequency (3.9% at 1.0% vs 12.5% at 0.5%) is survivable.
+
 ## Recommendation
 
 If this is taken forward, take **SENSEX first**: it is the only index positive and consistent in BOTH
