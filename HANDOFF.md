@@ -1,5 +1,22 @@
 # Handoff — institutional-trader
 
+## T-1 loss profile (11-Aug) — the payoff shape is why it is rejected, not the win rate
+
+1 lot, Oct-24->Aug-26 annualised. ONE loss erases: **30 wins** (NIFTY 2.5% w4), 10 (SENSEX 2.0% w6),
+4 (BANKNIFTY 1.0% w6). NIFTY 2.5%: avg win Rs246 vs avg loss Rs-7,432, worst Rs-14,860, net only
+Rs3,415/yr. Losses are RARE (1-6/yr) but each is 10-30x a win — pennies in front of a steamroller.
+
+Best NET/yr vs the DEPLOYED books (annualised): NIFTY T-1 1.5% w6 Rs17,013 vs live 0DTE Rs21,252 ·
+SENSEX T-1 1.0% w6 Rs21,214 vs live 0DTE Rs37,836. Both LOSE to what is already running.
+
+⚠ THE ONE GENUINELY OPEN SLOT: **BANKNIFTY**, whose 0DTE book was REJECTED (t=+0.10), so nothing
+occupies it. T-1 BANKNIFTY 1.0% w6 = 92% win, Rs22,089/yr, 1.1 losses/yr, one loss erases 4 wins —
+the best payoff SHAPE in the whole sweep and ADDITIVE rather than a replacement. But n=25 monthlies
+with ~2 losses total: far too thin to deploy. If T-1 is ever revisited, this is the only cell worth
+the compute, and it needs a bigger sample (extend before Oct-24 via bhavcopy) before any decision.
+
+---
+
 ## T-1 EXPIRY-EVE: REJECTED (11-Aug) — 95-100% win rates, but Rs3.7 credits · studies/T1_EXPIRY_EVE.md
 
 4,000+ trades, Oct-24->Aug-26. Win target smashed (NIFTY 97.7%, SENSEX 97.8%, BANKNIFTY 100%) and
