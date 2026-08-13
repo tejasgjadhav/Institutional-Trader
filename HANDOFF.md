@@ -1,5 +1,37 @@
 # Handoff — institutional-trader
 
+## c/w BANDS 0.25-0.35 measured (13-Aug) — information only, NOTHING deployed
+
+OOS Oct-24->date, 38-name slice, each band priced at each book's OWN geometry+exit:
+
+| band | v2 (S2W4 TP50 stop3x) | v1 (S1W3 TP40 no-stop) | v0 (S2W4 TP40 no-stop) |
+|---|---|---|---|
+| 0.25-0.30 | 78.1% / +2.6% ROM (n=64) | **85.7% / +5.1%** (n=70, +ve 3/3) | 84.4% / +4.9% (n=64) |
+| 0.30-0.35 | 74.1% / **0.0%** (n=58) | **82.6% / +11.6%** (n=92, +ve 3/3) | 77.6% / +3.1% (n=58) |
+| 0.35-0.40 (v0's live band) | 74.3% / +11.2% (n=35) | 74.8% / -1.0% (n=103) | **88.6% / +22.5%** (n=35) |
+| >=0.40 deployed v2 | **95.8% / +219%** | | |
+
+FINDINGS: (1) v1's TP-40/no-stop is the only exit that stays positive in ALL THREE low bands and
++ve 3/3 years — 0.30-0.35 at v1 shows 82.6% / +11.6%, which CONTRADICTS the LOWCW_BAND_RESCUE
+verdict that the band is dead (that study scored it at v2/v0 geometry, not v1's S1/W3). (2) v2's
+stop-3x is what kills the low bands (0.0% ROM at 0.30-0.35) — the stop binds when credit is thin.
+(3) ROM at every low band is 2-12% against +219% at the gate: 20-100x less money per rupee of
+margin. The win rates look fine; the money is the point.
+CAVEATS: n=58-92 per cell, OOS-only (IS leg needs the bhavcopy option pickle rebuilt ~40 min),
+38-name slice not the full 113. NOT actionable without the IS leg.
+
+---
+
+## RUNNING 13-Aug: win rates for c/w bands 0.25-0.30 and 0.30-0.35 at v0/v1/v2 exits
+
+User request (information only, no deployment). Bands below the deployed gates, priced at each
+book's OWN geometry+exit: v2 = S2/W4 TP-50 stop-3x · v1 = S1/W3 TP-40 no-stop · v0 = S2/W4 TP-40
+no-stop. IS = bhavcopy 2019->Sep-24, OOS = Upstox Oct-24->date. Script studies/ndte/cw_band_sweep.py.
+Known prior (LOWCW_BAND_RESCUE): 0.30-0.40 blended OOS TP-40 = 81.7% win / +2.2% ROM; 0.30-0.35 half
+is dead (+0.2% IS, -5.2% OOS). 0.25-0.30 has never been measured.
+
+---
+
 ## 13-Aug: watchlist polish round — user screenshot shows GATES ticks wrapping raggedly,
 ## SIGNAL header clipped to "IGNAL→LIV". Fix: compact one-line gates, deliberate 2-line legs,
 ## header renamed PRICE. See ui_terminal WATCH_COLS + _watch_weights.
