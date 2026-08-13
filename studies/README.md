@@ -37,6 +37,18 @@ there is no earlier CAS data to fetch. Use it before assuming anything about how
 
 ---
 
+## c/w bands below the gate — measured per book
+
+[`CW_BAND_BY_BOOK.md`](CW_BAND_BY_BOOK.md) — 0.25-0.30 and 0.30-0.35 scored at each book's OWN
+geometry+exit. v1's TP-40/no-stop is the only exit positive in all three low bands (0.30-0.35:
+82.6% win, +11.6% ROM, +ve 3/3 yrs); v2's 3x stop kills them (0.0% ROM). But ROM is 2-12% against
++219% at the >=0.40 gate. Explains why LOWCW_BAND_RESCUE called the band dead: that study defines
+band membership by c/w at v2's S2/W4 geometry and re-prices the SAME signals, whereas this asks
+which signals fall in the band at each book's own geometry — a different population. OOS only,
+not actionable.
+
+---
+
 ## T-1 (expiry-eve) entry — CLOSED, do not re-mine
 
 Two studies, both rejections, kept because they map a whole region of the search space:
