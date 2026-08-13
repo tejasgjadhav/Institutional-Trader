@@ -384,19 +384,22 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # Rebalanced 2026-08-10 (user screenshot): C/W truncated to "✗ …", LOT to "15…", BRK to
         # "D…", SIGNAL→LIVE cut on 4-digit prices. Space came out of STOCK/SELL-BUY/MAX columns —
         # the ones with headroom — so the row still fits one screen (sum 1288px < ~1400 window).
-        # SELL/BUY needs 25 chars for decimal strikes ("SELL 277.5 / BUY 267.5 PE") — 236px.
-        # Paid from STOCK, the MAX columns and RESULT, all of which have slack. Sum 1332px.
-        # SIDE 58->98 for "BEAR CALL"; SELL/BUY 236->268 for CE/PE on both legs. Paid from the
-        # MAX columns and RESULT only — no other column narrowed (user, 2026-08-11).
-        for _c, _px in ((0, 108), (1, 106), (2, 52), (3, 172), (4, 280), (5, 86), (6, 62),
-                        (7, 92), (8, 84), (9, 86), (10, 62), (11, 138), (12, 92)):
-            # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
-            _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
-            _wh.resizeSection(_c, _px)
+        # PROPORTIONAL, not fixed px (2026-08-12). Fixed widths were guesswork: the window is
+        # 1700 logical px but the table's viewport is whatever is left after margins and the outer
+        # scroll area, and with the horizontal scrollbar OFF Qt silently SQUEEZES columns to fit —
+        # so every fixed-width attempt was overridden and truncated. Weights below are shares of
+        # the ACTUAL viewport, recomputed on every resize, so columns can never be squeezed.
+        self._watch_weights = (9, 9, 4, 14, 23, 7, 5, 7, 7, 7, 5, 11, 8)   # sums to 116
+        _wh = self.pm_watch.horizontalHeader()
+        for _c in range(len(self.WATCH_COLS)):
+            _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
+        self.pm_watch.resizeEvent = lambda e, _t=self.pm_watch: (
+            self._size_watch_cols(), QTableWidget.resizeEvent(_t, e))[1]
         self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
         self.pm_watch.setAlternatingRowColors(True); self.pm_watch.verticalHeader().setVisible(False)
         self.pm_watch.verticalHeader().setDefaultSectionSize(28); self.pm_watch.setMaximumHeight(400)
         self.pm_watch.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self._size_watch_cols()
         v.addWidget(self.pm_watch)
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
@@ -1360,6 +1363,26 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             txt, col = "Market closed — today's signals are booked. Next session tomorrow ~09:15.", TEXT_DIM
         self.pm_now_hint.setText("  " + txt)
         self.pm_now_hint.setStyleSheet(f"color:{col}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
+
+    def _size_watch_cols(self):
+        """Distribute the table's REAL viewport width across the columns by weight.
+
+        Fixed pixel widths cannot work here: the horizontal scrollbar is off (single-screen rule),
+        so Qt compresses any total wider than the viewport and the fixed values are ignored. Sizing
+        from the measured viewport instead means the row always fits exactly and nothing truncates,
+        whatever the window size."""
+        try:
+            w = self.pm_watch.viewport().width()
+            if w < 200:
+                return
+            tot = sum(self._watch_weights)
+            acc = 0
+            for c, wt in enumerate(self._watch_weights[:-1]):
+                px = int(w * wt / tot)
+                self.pm_watch.setColumnWidth(c, px); acc += px
+            self.pm_watch.setColumnWidth(len(self._watch_weights) - 1, max(40, w - acc))
+        except Exception:
+            pass
 
     def _refresh_union_watch(self):
         """Populate the always-on UNION WATCHLIST panel from data/union_watchlist.json (breakout
