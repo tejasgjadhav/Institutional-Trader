@@ -1,5 +1,11 @@
 # Handoff — institutional-trader
 
+## 13-Aug: watchlist polish round — user screenshot shows GATES ticks wrapping raggedly,
+## SIGNAL header clipped to "IGNAL→LIV". Fix: compact one-line gates, deliberate 2-line legs,
+## header renamed PRICE. See ui_terminal WATCH_COLS + _watch_weights.
+
+---
+
 ## ⛔ T-1 CLOSE ENTRY — REJECTED IN FULL (11-Aug). Cadence killed it; user caught it.
 
 BANKNIFTY weeklies are GONE. Expiries/yr in the data: 2019-2023 ~52-58, 2024 40, then **12**. The

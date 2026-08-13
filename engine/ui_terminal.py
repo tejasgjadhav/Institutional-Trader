@@ -327,7 +327,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     # off Qt SQUEEZES columns to the viewport — so the fixed widths were silently ignored and every
     # cell truncated. Both are derivable (credit x lot; (width-credit) x lot) and are shown in full
     # on the PM DECISIONS rows anyway. The columns the user actually reads keep real width.
-    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "GATES  C/W · PREM≥50 · LIQ", "CREDIT", "MAX ₹ +/−", "RESULT"]
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "PRICE", "SELL / BUY", "EXPIRY", "LOT", "C/W ✓PREM≥50 ✓LIQ", "CREDIT", "MAX ₹ +/−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -391,7 +391,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # the ACTUAL viewport, recomputed on every resize, so columns can never be squeezed.
         # 11 columns, every one wide enough for its longest real string:
         # STOCK  SIDE  BRK  SIG   SELL/BUY  EXP  LOT  GATES  CREDIT  MAX     RESULT
-        self._watch_weights = (10, 10, 5, 8, 23, 7, 6, 13, 7, 15, 8)   # sums to 112
+        self._watch_weights = (10, 10, 5, 8, 17, 7, 5, 14, 7, 17, 8)   # sums to 108
         _wh = self.pm_watch.horizontalHeader()
         for _c in range(len(self.WATCH_COLS)):
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
@@ -1422,13 +1422,15 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     # tick/cross only (user, 2026-08-12): the rupee value was never read and the
                     # width is better spent on BRK and MAX. The gate itself is what matters here.
                     premcell = "✓" if row.get("prem_ok") else "✗"
-                    liqcell = "✓" if row.get("liq_ok") else f"✗ OI{oi}"
+                    liqcell = "✓" if row.get("liq_ok") else "✗"
                 result = "★ SIGNAL" if g == "PASS" else ("blocked" if evaluable else g.replace("_", " ").lower())
                 # legs instead of a redundant breakout tick (every row IS a breakout)
                 fmtk = lambda x: ("%g" % x) if isinstance(x, (int, float)) else None
                 ss, ls = fmtk(row.get("short_strike")), fmtk(row.get("long_strike"))
                 verb = "CE" if "CALL" in str(row.get("side", "")) else "PE"
-                legs = f"SELL {ss} {verb} / BUY {ls} {verb}" if ss and ls else "—"
+                # Deliberate two lines, breaking at the logical point (user approved next-line
+                # 12-Aug): ragged mid-text wrap ("... / BUY 10800" + "PE") read terribly.
+                legs = f"SELL {ss} {verb}\nBUY  {ls} {verb}" if ss and ls else "—"
                 sd = row.get("side", "")
                 # "BEAR"/"BULL" alone never said CALL or PUT, and the SELL/BUY cell carried the
                 # CE/PE only once at the end (user, 2026-08-11). Spell the structure out.
@@ -1463,7 +1465,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                       and isinstance(_ml, (int, float)) else "—")
                 # THREE narrow gate columns merged into one readable cell (user, 2026-08-12): c/w
                 # keeps its number because it is the edge; premium and liquidity are pass/fail only.
-                gates = f"{cwcell}  ·  {premcell}  ·  {liqcell}" if evaluable else "—"
+                # ONE compact line — the dot-separated wide form wrapped its last tick onto a
+                # second line (user screenshot, 13-Aug). Reads as: c/w value, prem tick, liq tick.
+                gates = f"{cwcell}  {premcell} {liqcell}" if evaluable else "—"
                 vals = [row.get("sym", "—"), side_s, f"D{row.get('dc','')}", sig_s,
                         legs, exp_s, lot_s, gates, crcell, mx, result]
                 self._set_row(self.pm_watch, i, vals)
