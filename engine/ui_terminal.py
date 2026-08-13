@@ -391,7 +391,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # the ACTUAL viewport, recomputed on every resize, so columns can never be squeezed.
         # 11 columns, every one wide enough for its longest real string:
         # STOCK  SIDE  BRK  SIG   SELL/BUY  EXP  LOT  GATES  CREDIT  MAX     RESULT
-        self._watch_weights = (10, 10, 5, 8, 24, 7, 5, 13, 7, 15, 8)   # sums to 112
+        self._watch_weights = (10, 10, 5, 8, 23, 7, 6, 13, 7, 15, 8)   # sums to 112
         _wh = self.pm_watch.horizontalHeader()
         for _c in range(len(self.WATCH_COLS)):
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
@@ -399,7 +399,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             self._size_watch_cols(), QTableWidget.resizeEvent(_t, e))[1]
         self.pm_watch.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)  # single view — never scroll sideways
         self.pm_watch.setAlternatingRowColors(True); self.pm_watch.verticalHeader().setVisible(False)
-        self.pm_watch.verticalHeader().setDefaultSectionSize(28); self.pm_watch.setMaximumHeight(400)
+        # WRAP, do not clip (user, 2026-08-12): setWordWrap + ResizeToContents on the vertical
+        # header lets any cell that exceeds its column run onto a second line — LOT, MAX and
+        # SELL/BUY are the ones that can. Nothing can be truncated at any window size now.
+        self.pm_watch.setWordWrap(True)
+        self.pm_watch.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.ResizeToContents)
+        self.pm_watch.setMaximumHeight(430)
+        self.pm_watch.horizontalHeader().setFixedHeight(38)   # room for the wrapped GATES header
         self.pm_watch.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self._size_watch_cols()
         v.addWidget(self.pm_watch)
@@ -1383,6 +1389,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 px = int(w * wt / tot)
                 self.pm_watch.setColumnWidth(c, px); acc += px
             self.pm_watch.setColumnWidth(len(self._watch_weights) - 1, max(40, w - acc))
+            self.pm_watch.resizeRowsToContents()   # a wrapped cell needs its row to grow
         except Exception:
             pass
 
