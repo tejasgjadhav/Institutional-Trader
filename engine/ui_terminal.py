@@ -389,7 +389,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # scroll area, and with the horizontal scrollbar OFF Qt silently SQUEEZES columns to fit —
         # so every fixed-width attempt was overridden and truncated. Weights below are shares of
         # the ACTUAL viewport, recomputed on every resize, so columns can never be squeezed.
-        self._watch_weights = (9, 9, 4, 14, 23, 7, 5, 7, 7, 7, 5, 11, 8)   # sums to 116
+        # STOCK SIDE BRK SIG SELL/BUY EXP LOT C/W CRED PREM LIQ MAX RESULT
+        self._watch_weights = (9, 9, 6, 7, 23, 7, 5, 7, 7, 4, 5, 18, 8)   # sums to 115
         _wh = self.pm_watch.horizontalHeader()
         for _c in range(len(self.WATCH_COLS)):
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
@@ -1410,7 +1411,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 if evaluable:
                     # show the ACTUAL number in every gate cell (with ✓/✗), not a bare tick
                     cwcell = f"{'✓' if row.get('cw_ok') else '✗'} {cw}"
-                    premcell = f"{'✓' if row.get('prem_ok') else '✗'} ₹{prem}"
+                    # tick/cross only (user, 2026-08-12): the rupee value was never read and the
+                    # width is better spent on BRK and MAX. The gate itself is what matters here.
+                    premcell = "✓" if row.get("prem_ok") else "✗"
                     liqcell = "✓" if row.get("liq_ok") else f"✗ OI{oi}"
                 result = "★ SIGNAL" if g == "PASS" else ("blocked" if evaluable else g.replace("_", " ").lower())
                 # legs instead of a redundant breakout tick (every row IS a breakout)
@@ -1439,13 +1442,13 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 # "AUC" = the signal price IS the closing-auction price, i.e. the official EOD
                 # close for an F&O stock and the exact field the backtests use. Anything else is a
                 # provisional intraday print and the official close does not exist yet.
+                # ONE value in the UI (user, 2026-08-12) — the latest price, plus AUC when it is
+                # the auction close. The BACKEND still records signal_px, signal_src, live_px and
+                # px_gap_pct unchanged; only this rendering collapses, and the cell is still tinted
+                # amber/red by the gap so a stale signal is visible without the arrow.
                 _tag = " AUC" if row.get("signal_auction") else ""
-                if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)):
-                    sig_s = f"{_sig:,.0f}{_tag}→{_liv:,.0f}" + (f" {_gap:+.1f}%" if _gap is not None else "")
-                elif isinstance(_sig, (int, float)):
-                    sig_s = f"{_sig:,.0f}{_tag}"
-                else:
-                    sig_s = "—"
+                _show = _liv if isinstance(_liv, (int, float)) else _sig
+                sig_s = f"{_show:,.0f}{_tag}" if isinstance(_show, (int, float)) else "—"
                 _cr = row.get("credit")
                 crcell = f"₹{_cr:.1f}" if isinstance(_cr, (int, float)) else "—"
                 mx = (f"+{_mp:,}/−{abs(_ml):,}" if isinstance(_mp, (int, float))
