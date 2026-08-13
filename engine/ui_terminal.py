@@ -321,11 +321,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     # could reveal it. A large gap here is that failure, visible.
     # CREDIT added 2026-08-10 (user): the premium DIFFERENCE — what the short leg pays minus what
     # the hedge costs, in points. It is the numerator of C/W and what you actually collect.
-    # MAX Rs+/Rs- dropped 2026-08-12: 14 columns could not fit, and with the horizontal scrollbar
+    # MAX +/- RESTORED 2026-08-12 as ONE merged column (user): the pair is what gets read, and
+    # one column fits where two did not. Original note kept below for the why.
+    # MAX Rs+/Rs- were dropped because 14 columns could not fit, and with the horizontal scrollbar
     # off Qt SQUEEZES columns to the viewport — so the fixed widths were silently ignored and every
     # cell truncated. Both are derivable (credit x lot; (width-credit) x lot) and are shown in full
     # on the PM DECISIONS rows anyway. The columns the user actually reads keep real width.
-    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "CREDIT", "PREM", "LIQ", "RESULT"]
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "CREDIT", "PREM", "LIQ", "MAX ₹ +/−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -386,8 +388,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # Paid from STOCK, the MAX columns and RESULT, all of which have slack. Sum 1332px.
         # SIDE 58->98 for "BEAR CALL"; SELL/BUY 236->268 for CE/PE on both legs. Paid from the
         # MAX columns and RESULT only — no other column narrowed (user, 2026-08-11).
-        for _c, _px in ((0, 116), (1, 112), (2, 56), (3, 180), (4, 290), (5, 90), (6, 68),
-                        (7, 96), (8, 88), (9, 92), (10, 70), (11, 100)):
+        for _c, _px in ((0, 108), (1, 106), (2, 52), (3, 172), (4, 280), (5, 86), (6, 62),
+                        (7, 92), (8, 84), (9, 86), (10, 62), (11, 138), (12, 92)):
             # STOCK,SIDE,BRK,SELL/BUY,EXPIRY,LOT,C/W,PREM,LIQ,MAX+,MAX-,RESULT (sum ~1276px, fits ~1400 window)
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)      # STOCK,DIR,SIDE,BRK,legs,C/W,PREM,LIQ,RESULT
             _wh.resizeSection(_c, _px)
@@ -1423,14 +1425,16 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                     sig_s = "—"
                 _cr = row.get("credit")
                 crcell = f"₹{_cr:.1f}" if isinstance(_cr, (int, float)) else "—"
+                mx = (f"+{_mp:,}/−{abs(_ml):,}" if isinstance(_mp, (int, float))
+                      and isinstance(_ml, (int, float)) else "—")
                 vals = [row.get("sym", "—"), side_s, f"D{row.get('dc','')}", sig_s,
-                        legs, exp_s, lot_s, cwcell, crcell, premcell, liqcell, result]
+                        legs, exp_s, lot_s, cwcell, crcell, premcell, liqcell, mx, result]
                 self._set_row(self.pm_watch, i, vals)
-                self._color_cell(self.pm_watch, i, 11, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+                self._color_cell(self.pm_watch, i, 12, GREEN if g == "PASS" else (AMBER if evaluable else RED))
                 if isinstance(_gap, (int, float)):
                     self._color_cell(self.pm_watch, i, 3,
                                      RED if abs(_gap) >= 1.0 else (AMBER if abs(_gap) >= 0.5 else TEXT_DIM))
-                for c in (2, 3, 5, 6, 7, 8, 9, 10, 11):   # centre everything except STOCK/SIDE/legs
+                for c in (2, 3, 5, 6, 7, 8, 9, 10, 11, 12):   # centre everything except STOCK/SIDE/legs
                     it = self.pm_watch.item(i, c)
                     if it: it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
