@@ -327,7 +327,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     # off Qt SQUEEZES columns to the viewport — so the fixed widths were silently ignored and every
     # cell truncated. Both are derivable (credit x lot; (width-credit) x lot) and are shown in full
     # on the PM DECISIONS rows anyway. The columns the user actually reads keep real width.
-    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "GATES  C/W · PREM · LIQ", "CREDIT", "MAX ₹ +/−", "RESULT"]
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "GATES  C/W · PREM≥50 · LIQ", "CREDIT", "MAX ₹ +/−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
