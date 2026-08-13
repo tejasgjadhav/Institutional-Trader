@@ -327,7 +327,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     # off Qt SQUEEZES columns to the viewport — so the fixed widths were silently ignored and every
     # cell truncated. Both are derivable (credit x lot; (width-credit) x lot) and are shown in full
     # on the PM DECISIONS rows anyway. The columns the user actually reads keep real width.
-    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "CREDIT", "PREM", "LIQ", "MAX ₹ +/−", "RESULT"]
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "SIGNAL→LIVE", "SELL / BUY", "EXPIRY", "LOT", "GATES  C/W · PREM · LIQ", "CREDIT", "MAX ₹ +/−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -389,8 +389,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # scroll area, and with the horizontal scrollbar OFF Qt silently SQUEEZES columns to fit —
         # so every fixed-width attempt was overridden and truncated. Weights below are shares of
         # the ACTUAL viewport, recomputed on every resize, so columns can never be squeezed.
-        # STOCK SIDE BRK SIG SELL/BUY EXP LOT C/W CRED PREM LIQ MAX RESULT
-        self._watch_weights = (9, 9, 6, 7, 23, 7, 5, 7, 7, 4, 5, 18, 8)   # sums to 115
+        # 11 columns, every one wide enough for its longest real string:
+        # STOCK  SIDE  BRK  SIG   SELL/BUY  EXP  LOT  GATES  CREDIT  MAX     RESULT
+        self._watch_weights = (10, 10, 5, 8, 24, 7, 5, 13, 7, 15, 8)   # sums to 112
         _wh = self.pm_watch.horizontalHeader()
         for _c in range(len(self.WATCH_COLS)):
             _wh.setSectionResizeMode(_c, QHeaderView.ResizeMode.Fixed)
@@ -1451,16 +1452,19 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
                 sig_s = f"{_show:,.0f}{_tag}" if isinstance(_show, (int, float)) else "—"
                 _cr = row.get("credit")
                 crcell = f"₹{_cr:.1f}" if isinstance(_cr, (int, float)) else "—"
-                mx = (f"+{_mp:,}/−{abs(_ml):,}" if isinstance(_mp, (int, float))
+                mx = (f"+{_mp:,} / −{abs(_ml):,}" if isinstance(_mp, (int, float))
                       and isinstance(_ml, (int, float)) else "—")
+                # THREE narrow gate columns merged into one readable cell (user, 2026-08-12): c/w
+                # keeps its number because it is the edge; premium and liquidity are pass/fail only.
+                gates = f"{cwcell}  ·  {premcell}  ·  {liqcell}" if evaluable else "—"
                 vals = [row.get("sym", "—"), side_s, f"D{row.get('dc','')}", sig_s,
-                        legs, exp_s, lot_s, cwcell, crcell, premcell, liqcell, mx, result]
+                        legs, exp_s, lot_s, gates, crcell, mx, result]
                 self._set_row(self.pm_watch, i, vals)
-                self._color_cell(self.pm_watch, i, 12, GREEN if g == "PASS" else (AMBER if evaluable else RED))
+                self._color_cell(self.pm_watch, i, 10, GREEN if g == "PASS" else (AMBER if evaluable else RED))
                 if isinstance(_gap, (int, float)):
                     self._color_cell(self.pm_watch, i, 3,
                                      RED if abs(_gap) >= 1.0 else (AMBER if abs(_gap) >= 0.5 else TEXT_DIM))
-                for c in (2, 3, 5, 6, 7, 8, 9, 10, 11, 12):   # centre everything except STOCK/SIDE/legs
+                for c in (2, 3, 5, 6, 7, 8, 9, 10):   # centre everything except STOCK/SIDE/legs
                     it = self.pm_watch.item(i, c)
                     if it: it.setTextAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
