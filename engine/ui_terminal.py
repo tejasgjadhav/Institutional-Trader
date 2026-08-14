@@ -959,6 +959,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{TEXT_DIM};"><td>Monthly long-call</td><td>SHELVED 07-13</td><td>gap/luck-dependent, unreliable</td></tr>
 <tr style="color:{TEXT_DIM};"><td>3-Family + ORB+VWAP option-buying</td><td>OFF</td><td>direction is real but does not survive option-buying costs</td></tr>
 </table>
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE 14-AUG EVIDENCE AUDIT — every deployed book re-checked</p>
+{res("<b>An adversarial audit re-checked the validation behind every live book.</b> All three stock-credit OOS scripts carried a date-alignment bug (option legs compared across different days); the 0DTE index books were clean by construction. The corrected re-run CONFIRMS the deployed gate: c/w ≥ 0.40 pays 91.7% win / +237% ROM (v2) and 84.4% / +54% (v1), while every band below 0.40 is flat or negative — the cliff at 0.40 is real on clean code. File: DEPLOYED_EVIDENCE_AUDIT.md")}
+{res("<b>v0 came out weakest.</b> Its corrected OOS cell reads 83.8% win / +5.2% ROM against the 90.7% / +19.4% it was deployed on, and its IS leg was always marginal (+1.9%, 4 of 6 years). It keeps its slot to build a live record; that decision is the user's to revisit. File: DEPLOYED_EVIDENCE_AUDIT.md")}
+{dim("• Stops cannot rescue the 0.25–0.35 bands: a 20-cell sweep found every stop multiple worse than no stop in 0.30–0.35, and the bands stay dead. File: CW_BAND_BY_BOOK.md")}
+{dim("• IS magnitudes are soft, not hollow: charging exit costs moves the bhavcopy ROM ~4 points, and 9–18% of exits price off an OI=0 settlement print.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">WHY THESE WORK — the results that survived</p>
 {res("<b>The exit sets the win rate, not the signal.</b> v1, on the IDENTICAL trade list: hold-to-expiry 54% · TP-75/stop-2× 64% (2019–24) / 73.6% (2024–26) · <b>TP-40/no-stop 85.0% (2019–24) / 86.0% (2024–26)</b>. Nothing about the entry changed. The 2× stop was realising losses that recover. File: V1_WINRATE_SWEEP.md")}
 {res("<b>The credit/width gate is the whole edge.</b> 629 real trades bucketed: c/w ≥ 0.40 → 86% win, +34% of width. 0.30–0.35 → 78% win but only +1.1%. Win rate barely falls below the gate; the MONEY collapses ~10×, because the payoff turns lopsided. Never loosen it. File: CW_BUCKET_ANALYSIS.md")}
