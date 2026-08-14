@@ -24,6 +24,30 @@ Full universe, 1,358 sessions of NSE F&O bhavcopy OPTSTK, same geometry and same
 | 0.35–0.40 | 74.3% · +6.9% (n=424, 3/6) | 81.4% · +8.9% (n=918, 4/6) | 79.2% · +10.4% (n=424, 4/6) |
 | **≥0.40** | 91.6% · +176% (n=2406, 6/6) | 93.1% · +173% (n=2918, 6/6) | **96.3% · +192%** (n=2406, 6/6) |
 
+## Consolidated — IS + OOS pooled into one 2019 → Aug-2026 series (added 14-Aug-2026)
+
+Each cell concatenates its IS trades (bhavcopy) and OOS trades (Upstox expired options); ROM is
+computed on the combined margin and years counted across all eight.
+
+| band | v2 (TP-50 · stop 3×) | v1 (TP-40 · no stop) | v0 (TP-40 · no stop) |
+|---|---|---|---|
+| **0.25–0.30** | 80.3% · +8.4% (7/8, n=610) | 81.0% · +2.8% (7/8, n=511) | **85.6% · +10.8%** (7/8, n=610) |
+| **0.30–0.35** | 75.5% · **−3.1%** (4/8, n=632) | **80.6% · +9.8%** (**7/8**, n=710) | 80.7% · +4.8% (4/8, n=632) |
+| **0.35–0.40** | 74.3% · +7.0% (5/8, n=459) | 80.7% · +8.1% (5/8, n=1021) | **80.0% · +10.8%** (6/8, n=459) |
+
+**Best exit per band:** v0 at 0.25–0.30 and 0.35–0.40, v1 at 0.30–0.35. The pattern across every
+row is the exit, not the band: TP-40 with no stop wins everywhere and the 3× stop wins nowhere —
+including at ≥0.40 in-sample, where the stop-free v0 exit out-earns v2's TP-50/stop by 16 points of
+ROM on the same signals. The stop is insurance against the tail loss, not expectancy.
+
+**Stability check on the best cell:** v1 0.30–0.35 pays +13.1 pts/trade IS and +13.4 pts/trade OOS —
+near-identical across the regime break. v0 0.25–0.30 pays +25.1 IS but +8.3 OOS, so its pooled
+figure leans on the old regime.
+
+**Hindsight caveat:** picking the best of three books per band after seeing both windows is
+selection in hindsight; with twelve cells, some winners are noise. The only cell chosen before
+looking was v0's live 0.35–0.40, and it held.
+
 **The one cell that survives both windows is v1 at 0.30–0.35.** Its in-sample year path is
 `2019 +24% · 2020 −2% · 2021 +6% · 2022 +13% · 2023 +11% · 2024 +7%`, so the only losing year is
 2020 and it loses 2%. Out-of-sample it returns +11.6% ROM at 82.6% win, positive in all three years.
