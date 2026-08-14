@@ -1,9 +1,45 @@
 # c/w bands below the gate, scored at EACH BOOK's own geometry (13-Aug-2026)
 
+> ## ⚠ AUDIT CORRECTION, 14-Aug-2026 — the OOS tables below are INVALID and the band is DEAD
+>
+> An adversarial audit (user-requested, before any deployment decision) found that the OOS script
+> dropped candle timestamps and walked the two legs POSITIONALLY (`sp[k] - lp[k]`). Upstox expired
+> options only carry candles on days the contract traded, and 47% of multi-leg windows had unequal
+> candle counts — so the "spread" often compared two different dates, and even the entry credit
+> could pair the short's Monday with the long's Thursday. The date-aligned re-run
+> (`cw_band_sweep_dated.py`: legs keyed by date, BOTH legs required to trade on entry day, path
+> marked only on common days) gives the corrected OOS answer:
+>
+> | band | v2 | v1 | v0 |
+> |---|---|---|---|
+> | 0.25–0.30 | 71.6% · **−5.5%** (n=67, 1/3 yrs) | 77.6% · **−7.5%** (n=67, 1/3) | 79.1% · **−1.9%** (n=67, 1/3) |
+> | 0.30–0.35 | 72.6% · **−10.9%** (n=62, 0/3) | 76.7% · **+1.2%** (n=103, 1/3) | 79.0% · **−1.2%** (n=62, 2/3) |
+> | 0.35–0.40 | 75.0% · +2.0% (n=36, 1/2) | 71.1% · **−11.1%** (n=121, 1/3) | 83.3% · +4.7% (n=36, 1/2) |
+>
+> **The headline cell — v1 at 0.30–0.35 — collapses from +11.6% ROM to +1.2%, 1 of 3 years
+> positive.** Every other low cell is flat or negative. The audit predicted this exactly: the
+> equal-weighted OOS mean was +3.2% ± 5.1% before the fix, and the +11.6% was date-misalignment
+> plus margin-weighting. **The low bands are dead out-of-sample, which re-confirms
+> LOWCW_BAND_RESCUE's original verdict by a corrected route.**
+>
+> The audit also found: (a) the IS leg charges no exit costs, so its +9.6% is nearer +8.1–8.7%,
+> and it prices settlement prints — 85% of bhavcopy OPTSTK rows with premium ≥₹50 carry OI=0 — so
+> the IS positives are gross-of-reality; (b) the "TP-40/no-stop beats the 3× stop everywhere"
+> claim is an ARTIFACT — 17/17 stop triggers at ≥0.40 and 17/26 in-band fired on marks where the
+> spread cost exceeded width, an arbitrage-impossible print; the clean TP-50→TP-40 difference on
+> identical trades is +1.9pp. **Do not touch v2's live stop on this study.** (c) Entry at the
+> option's daily close is FAITHFUL to the live system (15:36 scan on the official close, placement
+> to 15:40) — that audit point is answered by the system's own design.
+>
+> Everything below this box is preserved as the record of what was believed on 13–14 Aug and why
+> it was wrong. Scripts: `cw_band_sweep.py` (bugged OOS), `cw_band_sweep_dated.py` (corrected),
+> `cw_band_sweep_is.py` (IS, gross-of-cost caveats above).
+
 **User question:** what is the win rate for c/w 0.25–0.30 and 0.30–0.35 under our v0/v1/v2 criteria?
 
-**Answer, OOS Oct-2024 → Aug-2026, 38-name slice, each band priced at that book's own geometry and
-exit** (v2 = S2/W4 TP-50 stop-3× · v1 = S1/W3 TP-40 no-stop · v0 = S2/W4 TP-40 no-stop):
+**Answer as first measured (INVALID — see the audit box), OOS Oct-2024 → Aug-2026, 38-name slice,
+each band priced at that book's own geometry and exit** (v2 = S2/W4 TP-50 stop-3× · v1 = S1/W3
+TP-40 no-stop · v0 = S2/W4 TP-40 no-stop):
 
 | band | v2 | v1 | v0 |
 |---|---|---|---|

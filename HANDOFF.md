@@ -1,5 +1,31 @@
 # Handoff — institutional-trader
 
+## AUDIT 14-Aug: the c/w band study has TWO BLOCKERS — OOS re-run in flight
+
+An adversarial audit agent (user-requested) reviewed studies/CW_BAND_BY_BOOK.md before any
+deployment decision. Verified findings:
+1. **BLOCKER — OOS legs date-misaligned.** `leg()` in studies/ndte/cw_band_sweep.py drops candle
+   timestamps and the walk indexes positionally (`sp[k]-lp[k]`); 47% of multi-leg windows have
+   unequal candle counts, so spreads compare different DATES and even entry credit can pair
+   mismatched days. The +11.6%/82.6% OOS cell (v1 0.30-0.35) is invalid as measured.
+2. **BLOCKER — stop triggers on impossible prices.** 17/17 stop triggers at >=0.40 and 17/26
+   in-band fired on marks where spread cost EXCEEDED width (stale settlement prints). The
+   "no-stop beats 3x stop everywhere" claim is an ARTIFACT — do not touch v2's live stop.
+3. MAJOR: IS charges no exit costs (OOS does) → IS +9.6% is really ~+8.1-8.7%; bhavcopy >=0.40
+   comparator is stale-print fiction (85% of prem>=50 rows have OI=0) — honest comparator is
+   live v2's +41%/margin; winning cell is best-of-12 selected after both windows, OOS
+   equal-weighted mean +3.2% ± 5.1% (z≈0.6); live gates absent; OOS window is a favorable regime.
+4. **User's correction, accepted:** entering at the option's daily CLOSE is FAITHFUL to the live
+   system — since 3-Aug the engine scans 15:36 on the official close and places 15:36-15:40 while
+   derivatives trade to 15:40. The audit's "entry price ≠ entry time" point is answered by design;
+   the residual caveat is stale last-trades on illiquid strikes, not timing.
+RESULT of the date-aligned re-run (14-Aug, /tmp/cw_dated2.log, clean, no fetch failures):
+the headline cell v1@0.30-0.35 COLLAPSED from +11.6% ROM to +1.2% (n=103, 1/3 years). All other
+low cells flat or negative (v2 0.30-0.35: -10.9%). THE LOW BANDS ARE DEAD OOS — LOWCW_BAND_RESCUE's
+original verdict re-confirmed by a corrected route. Study rewritten with an audit-correction box at
+the top of studies/CW_BAND_BY_BOOK.md; do not touch v2's live stop on this study. User confirmed no
+deployment intended. Question CLOSED.
+
 ## c/w BANDS 0.25-0.35 measured (13-Aug) — information only, NOTHING deployed
 
 OOS Oct-24->date, 38-name slice, each band priced at each book's OWN geometry+exit:
