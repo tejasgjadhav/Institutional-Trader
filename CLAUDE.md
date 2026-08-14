@@ -256,6 +256,19 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
      is visible to the user rather than silent; his instinct, not a sweep, caught GRASIM.
   Reporting: state which layers were checked; a code-only sweep is never reported as "no bugs".
 
+- **RESEARCH SCRIPTS ARE PRODUCTION CODE (standing rule, user 2026-08-14).** Born from the
+  leg-misalignment incident: every Upstox OOS validation of v2/v1/v0 paired the two option legs
+  BY POSITION (`sp[k]-lp[k]`) instead of by DATE. Illiquid stock options skip days, so ~47% of
+  multi-leg windows compared prices from different calendar days. The bug survived dozens of runs
+  and many recorded studies because (1) it crashes nothing and prints plausible numbers, (2) each
+  new study copy-pasted the same harness, so "cross-checks" were the same bug agreeing with
+  itself, (3) the four-layer bug check was only ever applied to the ENGINE, never to studies/,
+  and (4) re-running a bugged test reproduces the bug — only an adversarial audit that assumed
+  the result was wrong found it. Therefore: backtest harnesses get the same audit as engine code;
+  every OOS script joins option legs BY DATE and requires both legs to have a candle on entry
+  day; and any result that gates a deployment decision gets an independent audit pass (a fresh
+  agent told to refute it) before it is believed. See studies/DEPLOYED_EVIDENCE_AUDIT.md.
+
 - **DO NOT BE CARRIED ALONG BY THE USER'S FRAMING (standing rule, user 2026-08-05).** This is
   distinct from "honesty over optimism" below, which is about how to report results. This one is
   about who is asking. If the user's question embeds a conclusion — "is this much better?", "so this
@@ -281,3 +294,27 @@ pgrep -f main.py                # viewer alive?
 tail logs/engine.out.log        # engine log
 .venv/bin/python -m engine.engine_runner --once   # run one engine cycle manually
 ```
+
+
+## Voice pass (binding, added 2026-08-10)
+
+Any prose written in his name — notes, docs, commit bodies, READMEs, book text — gets the
+sentence-level voice pass defined in `~/.claude/CLAUDE.md` ("Sentence-level voice pass"):
+every sentence needs a subject and a verb and one fact, no verbless caption lists, plain verbs,
+concrete places and moments. He may write examples with grammar slips; copy the voice, correct
+the grammar.
+
+## THE VOICE PASS GATE (strict, added 2026-08-10)
+
+**No prose written in his name ships without the sentence-level voice pass.** Standing
+instruction from 2026-08-10, covering every book, article, KDP asset, post, note and doc.
+The gate is grammatical: every sentence needs a subject, a verb and one fact. No verbless
+sentences, no caption lists used as prose, no staccato fragments. Plain verbs, concrete places,
+"Example:" to signpost an example. Imperatives are fine and disclaimers are exempt.
+Grep cannot detect a fragment, so read every sentence. Full rule and worked example:
+`~/.claude/CLAUDE.md`, sections "THE VOICE PASS GATE" and "Sentence-level voice pass".
+He may write examples with grammar slips; copy the voice and correct the grammar.
+
+
+Polish without the AI feel: a sharp line that is a complete sentence carrying one fact is his
+voice and stays. Cut fragments, not personality. Full rule in `~/.claude/CLAUDE.md`.

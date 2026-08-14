@@ -1,5 +1,7 @@
 # Handoff — institutional-trader
 
+(14-Aug evening: leg-misalignment lesson recorded as a standing rule in CLAUDE.md — research scripts are production code; OOS legs join BY DATE; deployment-gating results need an adversarial audit pass.)
+
 ## AUDIT OF DEPLOYED BOOKS — RESULTS (14-Aug) + corrected re-measurement IN FLIGHT
 
 Audit agent verdicts (full text in studies/DEPLOYED_EVIDENCE_AUDIT.md once written):
