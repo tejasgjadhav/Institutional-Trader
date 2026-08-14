@@ -39,6 +39,10 @@ there is no earlier CAS data to fetch. Use it before assuming anything about how
 
 ## c/w bands below the gate — measured per book
 
+[`DEPLOYED_EVIDENCE_AUDIT.md`](DEPLOYED_EVIDENCE_AUDIT.md) — adversarial audit of every deployed
+book's validation (14-Aug-2026). 0DTE books SURVIVE; all three stock-credit OOS validations were
+positionally BUGGED; corrected re-run: >=0.40 = 91.7%/+237% (v2) and 84.4%/+54% (v1), cliff at
+0.40 real; v0's band only +5.2% — weakest book. Every future OOS script joins legs BY DATE.
 [`CW_BAND_BY_BOOK.md`](CW_BAND_BY_BOOK.md) — 0.25-0.30 and 0.30-0.35 scored at each book's OWN
 geometry+exit. v1's TP-40/no-stop is the only exit positive in all three low bands (0.30-0.35:
 82.6% win, +11.6% ROM, +ve 3/3 yrs); v2's 3x stop kills them (0.0% ROM). But ROM is 2-12% against

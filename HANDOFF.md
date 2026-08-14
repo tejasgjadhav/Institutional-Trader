@@ -1,5 +1,28 @@
 # Handoff — institutional-trader
 
+## AUDIT OF DEPLOYED BOOKS — RESULTS (14-Aug) + corrected re-measurement IN FLIGHT
+
+Audit agent verdicts (full text in studies/DEPLOYED_EVIDENCE_AUDIT.md once written):
+- 0DTE NIFTY FLIP + 0DTE SENSEX: SURVIVE. Single-day real-trade prints, no path walk, intrinsic
+  settle, 4-leg costs. Structurally immune to both bug classes. (SENSEX caveat: no volume floor.)
+- v2/v1/v0 stock credit OOS: ALL BUGGED - every Upstox OOS validation (v2 87%/+41.2%/margin,
+  v1 86%, v0 90.7%/+19.4%) used POSITIONAL leg alignment (stkfade_oos_union.py:69-78,
+  stkfade_v1_oos_exits.py:72-76, stkfade_lowcw_oos2.py:162-190). UNPROVEN until re-run.
+  v0 already has a corrected cell: 83.3% / +4.7% ROM (was 90.7% / +19.4%) - its OOS case collapsed.
+- v2/v1 stock credit IS (bhavcopy): date-aligned CLEAN, direction real (6/6 yrs), but priced on
+  85%-OI=0 settlement prints with entry-only costs -> magnitude soft.
+- Forward record since 6-Aug restart: 4 resolved, 4 wins - statistically empty.
+RESULTS (both landed 14-Aug ~17:05, clean runs):
+- Date-aligned OOS >=0.40: v2 91.7% win / +237% ROM (n=24, 2/2 yrs) · v1 84.4% / +54% (n=109,
+  3/3 yrs) · v0-geometry 91.7% / +217%. THE DEPLOYED GATE SURVIVES ITS CORRECTED TEST; the cliff
+  at 0.40 (+54..237% above vs -12..+1% below) is the sharpest feature in the data.
+- IS forensics (full universe, OI tracked, exit costs charged): v2 +176->+172% ROM, 18% of exits
+  on an OI=0 leg, 120 impossible stop marks (5%); v1 +173->+169%, 9%, 0. IS magnitude soft, not
+  hollow. Win rates unchanged.
+- v0's live band corrected OOS: 83.8% / +5.2% (claimed 90.7% / +19.4%) - weakest book, slot is
+  the user's decision. Stop sweep: no stop rescues 0.25-0.35.
+Study: studies/DEPLOYED_EVIDENCE_AUDIT.md + addendum in CW_BAND_BY_BOOK.md, both pushed.
+
 ## AUDIT 14-Aug: the c/w band study has TWO BLOCKERS — OOS re-run in flight
 
 An adversarial audit agent (user-requested) reviewed studies/CW_BAND_BY_BOOK.md before any

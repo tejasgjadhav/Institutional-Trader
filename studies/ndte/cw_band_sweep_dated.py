@@ -20,7 +20,7 @@ from engine.expired_options import get_expiries, get_contracts, _get_json as _gj
 
 START = date(2024, 10, 1)
 MIN_DTE, REENTRY, MIN_PREM = 10, 3, 50.0
-BANDS = {"0.25-0.30": (0.25, 0.30), "0.30-0.35": (0.30, 0.35), "0.35-0.40": (0.35, 0.40)}
+BANDS = {"0.25-0.30": (0.25, 0.30), "0.30-0.35": (0.30, 0.35), "0.35-0.40": (0.35, 0.40), ">=0.40": (0.40, 9.9)}
 BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=3.0),
          "v1": dict(S=1, W=3, tp=0.40, stop=None),
          "v0": dict(S=2, W=4, tp=0.40, stop=None)}

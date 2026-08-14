@@ -154,3 +154,15 @@ OOS settles on Upstox expired-instrument closes.
 
 **Nothing deployed. No engine file touched.** Scripts: `studies/ndte/cw_band_sweep.py` (OOS),
 `/tmp/cw_is.py` → copied to `studies/ndte/cw_band_sweep_is.py` (IS).
+
+## Addendum, 14-Aug-2026 — stops cannot rescue the low bands, and the deployed band re-measured
+
+A 20-cell sweep on the date-aligned data (stop multiples 1.5/2.0/2.5/3.0/none, TP-40 fixed, both
+geometries, impossible marks filtered) found no stop that turns 0.25-0.35 positive. In 0.30-0.35
+every stop is worse than no stop (1.5x: -3.3%; none: +1.2% at S1/W3). The lone positive cell
+(S2/W4, 0.25-0.30, 2.0x, +3.6% ROM) sits between -3.6% and 0.0% at adjacent stop levels and is
+noise. Script: /tmp/cw_stop_sweep.py output in /tmp/cw_stops.log.
+
+The same date-aligned run extended to the DEPLOYED band answered the flagship question:
+v2 at >=0.40 = 91.7% win / +237% ROM (n=24, 2/2 yrs) and v1 = 84.4% / +54% (n=109, 3/3 yrs).
+The cliff at 0.40 is real on corrected code. Full audit: studies/DEPLOYED_EVIDENCE_AUDIT.md.
