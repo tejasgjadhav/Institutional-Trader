@@ -1,17 +1,15 @@
 # Handoff — institutional-trader
 
-## RUNNING 14-Aug evening: production backtest of the DEPLOYED configs (user request)
-studies/ndte/deployed_backtest.py — the new harness of record. Exact deployed configs (v2 >=0.40
-S2W4 TP50 stop3x · v1 >=0.40 S1W3 TP40 · v0 0.35-0.40 S2W4 TP40), FULL universe, date-aligned
-both windows, cross-book 3-day gap, v1-wins-clash rule, exit costs charged. Not modelled: live
-bid-ask/OI gate, daily caps, 15:36-15:40 fill timing. IS -> /tmp/dbt_is.log (from
-/tmp/bhav_optstk.pkl); OOS -> /tmp/dbt_oos.log (Upstox, cache /tmp/cw_band_legcache_dated.json,
-full universe so ~2-3h throttled; empty results no longer cached, so a network drop cannot
-poison it). PACE 18:42: IS DONE (v2 95.5/+183 · v1 92.9/+160 · v0 81.7/+11.2, 6/6·6/6·5/6 yrs). OOS at 15/113 after ~67min -> ETA roughly midnight-1am; 4 transient timeouts, cache not poisoned (empty results never cached). When both DONE: write results into DEPLOYED_EVIDENCE_AUDIT.md + UI + push.
-Context: user read 0.35-0.40 as dead; correct reading is WEAK (OOS +5.2% n=37, IS +10.4%) -
-this run is the full-universe decider for v0's slot. NOTHING deployed without his sign-off.
+## PRODUCTION BACKTEST COMPLETE (15-Aug morning) — the numbers of record
 
-(14-Aug evening: leg-misalignment lesson recorded as a standing rule in CLAUDE.md — research scripts are production code; OOS legs join BY DATE; deployment-gating results need an adversarial audit pass.)
+studies/ndte/deployed_backtest.py, full universe, date-aligned, engine rules (cross-book gap,
+v1-wins-clash, exit costs, fake-stop filter):
+- IS 2019-Sep24:  v2 95.5%/+183% (n=2497, 6/6) · v1 92.9%/+160% (n=3078, 6/6) · v0 81.7%/+11.2% (n=191, 5/6)
+- OOS Oct24-Aug26: v2 80.2%/+31.8% (n=91, 3/3) · v1 79.0%/+18.0% (n=443, 3/3) · v0 76.4%/-11.5% (n=55, 1/3)
+GATE BOOKS CONFIRMED both windows. v0 NEGATIVE OOS - regime-flip signature; every corrected
+measurement agrees the 0.35-0.40 band pays nothing after 2024. v0 OFF/KEEP is the USER'S open
+decision - do not touch config without his explicit sign-off. All in DEPLOYED_EVIDENCE_AUDIT.md
+§5 + UI STUDIES tab, pushed both remotes. Rows: /tmp/deployed_bt_is_rows.json, /tmp/deployed_bt_oos_rows.json.
 
 ## AUDIT OF DEPLOYED BOOKS — RESULTS (14-Aug) + corrected re-measurement IN FLIGHT
 

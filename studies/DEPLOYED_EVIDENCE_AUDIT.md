@@ -100,10 +100,27 @@ falls 424 → 191 because the clash rule hands its overlapping signals to v1 —
 did this and no earlier backtest modelled it. What v0 keeps for itself is a real but small edge:
 +11.2% ROM, 5 of 6 years, about one-sixteenth of the gate books per rupee of margin.
 
-**OOS, Upstox expired options Oct-2024 → date, full universe: RUNNING** (this section gets the
-table when it lands). The 38-name date-aligned slice already measured: v2 91.7% / +237% (n=24),
-v1 84.4% / +54% (n=109), v0 83.8% / +5.2% (n=37). The full-universe run is the decider for
-v0's slot.
+**OOS, Upstox expired options Oct-2024 → 15-Aug-2026, full universe (landed 15-Aug):**
+
+| book | band | n | WIN | ROM | +ve years |
+|---|---|---|---|---|---|
+| v2 | >=0.40 | 91 | **80.2%** | **+31.8%** | **3/3** |
+| v1 | >=0.40 | 443 | **79.0%** | **+18.0%** | **3/3** |
+| v0 | 0.35-0.40 | 55 | 76.4% | **−11.5%** | 1/3 |
+
+**The gate books are confirmed in both windows on the production harness.** v2 pays +31.8% ROM
+out-of-sample at 80.2% win, positive all three years — in line with the old +41%/margin claim and
+far below the 38-name slice's +237%, which was a thin lucky draw (n=24). v1 pays +18.0% at 79.0%,
+also positive all three years on a real sample (n=443). The IS-to-OOS decay (183% → 32%, 160% →
+18%) is the settlement-print optimism the forensics predicted; the direction, the cliff at 0.40
+and the year-consistency all hold.
+
+**v0 is negative out-of-sample: −11.5% ROM, 1 of 3 years positive, on its true 55-trade share.**
+Against +11.2% in-sample, that is the regime-flip signature this repo has rejected strategies for
+before (the index-fade gates, the width-1 recut). Every corrected measurement now agrees v0's
+band pays nothing after 2024: +5.2% on the slice at its own geometry, −11.1% at v1's geometry,
+−11.5% on the full universe with engine rules. The evidence for keeping v0 live is gone; the
+decision to switch it off is the user's.
 
 The ROM column everywhere is an upper bound: bhavcopy marks are settlement prints (9-18% of
 exits price off an OI=0 leg). The win-rate column moves far less under cost and mark stress, so
