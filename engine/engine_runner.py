@@ -250,20 +250,19 @@ class EngineRunner:
     # IS/OOS date ranges). Ends every signal message (user format 2026-07-30). Honest labels only.
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
-            "• 32,852 raw breakout signals screened → 609 passed the quality gates and were analysed\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>84%</b> win rate achieved · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>87%</b> win rate achieved · positive every year",
+            "• Donchian-union breakout fade · credit/width ≥ 0.40 · production backtest 15-Aug-2026\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 2,497 trades · <b>95.5%</b> win rate · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 91 trades · <b>80.2%</b> win rate · +31.8% on margin · positive every year",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
-            "• 310 in-sample trades and 43 out-of-sample trades analysed\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>77%</b> win rate · positive 4 of 6 years · +1.9% on margin\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>91%</b> win rate · positive every year · +19.4% on margin\n"
-            "• Avg net ₹2,408/lot per trade · ~5.5 signals/mo (real fills, Rs40k exposure cap applied)\n"
-            "• Forward paper-test at 1 lot — see studies/LOWCW_BAND_RESCUE.md §7",
+            "• Production backtest 15-Aug-2026 · the weakest evidence of the three stock books\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 191 trades · <b>81.7%</b> win rate · +11.2% on margin · positive 5 of 6 years\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 55 trades · <b>76.4%</b> win rate · <b>−11.5%</b> on margin · positive 1 of 3 years\n"
+            "• Forward paper-test at 1 lot to decide the band — see studies/DEPLOYED_EVIDENCE_AUDIT.md §5",
         "STOCK CREDIT v1":
-            "• 25,978 raw breakout signals screened → 997 passed the quality gates and were analysed\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>85%</b> win rate achieved · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>86%</b> win rate achieved · positive every year",
+            "• Same fade, short 1-OTM · width 3 · TP-40, no stop · credit/width ≥ 0.40 · production backtest 15-Aug-2026\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 3,078 trades · <b>92.9%</b> win rate · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 443 trades · <b>79.0%</b> win rate · +18.0% on margin · positive every year",
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>88%</b> win rate achieved\n"

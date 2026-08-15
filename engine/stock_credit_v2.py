@@ -314,12 +314,12 @@ def notify_nearmiss(rebuild: bool = True) -> int:
             ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
             cw = r.get("cw") or 0
             close = "🔥 " if cw >= 0.35 else ""   # within 0.05 of the 0.40 gate
-            # backtested win prob by c/w bucket (CW_BUCKET_ANALYSIS.md, 629 trades Oct'24→Jul'26):
+            # backtested win prob by c/w bucket (production harness 15-Aug-2026, date-aligned OOS):
             # ≥0.40=87% (the signal) · 0.35–0.40=82% · 0.30–0.35=76% · <0.30 = breakeven/lower
             # NB "&lt;" not "<": a literal '<' makes Telegram's HTML parser return 400, which sent
             # the ENTIRE digest through the plain-text fallback with every <b> tag visible
             # (user-reported 2026-08-03). Any new text here must be HTML-safe.
-            prob = "~82%" if cw >= 0.35 else ("~76%" if cw >= 0.30 else "&lt;76%")
+            prob = "~76% (no net edge)" if cw >= 0.35 else ("~77% (no net edge)" if cw >= 0.30 else "&lt;77%")
             import html as _h
             lines.append(f"{close}<b>{_h.escape(str(r['sym']))}</b> · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']} · backtest win {prob}")
             lines.append(f"   {SIDE_TXT.get(r['side'], r['side'])}")
