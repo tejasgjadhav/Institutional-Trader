@@ -74,3 +74,37 @@ hollow.
 
 Scripts: audit agent transcript summarised here; re-measurement `cw_band_sweep_dated.py` (bands
 extended to ≥0.40); forensics `/tmp/is_forensics.py` → `studies/ndte/is_forensics_deployed.py`.
+
+## 5. The production harness — the numbers of record (added 15-Aug-2026)
+
+`studies/ndte/deployed_backtest.py` is the single harness of record for the deployed configs,
+written under the research-scripts-are-production-code rule. It runs the three books exactly as
+the engine trades them: full 113-name universe, date-aligned in both windows, the CROSS-BOOK
+3-day re-entry gap, the v1-wins-clash rule (a same-day same-stock signal goes to v1, not v0),
+exit costs charged on TP/stop closes, and the impossible-mark stop filter. Not modelled, stated
+plainly: the live bid-ask/OI quote gate, the 5-per-day and 20-open caps, and 15:36-15:40 fill
+timing versus the close print.
+
+**IS, bhavcopy 2019 → Sep-2024, full universe:**
+
+| book | band | n | WIN | ROM | +ve years |
+|---|---|---|---|---|---|
+| v2 | >=0.40 | 2,497 | **95.5%** | **+183.2%** | **6/6** |
+| v1 | >=0.40 | 3,078 | **92.9%** | **+160.3%** | **6/6** |
+| v0 | 0.35-0.40 | 191 | 81.7% | +11.2% | 5/6 |
+
+These supersede the §2/§3 sweep figures where they differ, and every difference traces to a
+modelled rule: v2's win rate rises 91.6% → 95.5% because 120 fake stop triggers on impossible
+marks no longer fire; v1's ROM falls +173% → +160% because TP closes now pay exit costs; v0's n
+falls 424 → 191 because the clash rule hands its overlapping signals to v1 — the engine always
+did this and no earlier backtest modelled it. What v0 keeps for itself is a real but small edge:
++11.2% ROM, 5 of 6 years, about one-sixteenth of the gate books per rupee of margin.
+
+**OOS, Upstox expired options Oct-2024 → date, full universe: RUNNING** (this section gets the
+table when it lands). The 38-name date-aligned slice already measured: v2 91.7% / +237% (n=24),
+v1 84.4% / +54% (n=109), v0 83.8% / +5.2% (n=37). The full-universe run is the decider for
+v0's slot.
+
+The ROM column everywhere is an upper bound: bhavcopy marks are settlement prints (9-18% of
+exits price off an OI=0 leg). The win-rate column moves far less under cost and mark stress, so
+trust it first, and keep the 80%-of-model planning rule and 1-lot sizing regardless.
