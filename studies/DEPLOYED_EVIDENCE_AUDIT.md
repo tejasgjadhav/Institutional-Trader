@@ -75,53 +75,56 @@ hollow.
 Scripts: audit agent transcript summarised here; re-measurement `cw_band_sweep_dated.py` (bands
 extended to ≥0.40); forensics `/tmp/is_forensics.py` → `studies/ndte/is_forensics_deployed.py`.
 
-## 5. The production harness — the numbers of record (added 15-Aug-2026)
+## 5. The production harness — the numbers of record (15-Aug-2026, corrected)
 
-`studies/ndte/deployed_backtest.py` is the single harness of record for the deployed configs,
-written under the research-scripts-are-production-code rule. It runs the three books exactly as
-the engine trades them: full 113-name universe, date-aligned in both windows, the CROSS-BOOK
-3-day re-entry gap, the v1-wins-clash rule (a same-day same-stock signal goes to v1, not v0),
-exit costs charged on TP/stop closes, and the impossible-mark stop filter. Not modelled, stated
-plainly: the live bid-ask/OI quote gate, the 5-per-day and 20-open caps, and 15:36-15:40 fill
-timing versus the close print.
+`studies/ndte/deployed_backtest.py` is the single harness of record. A second adversarial audit
+caught the first version of it feeding v1 the wrong signal population, so these numbers post-date
+two fixes, not one. The harness now models the live hierarchy exactly:
 
-**IS, bhavcopy 2019 → Sep-2024, full universe:**
+- **v2** scans the Donchian UNION (D5/10/15/20); **v1 scans Donchian-10 only** (`STOCK_CREDIT_DONCHIAN = 10`).
+- **v1 stands down while v2 holds the name** (`stock_credit.py:221`), tracked to v2's actual exit date.
+- **v0 stands down for v1** on a same-day clash. One book takes a stock on a day, never two.
+- Cross-book 3-day re-entry gap, premium >= 50, >= 10 DTE, exit costs charged on TP/stop closes,
+  and stop triggers on arbitrage-impossible marks discarded.
 
-| book | band | n | WIN | ROM | +ve years |
-|---|---|---|---|---|---|
-| v2 | >=0.40 | 2,497 | **95.5%** | **+183.2%** | **6/6** |
-| v1 | >=0.40 | 3,078 | **92.9%** | **+160.3%** | **6/6** |
-| v0 | 0.35-0.40 | 191 | 81.7% | +11.2% | 5/6 |
+Not modelled, stated plainly: the live bid-ask and OI quote gate, the 5-new-per-day and 20-open
+caps, and fills in the 15:36-15:40 window rather than at the close print.
 
-These supersede the §2/§3 sweep figures where they differ, and every difference traces to a
-modelled rule: v2's win rate rises 91.6% → 95.5% because 120 fake stop triggers on impossible
-marks no longer fire; v1's ROM falls +173% → +160% because TP closes now pay exit costs; v0's n
-falls 424 → 191 because the clash rule hands its overlapping signals to v1 — the engine always
-did this and no earlier backtest modelled it. What v0 keeps for itself is a real but small edge:
-+11.2% ROM, 5 of 6 years, about one-sixteenth of the gate books per rupee of margin.
+| book | band | IS 2019 → Sep-2024 | OOS Oct-2024 → Aug-2026 |
+|---|---|---|---|
+| v2 | >=0.40 | **95.4%** · +182.8% ROM · 6/6 yrs (n=2,526) | **81.2%** · **+32.5%** · 3/3 yrs (n=96) |
+| v1 | >=0.40 | **89.4%** · +84.5% · 6/6 yrs (n=805) | **81.7%** · **+14.6%** · 3/3 yrs (n=268) |
+| v0 | 0.35-0.40 | 80.1% · +12.4% · 5/6 yrs (n=322) | 76.8% · **−3.9%** · 2/3 yrs (n=99) |
 
-**OOS, Upstox expired options Oct-2024 → 15-Aug-2026, full universe (landed 15-Aug):**
+**Both gate books are positive in every year of both windows.** That is the confirmation the audit
+set out to test, and it survives on corrected code. v1's population fell from 3,078 to 805 in-sample
+once it scanned D10 only and deferred to v2 — its edge is real every year, but its true share of the
+flow is about a quarter of what the earlier harness implied.
 
-| book | band | n | WIN | ROM | +ve years |
-|---|---|---|---|---|---|
-| v2 | >=0.40 | 91 | **80.2%** | **+31.8%** | **3/3** |
-| v1 | >=0.40 | 443 | **79.0%** | **+18.0%** | **3/3** |
-| v0 | 0.35-0.40 | 55 | 76.4% | **−11.5%** | 1/3 |
+**v0 does not clear its costs out-of-sample.** It reads +12.4% ROM in-sample and −3.9%
+out-of-sample. The user decided on 15-Aug-2026 to keep it live as a paper forward-test rather than
+switch it off, to see whether real fills disagree with the backtest. Nothing was changed.
 
-**The gate books are confirmed in both windows on the production harness.** v2 pays +31.8% ROM
-out-of-sample at 80.2% win, positive all three years — in line with the old +41%/margin claim and
-far below the 38-name slice's +237%, which was a thin lucky draw (n=24). v1 pays +18.0% at 79.0%,
-also positive all three years on a real sample (n=443). The IS-to-OOS decay (183% → 32%, 160% →
-18%) is the settlement-print optimism the forensics predicted; the direction, the cliff at 0.40
-and the year-consistency all hold.
+## 6. Rupee calibration — what the books are worth per month (15-Aug-2026)
 
-**v0 is negative out-of-sample: −11.5% ROM, 1 of 3 years positive, on its true 55-trade share.**
-Against +11.2% in-sample, that is the regime-flip signature this repo has rejected strategies for
-before (the index-fade gates, the width-1 recut). Every corrected measurement now agrees v0's
-band pays nothing after 2024: +5.2% on the slice at its own geometry, −11.1% at v1's geometry,
-−11.5% on the full universe with engine rules. The evidence for keeping v0 live is gone; the
-decision to switch it off is the user's.
+Every trade multiplied by its own **current lot size**, from the live contract feed. Rupees come
+from the **out-of-sample window only**: the in-sample window prices bhavcopy settlement prints and
+returns figures that are not credible (v2 reads ₹51,380 a trade in-sample against ₹14,956
+out-of-sample, on ₹13,531 of margin — nobody makes 380% a trade).
 
-The ROM column everywhere is an upper bound: bhavcopy marks are settlement prints (9-18% of
-exits price off an OI=0 leg). The win-rate column moves far less under cost and mark stress, so
-trust it first, and keep the 80%-of-model planning rule and 1-lot sizing regardless.
+| book | signals/mo | avg margin | avg WIN | avg LOSS | win:loss | ₹/trade | ₹/month |
+|---|---|---|---|---|---|---|---|
+| v2 | **4.3** | ₹12,620 | +₹20,916 | −₹10,872 | **1.92 : 1** | **+₹14,956** | **+₹64,311** |
+| v1 | **11.9** | ₹10,764 | +₹6,048 | −₹9,810 | 0.62 : 1 | +₹3,149 | **+₹37,509** |
+| v0 | **4.4** | ₹13,596 | +₹3,818 | −₹13,439 | 0.28 : 1 | **−₹191** | **−₹842** |
+
+With the two index books (~₹2,775 and ~₹3,031) the stock-plus-index total is about **₹106,700 a
+month at 1 lot**, and the standing 80% planning rule puts the number to plan on at about
+**₹85,400**. July 2026 realised ₹44,789 across 24 closed trades, so treat ₹85,400 as a ceiling and
+one live month as the floor.
+
+Two things the table says that the win rates hide. **v2 carries the book**: it fires only 4.3 times
+a month, but it is the one book whose average winner outsizes its average loser, at 1.92:1.
+**v0 wins 76.8% of its trades and still loses money**: a winner pays ₹3,818 and a loser costs
+₹13,439, so the arithmetic does not clear at that win rate.
+

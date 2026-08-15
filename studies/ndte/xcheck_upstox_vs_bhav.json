@@ -1,0 +1,153 @@
+{
+ "window": {
+  "from": "2024-09-02",
+  "to": "2026-08-13",
+  "sessions": 482
+ },
+ "rows": {
+  "bhav_only": 0,
+  "upstox_only": 1048,
+  "matched": 58000
+ },
+ "close": {
+  "within_0.1pct": 54193,
+  "mismatched": 3807,
+  "match_rate_pct": 93.4362,
+  "max_diff_pct": 90.0036,
+  "median_diff_pct": 0.0
+ },
+ "volume": {
+  "median_diff_pct": 0.0,
+  "over_1pct": 3807
+ },
+ "worst": [
+  {
+   "date": "2024-10-29",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7022.5,
+   "ups_close": 702.0,
+   "close_diff_pct": 0.9000355998576006
+  },
+  {
+   "date": "2025-01-09",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7277.45,
+   "ups_close": 727.5,
+   "close_diff_pct": 0.9000336656383761
+  },
+  {
+   "date": "2025-01-15",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7177.4,
+   "ups_close": 717.5,
+   "close_diff_pct": 0.9000334382924179
+  },
+  {
+   "date": "2024-09-09",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7347.45,
+   "ups_close": 734.5,
+   "close_diff_pct": 0.9000333449019728
+  },
+  {
+   "date": "2024-09-20",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7582.45,
+   "ups_close": 758.0,
+   "close_diff_pct": 0.9000323114560597
+  },
+  {
+   "date": "2025-01-03",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7407.25,
+   "ups_close": 740.5,
+   "close_diff_pct": 0.9000303756454825
+  },
+  {
+   "date": "2024-09-06",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7317.15,
+   "ups_close": 731.5,
+   "close_diff_pct": 0.9000293830248116
+  },
+  {
+   "date": "2025-01-17",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7182.1,
+   "ups_close": 718.0,
+   "close_diff_pct": 0.9000292393589618
+  },
+  {
+   "date": "2025-01-22",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7397.15,
+   "ups_close": 739.5,
+   "close_diff_pct": 0.9000290652481023
+  },
+  {
+   "date": "2025-03-18",
+   "sym": "BAJFINANCE",
+   "bhav_close": 8682.5,
+   "ups_close": 868.0,
+   "close_diff_pct": 0.9000287935502448
+  },
+  {
+   "date": "2025-05-08",
+   "sym": "BAJFINANCE",
+   "bhav_close": 8832.5,
+   "ups_close": 883.0,
+   "close_diff_pct": 0.9000283045570336
+  },
+  {
+   "date": "2025-05-02",
+   "sym": "BAJFINANCE",
+   "bhav_close": 8862.5,
+   "ups_close": 886.0,
+   "close_diff_pct": 0.9000282087447109
+  },
+  {
+   "date": "2025-02-14",
+   "sym": "BAJFINANCE",
+   "bhav_close": 8392.3,
+   "ups_close": 839.0,
+   "close_diff_pct": 0.900027406074616
+  },
+  {
+   "date": "2024-10-11",
+   "sym": "BAJFINANCE",
+   "bhav_close": 7302.0,
+   "ups_close": 730.0,
+   "close_diff_pct": 0.9000273897562312
+  },
+  {
+   "date": "2025-04-17",
+   "sym": "BAJFINANCE",
+   "bhav_close": 9162.5,
+   "ups_close": 916.0,
+   "close_diff_pct": 0.9000272851296044
+  }
+ ],
+ "signal_window": {
+  "dates": [
+   "2026-06-22",
+   "2026-06-23",
+   "2026-06-24",
+   "2026-06-25",
+   "2026-06-29",
+   "2026-06-30",
+   "2026-07-01",
+   "2026-07-02",
+   "2026-07-03",
+   "2026-07-06",
+   "2026-07-07"
+  ],
+  "matched_rows": 1342,
+  "close_match_rate_pct": 100.0,
+  "mismatches": 0
+ },
+ "out_of_scope": [
+  "intraday momentum (5-min bars)",
+  "ORB high/low",
+  "live option-chain flow (PCR, OI change)"
+ ]
+}

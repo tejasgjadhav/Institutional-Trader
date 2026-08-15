@@ -1,5 +1,17 @@
 # Handoff — institutional-trader
 
+## 15-Aug DONE: corrected harness + rupee calibration + UI/Telegram/studies refreshed
+Numbers of record (deployed_backtest.py, live hierarchy modelled: v1=D10 only, v1 defers to open
+v2, v0 defers to v1): IS v2 95.4/+182.8 (2526,6/6) · v1 89.4/+84.5 (805,6/6) · v0 80.1/+12.4 (322,5/6).
+OOS v2 81.2/+32.5 (96,3/3) · v1 81.7/+14.6 (268,3/3) · v0 76.8/-3.9 (99,2/3).
+Rupees (OOS only, per-symbol lot sizes /tmp/lotmap.json): v2 4.3 sig/mo Rs14,956/tr = Rs64,311/mo ·
+v1 11.9 sig/mo Rs3,149 = Rs37,509/mo · v0 4.4 sig/mo -Rs191 = -Rs842/mo. Total ~Rs106.7k, plan 80% = Rs85.4k.
+Shipped: study SS5+SS6 rewritten, UI (LIVE STRATEGIES, P&L, WORK BEHIND, STUDIES cards, PM+tab v0
+headers) all stale numbers purged, Telegram evidence lines updated, engine+viewer restarted, pushed.
+v0 STAYS LIVE as paper forward-test per user 15-Aug. PENDING: relaunch harness audit agent (the
+2nd one confirmed the D10/defer findings then hit the usage limit; a full pass on the fixed
+harness has not completed).
+
 ## PRODUCTION BACKTEST COMPLETE (15-Aug morning) — the numbers of record
 
 studies/ndte/deployed_backtest.py, full universe, date-aligned, engine rules (cross-book gap,

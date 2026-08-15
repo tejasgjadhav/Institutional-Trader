@@ -251,18 +251,18 @@ class EngineRunner:
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
             "• Donchian-union breakout fade · credit/width ≥ 0.40 · production backtest 15-Aug-2026\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 2,497 trades · <b>95.5%</b> win rate · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 91 trades · <b>80.2%</b> win rate · +31.8% on margin · positive every year",
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 2,526 trades · <b>95.4%</b> win rate · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 96 trades · <b>81.2%</b> win rate · +32.5% on margin · positive every year",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
             "• Production backtest 15-Aug-2026 · the weakest evidence of the three stock books\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 191 trades · <b>81.7%</b> win rate · +11.2% on margin · positive 5 of 6 years\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 55 trades · <b>76.4%</b> win rate · <b>−11.5%</b> on margin · positive 1 of 3 years\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 322 trades · <b>80.1%</b> win rate · +12.4% on margin · positive 5 of 6 years\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 99 trades · <b>76.8%</b> win rate · <b>−3.9%</b> on margin · positive 2 of 3 years\n"
             "• Forward paper-test at 1 lot to decide the band — see studies/DEPLOYED_EVIDENCE_AUDIT.md §5",
         "STOCK CREDIT v1":
-            "• Same fade, short 1-OTM · width 3 · TP-40, no stop · credit/width ≥ 0.40 · production backtest 15-Aug-2026\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 3,078 trades · <b>92.9%</b> win rate · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 443 trades · <b>79.0%</b> win rate · +18.0% on margin · positive every year",
+            "• Same fade, short 1-OTM · width 3 · TP-40, no stop · Donchian-10 · production backtest 15-Aug-2026\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 805 trades · <b>89.4%</b> win rate · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 268 trades · <b>81.7%</b> win rate · +14.6% on margin · positive every year",
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>88%</b> win rate achieved\n"
