@@ -141,7 +141,7 @@ def _check(p: dict, lo: float, hi):
     # Same size-aware floor the scan uses (audit 17-Aug-2026: this path still gated at the bare 100
     # units after the scan moved to lots, so the printed reject reason was wrong).
     _lot = int((d.get("lot") or 0))
-    _oi_floor = max(config.STOCK_CREDIT_MIN_OI, config.STOCK_CREDIT_MIN_OI_LOTS * _lot)
+    _oi_floor = config.STOCK_CREDIT_MIN_OI_LOTS * _lot if _lot else config.STOCK_CREDIT_MIN_OI
     if soi < _oi_floor:
         return False, d, f"OI {soi} < {_oi_floor}" + (f" ({config.STOCK_CREDIT_MIN_OI_LOTS} lots)" if _lot else "")
     if cw < lo or (hi is not None and cw >= hi):

@@ -259,7 +259,7 @@ def scan_signals() -> list:
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
             # OI floor is SIZE-AWARE — see config.STOCK_CREDIT_MIN_OI_LOTS.
-            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < max(STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MIN_OI_LOTS * lot):
+            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < (STOCK_CREDIT_MIN_OI_LOTS * lot if lot else STOCK_CREDIT_MIN_OI):
                 continue
             if lot <= 0:                                            # no lot size -> not tradeable
                 continue

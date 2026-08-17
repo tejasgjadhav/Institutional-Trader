@@ -170,7 +170,8 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         oi = got[3] if len(got) > 3 else None      # (oi_short, oi_long), IS only
         if se < MIN_PREM:
             REJECT[(MIN_DTE, "premium")] += 1; continue
-        _floor = max(MIN_OI, MIN_OI_LOTS * LOTMAP.get(sym, 0))
+        _lot = LOTMAP.get(sym, 0)
+        _floor = MIN_OI_LOTS * _lot if _lot else MIN_OI
         if oi is not None and (oi[0] < _floor or oi[1] < _floor):
             REJECT[(MIN_DTE, "openint")] += 1; continue
         credit = se - le; width = abs(ks[si] - ks[li])
@@ -296,7 +297,8 @@ def run_is():
                 # that day - the same theoretical-settlement price the gate exists to exclude, and
                 # the exit is where the P&L is actually realised. A walk day only counts if BOTH
                 # legs carried real open interest on it.
-                _f = max(MIN_OI, MIN_OI_LOTS * LOTMAP.get(sym, 0))
+                _l = LOTMAP.get(sym, 0)
+                _f = MIN_OI_LOTS * _l if _l else MIN_OI
                 walk = [w for t, w in enumerate(walk_all)
                         if (np.isfinite(P["O"][di+1+_idx[t], si]) and P["O"][di+1+_idx[t], si] >= _f
                             and np.isfinite(P["O"][di+1+_idx[t], li]) and P["O"][di+1+_idx[t], li] >= _f)]

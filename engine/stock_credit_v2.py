@@ -260,7 +260,7 @@ def build_watchlist() -> dict:
             cw_ok = cw >= STOCK_CREDIT_MIN_CW
             prem_ok = sm >= STOCK_CREDIT_MIN_PREM
             lot = int(s.get("lot", 0) or l.get("lot", 0) or 0)
-            oi_floor = max(STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MIN_OI_LOTS * lot)
+            oi_floor = STOCK_CREDIT_MIN_OI_LOTS * lot if lot else STOCK_CREDIT_MIN_OI
             liq_ok = (spr <= STOCK_CREDIT_MAX_SPREAD_PCT) and (soi >= oi_floor)
             row.update(cw=cw, prem=round(sm, 1), spread=spr, oi=int(soi),
                        short_strike=s["strike"], long_strike=l["strike"], expiry=exp,
@@ -412,7 +412,7 @@ def scan_signals() -> list:
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
             # OI floor is SIZE-AWARE: open interest is quoted in units, so a bare 100 was under one
             # lot for every name and filtered nothing but zero. See config.STOCK_CREDIT_MIN_OI_LOTS.
-            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < max(STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MIN_OI_LOTS * lot):
+            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < (STOCK_CREDIT_MIN_OI_LOTS * lot if lot else STOCK_CREDIT_MIN_OI):
                 continue
             # EXPOSURE CAP: skip extreme-notional names — width x lot <= STOCK_CREDIT_MAX_EXPOSURE
             # (0 = NO CAP since 2026-07-31; was 40,000 then 60,000). At 40k the backtest showed win rate

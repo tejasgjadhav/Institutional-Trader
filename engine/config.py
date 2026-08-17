@@ -338,7 +338,7 @@ STOCK_CREDIT_TAKE_PROFIT  = 0.40    # BOOK the win at 40% of credit (was 0.75). 
                                     # tail (index stays at hold-to-expiry). 0 = hold to expiry.
 STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
 STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)
-STOCK_CREDIT_MIN_OI       = 100     # absolute floor in UNITS (shares) — see the note below
+STOCK_CREDIT_MIN_OI       = 100     # UNITS fallback, used ONLY when the lot size is unknown
 # OPEN INTEREST IS REPORTED IN UNITS (SHARES), NOT CONTRACTS — verified 16-Aug-2026 against both
 # sources: NSE bhavcopy OPEN_INT is 100% divisible by lot size (HAL, INFY, ACC), and a live Upstox
 # quote showed OFSS short-leg oi = 34,300 against a lot of 100, i.e. 343 lots. So the old gate of
@@ -351,7 +351,11 @@ STOCK_CREDIT_MIN_OI       = 100     # absolute floor in UNITS (shares) — see t
 # of the signals that pass today's 100-unit gate, a 10-lot floor keeps 85% at v2/v0 geometry and
 # 89% at v1's. It removes roughly one signal in eight, and those are the thinnest contracts.
 # Deployed 16-Aug-2026 at the user's instruction, markets closed.
-STOCK_CREDIT_MIN_OI_LOTS  = 5       # short leg must show >= this many LOTS of open interest
+STOCK_CREDIT_MIN_OI_LOTS  = 5       # THE floor: short leg must show >= this many LOTS of open interest
+# The gate is exactly `MIN_OI_LOTS * lot` (user, 17-Aug-2026 — 'minimum at least 5 lots, not max').
+# It was briefly written as max(100, 5*lot), which equals 5*lot on 112 of the 113 names but forces
+# 20 lots on the one name whose lot size is 5. The 100-unit value now serves only as a fallback for
+# a contract whose lot size cannot be resolved.
 # Lowered 10 -> 5 on 17-Aug-2026 at the user's instruction. Rationale: the book trades 1-2 lots, so
 # 5 lots of resting interest is already several times its own size, and the measured cost of the
 # stricter floor was not obviously worth the signals it removed. Measured on bhavcopy 2019 -> Jul-2024
