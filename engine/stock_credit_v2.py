@@ -25,7 +25,7 @@ from engine.config import (
     STOCK_CREDIT_SHORT_OFFSET, STOCK_CREDIT_WIDTH, STOCK_CREDIT_MIN_CW, STOCK_CREDIT_MIN_PREM,
     STOCK_CREDIT_MAX_EXPOSURE,
     STOCK_CREDIT_STOP_MULT, STOCK_CREDIT_REENTRY_GAP_DAYS, STOCK_CREDIT_MAX_SPREAD_PCT,
-    STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MAX_NEW_PER_DAY, STOCK_CREDIT_MAX_OPEN, STOCK_CREDIT_LOTS,
+    STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MIN_OI_LOTS, STOCK_CREDIT_MAX_NEW_PER_DAY, STOCK_CREDIT_MAX_OPEN, STOCK_CREDIT_LOTS,
     STOCK_CREDIT_TAKE_PROFIT,
 )
 from engine.data_fetcher import fetch_upstox_historical, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
@@ -259,8 +259,9 @@ def build_watchlist() -> dict:
             # premium + liquidity status even when credit/width fails.
             cw_ok = cw >= STOCK_CREDIT_MIN_CW
             prem_ok = sm >= STOCK_CREDIT_MIN_PREM
-            liq_ok = (spr <= STOCK_CREDIT_MAX_SPREAD_PCT) and (soi >= STOCK_CREDIT_MIN_OI)
             lot = int(s.get("lot", 0) or l.get("lot", 0) or 0)
+            oi_floor = max(STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MIN_OI_LOTS * lot)
+            liq_ok = (spr <= STOCK_CREDIT_MAX_SPREAD_PCT) and (soi >= oi_floor)
             row.update(cw=cw, prem=round(sm, 1), spread=spr, oi=int(soi),
                        short_strike=s["strike"], long_strike=l["strike"], expiry=exp,
                        credit=credit, width_pts=w, lot=lot,
@@ -407,10 +408,12 @@ def scan_signals() -> list:
                 continue                                            # v0 only: v2 owns >= its ceiling
             if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
                 continue
-            spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
-            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
-                continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
+            spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
+            # OI floor is SIZE-AWARE: open interest is quoted in units, so a bare 100 was under one
+            # lot for every name and filtered nothing but zero. See config.STOCK_CREDIT_MIN_OI_LOTS.
+            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < max(STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MIN_OI_LOTS * lot):
+                continue
             # EXPOSURE CAP: skip extreme-notional names — width x lot <= STOCK_CREDIT_MAX_EXPOSURE
             # (0 = NO CAP since 2026-07-31; was 40,000 then 60,000). At 40k the backtest showed win rate
             # unchanged (85.7%), worst single loss -84.7k -> -21.6k, worst MONTH -2.28L -> -26.4k.

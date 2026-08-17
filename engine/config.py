@@ -338,7 +338,20 @@ STOCK_CREDIT_TAKE_PROFIT  = 0.40    # BOOK the win at 40% of credit (was 0.75). 
                                     # tail (index stays at hold-to-expiry). 0 = hold to expiry.
 STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
 STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)
-STOCK_CREDIT_MIN_OI       = 100     # live liquidity gate: short-leg OI >= 100
+STOCK_CREDIT_MIN_OI       = 100     # absolute floor in UNITS (shares) — see the note below
+# OPEN INTEREST IS REPORTED IN UNITS (SHARES), NOT CONTRACTS — verified 16-Aug-2026 against both
+# sources: NSE bhavcopy OPEN_INT is 100% divisible by lot size (HAL, INFY, ACC), and a live Upstox
+# quote showed OFSS short-leg oi = 34,300 against a lot of 100, i.e. 343 lots. So the old gate of
+# "OI >= 100" was 100 SHARES — less than a single lot for every name in the universe, where lots run
+# 125 to 1,000. It excluded nothing except open interest of exactly zero, and the bid-ask <= 6%
+# check was doing all of the real liquidity work.
+# This makes the floor size-aware: the short leg must carry at least N lots of open interest, so a
+# book trading 1-2 lots is never the whole market in that contract.
+# MEASURED COST before deploying (bhavcopy 2019 -> Jul-2024, deployed geometry, c/w gate applied):
+# of the signals that pass today's 100-unit gate, a 10-lot floor keeps 85% at v2/v0 geometry and
+# 89% at v1's. It removes roughly one signal in eight, and those are the thinnest contracts.
+# Deployed 16-Aug-2026 at the user's instruction, markets closed.
+STOCK_CREDIT_MIN_OI_LOTS  = 10      # short leg must show >= this many LOTS of open interest
 # MAX EXPOSURE per spread: skip any trade whose width x lot exceeds this. 0 = NO CAP.
 # HISTORY: hardcoded 40,000 -> 60,000 -> 0 (NO CAP), all on 2026-07-31, user's call.
 # What no-cap admits TODAY: the largest width x lot in the 113-name universe at v2 geometry is
