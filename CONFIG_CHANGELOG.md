@@ -14,6 +14,18 @@ trading config is a worse failure mode than the one it would prevent.
 
 ---
 
+## 2026-08-17 16:18:41 IST
+
+commit at snapshot: `6847419 (UNCOMMITTED EDITS)` — OI floor is exactly 5 lots, not max(100, 5*lot)
+
+| tunable | before | after |
+|---|---|---|
+| `STOCK_CREDIT_MIN_OI_LOTS` | `5` | `1` |
+
+Roll back with: `git checkout 6847419 (UNCOMMITTED EDITS) -- engine/config.py`
+
+---
+
 ## 2026-08-17 15:52:43 IST
 
 commit at snapshot: `5b32263 (UNCOMMITTED EDITS)` — studies: final IS+OOS+ROM after six corrections, with the convergence caveat

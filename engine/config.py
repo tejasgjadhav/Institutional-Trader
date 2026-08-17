@@ -351,8 +351,17 @@ STOCK_CREDIT_MIN_OI       = 100     # UNITS fallback, used ONLY when the lot siz
 # of the signals that pass today's 100-unit gate, a 10-lot floor keeps 85% at v2/v0 geometry and
 # 89% at v1's. It removes roughly one signal in eight, and those are the thinnest contracts.
 # Deployed 16-Aug-2026 at the user's instruction, markets closed.
-STOCK_CREDIT_MIN_OI_LOTS  = 5       # THE floor: short leg must show >= this many LOTS of open interest
-# The gate is exactly `MIN_OI_LOTS * lot` (user, 17-Aug-2026 — 'minimum at least 5 lots, not max').
+STOCK_CREDIT_MIN_OI_LOTS  = 1       # THE floor: short leg must show >= this many LOTS of open interest
+# The gate is exactly `MIN_OI_LOTS * lot`. Set to 1 lot on 17-Aug-2026 after the bucket study found
+# NO relationship between open interest and returns. In-sample, median cohort, ROM-Rs by OI bucket:
+#   v2  5-10 lots +22.1% · 10-25 +20.8% · 25+ -1.2% (68.3% win on n=63 — the MOST liquid bucket was
+#       the worst, which is the opposite of what a liquidity edge would look like)
+#   v1  2-5 +3.0% · 5-10 +28.7% · 10-25 +3.9% · 25+ +13.4%   (no order)
+#   v0  5-10 +3.2% · 10-25 +7.0% · 25+ +6.8%                 (flat)
+# Nothing is monotonic, so there is no return-based case for ANY lot threshold. What survives is the
+# fidelity argument only: a bhavcopy/exchange close on a contract that never traded is a theoretical
+# settlement price, not a fillable one. 1 lot excludes zero and untraded stubs and claims nothing
+# more. Earlier 10 and 5 lot settings were deployed on signal COUNTS, not returns — an error.
 # It was briefly written as max(100, 5*lot), which equals 5*lot on 112 of the 113 names but forces
 # 20 lots on the one name whose lot size is 5. The 100-unit value now serves only as a fallback for
 # a contract whose lot size cannot be resolved.

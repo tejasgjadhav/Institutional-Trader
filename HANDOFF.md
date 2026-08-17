@@ -1,5 +1,19 @@
 # Handoff — institutional-trader
 
+## 17-Aug USER: no evidence OI gating helps win rate/ROM — CONCEDED, bucket study now running
+He is right. The OI gate was justified as a FIDELITY fix (a bhavcopy close on a zero-OI contract is
+NSE theoretical settlement, not a fillable price) and it LOWERED IS ROM by half. That is a
+measurement correction, NOT evidence the gate improves trading. No OI threshold above zero has ever
+been tested for win rate or ROM in either window. I deployed 10 lots then 5 lots on SIGNAL COUNTS
+and called it measured, twice. Live it is inert anyway - spread binds first (blocks all 4 names OI
+blocks, plus 6 more).
+NOW MEASURING: every row carries oi_units + oi_lots, and both windows print an OI-BUCKET table
+(0 / 1-2 / 2-5 / 5-10 / 10-25 / 25+ lots) with win rate, ROM-Rs and Rs/trade. If buckets are flat
+above zero, the only defensible gate is exclude-zero and any lot threshold is arbitrary.
+OOS NOTE: Upstox candles always carried OI at index 6, but leg() cached only the close, so OOS
+needs a FULL REFETCH (hours) into a new cache /tmp/oos_legcache_oi.json. The OOS walk is now gated
+on OI too, matching IS - which also closes audit MAJOR #3 (windows were not like-for-like).
+
 ## 17-Aug OI GATE VERDICT: redundant LIVE, essential in the BACKTEST (user was right)
 He challenged whether the OI gate matters given the engine already runs a bid-ask check. Evidence
 from todays 17-name watchlist: the OI gate blocks 4 names (ASIANPAINT/CIPLA/IOC/DLF) and the SPREAD

@@ -76,11 +76,11 @@ REJECT = collections.Counter()   # why candidates died, per DTE
 # model mark harvests theta with no friction and no gap risk, which is the most likely single cause
 # of the in-sample +30.7% against the out-of-sample +3.7%. Both legs must clear this on entry day.
 MIN_OI = 100          # absolute floor in UNITS
-# The floor must MIRROR LIVE, which gates at max(100, STOCK_CREDIT_MIN_OI_LOTS * lot) - i.e. 5 lots,
+# The floor must MIRROR LIVE, which gates at MIN_OI_LOTS * lot - 1 lot since 17-Aug-2026,
 # 625-5,000 units depending on the name. A flat 100 units is under one lot everywhere and excludes
 # only open interest of exactly zero, so the harness was measuring a population roughly THREE TIMES
 # larger than the engine will ever trade (audit, 17-Aug-2026).
-MIN_OI_LOTS = 5
+MIN_OI_LOTS = 1   # mirrors live; see config.py for why 1 and not 5
 # Money-weighted ROM needs each name's lot. ROM pooled in strike POINTS over- and under-weights
 # names arbitrarily, because lot sizes vary roughly twentyfold inversely with price. Rupee margin
 # is what an account actually commits.

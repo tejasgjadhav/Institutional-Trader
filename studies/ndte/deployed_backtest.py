@@ -55,7 +55,7 @@ MIN_OI = 100          # absolute floor in UNITS
 # 625-5,000 units depending on the name. A flat 100 units is under one lot everywhere and excludes
 # only open interest of exactly zero, so the harness was measuring a population roughly THREE TIMES
 # larger than the engine will ever trade (audit, 17-Aug-2026).
-MIN_OI_LOTS = 5
+MIN_OI_LOTS = 1   # mirrors live; see config.py for why 1 and not 5
 # Money-weighted ROM needs each name's lot. ROM pooled in strike POINTS over- and under-weights
 # names arbitrarily, because lot sizes vary roughly twentyfold inversely with price. Rupee margin
 # is what an account actually commits.
@@ -181,7 +181,9 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         exits[bk] = exit_day
         net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
         _lot = LOTMAP.get(sym, 0)
+        _oiu = min(oi) if oi else None                      # binding leg's OI, in units
         rows.append(dict(book=bk, sym=sym, day=day, yr=int(day[:4]), cw=round(cw, 3),
+                         oi_units=_oiu, oi_lots=(round(_oiu / _lot, 1) if (_oiu and _lot) else None),
                          net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0),
                          lot=_lot, net_rs=round(net * _lot, 2),
                          margin_rs=round((width - credit) * _lot, 2)))
@@ -292,7 +294,7 @@ def run_is():
     return rows
 
 # ---------------- OOS: Upstox expired options, date-keyed ----------------
-CACHE = "/tmp/cw_band_legcache_dated.json"
+CACHE = "/tmp/oos_legcache_oi.json"   # {key: {date: [close, oi]}} — OI added 17-Aug-2026
 try: LEGC = json.load(open(CACHE))
 except Exception: LEGC = {}
 LK = threading.Lock()
@@ -308,7 +310,7 @@ def leg(key, d0, to):
     out = {}
     if j.get("status") == "success":
         for c in j.get("data", {}).get("candles", []) or []:
-            out[str(c[0])[:10]] = float(c[4])
+            out[str(c[0])[:10]] = [float(c[4]), float(c[6]) if len(c) > 6 and c[6] is not None else 0.0]
     if out:                                   # never cache an empty (network-poisoned) result
         with LK: LEGC[ck] = out
     return out
@@ -355,8 +357,12 @@ def run_oos():
                 lp = leg(chain[li]["instrument_key"], d, to)
                 if d not in sp or d not in lp: return None       # both legs must trade on entry day
                 both = sorted(set(sp) & set(lp))
-                walk = [(x, sp[x], lp[x]) for x in both if x > d]
-                return sp[d], lp[d], walk
+                _l = LOTMAP.get(sym, 0)
+                _f = MIN_OI_LOTS * _l if _l else MIN_OI
+                # gate the walk out-of-sample too, exactly as in-sample
+                walk = [(x, sp[x][0], lp[x][0]) for x in both
+                        if x > d and sp[x][1] >= _f and lp[x][1] >= _f]
+                return sp[d][0], lp[d][0], walk, (sp[d][1], lp[d][1])
             ok, ex = eval_books(d, sym, typ, ks, atm, px, cb, exp, spot_t, d10_hit, mine, open_until)
             if ok:
                 last_entry = dd
@@ -403,4 +409,26 @@ if SETTLE_FALLBACKS["used"]:
     print(f"NOTE: underlying-derived settlement used on {SETTLE_FALLBACKS['used']} legs "
           f"(contract stopped trading before expiry); every other held trade settled on its own "
           f"expiry-day option prices.")
+# ---- OI BUCKETS: does open interest actually predict outcome, or only exclude the untradeable? ----
+BUCKETS = [(0, 0.999, "0 lots"), (1, 2, "1-2"), (2, 5, "2-5"), (5, 10, "5-10"),
+           (10, 25, "10-25"), (25, 1e9, "25+")]
+print("\n=== OI BUCKETS · median cohort · does OI predict win rate and ROM? ===")
+print("The gate is justified as a FIDELITY fix (untraded contracts are not fillable). This asks the")
+print("separate question: among tradeable contracts, does MORE open interest earn MORE?\n")
+for bk in ("v2", "v1", "v0"):
+    lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
+    g0 = [x for x in rows if x["book"] == bk and lo <= x["cw"] < hi and x.get("oi_lots") is not None]
+    if len(g0) < 40: 
+        print(f"--- {bk}: only {len(g0)} rows carry OI, skipping"); continue
+    print(f"--- {bk} (n={len(g0)}) ---")
+    print(f"{'OI (lots)':<12}{'n':>7}{'WIN':>8}{'ROM-Rs':>10}{'Rs/trade':>11}")
+    for a, b, lbl in BUCKETS:
+        g = [x for x in g0 if a <= x["oi_lots"] < b]
+        if len(g) < 10:
+            print(f"{lbl:<12}{len(g):>7}   (too few)"); continue
+        mrs = sum(x["margin_rs"] for x in g)
+        rom = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
+        print(f"{lbl:<12}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%{rom:>+9.1f}%"
+              f"{sum(x['net_rs'] for x in g)/len(g):>+11,.0f}")
+    print()
 print(f"DONE-{WINDOW}")
