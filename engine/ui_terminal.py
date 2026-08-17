@@ -893,9 +893,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>82.2% · +30.7% on margin · positive every year <span style="color:{TEXT_DIM};">(667 trades)</span></td><td>82.8% · +3.7% · positive 2 of 3 years <span style="color:{TEXT_DIM};">(58 trades)</span></td><td><b>~2.6</b></td></tr>
-<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.9% · +19.9% · positive every year <span style="color:{TEXT_DIM};">(477 trades)</span></td><td>79.8% · +4.8% · positive every year <span style="color:{TEXT_DIM};">(193 trades)</span></td><td><b>~8.6</b></td></tr>
-<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.1% · +17.8% · positive every year <span style="color:{TEXT_DIM};">(569 trades)</span></td><td style="color:{AMBER};">80.4% · <b>−0.7% on margin</b> · positive 2 of 3 years <span style="color:{TEXT_DIM};">(97 trades)</span></td><td><b>~4.3</b></td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>74.3% · +13.7% on margin · positive 5 of 6 years <span style="color:{TEXT_DIM};">(140 trades)</span></td><td style="color:{TEXT_DIM};">re-measuring — see note below</td><td><b>~2.1</b></td></tr>
+<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.3% · +8.4% · positive 4 of 6 years <span style="color:{TEXT_DIM};">(285 trades)</span></td><td style="color:{TEXT_DIM};">re-measuring — see note below</td><td><b>~4.3</b></td></tr>
+<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>78.9% · +6.2% · positive 5 of 6 years <span style="color:{TEXT_DIM};">(185 trades)</span></td><td style="color:{TEXT_DIM};">re-measuring — see note below</td><td><b>~2.8</b></td></tr>
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
 <tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
@@ -903,33 +903,32 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 </table>
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the only money table</p>
-{dim("<b>Rebuilt 16-Aug-2026 from the production harness</b> (studies/ndte/deployed_backtest.py) after "
-     "four corrections, on the OUT-OF-SAMPLE window only — Oct 2024 to Aug 2026, real Upstox premiums, "
-     "legs joined by date, the live one-position-per-symbol rule applied, and every trade multiplied by "
-     "its own current lot size. Read on the median cohort, credit/width 0.40–0.50, which is where all 21 "
-     "real live fills sit. The in-sample window is deliberately NOT used for rupees: it prices bhavcopy "
-     "settlement prints, and 85% of its rows above ₹50 carry zero open interest. <b>Signals measured</b> "
-     "is how many real trades each row rests on — v1 at 193 is the solid one, v2 at 58 is thin.")}
+{dim("<b>Rebuilt 17-Aug-2026 after six corrections to the backtest.</b> These are IN-SAMPLE figures "
+     "(2019 → Jul-2024), read on the median cohort — credit/width 0.40–0.50, where all 21 real live "
+     "fills sit. Each trade is priced on contracts that actually traded, at entry AND on every day "
+     "the exit is checked, and is multiplied by its own lot size. <b>The out-of-sample window is "
+     "being re-measured</b> and its old numbers have been removed rather than left standing. Read "
+     "these as an upper bound: the harness cannot model the live bid-ask gate, which rejected 10 of "
+     "17 candidates on 17-Aug.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>measured</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>58</td><td>~2.6</td><td>82.8%</td><td style="color:{GREEN};">+₹6,022</td><td style="color:{RED};">−₹10,461</td><td>82.8% × ₹6,022 − 17.2% × ₹10,461 = ₹4,986 − ₹1,806 = <b style="color:{GREEN};">+₹3,180</b></td><td><b>₹8,198</b></td></tr>
-<tr><td>Stock v1</td><td>193</td><td>~8.6</td><td>79.8%</td><td style="color:{GREEN};">+₹3,887</td><td style="color:{RED};">−₹10,324</td><td>79.8% × ₹3,887 − 20.2% × ₹10,324 = ₹3,102 − ₹2,086 = <b style="color:{GREEN};">+₹1,016</b></td><td><b>₹8,711</b></td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>97</td><td>~4.3</td><td>80.4%</td><td style="color:{GREEN};">+₹3,815</td><td style="color:{RED};">−₹13,954</td><td>80.4% × ₹3,815 − 19.6% × ₹13,954 = ₹3,067 − ₹2,735 = <b style="color:{AMBER};">+₹335</b></td><td style="color:{AMBER};">₹1,443</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>140</td><td>~2.1</td><td>74.3%</td><td colspan="2" style="color:{TEXT_DIM};">in-sample, per-trade net</td><td>net per trade after entry AND exit costs</td><td><b>+₹1,897</b> /trade · <b>₹4,000</b>/mo</td></tr>
+<tr><td>Stock v1</td><td>285</td><td>~4.3</td><td>79.3%</td><td colspan="2" style="color:{TEXT_DIM};">in-sample, per-trade net</td><td>net per trade after entry AND exit costs</td><td><b>+₹1,364</b> /trade · <b>₹5,900</b>/mo</td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>185</td><td>~2.8</td><td>78.9%</td><td colspan="2" style="color:{TEXT_DIM};">in-sample, per-trade net</td><td>net per trade after entry AND exit costs</td><td><b>+₹1,210</b> /trade · <b>₹3,400</b>/mo</td></tr>
 <tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
 <tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>510</b></td><td><b>~23.5/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹24,159</b></td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹19,327</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>610</b></td><td><b>~17.2/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹19,100</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹15,280</b></td></tr>
 </table>
-{dim("<b>Sanity-check it against the only real datapoint.</b> July 2026 realised <b>₹44,789 across 24 "
-     "closed trades</b>, well above the ₹19,327 here — but that month ran under the old assumptions and "
-     "included trades the live one-position-per-symbol rule now blocks, so read it as a good month rather "
-     "than the baseline. Treat ₹19,327 as the plan and the forward record as the test. The harness does not "
-     "model the live bid-ask and OI quote gate, the 5-new-per-day cap or the 20-open cap, and it applies "
-     "the current lot sizes to older trades. <b>Read the win:loss shape.</b> Every book loses more on a loser "
-     "than it makes on a winner — 0.58:1 for v2 down to 0.27:1 for v0 — which is normal for selling credit "
-     "spreads and is exactly why the win rate has to stay high. <b>v0 wins 80.4% of its trades out-of-sample "
-     "and still clears only ₹335 each</b>; it stays live as a paper forward-test by the decision of "
-     "15-Aug-2026, to see whether real fills disagree with the backtest.")}
+{dim("<b>What changed, and why the numbers fell.</b> Six corrections were made to the backtest between "
+     "14 and 17 August, each found by an audit or by the user reading a figure that could not be true. "
+     "The two largest: option legs were being priced on contracts with zero open interest — exchange "
+     "settlement prices, not fillable quotes — and that was fixed at entry but left in place on the "
+     "exit, where the profit is actually realised. Gating both roughly halved the result twice over. "
+     "v2 went from ₹5,427 a trade to ₹1,897. <b>Nothing about the strategy changed; only the honesty "
+     "of the measurement did.</b> <b>The biggest remaining gap is the bid-ask gate</b>, which the "
+     "backtest cannot run because the historical files carry no bid or ask — live it rejected 59% of "
+     "candidates on 17-Aug. Treat every figure here as a ceiling and the forward record as the test.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
@@ -939,9 +938,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "keeping the win rate near 80%.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>667 IS · 58 OOS</td><td>82.2% / 82.8%</td><td>+₹6,022</td><td>−₹10,461</td><td>0.58 : 1</td></tr>
-<tr><td>Stock v1</td><td>25,978</td><td>477 IS · 193 OOS</td><td>79.9% / 79.8%</td><td>+₹3,887</td><td>−₹10,324</td><td>0.38 : 1</td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>569 IS · 97 OOS</td><td>83.1% / 80.4%</td><td>+₹3,815</td><td>−₹13,954</td><td>0.27 : 1</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>140 IS <span style="color:{TEXT_DIM};">(OOS re-measuring)</span></td><td>74.3%</td><td colspan="2" style="color:{TEXT_DIM};">+₹1,897 net per trade</td><td>5 of 6 yrs +ve</td></tr>
+<tr><td>Stock v1</td><td>25,978</td><td>285 IS <span style="color:{TEXT_DIM};">(OOS re-measuring)</span></td><td>79.3%</td><td colspan="2" style="color:{TEXT_DIM};">+₹1,364 net per trade</td><td>4 of 6 yrs +ve</td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>185 IS <span style="color:{TEXT_DIM};">(OOS re-measuring)</span></td><td>78.9%</td><td colspan="2" style="color:{TEXT_DIM};">+₹1,210 net per trade</td><td>5 of 6 yrs +ve</td></tr>
 <tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td>+₹1,202</td><td>−₹6,274</td><td>0.2 : 1</td></tr>
 <tr><td>Intraday SENSEX</td><td>89 expiry days</td><td>89</td><td>88.8%</td><td>+₹1,427</td><td>−₹4,549</td><td>0.3 : 1</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Classic strategies (all rejected)</td><td>227,000 trades · 7 families</td><td>0 kept</td><td>up to 83.6%</td><td colspan="3">every one negative after costs — Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays, NR7. The 83.6% is the illusion demo: a high win rate with negative expectancy.</td></tr>
@@ -964,10 +963,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{TEXT_DIM};"><td>3-Family + ORB+VWAP option-buying</td><td>OFF</td><td>direction is real but does not survive option-buying costs</td></tr>
 </table>
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE EVIDENCE AUDIT, 14–16 AUG — every deployed book re-measured</p>
-{res("<b>The production harness is the number of record, after four corrections.</b> Option legs are joined by DATE; v1 scans Donchian-10 only and stands down while v2 holds a name; spot is derived from the option chain by put-call parity, because split-adjusted closes against unadjusted strike ladders were fabricating deep-ITM trades; and each book now skips a name it already holds open, which removed 59% of in-sample trades that the live engine could never have taken. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
-{res("<b>Read on the median cohort — credit/width 0.40–0.50, where all 21 real live fills sit.</b> IS 2019–2024: v2 82.2% / +30.7% ROM · v1 79.9% / +19.9% · v0 83.1% / +17.8%, and all three are positive in every one of the six years. OOS 2024–2026: v2 82.8% / +3.7% · v1 79.8% / +4.8% · v0 80.4% / −0.7%. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
-{res("<b>Out-of-sample cannot rank the books, and saying so is the honest result.</b> Bootstrapped 90% intervals on ROM span zero for all three: v2 [−27.8%, +39.7%] on 58 trades, v1 [−5.0%, +13.3%] on 193, v0 [−14.8%, +12.5%] on 97. In-sample is far better measured but is NOT independent — the gate, the geometry and the exits were all chosen on that window. The forward record is the only instrument that settles it.")}
-{res("<b>The take-profit level does not carry the edge.</b> Swept 30/40/50/60/70 on both windows: v2 is flat across the whole range (+28.8% to +31.4% in-sample), and v1's slope INVERTS between windows — lower is better in-sample, higher is better out-of-sample — which is what a parameter with no information looks like. Deployed settings stay: v2 TP-50, v1 TP-40, v0 TP-40.")}
+{res("<b>The harness of record, after six corrections.</b> Legs joined by DATE; v1 scans Donchian-10 only and stands down while v2 holds a name; spot derived from the option chain by put-call parity, because split-adjusted closes against unadjusted strike ladders were fabricating deep-ITM trades; each book skips a name it already holds open; open interest required on BOTH legs at entry AND on every exit-check day; and expiry settled from each option's own closing price. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
+{res("<b>In-sample, median cohort (c/w 0.40–0.50), 2019 → Jul-2024.</b> v2 74.3% win · +13.7% on margin · ₹1,897 a trade · 5 of 6 years. v1 79.3% · +8.4% · ₹1,364 · 4 of 6. v0 78.9% · +6.2% · ₹1,210 · 5 of 6. The out-of-sample window is being re-measured on the corrected harness; its previous figures were withdrawn rather than left on screen.")}
+{res("<b>Open interest does NOT predict returns.</b> Bucketed in-sample by the binding leg's open interest: v2 pays +22.1% at 5–10 lots, +20.8% at 10–25, and <b>−1.2% at 25+</b> — its most liquid bucket is its worst, on 63 trades at a 68.3% win rate. v1 and v0 are equally unordered. So there is no return-based case for any lot threshold; the live floor is 1 lot, which excludes untraded contracts and claims nothing more.")}
+{res("<b>No book has a working stop, and none can.</b> A stop priced as a multiple of the credit is unreachable above c/w 1/3, because a vertical can never cost more than its width. At c/w 0.40 a 3× stop sits at 1.2× the width while full loss arrives at 1.0×. Live had already disabled it; the UI and the harness had both been describing a stop that could never fire.")}
+{res("<b>The take-profit level does not carry the edge.</b> Swept 30/40/50/60/70 on both windows: v2 is flat across the whole range, and v1's slope INVERTS between windows — lower is better in-sample, higher is better out-of-sample — which is what a parameter with no information looks like. Deployed settings stay: v2 TP-50, v1 TP-40, v0 TP-40.")}
 {dim("• Stops cannot rescue the 0.25–0.35 bands: a 20-cell sweep found every stop multiple worse than no stop in 0.30–0.35, and the bands stay dead. File: CW_BAND_BY_BOOK.md")}
 {dim("• IS magnitudes are soft, not hollow: charging exit costs moves the bhavcopy ROM ~4 points, and 9–18% of exits price off an OI=0 settlement print.")}
 

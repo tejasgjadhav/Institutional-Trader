@@ -212,7 +212,7 @@ class EngineRunner:
 
     # (target, stop) the backtest win% is CONDITIONED ON — stated on every signal so the win rate
     # is never read in isolation (user 2026-07-29: "the winrate is subject to target and stop loss").
-    _TG_TGT_STOP = {"STOCK CREDIT v2 UNION": ("book at 50% of credit", "3× credit"),
+    _TG_TGT_STOP = {"STOCK CREDIT v2 UNION": ("book at 50% of credit", "none — wing caps the loss"),
                     "STOCK CREDIT v0 (c/w 0.35-0.40)": ("book at 40% of credit", "none — wing caps the loss"),
                     "STOCK CREDIT v1": ("book 40% of credit", "none — wing caps the loss"),
                     "0DTE NIFTY": ("hold to same-day expiry", "none — bought wing caps the loss"),
@@ -250,22 +250,21 @@ class EngineRunner:
     # IS/OOS date ranges). Ends every signal message (user format 2026-07-30). Honest labels only.
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
-            "• Donchian-union breakout fade · credit/width ≥ 0.40 · production backtest 16-Aug-2026\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 667 trades · <b>82.2%</b> win rate · +30.7% on margin · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 58 trades · <b>82.8%</b> win rate · +3.7% on margin · positive 2 of 3 years\n"
-            "• The out-of-sample sample is thin, so its range runs wide. Treat the in-sample figure as the shape and the live record as the test.",
+            "• Donchian-union breakout fade · credit/width ≥ 0.40 · nearest expiry at least 10 days out\n"
+            "• In-sample (1-Jan-2019 → 5-Jul-2024): 140 trades · <b>74.3%</b> win rate · +13.7% on margin · ₹1,897 net per trade · positive 5 of 6 years\n"
+            "• Out-of-sample is being re-measured after six corrections to the backtest, so no figure is quoted for it today\n"
+            "• The backtest cannot model the live bid-ask gate, which rejected 10 of 17 candidates on 17-Aug, so read this as a ceiling",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
-            "• Production backtest 16-Aug-2026 · the weakest evidence of the three stock books\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 569 trades · <b>83.1%</b> win rate · +17.8% on margin · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 97 trades · <b>80.4%</b> win rate · <b>−0.7%</b> on margin · positive 2 of 3 years\n"
-            "• It wins 4 trades in 5 and still clears only ₹335 each, because a loser costs about four times a winner\n"
-            "• Forward paper-test at 1 lot to decide the band — see studies/DEPLOYED_EVIDENCE_AUDIT.md §5",
+            "• The weakest evidence of the three stock books · forward paper-test at 1 lot\n"
+            "• In-sample (1-Jan-2019 → 5-Jul-2024): 185 trades · <b>78.9%</b> win rate · +6.2% on margin · ₹1,210 net per trade · positive 5 of 6 years\n"
+            "• Out-of-sample is being re-measured; the earlier figure was withdrawn rather than left standing\n"
+            "• It wins about four trades in five and still clears the least of the three books per trade",
         "STOCK CREDIT v1":
-            "• Same fade, short 1-OTM · width 3 · TP-40, no stop · Donchian-10 · production backtest 16-Aug-2026\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 477 trades · <b>79.9%</b> win rate · +19.9% on margin · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 193 trades · <b>79.8%</b> win rate · +4.8% on margin · positive every year\n"
-            "• This is the best-measured of the three stock books, on 193 out-of-sample trades.",
+            "• Same fade, short 1-OTM · width 3 · book at 40% of credit · Donchian-10 · nearest expiry at least 10 days out\n"
+            "• In-sample (1-Jan-2019 → 5-Jul-2024): 285 trades · <b>79.3%</b> win rate · +8.4% on margin · ₹1,364 net per trade · positive 4 of 6 years\n"
+            "• Out-of-sample is being re-measured after six corrections to the backtest\n"
+            "• Fires about twice as often as v2 and rests on the larger measured sample",
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>88%</b> win rate achieved\n"
