@@ -550,7 +550,7 @@ def resolve_positions() -> int:
                 p["status"] = "WIN"; p["closed_date"] = today.isoformat()
                 closed += 1
                 logger.info(f"stock_credit: {p['symbol']} {p['side']} TOOK PROFIT {tp:.0%} pnl {p['pnl_pts']:+.1f}")
-            elif cost >= p["stop_cost"]:
+            elif p.get("stop_cost") and cost >= p["stop_cost"]:
                 p["exit_cost"] = round(min(cost, p["width_pts"]), 2)
                 p["pnl_pts"] = round(p["credit"] - p["exit_cost"], 2)
                 p["status"] = "LOSS"; p["closed_date"] = today.isoformat()
