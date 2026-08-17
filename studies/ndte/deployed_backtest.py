@@ -50,12 +50,11 @@ MIN_DTE, REENTRY, MIN_PREM = 10, 3, 50.0
 # because an Upstox expired candle exists only if the contract traded. Selling and buying back at a
 # model mark harvests theta with no friction and no gap risk, which is the most likely single cause
 # of the in-sample +30.7% against the out-of-sample +3.7%. Both legs must clear this on entry day.
-MIN_OI = 100          # absolute floor in UNITS
+MIN_OI = 1            # open interest must EXIST — mirrors config.STOCK_CREDIT_MIN_OI
 # The floor must MIRROR LIVE, which gates at max(100, STOCK_CREDIT_MIN_OI_LOTS * lot) - i.e. 5 lots,
 # 625-5,000 units depending on the name. A flat 100 units is under one lot everywhere and excludes
 # only open interest of exactly zero, so the harness was measuring a population roughly THREE TIMES
 # larger than the engine will ever trade (audit, 17-Aug-2026).
-MIN_OI_LOTS = 1   # mirrors live; see config.py for why 1 and not 5
 # Money-weighted ROM needs each name's lot. ROM pooled in strike POINTS over- and under-weights
 # names arbitrarily, because lot sizes vary roughly twentyfold inversely with price. Rupee margin
 # is what an account actually commits.
@@ -144,8 +143,7 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         se, le, walk = got[0], got[1], got[2]
         oi = got[3] if len(got) > 3 else None      # (oi_short, oi_long), IS only
         if se < MIN_PREM: continue
-        _lot = LOTMAP.get(sym, 0)
-        _floor = MIN_OI_LOTS * _lot if _lot else MIN_OI
+        _floor = MIN_OI
         if oi is not None and (oi[0] < _floor or oi[1] < _floor): continue
         credit = se - le; width = abs(ks[si] - ks[li])
         if credit <= 0 or credit >= width: continue
@@ -272,8 +270,7 @@ def run_is():
                 # that day - the same theoretical-settlement price the gate exists to exclude, and
                 # the exit is where the P&L is actually realised. A walk day only counts if BOTH
                 # legs carried real open interest on it.
-                _l = LOTMAP.get(sym, 0)
-                _f = MIN_OI_LOTS * _l if _l else MIN_OI
+                _f = MIN_OI
                 walk = [w for t, w in enumerate(walk_all)
                         if (np.isfinite(P["O"][di+1+_idx[t], si]) and P["O"][di+1+_idx[t], si] >= _f
                             and np.isfinite(P["O"][di+1+_idx[t], li]) and P["O"][di+1+_idx[t], li] >= _f)]
@@ -357,8 +354,7 @@ def run_oos():
                 lp = leg(chain[li]["instrument_key"], d, to)
                 if d not in sp or d not in lp: return None       # both legs must trade on entry day
                 both = sorted(set(sp) & set(lp))
-                _l = LOTMAP.get(sym, 0)
-                _f = MIN_OI_LOTS * _l if _l else MIN_OI
+                _f = MIN_OI
                 # gate the walk out-of-sample too, exactly as in-sample
                 walk = [(x, sp[x][0], lp[x][0]) for x in both
                         if x > d and sp[x][1] >= _f and lp[x][1] >= _f]

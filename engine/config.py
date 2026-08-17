@@ -338,53 +338,18 @@ STOCK_CREDIT_TAKE_PROFIT  = 0.40    # BOOK the win at 40% of credit (was 0.75). 
                                     # tail (index stays at hold-to-expiry). 0 = hold to expiry.
 STOCK_CREDIT_REENTRY_GAP_DAYS = 3   # min days between entries on the same stock
 STOCK_CREDIT_MAX_SPREAD_PCT = 6.0   # live liquidity gate: short-leg bid-ask <= 6% (else skip)
-STOCK_CREDIT_MIN_OI       = 100     # UNITS fallback, used ONLY when the lot size is unknown
-# OPEN INTEREST IS REPORTED IN UNITS (SHARES), NOT CONTRACTS — verified 16-Aug-2026 against both
-# sources: NSE bhavcopy OPEN_INT is 100% divisible by lot size (HAL, INFY, ACC), and a live Upstox
-# quote showed OFSS short-leg oi = 34,300 against a lot of 100, i.e. 343 lots. So the old gate of
-# "OI >= 100" was 100 SHARES — less than a single lot for every name in the universe, where lots run
-# 125 to 1,000. It excluded nothing except open interest of exactly zero, and the bid-ask <= 6%
-# check was doing all of the real liquidity work.
-# This makes the floor size-aware: the short leg must carry at least N lots of open interest, so a
-# book trading 1-2 lots is never the whole market in that contract.
-# MEASURED COST before deploying (bhavcopy 2019 -> Jul-2024, deployed geometry, c/w gate applied):
-# of the signals that pass today's 100-unit gate, a 10-lot floor keeps 85% at v2/v0 geometry and
-# 89% at v1's. It removes roughly one signal in eight, and those are the thinnest contracts.
-# Deployed 16-Aug-2026 at the user's instruction, markets closed.
-STOCK_CREDIT_MIN_OI_LOTS  = 1       # THE floor: short leg must show >= this many LOTS of open interest
-# The gate is exactly `MIN_OI_LOTS * lot`. Set to 1 lot on 17-Aug-2026 after the bucket study found
-# NO relationship between open interest and returns. In-sample, median cohort, ROM-Rs by OI bucket:
-#   v2  5-10 lots +22.1% · 10-25 +20.8% · 25+ -1.2% (68.3% win on n=63 — the MOST liquid bucket was
-#       the worst, which is the opposite of what a liquidity edge would look like)
-#   v1  2-5 +3.0% · 5-10 +28.7% · 10-25 +3.9% · 25+ +13.4%   (no order)
-#   v0  5-10 +3.2% · 10-25 +7.0% · 25+ +6.8%                 (flat)
-# Nothing is monotonic, so there is no return-based case for ANY lot threshold. What survives is the
-# fidelity argument only: a bhavcopy/exchange close on a contract that never traded is a theoretical
-# settlement price, not a fillable one. 1 lot excludes zero and untraded stubs and claims nothing
-# more. Earlier 10 and 5 lot settings were deployed on signal COUNTS, not returns — an error.
-# It was briefly written as max(100, 5*lot), which equals 5*lot on 112 of the 113 names but forces
-# 20 lots on the one name whose lot size is 5. The 100-unit value now serves only as a fallback for
-# a contract whose lot size cannot be resolved.
-# Lowered 10 -> 5 on 17-Aug-2026 at the user's instruction. Rationale: the book trades 1-2 lots, so
-# 5 lots of resting interest is already several times its own size, and the measured cost of the
-# stricter floor was not obviously worth the signals it removed. Measured on bhavcopy 2019 -> Jul-2024
-# at the deployed geometry, share of signals whose short leg clears each floor: 1 lot 25.4% /
-# 5 lots 23.0% / 10 lots 21.7% / 25 lots 18.6% at v2-v0 geometry, and 34.4 / 31.8 / 30.4 / 26.7 at
-# v1's. Moving 10 -> 5 hands back roughly one signal in sixteen. The floor's real work is excluding
-# open interest of exactly zero, which is where the untradeable contracts live.
-# MAX EXPOSURE per spread: skip any trade whose width x lot exceeds this. 0 = NO CAP.
-# HISTORY: hardcoded 40,000 -> 60,000 -> 0 (NO CAP), all on 2026-07-31, user's call.
-# What no-cap admits TODAY: the largest width x lot in the 113-name universe at v2 geometry is
-# HEROMOTOCO Rs90,000 (max loss ~Rs45k at c/w 0.5); median Rs30,000. A 60k cap already allowed
-# 87 of 92 priced names, so removing it entirely adds only ~5 names — but it also removes the
-# ceiling for any FUTURE high-priced listing, which is the real open risk here.
-# MEASURED OOS Oct'24->Jul'26, v2 core at 1 lot: 40k -> 26 trades/Rs22.0k mo · 60k -> 27/Rs28.6k
-# · no cap -> 43 trades at Rs47,824 avg. DO NOT TRUST that last mo-figure (~Rs278k/mo): it implies
-# >100% monthly on deployed margin off a 43-trade sample and is a small-n artifact.
-# THE REAL TRADE-OFF: big-exposure trades won 95.3% of the time in this window, which is exactly the
-# whale profile the cap was written for — they nearly always win, and the one that does not cost
-# -Rs84.7k (worst MONTH -Rs2.28L) on the longer window that produced the original 40k limit.
-# On ~Rs5L capital a single -Rs85k trade is ~17% of the account. Keep lots at 1.
+STOCK_CREDIT_MIN_OI       = 1       # open interest must EXIST on the short leg — nothing more
+# WHY THIS IS 1 AND NOT A LOT MULTIPLE (17-Aug-2026, after measuring it).
+# The gate's only job is to exclude a contract that never traded. An exchange CLOSE on such a
+# contract is a THEORETICAL SETTLEMENT price, not a fillable quote, and pricing a backtest off one
+# inflates the result — that defect halved the in-sample ROM when it was fixed.
+# It is NOT an edge filter. Bucketing every in-sample trade by the binding leg's open interest found
+# no relationship between OI and returns: v2 paid +22.1% at 5-10 lots, +20.8% at 10-25 and -1.2% at
+# 25+, its MOST liquid bucket being its worst on 63 trades; v1 and v0 were equally unordered. So a
+# 10-lot or 5-lot floor claims something the data does not support, and earlier settings of 10 and
+# then 5 were deployed on signal COUNTS rather than returns, which was an error.
+# Live, the gate is close to inert anyway: on 17-Aug the bid-ask gate blocked all four names this
+# one blocked, plus six more. Spread is the binding liquidity constraint; this is the floor under it.
 STOCK_CREDIT_MAX_EXPOSURE = 0      # 0 = NO CAP (user, 2026-07-31)
 STOCK_CREDIT_MAX_NEW_PER_DAY = 5    # cap new entries/day (breakouts cluster -> avoid 1-day pile-on)
 STOCK_CREDIT_MAX_OPEN     = 20      # cap total concurrent positions (margin + correlated-gap risk)

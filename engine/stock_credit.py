@@ -21,7 +21,7 @@ from engine.config import (
     IST, DATA_DIR, UNIVERSE, STOCK_CREDIT_ENABLED, STOCK_CREDIT_DONCHIAN, STOCK_CREDIT_MIN_DTE,
     STOCK_CREDIT_SHORT_OFFSET, STOCK_CREDIT_WIDTH, STOCK_CREDIT_MIN_CW, STOCK_CREDIT_MIN_PREM,
     STOCK_CREDIT_STOP_MULT, STOCK_CREDIT_REENTRY_GAP_DAYS, STOCK_CREDIT_MAX_SPREAD_PCT,
-    STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MIN_OI_LOTS, STOCK_CREDIT_MAX_NEW_PER_DAY, STOCK_CREDIT_MAX_OPEN, STOCK_CREDIT_LOTS,
+    STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MAX_NEW_PER_DAY, STOCK_CREDIT_MAX_OPEN, STOCK_CREDIT_LOTS,
     STOCK_CREDIT_TAKE_PROFIT,
 )
 from engine.data_fetcher import fetch_upstox_historical, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
@@ -258,8 +258,7 @@ def scan_signals() -> list:
                 continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
-            # OI floor is SIZE-AWARE — see config.STOCK_CREDIT_MIN_OI_LOTS.
-            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < (STOCK_CREDIT_MIN_OI_LOTS * lot if lot else STOCK_CREDIT_MIN_OI):
+            if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
                 continue
             if lot <= 0:                                            # no lot size -> not tradeable
                 continue

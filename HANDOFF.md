@@ -1,5 +1,36 @@
 # Handoff — institutional-trader
 
+## 17-Aug LIVE ENGINE + VIEWER AUDIT - 5 BLOCKERS. Engine safe to run with 2 rules.
+B1 Settlement has NO DATE GUARD on the price. from_date=to_date=expiry returns empty (no same-day
+   daily bar), so it falls through to _spot() = today's LTP every time. On the catch-up path a fetch
+   failure settles a days-old expiry at TODAY's price, silently. THREE OPEN v1 POSITIONS SETTLE
+   THROUGH THIS ON 25-AUG. Works today only because SETTLE_AFTER 15:40 > CAS_END 15:35 makes LTP the
+   auction print - load-bearing and undocumented. Fix: 3 lines each at stock_credit.py:348,
+   stock_credit_v2.py:506, swing_credit.py:329 - require the bar dated the expiry, else refuse.
+B2 todays_close() stale-bar guard + direction audit are on all three SCAN paths but NO resolve path.
+B3 THE VIEWER IS NOT READ-ONLY: ui_terminal.py:1226 -> signal_db.py:101 writes
+   data/signals_export.csv on the first refresh each day. Only caller in the system.
+B4 STOCK_CREDIT_MAX_NEW_PER_DAY is per SCAN INVOCATION, not per day. A restart 15:36-15:40 can open
+   5+5+3 MORE positions. Did not fire today.
+B5 *** BAJAJ-AUTO-2026-07-29 carries a REACHABLE STOP under a no-stop book. stop_cost 241.8 frozen
+   from when STOP_MULT was 2.0 = 0.81x width; current cost 211.22, so 30.58 POINTS FROM FIRING,
+   realising -Rs9,068 on a policy that says no stops. USER DECISION NEEDED. ***
+MINE, FROM TODAY: signal_recheck OI floor ALWAYS collapses to 100 units (d has no "lot" key - use
+   p.get("lot")); the v2 Telegram line hardcodes "10 of 17 candidates on 17-Aug", stale tomorrow;
+   UI still shows OI>=100 at :869 and withdrawn OOS figures at :454/:435/:580.
+OTHER MAJORS: signal_recheck rebuilds messages every 5s 09:30-15:40 (~66k extra API calls/day - the
+   proximate cause of today's DNS failure); market_is_trading_today cannot tell a network failure
+   from a holiday (fix: never cache a negative from an empty frame, fail OPEN - todays_close already
+   fails closed per stock); once-a-day markers burnt BEFORE the work, no success check; one bad
+   signal kills the whole Telegram batch; a failed book write reports success; TP/stop bookings have
+   no spread gate (5 of 19 closes in the first 10 min, one 22s after the open);
+   _stock_settlement_due opens the resolve gate 24/7 for ALL books if ANY position expired;
+   disabling STOCK_CREDIT_ENABLED strands open positions forever.
+VERIFIED CLEAN: no double-settle, P&L arithmetic dimensionally correct, no duplicate ids,
+   engine_runner integrity fine after the corruption revert, v0 inherits the OI floor, watchlist and
+   trading floors identical, phantom stop correctly neutralised.
+RULES UNTIL FIXED: (a) do NOT restart the engine 15:15-15:40; (b) watch BAJAJ-AUTO.
+
 ## 17-Aug USER: no evidence OI gating helps win rate/ROM — CONCEDED, bucket study now running
 He is right. The OI gate was justified as a FIDELITY fix (a bhavcopy close on a zero-OI contract is
 NSE theoretical settlement, not a fillable price) and it LOWERED IS ROM by half. That is a
