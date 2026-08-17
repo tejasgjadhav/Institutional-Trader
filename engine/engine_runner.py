@@ -250,19 +250,22 @@ class EngineRunner:
     # IS/OOS date ranges). Ends every signal message (user format 2026-07-30). Honest labels only.
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
-            "• Donchian-union breakout fade · credit/width ≥ 0.40 · production backtest 15-Aug-2026\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 2,526 trades · <b>95.4%</b> win rate · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 96 trades · <b>81.2%</b> win rate · +32.5% on margin · positive every year",
+            "• Donchian-union breakout fade · credit/width ≥ 0.40 · production backtest 16-Aug-2026\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 667 trades · <b>82.2%</b> win rate · +30.7% on margin · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 58 trades · <b>82.8%</b> win rate · +3.7% on margin · positive 2 of 3 years\n"
+            "• The out-of-sample sample is thin, so its range runs wide. Treat the in-sample figure as the shape and the live record as the test.",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
-            "• Production backtest 15-Aug-2026 · the weakest evidence of the three stock books\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 322 trades · <b>80.1%</b> win rate · +12.4% on margin · positive 5 of 6 years\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 99 trades · <b>76.8%</b> win rate · <b>−3.9%</b> on margin · positive 2 of 3 years\n"
+            "• Production backtest 16-Aug-2026 · the weakest evidence of the three stock books\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 569 trades · <b>83.1%</b> win rate · +17.8% on margin · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 97 trades · <b>80.4%</b> win rate · <b>−0.7%</b> on margin · positive 2 of 3 years\n"
+            "• It wins 4 trades in 5 and still clears only ₹335 each, because a loser costs about four times a winner\n"
             "• Forward paper-test at 1 lot to decide the band — see studies/DEPLOYED_EVIDENCE_AUDIT.md §5",
         "STOCK CREDIT v1":
-            "• Same fade, short 1-OTM · width 3 · TP-40, no stop · Donchian-10 · production backtest 15-Aug-2026\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 805 trades · <b>89.4%</b> win rate · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 268 trades · <b>81.7%</b> win rate · +14.6% on margin · positive every year",
+            "• Same fade, short 1-OTM · width 3 · TP-40, no stop · Donchian-10 · production backtest 16-Aug-2026\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 477 trades · <b>79.9%</b> win rate · +19.9% on margin · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 193 trades · <b>79.8%</b> win rate · +4.8% on margin · positive every year\n"
+            "• This is the best-measured of the three stock books, on 193 out-of-sample trades.",
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>88%</b> win rate achieved\n"

@@ -66,8 +66,9 @@ ATM_MIN_LADDER_POS = 0.15   # ATM must sit mid-ladder, not at its edge
 BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=3.0, band=(0.40, 99.0)),
          "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0)),
          "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40))}
+SWEEP_TPS = [0.30, 0.40, 0.50, 0.60, 0.70]
 spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
-OUT = f"/tmp/deployed_bt_{WINDOW.lower()}_rows.json"
+OUT = f"/tmp/tpsweep_{WINDOW.lower()}_rows.json"
 
 def parity_spot(ce_px, pe_px):
     """Implied spot from the chain itself: at the strike where |CE - PE| is smallest, S = K + C - P.
@@ -121,19 +122,22 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
     if not fired: return False, {}
     exits = {}
     for bk, (si, li, se, le, credit, width, cw, walk) in fired.items():
-        cfg = BOOKS[bk]; close = None; xc = 0.0; exit_day = exp
-        for (wd, s2, l2) in walk:
-            cost = s2 - l2
-            if cost <= credit * (1 - cfg["tp"]):
-                close = max(cost, 0.0); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
-            if cfg["stop"] and cost >= credit * cfg["stop"] and cost <= width * 1.05:
-                close = min(cost, width); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
-        if close is None:
-            close = settle(cb, exp, ks, si, li, typ, width, spot)
-        exits[bk] = exit_day
-        net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
-        rows.append(dict(book=bk, sym=sym, day=day, yr=int(day[:4]), cw=round(cw, 3),
-                         net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0)))
+        cfg = BOOKS[bk]
+        for tp in SWEEP_TPS:
+            close = None; xc = 0.0; exit_day = exp
+            for (wd, s2, l2) in walk:
+                cost = s2 - l2
+                if cost <= credit * (1 - tp):
+                    close = max(cost, 0.0); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
+                if cfg["stop"] and cost >= credit * cfg["stop"] and cost <= width * 1.05:
+                    close = min(cost, width); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
+            if close is None:
+                close = settle(cb, exp, ks, si, li, typ, width, spot)
+            if abs(tp - cfg["tp"]) < 1e-9:
+                exits[bk] = exit_day        # hierarchy + open-position timing at the DEPLOYED tp
+            net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
+            rows.append(dict(book=bk, tp=tp, sym=sym, day=day, yr=int(day[:4]), cw=round(cw, 3),
+                             net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0)))
     return True, exits
 
 def breakout_days(u):
@@ -306,17 +310,19 @@ def run_oos():
 
 rows = run_is() if WINDOW == "IS" else run_oos()
 json.dump(rows, open(OUT, "w"))
-lbl = "IS 2019->Sep-2024 (bhavcopy)" if WINDOW == "IS" else "OOS Oct-2024->date (Upstox, date-aligned)"
-print(f"\n=== DEPLOYED CONFIGS · {lbl} · hierarchy + gap + exit costs + corporate-action guard ===")
-print(f"{'book':<5}{'band':<12}{'n':>6}{'WIN':>8}{'ROM':>9}{'avg/tr':>9}{'+ve yrs':>9}")
-for bk, cfg in BOOKS.items():
-    s = [x for x in rows if x["book"] == bk]
-    if not s: print(f"{bk:<5}  (none)"); continue
-    by = collections.defaultdict(list)
-    for x in s: by[x["yr"]].append(x["net"])
-    pos = sum(1 for v in by.values() if sum(v) > 0)
-    band = f"{cfg['band'][0]}-{cfg['band'][1] if cfg['band'][1]<90 else ''}"
-    print(f"{bk:<5}{band:<12}{len(s):>6}{sum(x['win'] for x in s)/len(s)*100:>7.1f}%"
-          f"{sum(x['net'] for x in s)/sum(x['margin'] for x in s)*100:>+8.1f}%"
-          f"{sum(x['net'] for x in s)/len(s):>+9.2f}{pos:>6}/{len(by)}")
+lbl = "IS 2019->Sep-2024 (bhavcopy, parity spot)" if WINDOW == "IS" else "OOS Oct-2024->date (Upstox, guards)"
+print(f"\n=== TP SWEEP · {lbl} · MEDIAN COHORT c/w 0.40-0.50 (v0: 0.35-0.40) · one-open-position rule ===")
+print(f"{'book':<5}{'TP':>5}{'n':>7}{'WIN':>8}{'ROM':>9}{'+ve yrs':>9}")
+for bk in ("v2", "v1", "v0"):
+    band = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
+    for tp in SWEEP_TPS:
+        g = [x for x in rows if x["book"] == bk and x["tp"] == tp and band[0] <= x["cw"] < band[1]]
+        if len(g) < 20: continue
+        by = collections.defaultdict(list)
+        for x in g: by[x["yr"]].append(x["net"])
+        pos = sum(1 for v in by.values() if sum(v) > 0)
+        star = " <-- deployed" if abs(tp - BOOKS[bk]["tp"]) < 1e-9 else ""
+        print(f"{bk:<5}{int(tp*100):>5}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%"
+              f"{sum(x['net'] for x in g)/sum(x['margin'] for x in g)*100:>+8.1f}%{pos:>6}/{len(by):<2}{star}")
+    print()
 print(f"DONE-{WINDOW}")

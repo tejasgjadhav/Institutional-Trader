@@ -432,8 +432,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # honest IS/OOS pair — see studies/LOWCW_BAND_RESCUE.md §7.
         pmv0 = QLabel("STOCK CREDIT v0 · c/w 0.35–0.40 (the band below the v2 gate) · same geometry as v2 "
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
-                      "WIN 80.1% over 2019–Sep 2024 (positive 5 of those 6 yrs, +12.4% on margin, 322 trades) / "
-                      "76.8% over Oct 2024–Aug 2026 (99 trades) but NEGATIVE −3.9% on margin, −₹186 a trade · "
+                      "WIN 83.1% over 2019–Sep 2024 (positive every one of those 6 yrs, +17.8% on margin, 569 trades) / "
+                      "80.4% over Oct 2024–Aug 2026 (97 trades) but −0.7% on margin, ₹335 a trade · "
                       "PAPER FORWARD-TEST — the backtest does not clear its costs, so this book is running to see whether "
                       "real fills disagree · 1 lot · max 3/day, 10 open · ~4.4 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
         pmv0.setWordWrap(True)
@@ -577,7 +577,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
         v0hdr = QLabel("STOCK CREDIT v0 (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
-                       "80.1% IS (+ve 5/6 yrs, +12.4%) · 76.8% OOS but −3.9% on margin (99 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
+                       "83.1% IS (+ve 6/6 yrs, +17.8%) · 80.4% OOS but −0.7% on margin (97 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
         v0hdr.setWordWrap(True)
         v0hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         v0hdr.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -893,9 +893,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>95.4% · positive every year <span style="color:{TEXT_DIM};">(2,526 trades)</span></td><td>81.2% · positive every year <span style="color:{TEXT_DIM};">(96 trades)</span></td><td><b>~4.3</b></td></tr>
-<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>89.4% · positive every year <span style="color:{TEXT_DIM};">(805 trades)</span></td><td>81.7% · positive every year <span style="color:{TEXT_DIM};">(268 trades)</span></td><td><b>~11.9</b></td></tr>
-<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>80.1% · positive 5 of the 6 years <span style="color:{TEXT_DIM};">(322 trades)</span></td><td style="color:{AMBER};">76.8% · <b>NEGATIVE −3.9% on margin</b> · positive 2 of 3 years</td><td><b>~4.4</b></td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>82.2% · +30.7% on margin · positive every year <span style="color:{TEXT_DIM};">(667 trades)</span></td><td>82.8% · +3.7% · positive 2 of 3 years <span style="color:{TEXT_DIM};">(58 trades)</span></td><td><b>~2.6</b></td></tr>
+<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.9% · +19.9% · positive every year <span style="color:{TEXT_DIM};">(477 trades)</span></td><td>79.8% · +4.8% · positive every year <span style="color:{TEXT_DIM};">(193 trades)</span></td><td><b>~8.6</b></td></tr>
+<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.1% · +17.8% · positive every year <span style="color:{TEXT_DIM};">(569 trades)</span></td><td style="color:{AMBER};">80.4% · <b>−0.7% on margin</b> · positive 2 of 3 years <span style="color:{TEXT_DIM};">(97 trades)</span></td><td><b>~4.3</b></td></tr>
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
 <tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
@@ -903,21 +903,22 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 </table>
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the only money table</p>
-{dim("<b>Rebuilt 15-Aug-2026 from the production harness</b> (studies/ndte/deployed_backtest.py), on the OUT-OF-SAMPLE "
-     "window only — Oct 2024 to Aug 2026, real Upstox premiums, date-aligned legs, every trade multiplied by its own "
-     "current lot size. The in-sample window is deliberately NOT used for rupees: it prices bhavcopy settlement prints "
-     "and returns figures that are not credible (v2 reads ₹51,380 a trade in-sample against ₹14,956 out-of-sample). "
-     "Expectancy is what one trade is worth; multiply by signals per month to get monthly. <b>Signals measured</b> is how "
-     "many real trades each row rests on — v1 at 268 is the solid one, v2 at 96 and the index books at 73 and 89 are thin.")}
+{dim("<b>Rebuilt 16-Aug-2026 from the production harness</b> (studies/ndte/deployed_backtest.py) after "
+     "four corrections, on the OUT-OF-SAMPLE window only — Oct 2024 to Aug 2026, real Upstox premiums, "
+     "legs joined by date, the live one-position-per-symbol rule applied, and every trade multiplied by "
+     "its own current lot size. Read on the median cohort, credit/width 0.40–0.50, which is where all 21 "
+     "real live fills sit. The in-sample window is deliberately NOT used for rupees: it prices bhavcopy "
+     "settlement prints, and 85% of its rows above ₹50 carry zero open interest. <b>Signals measured</b> "
+     "is how many real trades each row rests on — v1 at 193 is the solid one, v2 at 58 is thin.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>measured</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>96</td><td>~4.3</td><td>81.2%</td><td style="color:{GREEN};">+₹20,916</td><td style="color:{RED};">−₹10,872</td><td>81.2% × ₹20,916 − 18.8% × ₹10,872 = ₹16,984 − ₹2,044 = <b style="color:{GREEN};">+₹14,956</b></td><td><b>₹64,311</b></td></tr>
-<tr><td>Stock v1</td><td>268</td><td>~11.9</td><td>81.7%</td><td style="color:{GREEN};">+₹6,048</td><td style="color:{RED};">−₹9,810</td><td>81.7% × ₹6,048 − 18.3% × ₹9,810 = ₹4,941 − ₹1,795 = <b style="color:{GREEN};">+₹3,146</b></td><td><b>₹37,437</b></td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>99</td><td>~4.4</td><td>76.8%</td><td style="color:{GREEN};">+₹3,818</td><td style="color:{RED};">−₹13,439</td><td>76.8% × ₹3,818 − 23.2% × ₹13,439 = ₹2,932 − ₹3,118 = <b style="color:{RED};">−₹186</b></td><td style="color:{RED};">−₹818</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>58</td><td>~2.6</td><td>82.8%</td><td style="color:{GREEN};">+₹6,022</td><td style="color:{RED};">−₹10,461</td><td>82.8% × ₹6,022 − 17.2% × ₹10,461 = ₹4,986 − ₹1,806 = <b style="color:{GREEN};">+₹3,180</b></td><td><b>₹8,198</b></td></tr>
+<tr><td>Stock v1</td><td>193</td><td>~8.6</td><td>79.8%</td><td style="color:{GREEN};">+₹3,887</td><td style="color:{RED};">−₹10,324</td><td>79.8% × ₹3,887 − 20.2% × ₹10,324 = ₹3,102 − ₹2,086 = <b style="color:{GREEN};">+₹1,016</b></td><td><b>₹8,711</b></td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>97</td><td>~4.3</td><td>80.4%</td><td style="color:{GREEN};">+₹3,815</td><td style="color:{RED};">−₹13,954</td><td>80.4% × ₹3,815 − 19.6% × ₹13,954 = ₹3,067 − ₹2,735 = <b style="color:{AMBER};">+₹335</b></td><td style="color:{AMBER};">₹1,443</td></tr>
 <tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
 <tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>625</b></td><td><b>~28.6/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹106,736</b></td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹85,389</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>510</b></td><td><b>~23.5/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹24,159</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹19,327</b></td></tr>
 </table>
 {dim("<b>Sanity-check it against the only real datapoint.</b> July 2026 came in at <b>24 closed trades and ₹44,789</b> "
      "realised. Treat ₹85,389 as a ceiling and one live month as the floor: live fires fewer trades than the measured "
@@ -937,18 +938,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "carries the book even at 4.3 signals a month.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>2,526 IS · 96 OOS</td><td>95.4% / 81.2%</td><td>+₹20,916</td><td>−₹10,872</td><td>1.92 : 1</td></tr>
-<tr><td>Stock v1</td><td>25,978</td><td>805 IS · 268 OOS</td><td>89.4% / 81.7%</td><td>+₹6,048</td><td>−₹9,810</td><td>0.62 : 1</td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>322 IS · 99 OOS</td><td>80.1% / 76.8%</td><td>+₹3,818</td><td>−₹13,439</td><td>0.28 : 1</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>667 IS · 58 OOS</td><td>82.2% / 82.8%</td><td>+₹6,022</td><td>−₹10,461</td><td>0.58 : 1</td></tr>
+<tr><td>Stock v1</td><td>25,978</td><td>477 IS · 193 OOS</td><td>79.9% / 79.8%</td><td>+₹3,887</td><td>−₹10,324</td><td>0.38 : 1</td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>569 IS · 97 OOS</td><td>83.1% / 80.4%</td><td>+₹3,815</td><td>−₹13,954</td><td>0.27 : 1</td></tr>
 <tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td>+₹1,202</td><td>−₹6,274</td><td>0.2 : 1</td></tr>
 <tr><td>Intraday SENSEX</td><td>89 expiry days</td><td>89</td><td>88.8%</td><td>+₹1,427</td><td>−₹4,549</td><td>0.3 : 1</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Classic strategies (all rejected)</td><td>227,000 trades · 7 families</td><td>0 kept</td><td>up to 83.6%</td><td colspan="3">every one negative after costs — Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays, NR7. The 83.6% is the illusion demo: a high win rate with negative expectancy.</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL RESEARCH</b></td><td><b>~287,000 signals/trades</b></td><td><b>~2,500 analysed</b></td><td colspan="4"><b>56 written studies · 106 runnable scripts · 2019 → 2026</b></td></tr>
 </table>
-{dim("Read the win:loss column, not just the win rate. <b>v0 is the honest outlier</b> — it wins 76.8% of the time out-of-sample "
-     "and still loses money, because its average winner (₹3,818) is barely a quarter of its average loser (₹13,439). v2 wins at a "
-     "similar rate and earns, because its winners are nearly twice its losers. A high win rate with a bad payoff ratio is the exact "
-     "illusion the 227,000-trade sweep was run to expose: a 0.15%-target bot prints 83.6% win and still loses money.")}
+{dim("Read the win:loss column, not just the win rate. <b>Every book loses more on a loser than it makes "
+     "on a winner</b> — 0.58:1 for v2 down to 0.27:1 for v0. That is normal for selling credit spreads and it "
+     "is exactly why the win rate has to stay high: v0 wins 80.4% of its trades out-of-sample and still only "
+     "clears ₹335 each, so a few points of win rate would put it underwater. A high win rate with a bad payoff "
+     "ratio is the illusion the 227,000-trade sweep was run to expose: a 0.15%-target bot prints 83.6% win and "
+     "still loses money.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">REJECTED / OFF</p>
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
@@ -961,9 +964,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 </table>
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE 14-AUG EVIDENCE AUDIT — every deployed book re-checked</p>
 {res("<b>An adversarial audit re-checked the validation behind every live book.</b> All three stock-credit OOS scripts carried a date-alignment bug (option legs compared across different days); the 0DTE index books were clean by construction. The corrected re-run CONFIRMS the deployed gate — the cliff at 0.40 is real on clean code. File: DEPLOYED_EVIDENCE_AUDIT.md")}
-{res("<b>The production harness is the number of record.</b> Full universe, date-aligned, and modelling the live hierarchy for the first time: v1 scans Donchian-10 only, v1 stands down while v2 holds the name, v0 stands down for v1. IS 2019–2024: v2 95.4% / +183% ROM (2,526 trades) · v1 89.4% / +84.5% (805) · v0 80.1% / +12.4% (322). OOS 2024–2026: v2 81.2% / +32.5% (96) · v1 81.7% / +14.6% (268) · v0 76.8% / <b>−3.9%</b> (99). Both gate books are positive in every year of both windows. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
-{res("<b>An adversarial audit re-checked every live book and found two bug classes.</b> All three stock-credit OOS scripts compared option legs across different calendar days, and stop triggers fired on settlement prints that no market could produce. The 0DTE index books were clean by construction. A second audit then caught the harness itself feeding v1 the wrong breakout population. Every number above post-dates both fixes. File: DEPLOYED_EVIDENCE_AUDIT.md")}
-{res("<b>v0 does not clear its own costs out-of-sample.</b> It wins 76.8% of its trades and still loses ₹186 a trade, because a winner pays ₹3,818 and a loser costs ₹13,439. It stays live as a paper forward-test by the decision of 15-Aug-2026. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
+{res("<b>The production harness is the number of record, after four corrections.</b> Option legs are joined by DATE; v1 scans Donchian-10 only and stands down while v2 holds a name; spot is derived from the option chain by put-call parity, because split-adjusted closes against unadjusted strike ladders were fabricating deep-ITM trades; and each book now skips a name it already holds open, which removed 59% of in-sample trades that the live engine could never have taken. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
+{res("<b>Read on the median cohort — credit/width 0.40–0.50, where all 21 real live fills sit.</b> IS 2019–2024: v2 82.2% / +30.7% ROM · v1 79.9% / +19.9% · v0 83.1% / +17.8%, and all three are positive in every one of the six years. OOS 2024–2026: v2 82.8% / +3.7% · v1 79.8% / +4.8% · v0 80.4% / −0.7%. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
+{res("<b>Out-of-sample cannot rank the books, and saying so is the honest result.</b> Bootstrapped 90% intervals on ROM span zero for all three: v2 [−27.8%, +39.7%] on 58 trades, v1 [−5.0%, +13.3%] on 193, v0 [−14.8%, +12.5%] on 97. In-sample is far better measured but is NOT independent — the gate, the geometry and the exits were all chosen on that window. The forward record is the only instrument that settles it.")}
+{res("<b>The take-profit level does not carry the edge.</b> Swept 30/40/50/60/70 on both windows: v2 is flat across the whole range (+28.8% to +31.4% in-sample), and v1's slope INVERTS between windows — lower is better in-sample, higher is better out-of-sample — which is what a parameter with no information looks like. Deployed settings stay: v2 TP-50, v1 TP-40, v0 TP-40.")}
 {dim("• Stops cannot rescue the 0.25–0.35 bands: a 20-cell sweep found every stop multiple worse than no stop in 0.30–0.35, and the bands stay dead. File: CW_BAND_BY_BOOK.md")}
 {dim("• IS magnitudes are soft, not hollow: charging exit costs moves the bhavcopy ROM ~4 points, and 9–18% of exits price off an OI=0 settlement print.")}
 

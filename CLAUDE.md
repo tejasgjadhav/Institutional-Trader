@@ -19,23 +19,36 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50) | `STOCK_CREDIT_ENABLED` | 87% | ~₹20,000 | t=+13.78 · +ve 8/8 yrs |
-| Stock credit v1 (TP-40/no-stop, 07-30) | `STOCK_CREDIT_ENABLED` | 86% | ~₹13,000 | 85% IS / 86% OOS · same signals (V1_WINRATE_SWEEP) |
-| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 77% IS / 91% OOS | ~₹16,300 (5.8 sig/mo × ₹2,808) | IS +1.9% ROM, +ve only 4/6 yrs (n=310); OOS n=43. Adds ~9% net for ~99% capital — one more CORE lot returned 82% more. User-approved 2026-07-31 to build a live record. See LOWCW_BAND_RESCUE §7 |
+| ★ Stock fade v2 UNION (TP-50) | `STOCK_CREDIT_ENABLED` | 82.2% IS / 82.8% OOS | ₹8,198 (2.6/mo × ₹3,180) | IS +30.7% ROM, +ve 6/6 yrs (n=667); OOS +3.7%, 2/3 yrs (n=58, CI spans zero) |
+| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.9% IS / 79.8% OOS | ₹8,711 (8.6/mo × ₹1,016) | IS +19.9% ROM, +ve 6/6 yrs (n=477); OOS +4.8%, **3/3 yrs** (n=193) — the best-measured stock book |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 80.4% OOS | ₹1,443 (4.3/mo × ₹335) | IS +17.8% ROM, +ve 6/6 yrs (n=569); OOS **−0.7%**, 2/3 yrs (n=97). Kept live as a paper forward-test, user 2026-08-15 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | `DTE_MULTI_BANKNIFTY_ENABLED=False` | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 |
 | Index swing fade | `SWING_CREDIT_ENABLED` | 54% | ~₹0 | regime-dep · failed OOS |
 | Monthly futures | `MONTHLY_FUT_ENABLED` | 75.7% | ₹0 now | REGIME-OFF · needs ~₹15L |
 
-**MODEL vs LIVE-COMPARABLE — read both.** The old model (v2 ₹20,000 · v1 ₹13,000 · SENSEX ₹3,153 ·
-NIFTY ₹1,771) came from backtests with **no ₹40k exposure cap and no live liquidity gates**, and it
-overstates v2 badly: v2 fired **once** in July against a 7.6/mo model. Re-measured on real Upstox
-premiums Oct'24→Jul'26 **with the exposure cap applied (that cap was REMOVED 31-Jul-2026)** (1 lot, scaled to 113 names):
-**v2 core ₹7,831/trade × 3.7/mo ≈ ₹28,600 · v0 ₹2,808/trade × 5.8/mo ≈ ₹16,300** (cap raised 40k→60k on 31-Jul-2026). At the old 40k cap it blocked **17 of v2's 43** OOS trades and **2 of v0's**; at 60k, 16 and 0, so v0 fires MORE often live than v2 and adds
-~+61% on top of it. Per rupee of margin v2 is still better (+41.2% vs +18.7%) — but it is
-signal-starved, so with spare margin v0 adds real money. Edges are validated; **magnitude is NOT** — v2 implies ~97%/mo on
-deployed capital, which is not credible. **Plan on 80% of the model figure (user, 2026-07-31 — was ~50%), and keep lots at 1.**
+**THE NUMBERS ABOVE ARE THE 16-AUG-2026 PRODUCTION HARNESS** (`studies/ndte/deployed_backtest.py`),
+after four corrections that each changed the answer materially: option legs joined BY DATE, v1 given
+its real Donchian-10 population, spot derived from the option chain by put-call parity (split-adjusted
+closes against unadjusted strike ladders had been fabricating deep-ITM trades and printing +182.8%
+ROM), and the live one-position-per-symbol rule applied (59% of in-sample trades were re-entries the
+engine could never have taken). Every earlier figure in this repo predates at least one of those and
+must not be quoted. Read on the MEDIAN COHORT, c/w 0.40–0.50, where all 21 real live fills sit.
+
+**What the two windows can and cannot say.** In-sample is far better measured — 667/477/569 trades,
+six full years, all three books positive in every year — but it is NOT independent, because the c/w
+gate, the geometry and the exits were all chosen on that data. Out-of-sample is honest but thin:
+bootstrapped 90% ROM intervals are v2 [−27.8%, +39.7%], v1 [−5.0%, +13.3%], v0 [−14.8%, +12.5%], all
+spanning zero, and v2's 58 trades include a four-trade 2024 stub. **The out-of-sample window cannot
+rank the books.** Stock books total about ₹18,350/mo at 1 lot; with the index books ~₹24,200, and the
+80% planning rule puts it at ~₹19,300. **Keep lots at 1.** The forward record, restarted 6-Aug-2026,
+is the only instrument that settles this.
+
+**Take-profit is settled — do NOT re-tune it.** Swept 30/40/50/60/70 on both windows (`tp_sweep.py`):
+v2 is flat across the whole range, and v1's slope INVERTS between windows (lower is better in-sample,
+higher is better out-of-sample), which is what a parameter carrying no information looks like.
+Deployed levels stay: v2 TP-50, v1 TP-40, v0 TP-40.
 
 **Structural exclusions deployed 2026-07-19** (risk limits, NOT edges):
 `ZERO_DTE_MULTI_MIN_CW=0.04` (SENSEX/BNF; NIFTY unchanged) and `ZERO_DTE_ELECTION_BLACKOUT`.

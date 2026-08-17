@@ -1,5 +1,127 @@
 # Handoff — institutional-trader
 
+## 16-Aug CONSOLIDATED UPDATE SHIPPED (studies + UI + Telegram + CLAUDE.md)
+Final numbers everywhere = production harness after 4 corrections, MEDIAN COHORT c/w 0.40-0.50:
+  IS  v2 82.2%/+30.7% (n=667, 6/6) · v1 79.9%/+19.9% (n=477, 6/6) · v0 83.1%/+17.8% (n=569, 6/6)
+  OOS v2 82.8%/+3.7% (n=58, 2/3) · v1 79.8%/+4.8% (n=193, 3/3) · v0 80.4%/-0.7% (n=97, 2/3)
+  Rs/mo: v2 8,198 (2.6/mo) · v1 8,711 (8.6/mo) · v0 1,443 (4.3/mo); +index = ~24,159; 80% = 19,327
+Updated: studies/DEPLOYED_EVIDENCE_AUDIT.md SS5+SS6 rewritten · studies/README.md index ·
+UI LIVE STRATEGIES + PROFIT AND LOSS + WORK BEHIND tables + 4 STUDIES cards + PM/trade-log v0
+headers · Telegram _TG_ANALYSIS v2/v1/v0 evidence blocks · CLAUDE.md live-books table + a new
+block on what the two windows can and cannot say + TP-is-settled note. Viewer AND engine restarted.
+ENGINE LOGIC UNTOUCHED throughout: config.py unchanged since 6-Aug; only display strings edited.
+Remaining disclosed gaps: daily caps ~5%, todays lot sizes on old trades, margin proxy vs SPAN,
+no bid-ask/OI gate, OOS on guards not parity, harness not re-audited since the parity fix.
+
+## 16-Aug FIX #1 COMPLETE — BOTH WINDOWS. v2 lifts off zero; all three books now ~flat OOS.
+OOS with the one-open-position rule (median cohort, deployed TP):
+  v2 n=58  +3.7% ROM (was -0.3%)  2/3 yrs  Rs8,198/mo  90% CI [-27.8%, +39.7%]
+  v1 n=193 +4.8% ROM (was +5.4%)  3/3 yrs  Rs8,711/mo  90% CI [-5.0%, +13.3%]
+  v0 n=97  -0.7% ROM (was -3.9%)  2/3 yrs  Rs1,443/mo  90% CI [-14.8%, +12.5%]
+IS with the rule: v2 +30.7% 6/6 · v1 +19.9% 6/6 · v0 +17.8% 6/6.
+READING: the fix moved v2 and v0 UP in both windows, confirming the removed re-entries were
+adverse. v2 is no longer negative OOS. BUT all three CIs still span zero and v2 n=58 with a
+4-trade 2024 stub, so the OOS window STILL cannot rank the books. The v1-over-v2 lean from 15-Aug
+is WEAKER now - point estimates are +4.8 vs +3.7, effectively tied.
+TP verdict UNCHANGED and now firmer: v2 flat across 30-70 both windows; v1 slope still INVERTS
+(IS falls +20.0->+13.2, OOS rises +1.8->+11.1) = noise, do not move off TP-40; v0 negative-to-flat
+at every TP. KEEP v2 TP-50, v1 TP-40, v0 TP-40. NOTHING TO DEPLOY.
+Remaining audit gaps (unfixed, disclosed): daily caps ~5%, todays lot sizes on 2019-26 trades,
+margin proxy not SPAN, no bid-ask/OI gate, OOS uses guards not parity, harness not re-audited
+since the parity fix.
+STILL PENDING: consolidated correction across studies SS5/SS6 + UI + Telegram + CLAUDE.md table.
+
+## 16-Aug FIX #1 LANDED: one-open-position-per-symbol rule now modelled (IS done, OOS running)
+Audit gap #1 (biggest): live each book skips a name it already holds OPEN until it closes
+(stock_credit.py:223, stock_credit_v2.py:372). Harness only had the 3-day gap, so 59% IS / 31% OOS
+of trades were same-book re-entries inside 35 days that live could never take. Bias had a
+direction: winners exit fast and free the name, losers stay open, so the extra trades were drawn
+from names STILL GOING AGAINST the book.
+Implemented as per-symbol `open_until` {book: exit_day}; it now drives self-blocking, v1 deferring
+to an open v2, and the same-day clash from ONE piece of state (v2_hold_until removed).
+Both deployed_backtest.py and tp_sweep.py carry it.
+IS RESULT (median cohort) - REMOVING THOSE TRADES IMPROVED EVERY BOOK:
+  v2 n 1041->667, TP50 ROM +24.0% -> +30.7%, years 5/6 -> 6/6, win 80.3% -> 82.2%
+  v1 n  566->477, TP40 ROM +23.5% -> +19.9%, years 6/6 (unchanged), win 79.7% -> 79.9%
+  v0 n  724->569, TP40 ROM +18.8% -> +17.8%, years 6/6 (unchanged), win 81.5% -> 83.1%
+=> v2 is the biggest beneficiary: the re-entries were concentrated in its book and they were
+adverse. v2 now 6/6 years IS. v1/v0 slightly lower but unchanged in shape. TP still flat for v2
+(+28.8..+31.4 across 30-70) and still decaying with higher TP for v1 - same verdict, keep TPs.
+OOS in flight /tmp/tp2_oos.log. IS rows /tmp/tpsweep_is_rows.json.
+
+## 16-Aug TP SWEEP COMPLETE — lowering TP does NOT help; the two windows DISAGREE on direction
+studies/ndte/tp_sweep.py, median cohort, hierarchy timing held at deployed TP-50 so every level
+scores the SAME trades.
+IS  ROM by TP (30/40/50/60/70): v2 +23.5/+23.4/+24.0/+24.1/+24.0 · v1 +23.5/+23.5/+20.8/+20.4/+19.5
+    · v0 +19.7/+18.8/+18.7/+18.5/+19.4   -> essentially FLAT for v2 and v0; v1 decays ABOVE TP-50.
+OOS ROM by TP: v2 -3.4/+0.0/-0.3/+2.4/+2.4 (2/3 yrs at every level) · v1 +3.8/+5.4/+6.8/+10.5/+12.3
+    (3/3 yrs at every level) · v0 -5.4/-3.9/-1.4/-2.0/-0.8 (never positive).
+VERDICT: (1) The user's idea of cutting TP to 40 or 30 to force a positive net is REFUTED - lower
+TP buys win rate and gives back average win size, and the two cancel. v2 at TP-30 is the WORST OOS
+cell (-3.4%). (2) v1 IS->OOS DISAGREE ON SLOPE: in-sample lower TP is better (+23.5 at 30 vs +19.5
+at 70), out-of-sample HIGHER is better (+3.8 at 30 vs +12.3 at 70). A parameter whose slope
+inverts between windows is noise, so DO NOT move v1 off TP-40. (3) v0 is negative at every TP.
+NOTHING TO DEPLOY from this sweep. Deployed settings stay: v2 TP-50, v1 TP-40, v0 TP-40.
+STILL PENDING: one consolidated correction across studies SS5/SS6 + UI tables/cards + Telegram
+evidence lines + CLAUDE.md book table, all of which still carry pre-parity numbers.
+
+## 16-Aug FINAL CLEAN BASELINE (both windows, corporate-action fixed) — v1 IS THE BOOK
+Method: IS uses PUT-CALL PARITY spot (bhavcopy has every strike). OOS cannot - Upstox expired
+candles exist only for strikes that traded, so a parity OOS returned v2 n=0 / v1 n=9; OOS therefore
+uses the drift + ladder-edge guards and is headlined on the MEDIAN COHORT (c/w 0.40-0.50).
+
+HEADLINE (median cohort, which is where all 21 live fills sit at c/w 0.39-0.47):
+  IS 2019-Sep24: v2 80.3% / +24.0% ROM (n=1041) · v1 79.7% / +23.5% (n=566) · v0 81.5% / +18.8% (n=726, 6/6 yrs)
+  OOS Oct24-Aug26: v2 77.1% / -0.3% (n=70, 2/3) · v1 80.2% / +5.4% (n=227, 3/3) · v0 76.8% / -3.9% (n=99, 2/3)
+  Rupees OOS cohort: v2 3.1 sig/mo Rs2,111/tr = Rs6,567/mo · v1 10.1 sig/mo Rs1,019 = Rs10,276/mo · v0 -Rs842/mo
+=> v1 IS THE ONLY BOOK POSITIVE IN BOTH WINDOWS AND ALL 3 OOS YEARS. v2's OOS edge is ZERO at the
+c/w it actually trades (its whole-sample +4.1% comes from the high-c/w tail). v0 negative OOS.
+This REVERSES the entire history of this repo, which has always called v2 the leader.
+ALL published numbers (UI, studies SS5/SS6, Telegram lines, CLAUDE.md book table) are WRONG and
+must be replaced with the above. NOTHING deployed; engine untouched; v0 stays paper per user.
+PENDING: TP sweep 30/40/50 on this clean baseline (user asked; must be judged IS->OOS, not tuned
+until positive), then one consolidated correction across study + UI + Telegram + both remotes.
+
+## 15-Aug ~19:00 PARITY FIX WORKED; ROM decomposition shows the tail still dominates
+Root cause was adjusted-spot vs unadjusted-strikes. Two heuristic guards FAILED (median c/w
+0.78->0.56->0.54). REAL FIX: derive spot from the option chain by put-call parity (S = K + C - P at
+the strike where |CE-PE| is least) - both quotes carry the same unadjusted scale as the strikes so
+a split cannot desync them. Adjusted equity series still used for the Donchian breakout only.
+IS (parity, /tmp/deployed_bt_is_rows_PARITY.json): v2 n=1706 82.4%/+41.3% 6/6 median cw 0.47 ·
+v1 n=874 83.2%/+42.0% 6/6 median 0.45 · v0 n=726 81.5%/+18.8% 6/6. Acceptance test PASSED
+(median cw 0.44-0.49, matching the 21 live trades at 0.39-0.47). n ROSE (1025->1706).
+USER THEN ASKED: is ROM computed on the median c/w? Decomposition says NO, the tail still carries
+it: v2 gets 33.4% of all its profit from cw>=0.65 (n=330, ROM +253.7%) and v1 gets 38.8% from the
+same bucket. AT THE MEDIAN COHORT (cw 0.40-0.50) the honest numbers are v2 80.3% win/+24.0% ROM
+(n=1041) and v1 79.7%/+23.5% (n=566). v0 has no tail at all (band caps 0.40) so its +18.8% is
+already clean - v0 is the only book whose headline needs no discount, and it is now 6/6 years.
+=> REPORT THE MEDIAN-COHORT ROM as the headline going forward; the high-cw tail on high-priced
+dense-ladder names (MARUTI 0.73, LT 0.60) is structurally real but is NOT what the live book trades.
+OOS parity run in flight: /tmp/dbt6_oos.log (extra chain fetches per signal, slow).
+
+## 15-Aug ~17:30 ROOT CAUSE FOUND: corporate-action scale mismatch (NOT a c/w cap issue)
+User challenged +182.8% ROM and 1.92:1 win:loss (both impossible for a vertical) and then refused
+an arbitrary c/w cap, asking for evidence. He was right. Audit + probe root-caused it:
+fetch_upstox_historical returns split/bonus-ADJUSTED closes; bhavcopy STRIKE_PR and Upstox expired
+strikes are UNADJUSTED as-listed. On split/bonus names the scales diverge, atm pins to the far end
+of the ladder, legs are picked DEEP ITM, credit~width, margin~0, and settlement vs the same
+adjusted price books a fabricated full-credit win. Evidence: IS median c/w per symbol - HCLTECH
+0.96 PIDILITIND 0.95 DRREDDY 0.95 HDFCBANK 0.91 RELIANCE 0.91 WIPRO 0.90 (all split/bonus); names
+with NO corporate action sit 0.44-0.49, matching all 21 live trades (0.39-0.47). c/w NEVER
+genuinely exceeds ~0.50.
+FIX (deployed in harness, not engine): ATM_MAX_DRIFT=0.05 - reject the name-day when the nearest
+strike is >5% from the close. A DATA guard, no upper c/w bound, so a real high-c/w quote would
+still trade. Runs in flight: /tmp/dbt4_is.log, /tmp/dbt4_oos.log.
+Audit clean-subset preview: OOS v2 +32.5% -> +0.4% ROM, Rs14,956 -> Rs2,224/trade; OOS v1 +14.6%
+-> +7.7%, Rs1,428; v0 -4.0% unchanged. IS v2 +182.8% -> +40.6%, v1 +84.5% -> +31.1%.
+=> v1 likely the STRONGER book OOS, reversing every prior version of this study. ALL UI/study/
+telegram numbers pushed 15-Aug are WRONG pending these runs.
+Audit also flagged (open, not yet fixed): live one-open-position-per-symbol rule not modelled
+(59% IS / 31% OOS same-book re-entries within 35d); MAX_NEW_PER_DAY/MAX_OPEN not applied (~5%);
+lot sizes are todays applied to 2019-2026 trades; OOS 3/3 years is really 3mo+12mo+8mo.
+USER ALSO ASKED: sweep v2 TP 50->40->30 to find a positive net. Do it ONLY on the fixed harness
+and judge IS->OOS; tuning until positive is curve-fitting and must be called out.
+
 ## 15-Aug DONE: corrected harness + rupee calibration + UI/Telegram/studies refreshed
 Numbers of record (deployed_backtest.py, live hierarchy modelled: v1=D10 only, v1 defers to open
 v2, v0 defers to v1): IS v2 95.4/+182.8 (2526,6/6) · v1 89.4/+84.5 (805,6/6) · v0 80.1/+12.4 (322,5/6).
