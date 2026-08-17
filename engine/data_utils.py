@@ -5,7 +5,7 @@ All via Upstox V3 (primary), no Yahoo latency.
 import os
 import logging
 import requests
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, date
 
 from engine.config import IST, MARKET_OPEN, MARKET_CLOSE, DATA_DIR
 from engine.data_fetcher import (
@@ -219,12 +219,53 @@ def recent_entry_symbols(gap_days: int = None) -> frozenset:
     return frozenset(syms)
 
 
+def _snapshots_today() -> int:
+    """How many market snapshots the engine has ALREADY written for today, from its own DB.
+
+    This is the second opinion that does not need the network. The engine records a snapshot every
+    few seconds all session, so a non-zero count is direct evidence the market traded today — and it
+    survives any outage, because it is a local read of work already done.
+    """
+    try:
+        import sqlite3
+        db = DATA_DIR if os.path.isabs(DATA_DIR) else os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), DATA_DIR)
+        con = sqlite3.connect(os.path.join(db, "engine.db"), timeout=3)
+        try:
+            return con.execute("SELECT COUNT(*) FROM market_snapshots WHERE date = ?",
+                               (date.today().isoformat(),)).fetchone()[0]
+        finally:
+            con.close()
+    except Exception as e:
+        logger.warning("snapshot-count probe failed (%s) — this layer is blind, falling through", e)
+        return 0
+
+
 def market_is_trading_today() -> bool:
-    """True only if the market is ACTUALLY trading now — weekday + hours AND live intraday data
-    flowing. Distinguishes a real session from an NSE HOLIDAY (when _market_is_open() still says
-    'open' by the clock but no candles form and the LTP is frozen at the prior close). No
-    hardcoded holiday calendar: it infers 'not trading' from the absence of today's data.
-    Cached ~5 min so it costs at most one NIFTY intraday call per cache window."""
+    """True only if the market is ACTUALLY trading now — weekday + hours AND live data flowing.
+
+    Distinguishes a real session from an NSE HOLIDAY, when `_market_is_open()` still says open by
+    the clock but no candles form and the LTP is frozen at the prior close. There is no hardcoded
+    holiday calendar; it infers "not trading" from the absence of today's data.
+
+    THE 17-AUG-2026 FAILURE, and why this now takes three sources instead of one. At 15:15 a DNS
+    outage made every fetch fail — NIFTY, BANKNIFTY, SENSEX and the yfinance fallbacks all at once.
+    Each raised an exception, `fetch_upstox_intraday` caught it and returned an EMPTY frame, and an
+    empty frame was read as "nothing traded today". The engine logged "exchange holiday" for twelve
+    minutes, and the 15:17 watchlist ran late on nothing: 0 breakouts, against 20 at the 15:31
+    rebuild. A network failure and a holiday are completely different facts and had become
+    indistinguishable.
+
+    Three layers now, cheapest and most reliable first:
+      1. The engine's OWN database. If snapshots exist dated today, the market traded — local, needs
+         no network, and cannot be taken out by an outage.
+      2. NIFTY intraday, as before.
+      3. If both are silent, return UNKNOWN as True and DO NOT CACHE IT. Failing open is right here
+         because the real safety is per-stock and fails closed: `todays_close()` returns
+         (None, "stale") and every book refuses to fire on it. A false "holiday" silently skips a
+         whole trading day; a false "trading" costs nothing, because the price guard still bites.
+    Never cache a negative derived from an empty frame — that was the specific defect.
+    """
     now = datetime.now(IST)
     if not _market_is_open():
         return False
@@ -235,10 +276,23 @@ def market_is_trading_today() -> bool:
     if (c["date"] == now.date() and c["at"] and
             (now - c["at"]).total_seconds() < 300 and c["trading"] is not None):
         return c["trading"]
+
+    # LAYER 1 — the engine's own record of today, no network involved.
+    if _snapshots_today() > 0:
+        _trading_cache.update(date=now.date(), at=now, trading=True)
+        return True
+
+    # LAYER 2 — live NIFTY candles.
     df = fetch_upstox_intraday("NIFTY", interval=5)
-    trading = (not df.empty) and (df.index[-1].date() == now.date())
-    _trading_cache.update(date=now.date(), at=now, trading=trading)
-    return trading
+    if df is not None and not df.empty:
+        trading = (df.index[-1].date() == now.date())
+        _trading_cache.update(date=now.date(), at=now, trading=trading)
+        return trading
+
+    # LAYER 3 — nothing answered. UNKNOWN, not a holiday. Do not cache this.
+    logger.warning("market_is_trading_today: no snapshots today and NIFTY intraday returned "
+                   "nothing — treating as TRADING (unknown, not a holiday) and not caching")
+    return True
 
 
 def _prev_session_close_from_db(index_name: str) -> float:
