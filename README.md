@@ -223,6 +223,69 @@ daily schedule **whether or not the app is open**.
 | Schedule | wakes every **5 s** in market hours; scans every 5 min; 15:30 force-book | re-reads disk every 15 s |
 | Writes | `engine.db`, `signals.db`, `trade_log.json`, `latest_scan.json`, `market_snapshot.json` | nothing |
 
+### The two processes, and what flows between them
+
+```mermaid
+flowchart LR
+    UP["Upstox API<br/>quotes, candles, option chain"]
+    TG["Telegram<br/>signals, results, digests"]
+
+    subgraph ENGINE["HEADLESS ENGINE - engine_runner.py (launchd, always on)"]
+        direction TB
+        SCAN["scan<br/>Donchian breakout on today's close"]
+        GATE["gates<br/>c/w >= 0.40 · premium >= Rs50<br/>bid-ask <= 6% · open interest > 0"]
+        BOOK["book the spread<br/>v2 / v1 / v0 - one book per name"]
+        RES["resolve<br/>take-profit, expiry settlement"]
+        SCAN --> GATE --> BOOK
+    end
+
+    subgraph DISK["data/ - the only channel between the two"]
+        DB[("engine.db<br/>scans, snapshots")]
+        POS["stock_credit_*_positions.json<br/>the open books"]
+        WL["union_watchlist.json"]
+        TL["trade_log.json"]
+    end
+
+    VIEW["READ-ONLY VIEWER - main.py to ui_terminal.py<br/>re-reads disk every 15s, writes nothing"]
+
+    UP --> SCAN
+    UP --> RES
+    BOOK --> POS
+    POS --> RES
+    BOOK --> TG
+    RES --> TG
+    SCAN --> DB
+    SCAN --> WL
+    RES --> TL
+    DB --> VIEW
+    POS --> VIEW
+    WL --> VIEW
+    TL --> VIEW
+```
+
+The engine never reads from the viewer and the viewer never writes. Everything passes through
+`data/`, so a viewer crash cannot stop trading, and the display can never delay a decision.
+
+### The daily clock
+
+```mermaid
+timeline
+    title One trading day, IST
+    09:15 : market opens, engine wakes every 5 seconds
+    09:30 : morning re-check - do yesterday's calls still pass every gate
+    15:15 : F&O stocks stop continuous trading, closing auction begins
+          : DEPLOYMENT FREEZE starts, no restarts until 15:40
+    15:17 : watchlist built - the likely candidates, for pre-staging
+    15:31 : digest sent, rebuilt after the auction has matched
+    15:35 : auction ends, the official close is struck
+    15:36 : THE SCAN - breakouts read off the official close, signals fire
+    15:40 : derivatives close, positions settle, freeze ends
+```
+
+Stocks are scanned **once a day**, at 15:36, on the auction close. The 15:17 watchlist is a
+pre-stage list rather than a signal: it is built before the auction matches, so its strikes can
+still move. See `studies/NSE_SESSION_CHANGE_2026_08_03.md` for why these timings exist.
+
 **All data is saved locally daily** in `data/engine.db` — every scan (one row per stock with
 its full gate state) and every market snapshot — apart from trade outcomes, which stay in
 `trade_log.json`. The viewer never scans, fires, resolves, books, or writes a DB; it only
