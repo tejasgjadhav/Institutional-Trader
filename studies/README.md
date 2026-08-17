@@ -39,6 +39,14 @@ there is no earlier CAS data to fetch. Use it before assuming anything about how
 
 ## c/w bands below the gate — measured per book
 
+[`MIN_DTE_SWEEP.md`](MIN_DTE_SWEEP.md) — the 10-day expiry floor, tested for the first time
+(17-Aug-2026). v2's deployed 10 IS its peak, a smooth optimum on both ROM and rupees per month.
+v1 runs the OPPOSITE way and its deployed setting is its worst cell: 25 days pays +17.5% against
++10.3%, worth about ₹7,300 a month more, on a higher win rate. v0's peak at 10 is a spike between
+two low neighbours, so noise. Premium rejections outnumber open-interest rejections eight to one,
+confirming the tradeoff the user predicted. IN-SAMPLE ONLY — nothing changes until the OOS sweep
+runs, because the TP sweep already showed v1's slope inverting between windows.
+
 [`DEPLOYED_EVIDENCE_AUDIT.md`](DEPLOYED_EVIDENCE_AUDIT.md) — the deployed books re-measured after
 FOUR corrections (14–16 Aug 2026): legs joined by DATE, v1 given its real D10 population, spot
 derived by put-call parity (split-adjusted closes vs unadjusted strikes were fabricating deep-ITM

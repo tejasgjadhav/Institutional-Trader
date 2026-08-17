@@ -178,6 +178,69 @@ a good month rather than the baseline.
 spreads and it is exactly why the win rate has to stay high. v0 wins four trades in five and still
 clears only ₹565 each.
 
+## 7. Open interest: the gate, and what the buckets actually say (17-Aug-2026)
+
+The gate exists as a **fidelity fix**, not an edge filter. An exchange CLOSE on a contract that never
+traded is a theoretical settlement price rather than a fillable quote; pricing a backtest off those
+inflates it, and gating them out roughly halved the in-sample ROM. That argument does not require
+open interest to predict anything.
+
+The user pressed the separate question — is there evidence that MORE open interest earns more? — and
+the answer changed as the measurement improved.
+
+**First pass, coarse buckets, 100-unit floor:** the buckets looked unordered, so the conclusion was
+"open interest does not predict returns" and the live floor was dropped to `> 0`, which is the only
+rule the fidelity argument supports.
+
+**Second pass, full window and finer buckets:** the pattern is not unordered. It decays.
+
+| OI (lots) | v2 n | v2 ROM-₹ | v0 n | v0 ROM-₹ |
+|---|---|---|---|---|
+| 1–2 | 23 | **+37.2%** | 12 | +25.6% |
+| 2–5 | 39 | **+38.2%** | 35 | **+26.1%** |
+| 5–10 | 38 | +26.8% | 19 | +9.7% |
+| 10–25 | 36 | +24.1% | 39 | +8.0% |
+| **25+** | **60** | **+2.4%** | 124 | +7.8% |
+
+**The thinnest contracts pay the most and the most liquid pay almost nothing.** That is backwards for
+a liquidity story, and it is the classic signature of stale pricing: illiquid contracts carry closes
+nobody transacted at, so the backtest books wins that could not have happened. The most trustworthy
+cell is the least attractive one — v2 at 25+ lots, n=60, pays **+2.4%**.
+
+Two readings survive and the in-sample window cannot separate them. Either the illiquid marks are
+flattering the result, in which case the `> 0` floor is too loose and should rise; or illiquid names
+genuinely carry richer premium, in which case the floor is correct and the decay is an edge.
+
+**The out-of-sample window is the deciding test**, because an Upstox expired-option candle exists
+only for a contract that actually traded — phantom trades cannot appear there at all. If the decay
+persists out-of-sample it is real; if it vanishes, the in-sample low-OI cells are artifacts and the
+floor must go up. **That run is in flight and nothing changes until it lands.**
+
+Recorded plainly: the 10-lot and 5-lot floors deployed earlier on 17-Aug were justified on SIGNAL
+COUNTS rather than returns, which was an error, and both were reverted. Live the gate is close to
+inert either way — on 17-Aug the bid-ask check blocked all four names this one blocked, plus six
+more. Spread is the binding liquidity constraint; open interest is the floor beneath it.
+
+## 8. What is measured, and what is still open (17-Aug-2026, end of day)
+
+**Measured on the corrected harness, in-sample only** (2019-01-01 → 2024-09-30, 1,418 sessions,
+median cohort):
+
+| book | n | WIN | ROM-₹ | ₹/trade | +ve yrs |
+|---|---|---|---|---|---|
+| v2 | 217 | 78.8% | +27.2% | ₹5,798 | 6/6 |
+| v1 | 359 | 79.1% | +10.3% | ₹2,016 | 6/6 |
+| v0 | 237 | 83.1% | +14.4% | ₹3,460 | 5/6 |
+
+**Still open, all three waiting on the same out-of-sample run:**
+
+1. **The headline out-of-sample numbers.** No valid figure exists for that window on the corrected
+   harness. Every previously published OOS number predates at least one of the corrections in §5.
+2. **Whether the open-interest floor should be above zero** (§7).
+3. **Whether v1's minimum DTE should move from 10 to 25** (`MIN_DTE_SWEEP.md`). In-sample it is worth
+   about ₹7,300 a month, and in-sample is exactly the window that cannot be trusted to say so.
+
+
 ---
 
 *Superseded figures.* Everything published before 17-Aug-2026 predates at least one of the six

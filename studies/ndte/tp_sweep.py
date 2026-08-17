@@ -74,7 +74,7 @@ BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
          "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40))}
 SWEEP_TPS = [0.30, 0.40, 0.50, 0.60, 0.70]
 spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
-OUT = f"/tmp/tpsweep_{WINDOW.lower()}_rows.json"
+OUT = f"research/tpsweep_{WINDOW.lower()}_rows.json"
 
 def parity_spot(ce_px, pe_px):
     """Implied spot from the chain itself: at the strike where |CE - PE| is smallest, S = K + C - P.
@@ -163,7 +163,7 @@ def breakout_days(u):
 # ---------------- IS: bhavcopy pickle ----------------
 def run_is():
     from engine.data_fetcher import fetch_upstox_historical
-    frames = pickle.load(open("/tmp/bhav_optstk.pkl", "rb"))
+    frames = pickle.load(open("research/bhav_optstk.pkl", "rb"))
     big = []
     for d, df in frames:
         df = df.copy(); df["DAY"] = d; big.append(df)
@@ -235,7 +235,7 @@ def run_is():
     return rows
 
 # ---------------- OOS: Upstox expired options, date-keyed ----------------
-CACHE = "/tmp/cw_band_legcache_dated.json"
+CACHE = "research/cache/oos_legcache_oi.json"
 try: LEGC = json.load(open(CACHE))
 except Exception: LEGC = {}
 LK = threading.Lock()

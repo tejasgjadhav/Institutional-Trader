@@ -57,7 +57,7 @@ MIN_OI = 1            # open interest must EXIST — mirrors config.STOCK_CREDIT
 # ROM when it was fixed. Bucketing by OI found no link between open interest and returns, so no lot
 # multiple is justified; see engine/config.py for the numbers.
 try:
-    LOTMAP = json.load(open("/tmp/lotmap.json"))
+    LOTMAP = json.load(open("research/lotmap.json"))
 except Exception:
     LOTMAP = {}
 # CORPORATE-ACTION SCALE FIX (15-Aug-2026, user-caught, audit-root-caused, then fixed properly).
@@ -91,7 +91,7 @@ BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
          "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0)),
          "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40))}
 spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
-OUT = f"/tmp/deployed_bt_{WINDOW.lower()}_rows.json"
+OUT = f"research/deployed_bt_{WINDOW.lower()}_rows.json"
 
 def parity_spot(ce_px, pe_px):
     """Implied spot from the chain itself: at the strike where |CE - PE| is smallest, S = K + C - P.
@@ -202,7 +202,7 @@ def breakout_days(u):
 # ---------------- IS: bhavcopy pickle ----------------
 def run_is():
     from engine.data_fetcher import fetch_upstox_historical
-    frames = pickle.load(open("/tmp/bhav_optstk.pkl", "rb"))
+    frames = pickle.load(open("research/bhav_optstk.pkl", "rb"))
     big = []
     for d, df in frames:
         df = df.copy(); df["DAY"] = d; big.append(df)
@@ -289,7 +289,7 @@ def run_is():
     return rows
 
 # ---------------- OOS: Upstox expired options, date-keyed ----------------
-CACHE = "/tmp/oos_legcache_oi.json"   # {key: {date: [close, oi]}} — OI added 17-Aug-2026
+CACHE = "research/cache/oos_legcache_oi.json"   # {key: {date: [close, oi]}} — OI added 17-Aug-2026
 try: LEGC = json.load(open(CACHE))
 except Exception: LEGC = {}
 LK = threading.Lock()

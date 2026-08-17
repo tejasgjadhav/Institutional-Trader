@@ -42,3 +42,6 @@ studies/monthly_fut/cache_2018/
 studies/monthly_fut/cache_idx/
 studies/monthly_fut/cache_new/
 studies/monthly_fut/panel.csv.gz
+
+# research artifacts — large, rebuildable, never committed
+research/
