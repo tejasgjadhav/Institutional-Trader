@@ -45,7 +45,7 @@ rank the books.** Stock books total about ₹18,350/mo at 1 lot; with the index 
 80% planning rule puts it at ~₹19,300. **Keep lots at 1.** The forward record, restarted 6-Aug-2026,
 is the only instrument that settles this.
 
-**NO BOOK HAS A WORKING STOP, and that is correct — do not "fix" it by adding one.** All three
+**NO BOOK HAS A STOP. SETTLED — do not add one.** The user closed this on 17-Aug-2026: *"no exit rule is no stop now for v0, v1 and v2, we wont change"*. All three
 stock books run take-profit only; risk is capped by the bought wing at (width − credit).
 `STOCK_CREDIT_STOP_MULT` and `STOCK_CREDIT_V0_STOP_MULT` are both 99.0 for a structural reason: a
 stop priced as a multiple of the credit is unreachable above c/w 1/3, because a vertical spread can
@@ -54,6 +54,15 @@ width, while full loss arrives at 1.0x width, i.e. 2.5x credit. The user derived
 17-Aug-2026; the UI and the backtest harness had both been describing a "3x stop" that could not
 fire, and both were corrected. A stop that DOES bite (say 2x credit = 0.8x width at c/w 0.40) is a
 real strategy change and needs both windows measured before anyone proposes it.
+
+**The code now enforces this, because a config change alone did not.** New positions store
+`stop_cost: None` rather than a 99x-credit fiction, and the resolver short-circuits when there is
+no stop. This matters: `stop_cost` is frozen into each position AT ENTRY, so changing the config
+never touched positions already on the book. BAJAJ-AUTO-2026-07-29 carried a REACHABLE 2x stop
+(0.81x width) for nineteen days after the books stopped using stops, and it came within about 30
+points of realising -Rs9,068 on a policy that says no stops. The user cleared it on 17-Aug and all
+three open positions now carry `stop_cost: None`. General lesson, still unfixed elsewhere: no book
+re-checks its frozen exit parameters against current config.
 
 **Take-profit is settled — do NOT re-tune it.** Swept 30/40/50/60/70 on both windows (`tp_sweep.py`):
 v2 is flat across the whole range, and v1's slope INVERTS between windows (lower is better in-sample,

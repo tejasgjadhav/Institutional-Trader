@@ -47,7 +47,6 @@ _impl.STOCK_CREDIT_ENABLED    = bool(getattr(config, "STOCK_CREDIT_V0_ENABLED", 
 _impl.STOCK_CREDIT_MIN_CW     = float(getattr(config, "STOCK_CREDIT_V0_MIN_CW", 0.35))
 _impl.STOCK_CREDIT_MAX_CW     = float(getattr(config, "STOCK_CREDIT_V0_MAX_CW", 0.40))
 _impl.STOCK_CREDIT_TAKE_PROFIT = float(getattr(config, "STOCK_CREDIT_V0_TAKE_PROFIT", 0.40))
-_impl.STOCK_CREDIT_STOP_MULT  = float(getattr(config, "STOCK_CREDIT_V0_STOP_MULT", 99.0))
 _impl.STOCK_CREDIT_MAX_NEW_PER_DAY = int(getattr(config, "STOCK_CREDIT_V0_MAX_NEW_PER_DAY", 3))
 _impl.STOCK_CREDIT_MAX_OPEN   = int(getattr(config, "STOCK_CREDIT_V0_MAX_OPEN", 10))
 _impl.STOCK_CREDIT_LOTS       = int(getattr(config, "STOCK_CREDIT_V0_LOTS", 1))

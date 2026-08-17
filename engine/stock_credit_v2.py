@@ -24,7 +24,7 @@ from engine.config import (
     IST, DATA_DIR, UNIVERSE, STOCK_CREDIT_ENABLED, STOCK_CREDIT_DONCHIAN, STOCK_CREDIT_MIN_DTE,
     STOCK_CREDIT_SHORT_OFFSET, STOCK_CREDIT_WIDTH, STOCK_CREDIT_MIN_CW, STOCK_CREDIT_MIN_PREM,
     STOCK_CREDIT_MAX_EXPOSURE,
-    STOCK_CREDIT_STOP_MULT, STOCK_CREDIT_REENTRY_GAP_DAYS, STOCK_CREDIT_MAX_SPREAD_PCT,
+    STOCK_CREDIT_REENTRY_GAP_DAYS, STOCK_CREDIT_MAX_SPREAD_PCT,
     STOCK_CREDIT_MIN_OI, STOCK_CREDIT_MAX_NEW_PER_DAY, STOCK_CREDIT_MAX_OPEN, STOCK_CREDIT_LOTS,
     STOCK_CREDIT_TAKE_PROFIT,
 )
@@ -41,7 +41,6 @@ WATCHLIST_PATH = os.path.join(DATA_DIR, "union_watchlist.json")
 STOCK_CREDIT_SHORT_OFFSET = 2
 STOCK_CREDIT_WIDTH        = 4
 STOCK_CREDIT_TAKE_PROFIT  = 0.50
-STOCK_CREDIT_STOP_MULT    = 3.0
 
 # ── hooks for the v0 instance (engine/stock_credit_v0.py loads a SECOND, independent copy of
 # this module and rebinds these). Both are no-ops for v2 itself: v2 has no c/w ceiling and
@@ -436,7 +435,14 @@ def scan_signals() -> list:
                 "width_pts": int(width_pts), "lot": lot, "num_lots": num_lots, "qty": qty,
                 "expiry": expiry, "short_prem": round(sm, 2), "long_prem": round(lm, 2),
                 "credit": credit, "credit_width": round(credit / width_pts, 2),
-                "stop_cost": round(credit * STOCK_CREDIT_STOP_MULT, 2),
+                # NO STOP. All three stock books are take-profit only and that is settled
+                # (user, 2026-08-17: "no exit rule is no stop now for v0, v1 and v2, we wont
+                # change"). The bought wing caps the loss at (width - credit).
+                # This is written as None rather than a 99x-credit fiction so that a future
+                # config change can never silently re-arm a stop on a position already on
+                # the book. That is exactly how BAJAJ-AUTO-2026-07-29 kept a reachable 2x
+                # stop for nineteen days after the books stopped using stops.
+                "stop_cost": None,
                 "max_loss_pts": round(width_pts - credit, 2),
                 "capital": round((width_pts - credit) * qty, 0) if qty else None,
                 "order_label": (f"SELL {sym} {short['strike']:g} {verb} / BUY {long['strike']:g} {verb}"

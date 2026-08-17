@@ -330,7 +330,14 @@ STOCK_CREDIT_SHORT_OFFSET = 1       # short 1 strike OTM
 STOCK_CREDIT_WIDTH        = 3       # long 3 strikes further OTM (defined risk)
 STOCK_CREDIT_MIN_CW       = 0.40    # THE EDGE: only trade when credit >= 40% of the strike width
 STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/untradeable options)
-STOCK_CREDIT_STOP_MULT    = 99.0    # NO stop (unreachable) — the bought wing caps risk at width-credit.
+# NO STOP, SETTLED (user, 2026-08-17: "no exit rule is no stop now for v0, v1 and v2, we wont
+# change"). All three stock books are take-profit only and the bought wing caps the loss at
+# (width - credit). New positions store stop_cost None; no book reads a stop multiple any more, so
+# the two constants below are kept only as a record of the decision and are referenced nowhere.
+# Do not re-introduce one without measuring both windows first: a stop priced as a multiple of the
+# credit is unreachable above c/w 1/3 anyway, and the 2026-07-30 sweep showed the 2x stop it
+# replaced was realising losses that recover.
+STOCK_CREDIT_STOP_MULT    = 99.0    # not read — see the note above
                                     # Sweep 2026-07-30 (V1_WINRATE_SWEEP.md): the 2x stop realized losses
                                     # that recover; removing it raised win AND net in IS and OOS.
 STOCK_CREDIT_TAKE_PROFIT  = 0.40    # BOOK the win at 40% of credit (was 0.75). 85.0% IS / 86.0% OOS,
@@ -375,7 +382,7 @@ STOCK_CREDIT_V0_ENABLED   = True
 STOCK_CREDIT_V0_MIN_CW    = 0.35    # floor
 STOCK_CREDIT_V0_MAX_CW    = 0.40    # ceiling (EXCLUSIVE) — at/above this v2 owns the trade
 STOCK_CREDIT_V0_TAKE_PROFIT = 0.40  # book at 40% of credit (the exit this band wants)
-STOCK_CREDIT_V0_STOP_MULT = 99.0    # NO stop — the bought wing caps risk at width-credit
+STOCK_CREDIT_V0_STOP_MULT = 99.0    # not read — see STOCK_CREDIT_STOP_MULT above
 STOCK_CREDIT_V0_MAX_NEW_PER_DAY = 3 # tighter than v2's 5 — this is the unproven book
 STOCK_CREDIT_V0_MAX_OPEN  = 10      # tighter than v2's 20, caps the margin it can tie up
 STOCK_CREDIT_V0_LOTS      = 1       # KEEP AT 1
