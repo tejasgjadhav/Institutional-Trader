@@ -505,14 +505,24 @@ def resolve_positions() -> int:
                 try:
                     df = fetch_upstox_historical(p["symbol"] + ".NS", unit="days", interval=1,
                                                  from_date=exp.isoformat(), to_date=exp.isoformat())
-                    if df is not None and not df.empty:
+                    # DATE GUARD (audit 17-Aug-2026). Asking for a single day returns EMPTY on the
+                    # expiry day itself, because the Upstox daily endpoint publishes no same-day bar
+                    # during the session — the same defect as the stale-bar incident. Without this
+                    # check the code fell through to _spot(), today's LIVE price, on every settle,
+                    # and on the catch-up path it would settle a days-old expiry at TODAY's price.
+                    # It only looked correct because settlement runs after 15:40, when the live
+                    # print happens to equal the auction close. Require the bar to BE the expiry
+                    # day; otherwise leave the position open and retry rather than guess.
+                    if df is not None and not df.empty and df.index[-1].date() == exp:
                         spot = float(df["Close"].iloc[-1])
-                except Exception:
-                    pass
-                if not spot:
+                except Exception as e:
+                    logger.warning("%s: expiry-close fetch failed (%s)", p.get("id"), e)
+                if not spot and date.today() == exp:
+                    # Same-day expiry only: after FNO_CLOSE the live print IS the auction close.
                     spot = _spot(p["symbol"])
                 if not spot:
-                    logger.warning(f"stock_credit_v2: {p.get('id')} expired but NO SPOT — leaving OPEN, will retry")
+                    logger.warning("%s: no close dated %s — leaving OPEN, will retry (never settling "
+                                   "on a price from another day)", p.get("id"), exp)
                     continue
                 if p["side"] == "BEAR_CALL":
                     si = max(0.0, spot - p["short_strike"]); li = max(0.0, spot - p["long_strike"])
