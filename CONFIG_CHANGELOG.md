@@ -14,6 +14,18 @@ trading config is a worse failure mode than the one it would prevent.
 
 ---
 
+## 2026-08-17 15:52:43 IST
+
+commit at snapshot: `5b32263 (UNCOMMITTED EDITS)` — studies: final IS+OOS+ROM after six corrections, with the convergence caveat
+
+| tunable | before | after |
+|---|---|---|
+| `STOCK_CREDIT_MIN_OI_LOTS` | `10` | `5` |
+
+Roll back with: `git checkout 5b32263 (UNCOMMITTED EDITS) -- engine/config.py`
+
+---
+
 ## 2026-08-17 10:49:38 IST
 
 commit at snapshot: `182f4d4 (UNCOMMITTED EDITS)` — ui: fix f-string escape that broke the viewer, tidy duplicate audit card

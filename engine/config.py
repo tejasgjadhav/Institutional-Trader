@@ -351,7 +351,14 @@ STOCK_CREDIT_MIN_OI       = 100     # absolute floor in UNITS (shares) — see t
 # of the signals that pass today's 100-unit gate, a 10-lot floor keeps 85% at v2/v0 geometry and
 # 89% at v1's. It removes roughly one signal in eight, and those are the thinnest contracts.
 # Deployed 16-Aug-2026 at the user's instruction, markets closed.
-STOCK_CREDIT_MIN_OI_LOTS  = 10      # short leg must show >= this many LOTS of open interest
+STOCK_CREDIT_MIN_OI_LOTS  = 5       # short leg must show >= this many LOTS of open interest
+# Lowered 10 -> 5 on 17-Aug-2026 at the user's instruction. Rationale: the book trades 1-2 lots, so
+# 5 lots of resting interest is already several times its own size, and the measured cost of the
+# stricter floor was not obviously worth the signals it removed. Measured on bhavcopy 2019 -> Jul-2024
+# at the deployed geometry, share of signals whose short leg clears each floor: 1 lot 25.4% /
+# 5 lots 23.0% / 10 lots 21.7% / 25 lots 18.6% at v2-v0 geometry, and 34.4 / 31.8 / 30.4 / 26.7 at
+# v1's. Moving 10 -> 5 hands back roughly one signal in sixteen. The floor's real work is excluding
+# open interest of exactly zero, which is where the untradeable contracts live.
 # MAX EXPOSURE per spread: skip any trade whose width x lot exceeds this. 0 = NO CAP.
 # HISTORY: hardcoded 40,000 -> 60,000 -> 0 (NO CAP), all on 2026-07-31, user's call.
 # What no-cap admits TODAY: the largest width x lot in the 113-name universe at v2 geometry is
