@@ -1,4 +1,27 @@
-"""PRODUCTION BACKTEST of the three DEPLOYED stock-credit books, IS and OOS, date-aligned.
+"""MIN-DTE SWEEP — is the 10-day expiry floor right, and what does it cost?
+
+`STOCK_CREDIT_MIN_DTE = 10` has NO study behind it anywhere in this repo. Every study that mentions
+DTE holds it fixed at 10 while sweeping something else, and the only "DTE sweep" on record belongs
+to the rejected low-c/w rescue. It appears to have been inherited from the index swing book.
+
+WHY IT MATTERS (user, 17-Aug-2026). The floor pushes the books into FAR expiries: on 17-Aug it
+skipped the 25-Aug expiry as too near and took 29-Sep, 43 days out, where ASIANPAINT's 2640 PE had
+ZERO open interest and no last trade. So the rule may be creating the illiquidity that the new OI
+gate then filters out. His counter-hypothesis, which this measures directly: a lower floor gives
+MORE signals, but the premium >= 50 floor starts to bite, because a nearer expiry carries less time
+value. Both effects are real and they push opposite ways.
+
+WHAT THIS PRINTS, per DTE floor: surviving trades, win rate, money-weighted ROM, rupees per trade
+and per month, AND the two rejection counts that explain the tradeoff — how many candidates died on
+the premium floor and how many on the OI floor. That last pair is the point: it shows whether a
+shorter tenor buys liquidity faster than it loses premium.
+
+Everything else is the harness of record, unchanged: parity spot in-sample, guards out-of-sample,
+date-aligned legs, live hierarchy, one-open-position, OI gate, exit costs.
+
+Run:  .venv/bin/python studies/ndte/dte_sweep.py IS|OOS
+"""
+_ORIG = """PRODUCTION BACKTEST of the three DEPLOYED stock-credit books, IS and OOS, date-aligned.
 
 Written 14-Aug-2026 after the leg-misalignment incident, to the standing rule that research
 scripts are production code. This is the single harness of record for the deployed configs:
@@ -42,6 +65,29 @@ from engine.config import UNIVERSE
 
 WINDOW = sys.argv[1] if len(sys.argv) > 1 else "OOS"
 MIN_DTE, REENTRY, MIN_PREM = 10, 3, 50.0
+DTE_GRID = [3, 5, 7, 10, 15, 20, 25]
+REJECT = collections.Counter()   # why candidates died, per DTE
+# OPEN-INTEREST FLOOR (added 16-Aug-2026 — the audit's BLOCKER finding, matching the live gate).
+# Bhavcopy publishes a CLOSE for every listed contract, and for one that never traded that CLOSE is
+# NSE's THEORETICAL SETTLEMENT price, not a print. Measured on the strikes this harness actually
+# sells: 24% of 1-OTM shorts and 30% of 2-OTM shorts had OPEN_INT == 0. The live engine refuses
+# OI < 100 (`stock_credit_v2.py:411`), and out-of-sample cannot include such contracts at all
+# because an Upstox expired candle exists only if the contract traded. Selling and buying back at a
+# model mark harvests theta with no friction and no gap risk, which is the most likely single cause
+# of the in-sample +30.7% against the out-of-sample +3.7%. Both legs must clear this on entry day.
+MIN_OI = 100          # absolute floor in UNITS
+# The floor must MIRROR LIVE, which gates at max(100, STOCK_CREDIT_MIN_OI_LOTS * lot) - i.e. 5 lots,
+# 625-5,000 units depending on the name. A flat 100 units is under one lot everywhere and excludes
+# only open interest of exactly zero, so the harness was measuring a population roughly THREE TIMES
+# larger than the engine will ever trade (audit, 17-Aug-2026).
+MIN_OI_LOTS = 5
+# Money-weighted ROM needs each name's lot. ROM pooled in strike POINTS over- and under-weights
+# names arbitrarily, because lot sizes vary roughly twentyfold inversely with price. Rupee margin
+# is what an account actually commits.
+try:
+    LOTMAP = json.load(open("/tmp/lotmap.json"))
+except Exception:
+    LOTMAP = {}
 # CORPORATE-ACTION SCALE FIX (15-Aug-2026, user-caught, audit-root-caused, then fixed properly).
 # THE DEFECT: `fetch_upstox_historical` returns split/bonus-ADJUSTED closes, while bhavcopy
 # STRIKE_PR and Upstox expired-contract strikes are the UNADJUSTED as-listed strikes of that date.
@@ -72,9 +118,8 @@ ATM_MIN_LADDER_POS = 0.15   # ATM must sit mid-ladder, not at its edge
 BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
          "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0)),
          "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40))}
-SWEEP_TPS = [0.30, 0.40, 0.50, 0.60, 0.70]
 spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
-OUT = f"/tmp/tpsweep_{WINDOW.lower()}_rows.json"
+OUT = f"/tmp/dtesweep_{WINDOW.lower()}_rows.json"
 
 def parity_spot(ce_px, pe_px):
     """Implied spot from the chain itself: at the strike where |CE - PE| is smallest, S = K + C - P.
@@ -92,7 +137,14 @@ def parity_spot(ce_px, pe_px):
         return None
     return spot
 
+SETTLE_FALLBACKS = collections.Counter()
+
 def settle(cb, exp, ks, si, li, typ, width, fallback_spot):
+    """LAST RESORT only — used when a leg stopped trading before expiry, so the expiry-day option
+    prices do not exist. Derives intrinsic from an underlying price, which is the path that can
+    disagree with the strike scale on a split or bonus name. Counted so the report can state how
+    often it ran instead of hiding it."""
+    SETTLE_FALLBACKS["used"] += 1
     es = cb.get(exp) or (cb[max(x for x in cb if x <= exp)] if any(x <= exp for x in cb) else fallback_spot)
     iS = max(0.0, es - ks[si]) if typ == "CE" else max(0.0, ks[si] - es)
     iL = max(0.0, es - ks[li]) if typ == "CE" else max(0.0, ks[li] - es)
@@ -114,8 +166,13 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         if not (0 <= si < len(ks) and 0 <= li < len(ks)): continue
         got = px_short_long(si, li)
         if got is None: continue
-        se, le, walk = got
-        if se < MIN_PREM: continue
+        se, le, walk = got[0], got[1], got[2]
+        oi = got[3] if len(got) > 3 else None      # (oi_short, oi_long), IS only
+        if se < MIN_PREM:
+            REJECT[(MIN_DTE, "premium")] += 1; continue
+        _floor = max(MIN_OI, MIN_OI_LOTS * LOTMAP.get(sym, 0))
+        if oi is not None and (oi[0] < _floor or oi[1] < _floor):
+            REJECT[(MIN_DTE, "openint")] += 1; continue
         credit = se - le; width = abs(ks[si] - ks[li])
         if credit <= 0 or credit >= width: continue
         cw = credit / width
@@ -128,22 +185,32 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
     if not fired: return False, {}
     exits = {}
     for bk, (si, li, se, le, credit, width, cw, walk) in fired.items():
-        cfg = BOOKS[bk]
-        for tp in SWEEP_TPS:
-            close = None; xc = 0.0; exit_day = exp
-            for (wd, s2, l2) in walk:
-                cost = s2 - l2
-                if cost <= credit * (1 - tp):
-                    close = max(cost, 0.0); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
-                if cfg["stop"] and cost >= credit * cfg["stop"] and cost <= width * 1.05:
-                    close = min(cost, width); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
-            if close is None:
-                close = settle(cb, exp, ks, si, li, typ, width, spot)
-            if abs(tp - cfg["tp"]) < 1e-9:
-                exits[bk] = exit_day        # hierarchy + open-position timing at the DEPLOYED tp
-            net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
-            rows.append(dict(book=bk, tp=tp, sym=sym, day=day, yr=int(day[:4]), cw=round(cw, 3),
-                             net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0)))
+        cfg = BOOKS[bk]; close = None; xc = 0.0; exit_day = exp
+        for (wd, s2, l2) in walk:
+            cost = s2 - l2
+            if cost <= credit * (1 - cfg["tp"]):
+                close = max(cost, 0.0); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
+            if cfg["stop"] and cost >= credit * cfg["stop"] and cost <= width * 1.05:
+                close = min(cost, width); xc = (s2*spf(s2) + l2*spf(l2))/100.0; exit_day = wd; break
+        if close is None:
+            # HELD TO EXPIRY. Read the spread's value straight off the two legs on expiry day: an
+            # option's closing price ON expiry IS its settlement value, zero when out of the money
+            # and intrinsic when in. Both legs come from the same file on the same unadjusted scale
+            # as the strikes, so there is nothing to reconcile - no underlying price, no parity, no
+            # split adjustment. (User's point, 17-Aug-2026, and it removes the whole class of bug:
+            # the previous code derived intrinsic from the UNDERLYING close and silently fell back
+            # to the split-ADJUSTED series when a better source was missing.)
+            if walk and walk[-1][0] == exp:
+                close = min(max(walk[-1][1] - walk[-1][2], 0.0), width)
+            else:
+                close = settle(cb, exp, ks, si, li, typ, width, spot)   # contract stopped trading early
+        exits[bk] = exit_day
+        net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
+        _lot = LOTMAP.get(sym, 0)
+        rows.append(dict(book=bk, sym=sym, day=day, yr=int(day[:4]), cw=round(cw, 3),
+                         net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0),
+                         lot=_lot, net_rs=round(net * _lot, 2),
+                         margin_rs=round((width - credit) * _lot, 2)))
     return True, exits
 
 def breakout_days(u):
@@ -169,15 +236,18 @@ def run_is():
         df = df.copy(); df["DAY"] = d; big.append(df)
     big = pd.concat(big, ignore_index=True); big.columns = [c.strip() for c in big.columns]
     big["EXP"] = pd.to_datetime(big["EXPIRY_DT"], format="mixed", dayfirst=True).dt.date.astype(str)
-    for col in ("STRIKE_PR", "CLOSE"): big[col] = big[col].astype(float)
+    for col in ("STRIKE_PR", "CLOSE", "OPEN_INT"): big[col] = big[col].astype(float)
     big["OPTION_TYP"] = big["OPTION_TYP"].astype(str).str.strip()
     big["SYMBOL"] = big["SYMBOL"].astype(str).str.strip()
     PX = {}
     for k, sub in big.groupby(["SYMBOL", "EXP", "OPTION_TYP"], observed=True):
         c = sub.pivot_table(index="DAY", columns="STRIKE_PR", values="CLOSE", aggfunc="last")
+        o = sub.pivot_table(index="DAY", columns="STRIKE_PR", values="OPEN_INT",
+                            aggfunc="last").reindex(index=c.index, columns=c.columns)
         PX[(str(k[0]), str(k[1]), str(k[2]))] = dict(
             ks=np.asarray(c.columns, dtype="float64"),
-            didx={str(d): i for i, d in enumerate(c.index)}, C=c.values.astype("float32"))
+            didx={str(d): i for i, d in enumerate(c.index)}, C=c.values.astype("float32"),
+            O=o.values.astype("float32"))
     del big
     exps_by = collections.defaultdict(set)
     for (s, e, t) in PX: exps_by[(s, t)].add(e)
@@ -218,7 +288,19 @@ def run_is():
                 for t, (a, b) in enumerate(zip(P["C"][di+1:, si], P["C"][di+1:, li])):
                     if np.isfinite(a) and np.isfinite(b):
                         walk_all.append((wdays[di+1+t], float(a), float(b))); _idx.append(t)
-                return se, le, walk
+                oS, oL = P["O"][di, si], P["O"][di, li]
+                oS = 0.0 if not np.isfinite(oS) else float(oS)
+                oL = 0.0 if not np.isfinite(oL) else float(oL)
+                # THE EXIT MUST BE GATED TOO (audit blocker, 17-Aug-2026). The entry gate alone left
+                # every take-profit free to fire on a bhavcopy close for a contract that never traded
+                # that day - the same theoretical-settlement price the gate exists to exclude, and
+                # the exit is where the P&L is actually realised. A walk day only counts if BOTH
+                # legs carried real open interest on it.
+                _f = max(MIN_OI, MIN_OI_LOTS * LOTMAP.get(sym, 0))
+                walk = [w for t, w in enumerate(walk_all)
+                        if (np.isfinite(P["O"][di+1+_idx[t], si]) and P["O"][di+1+_idx[t], si] >= _f
+                            and np.isfinite(P["O"][di+1+_idx[t], li]) and P["O"][di+1+_idx[t], li] >= _f)]
+                return se, le, walk, (oS, oL)
             cb_t = dict(cb)
             if exp in P["didx"] and exp in Q["didx"]:
                 ei, fi = P["didx"][exp], Q["didx"][exp]
@@ -315,21 +397,38 @@ def run_oos():
     json.dump(LEGC, open(CACHE, "w"))
     return rows
 
-rows = run_is() if WINDOW == "IS" else run_oos()
+ALL = {}
+for _d in DTE_GRID:
+    MIN_DTE = _d
+    globals()["MIN_DTE"] = _d
+    REJECT.clear()
+    _r = run_is() if WINDOW == "IS" else run_oos()
+    for x in _r: x["dte_floor"] = _d
+    ALL[_d] = dict(rows=_r, prem=REJECT[(_d, "premium")], oi=REJECT[(_d, "openint")])
+    print(f"  DTE>={_d}: {len(_r)} trades · rejected on premium {REJECT[(_d,'premium')]} · on OI {REJECT[(_d,'openint')]}", flush=True)
+rows = [x for v in ALL.values() for x in v["rows"]]
 json.dump(rows, open(OUT, "w"))
-lbl = "IS 2019->Sep-2024 (bhavcopy, parity spot)" if WINDOW == "IS" else "OOS Oct-2024->date (Upstox, guards)"
-print(f"\n=== TP SWEEP · {lbl} · MEDIAN COHORT c/w 0.40-0.50 (v0: 0.35-0.40) · one-open-position rule ===")
-print(f"{'book':<5}{'TP':>5}{'n':>7}{'WIN':>8}{'ROM':>9}{'+ve yrs':>9}")
+lbl = "IS 2019-01-01 -> 2024-07-05 (bhavcopy)" if WINDOW == "IS" else "OOS Oct-2024 -> date (Upstox)"
+MON = 66.0 if WINDOW == "IS" else 22.5
+print(f"\n=== MIN-DTE SWEEP · {lbl} · MEDIAN COHORT (c/w 0.40-0.50; v0 0.35-0.40) ===")
+print("Deployed floor is 10. 'rej prem' / 'rej OI' are candidates killed by those gates at that DTE.\n")
 for bk in ("v2", "v1", "v0"):
-    band = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
-    for tp in SWEEP_TPS:
-        g = [x for x in rows if x["book"] == bk and x["tp"] == tp and band[0] <= x["cw"] < band[1]]
-        if len(g) < 20: continue
+    lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
+    print(f"--- {bk} ---")
+    print(f"{'DTE>=':>6}{'n':>7}{'WIN':>8}{'ROM-Rs':>10}{'Rs/trade':>11}{'sig/mo':>9}{'Rs/mo':>11}{'+ve yrs':>9}{'rej prem':>10}{'rej OI':>9}")
+    for d in DTE_GRID:
+        g = [x for x in ALL[d]["rows"] if x["book"] == bk and lo <= x["cw"] < hi]
+        if len(g) < 15:
+            print(f"{d:>6}{len(g):>7}   (too few)"); continue
         by = collections.defaultdict(list)
         for x in g: by[x["yr"]].append(x["net_rs"])
         pos = sum(1 for v in by.values() if sum(v) > 0)
-        star = " <-- deployed" if abs(tp - BOOKS[bk]["tp"]) < 1e-9 else ""
-        print(f"{bk:<5}{int(tp*100):>5}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%"
-              f"{sum(x['net'] for x in g)/sum(x['margin'] for x in g)*100:>+8.1f}%{pos:>6}/{len(by):<2}{star}")
+        mrs = sum(x["margin_rs"] for x in g)
+        rom = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
+        rs = sum(x["net_rs"] for x in g)
+        star = "  <-- deployed" if d == 10 else ""
+        print(f"{d:>6}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%{rom:>+9.1f}%"
+              f"{rs/len(g):>+11,.0f}{len(g)/MON:>9.1f}{rs/MON:>+11,.0f}{pos:>6}/{len(by):<2}"
+              f"{ALL[d]['prem']:>10,}{ALL[d]['oi']:>9,}{star}")
     print()
 print(f"DONE-{WINDOW}")

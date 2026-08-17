@@ -50,7 +50,12 @@ MIN_DTE, REENTRY, MIN_PREM = 10, 3, 50.0
 # because an Upstox expired candle exists only if the contract traded. Selling and buying back at a
 # model mark harvests theta with no friction and no gap risk, which is the most likely single cause
 # of the in-sample +30.7% against the out-of-sample +3.7%. Both legs must clear this on entry day.
-MIN_OI = 100
+MIN_OI = 100          # absolute floor in UNITS
+# The floor must MIRROR LIVE, which gates at max(100, STOCK_CREDIT_MIN_OI_LOTS * lot) - i.e. 5 lots,
+# 625-5,000 units depending on the name. A flat 100 units is under one lot everywhere and excludes
+# only open interest of exactly zero, so the harness was measuring a population roughly THREE TIMES
+# larger than the engine will ever trade (audit, 17-Aug-2026).
+MIN_OI_LOTS = 5
 # Money-weighted ROM needs each name's lot. ROM pooled in strike POINTS over- and under-weights
 # names arbitrarily, because lot sizes vary roughly twentyfold inversely with price. Rupee margin
 # is what an account actually commits.
@@ -139,7 +144,8 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         se, le, walk = got[0], got[1], got[2]
         oi = got[3] if len(got) > 3 else None      # (oi_short, oi_long), IS only
         if se < MIN_PREM: continue
-        if oi is not None and (oi[0] < MIN_OI or oi[1] < MIN_OI): continue
+        _floor = max(MIN_OI, MIN_OI_LOTS * LOTMAP.get(sym, 0))
+        if oi is not None and (oi[0] < _floor or oi[1] < _floor): continue
         credit = se - le; width = abs(ks[si] - ks[li])
         if credit <= 0 or credit >= width: continue
         cw = credit / width
@@ -251,12 +257,22 @@ def run_is():
             def px(si, li, P=P, di=di, wdays=wdays):
                 se, le = float(P["C"][di, si]), float(P["C"][di, li])
                 if not (np.isfinite(se) and np.isfinite(le)): return None
-                walk = [(wdays[di+1+t], float(a), float(b)) for t, (a, b) in
-                        enumerate(zip(P["C"][di+1:, si], P["C"][di+1:, li]))
-                        if np.isfinite(a) and np.isfinite(b)]
+                walk_all, _idx = [], []
+                for t, (a, b) in enumerate(zip(P["C"][di+1:, si], P["C"][di+1:, li])):
+                    if np.isfinite(a) and np.isfinite(b):
+                        walk_all.append((wdays[di+1+t], float(a), float(b))); _idx.append(t)
                 oS, oL = P["O"][di, si], P["O"][di, li]
                 oS = 0.0 if not np.isfinite(oS) else float(oS)
                 oL = 0.0 if not np.isfinite(oL) else float(oL)
+                # THE EXIT MUST BE GATED TOO (audit blocker, 17-Aug-2026). The entry gate alone left
+                # every take-profit free to fire on a bhavcopy close for a contract that never traded
+                # that day - the same theoretical-settlement price the gate exists to exclude, and
+                # the exit is where the P&L is actually realised. A walk day only counts if BOTH
+                # legs carried real open interest on it.
+                _f = max(MIN_OI, MIN_OI_LOTS * LOTMAP.get(sym, 0))
+                walk = [w for t, w in enumerate(walk_all)
+                        if (np.isfinite(P["O"][di+1+_idx[t], si]) and P["O"][di+1+_idx[t], si] >= _f
+                            and np.isfinite(P["O"][di+1+_idx[t], li]) and P["O"][di+1+_idx[t], li] >= _f)]
                 return se, le, walk, (oS, oL)
             cb_t = dict(cb)
             if exp in P["didx"] and exp in Q["didx"]:
@@ -372,7 +388,7 @@ for scope in ("MEDIAN COHORT", "FULL BAND"):
         if len(g) < 20:
             print(f"{bk:<5}{len(g):>7}   (too few)"); continue
         by = collections.defaultdict(list)
-        for x in g: by[x["yr"]].append(x["net"])
+        for x in g: by[x["yr"]].append(x["net_rs"])
         pos = sum(1 for v in by.values() if sum(v) > 0)
         mrs = sum(x["margin_rs"] for x in g)
         rom_rs = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0

@@ -138,8 +138,12 @@ def _check(p: dict, lo: float, hi):
         return False, d, f"short premium ₹{sm:.0f} < ₹{config.STOCK_CREDIT_MIN_PREM:.0f}"
     if spread_pct > config.STOCK_CREDIT_MAX_SPREAD_PCT:
         return False, d, f"bid-ask {spread_pct:.1f}% > {config.STOCK_CREDIT_MAX_SPREAD_PCT:.0f}%"
-    if soi < config.STOCK_CREDIT_MIN_OI:
-        return False, d, f"OI {soi} < {config.STOCK_CREDIT_MIN_OI}"
+    # Same size-aware floor the scan uses (audit 17-Aug-2026: this path still gated at the bare 100
+    # units after the scan moved to lots, so the printed reject reason was wrong).
+    _lot = int((d.get("lot") or 0))
+    _oi_floor = max(config.STOCK_CREDIT_MIN_OI, config.STOCK_CREDIT_MIN_OI_LOTS * _lot)
+    if soi < _oi_floor:
+        return False, d, f"OI {soi} < {_oi_floor}" + (f" ({config.STOCK_CREDIT_MIN_OI_LOTS} lots)" if _lot else "")
     if cw < lo or (hi is not None and cw >= hi):
         band = f"{lo:.2f}-{hi:.2f}" if hi is not None else f"≥{lo:.2f}"
         return False, d, f"c/w {cw:.2f} outside {band}"

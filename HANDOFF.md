@@ -1,5 +1,22 @@
 # Handoff — institutional-trader
 
+## 17-Aug OI GATE VERDICT: redundant LIVE, essential in the BACKTEST (user was right)
+He challenged whether the OI gate matters given the engine already runs a bid-ask check. Evidence
+from todays 17-name watchlist: the OI gate blocks 4 names (ASIANPAINT/CIPLA/IOC/DLF) and the SPREAD
+gate already blocks all 4; OI blocks ZERO that spread does not. Spread blocks 6 MORE that OI passes
+(COLPAL 59%, HEROMOTOCO 9.1%, NESTLEIND, AMBUJACEM, BHEL, SUNPHARMA). => LIVE the OI floor is inert;
+bid-ask <= 6% is the binding constraint. Left at 5 lots as a harmless backstop; not worth another
+config change either way.
+BUT bhavcopy has NO bid/ask - only CLOSE and OPEN_INT - so the HARNESS cannot run the spread gate.
+There OI is the ONLY liquidity proxy and stands in for it. That is why gating it halved IS ROM.
+*** THE BIG UNMODELLED GAP, now the honest headline caveat: the live SPREAD gate blocked 10 of 17
+candidates TODAY (59%). The backtest models none of it. Every ROM figure is computed on a
+population that includes names live would refuse. Larger source of optimism than any OI threshold. ***
+ALSO ADMITTED: the 10-lot and 5-lot deploys were made on a SIGNAL-COUNT measurement, not a P&L
+backtest. No OI threshold above ~zero has ever been backtested for win rate or ROM.
+RUNNING: dte_sweep.py IS (floors 3/5/7/10/15/20/25, reports rejections on premium AND OI per DTE,
+~2-3h) -> /tmp/dte_is.log; code audit agent on the OI gate + rupee columns + expiry settlement.
+
 ## 17-Aug STUDY UPDATED with final IS+OOS+ROM (six corrections documented)
 studies/DEPLOYED_EVIDENCE_AUDIT.md SS5/SS6 rewritten. FINAL median-cohort numbers:
   IS  v2 77.5%/+25.3% ROM-Rs/Rs5,427/6-6yrs (n=191) · v1 80.1%/+14.1%/Rs2,828/5-6 (n=322) ·
