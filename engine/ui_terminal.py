@@ -920,15 +920,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>510</b></td><td><b>~23.5/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹24,159</b></td></tr>
 <tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹19,327</b></td></tr>
 </table>
-{dim("<b>Sanity-check it against the only real datapoint.</b> July 2026 came in at <b>24 closed trades and ₹44,789</b> "
-     "realised. Treat ₹85,389 as a ceiling and one live month as the floor: live fires fewer trades than the measured "
-     "rates assume, and the harness does not model the live bid-ask/OI quote gate, the 5-new-per-day cap or the "
-     "20-open cap. <b>Read the win:loss shape.</b> v2 is the only book whose average winner beats its average loser "
-     "(1.92:1) — v1 runs 0.62:1 and v0 runs 0.28:1, which is normal for selling credit spreads and is exactly why the "
-     "win rate has to stay high. <b>v0 now prints a NEGATIVE expectancy out-of-sample</b> (−₹186 a trade, −₹818 a month): "
-     "76.8% of its trades win ₹3,818 and the other 23.2% lose ₹13,439, and that arithmetic does not clear. It stays live "
-     "as a paper forward-test by the decision of 15-Aug-2026, to see whether real fills say something different "
-     "from the backtest. <b>Every rupee here uses the current lot size of each stock.</b>")}
+{dim("<b>Sanity-check it against the only real datapoint.</b> July 2026 realised <b>₹44,789 across 24 "
+     "closed trades</b>, well above the ₹19,327 here — but that month ran under the old assumptions and "
+     "included trades the live one-position-per-symbol rule now blocks, so read it as a good month rather "
+     "than the baseline. Treat ₹19,327 as the plan and the forward record as the test. The harness does not "
+     "model the live bid-ask and OI quote gate, the 5-new-per-day cap or the 20-open cap, and it applies "
+     "today\u2019s lot sizes to older trades. <b>Read the win:loss shape.</b> Every book loses more on a loser "
+     "than it makes on a winner — 0.58:1 for v2 down to 0.27:1 for v0 — which is normal for selling credit "
+     "spreads and is exactly why the win rate has to stay high. <b>v0 wins 80.4% of its trades out-of-sample "
+     "and still clears only ₹335 each</b>; it stays live as a paper forward-test by the decision of "
+     "15-Aug-2026, to see whether real fills disagree with the backtest.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
