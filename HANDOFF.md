@@ -1,5 +1,23 @@
 # Handoff — institutional-trader
 
+## 17-Aug STUDY UPDATED with final IS+OOS+ROM (six corrections documented)
+studies/DEPLOYED_EVIDENCE_AUDIT.md SS5/SS6 rewritten. FINAL median-cohort numbers:
+  IS  v2 77.5%/+25.3% ROM-Rs/Rs5,427/6-6yrs (n=191) · v1 80.1%/+14.1%/Rs2,828/5-6 (n=322) ·
+      v0 81.9%/+13.6%/Rs3,412/6-6 (n=216)
+  OOS v2 82.8%/+27.3%/Rs3,477/2-3 (n=58) · v1 80.2%/+10.4%/Rs1,145/3-3 (n=192) ·
+      v0 80.4%/+4.1%/Rs565/2-3 (n=97)
+  Rs/mo: v2 9,040 · v1 9,733 · v0 2,430 = ~21,200 stock; ~27,000 with index; 80% rule = ~21,600
+Six corrections listed in SS5: leg alignment, v1 population, corporate-action scale (parity),
+one-open-position, OI>=100 both legs (THE BLOCKER - halved IS ROM), expiry settlement from the
+options own closes (users fix). Plus the phantom 3x stop removed everywhere.
+CONVERGENCE CAVEAT recorded in the study: IS and OOS agree now, but NOT independently - two
+different fixes moved two different windows toward each other. Encouraging, not proof.
+OPEN + NOW DOCUMENTED: STOCK_CREDIT_MIN_DTE=10 has NO study behind it. Every study holds it fixed
+at 10 while sweeping something else; the only DTE sweep on record belongs to the rejected low-c/w
+rescue. It pushes the books into far expiries where strikes are thin - possibly CREATING the
+illiquidity the new OI gate then removes. Sweep 5/10/15/20/25 both windows is the next test.
+STILL OWED: UI + Telegram still carry pre-OI-gate numbers = STALE.
+
 ## 17-Aug FINAL BOTH-WINDOW TABLE (OI-gated IS + money-weighted ROM) — THE GAP CLOSED
               IS ROM-Rs   n    yrs |  OOS ROM-Rs   n    yrs   Rs/trade
   v2            +26.1%   200   6/6 |    +24.9%    58   2/3    Rs3,180

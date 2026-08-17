@@ -75,84 +75,112 @@ hollow.
 Scripts: audit agent transcript summarised here; re-measurement `cw_band_sweep_dated.py` (bands
 extended to ≥0.40); forensics `/tmp/is_forensics.py` → `studies/ndte/is_forensics_deployed.py`.
 
-## 5. The production harness — the numbers of record (16-Aug-2026, final)
+## 5. The production harness — the numbers of record (17-Aug-2026, final)
 
 `studies/ndte/deployed_backtest.py` is the single harness of record. It reached these numbers
-through four corrections, each found by an adversarial audit or by the user reading a figure that
-could not be true:
+through SIX corrections. Each one changed the answer, and each was found either by an adversarial
+audit or by the user reading a figure that could not be true.
 
 1. **Leg alignment.** Option legs were paired by list position, so ~47% of multi-leg windows
-   compared prices from different calendar days. Legs are now keyed by date and both must trade on
+   compared prices from different calendar days. Legs are now keyed by date, and both must trade on
    the entry day.
 2. **Signal population.** v1 was fed the Donchian UNION while live v1 scans **D10 only**
    (`STOCK_CREDIT_DONCHIAN = 10`), and the harness never modelled v1 standing down while v2 holds a
    name.
 3. **Corporate-action scale.** `fetch_upstox_historical` returns split-adjusted closes while the
    strike ladders are unadjusted, so on any split or bonus name the harness picked deep-ITM legs,
-   collected near-full width and booked fabricated wins. It returned +182.8% ROM and a 1.92:1
-   win:loss, both impossible for a defined-risk vertical, and the user caught both. **In-sample
-   now derives spot from the option chain by put-call parity** — at the strike where a call and a
-   put cost the same, that strike is the forward, and S = K + C − P. Both quotes carry the same
-   unadjusted scale as the strikes, so a split cannot desynchronise them. Out-of-sample cannot use
-   parity: Upstox expired candles exist only for strikes that traded, and demanding both sides
-   returned 0 trades for v2. OOS uses two structural guards instead and is read on the median
-   cohort.
-4. **One open position per symbol.** Live, each book skips a name it already holds open
-   (`stock_credit.py:223`, `stock_credit_v2.py:372`). The harness had only the 3-day gap, so **59%
-   of in-sample and 31% of out-of-sample trades were same-book re-entries inside 35 days**. The
-   bias had a direction: a winner exits fast and frees the name while a loser stays open, so the
-   extra trades were drawn from names still moving against the fade. Modelling the rule **raised**
-   every book in **both** windows, which is the confirmation that those trades were adverse.
+   collected near-full width and booked fabricated wins. It printed +182.8% ROM and a 1.92:1
+   win:loss, both arithmetically impossible for a defined-risk vertical, and the user caught both.
+   In-sample now derives spot from the option chain by put-call parity.
+4. **One open position per symbol.** Live, each book skips a name it already holds open. The
+   harness had only the 3-day gap, so **59% of in-sample and 31% of out-of-sample trades were
+   same-book re-entries inside 35 days**. Winners exit fast and free the name while losers stay
+   open, so the extra trades came from names still moving against the fade. Modelling the rule
+   raised every book in both windows.
+5. **Open interest (the audit's blocker).** Bhavcopy publishes a CLOSE for every listed contract,
+   and for one that never traded that CLOSE is NSE's theoretical settlement price, not a print.
+   **24% of 1-OTM and 30% of 2-OTM short legs carried zero open interest.** Both legs must now clear
+   `OI >= 100` units, matching the live gate. This removed 70% of v2's in-sample trades, because
+   both legs must pass and the long wing is the illiquid one. **It roughly halved in-sample ROM,
+   which is the single largest correction in this document.**
+6. **Expiry settlement (the user's fix).** Settlement derived intrinsic from the underlying close,
+   which reintroduced correction 3 at settlement whenever the parity lookup failed. His point: at
+   expiry an option IS its intrinsic value, so read the two legs' own expiry-day closing prices and
+   skip the underlying entirely. The old path is now last resort and counts itself — it was needed
+   on **19 legs in-sample and 8 out-of-sample** across the whole history.
 
-Also modelled: the cross-book 3-day gap, v0 standing down to v1, premium >= 50, >= 10 DTE, and
-exit costs on TP and stop closes. Not modelled, stated plainly: the live bid-ask and OI quote
-gate, the 5-new-per-day and 20-open caps, today's lot sizes applied to older trades, and margin as
-(width − credit) rather than exchange SPAN.
+Also corrected on 17-Aug: **no book has a working stop, and none can.** A stop priced as a multiple
+of the credit is unreachable above c/w 1/3, because a vertical can never cost more than its width.
+At the deployed c/w 0.40 a 3x-credit stop sits at 1.2x the width while full loss arrives at 1.0x.
+Live already had `STOCK_CREDIT_STOP_MULT = 99.0`, but the UI advertised a "3x stop, almost never
+reached" and the harness modelled `stop=3.0`. Both were wrong; both were fixed. All three books are
+take-profit only, with risk capped by the bought wing.
 
 **Read on the MEDIAN COHORT — c/w 0.40–0.50, where every one of the 21 real live fills sits
-(0.39–0.47).** The headline ROM was previously carried by a high-c/w tail: a third of v2's profit
-came from trades above 0.65, where margin is tiny and ROM per trade approaches its 488% ceiling.
-Those quotes are real on high-priced dense-ladder names, but the live book has never traded one.
+(0.39–0.47).** ROM is reported two ways: pooled in strike POINTS, and pooled in RUPEE margin, which
+is what an account actually commits. Lot sizes vary roughly twentyfold inversely with price, so the
+two differ materially and **the rupee column is the one to use**.
 
-| book | band | IS 2019 → Sep-2024 | OOS Oct-2024 → Aug-2026 |
-|---|---|---|---|
-| v2 | >=0.40 | **82.2%** · **+30.7%** ROM · **6/6 yrs** (n=667) | 82.8% · **+3.7%** · 2/3 yrs (n=58) |
-| v1 | >=0.40 | **79.9%** · +19.9% · **6/6 yrs** (n=477) | 79.8% · **+4.8%** · **3/3 yrs** (n=193) |
-| v0 | 0.35-0.40 | **83.1%** · +17.8% · **6/6 yrs** (n=569) | 80.4% · **−0.7%** · 2/3 yrs (n=97) |
+| book | IS 2019-01-01 → 2024-07-05 | OOS Oct-2024 → Aug-2026 |
+|---|---|---|
+| v2 | 77.5% · **+25.3% ROM-₹** · ₹5,427/trade · 6/6 yrs (n=191) | 82.8% · **+27.3% ROM-₹** · ₹3,477/trade · 2/3 yrs (n=58) |
+| v1 | 80.1% · **+14.1%** · ₹2,828/trade · 5/6 yrs (n=322) | 80.2% · **+10.4%** · ₹1,145/trade · **3/3 yrs** (n=192) |
+| v0 | 81.9% · **+13.6%** · ₹3,412/trade · 6/6 yrs (n=216) | 80.4% · **+4.1%** · ₹565/trade · 2/3 yrs (n=97) |
 
-**All three books are positive in every in-sample year.** In-sample is the better-measured window
-(667/477/569 trades, parity spot, six full years) but it is **not independent evidence**: the c/w
-gate, the geometry and the exits were all chosen on this data. A precise in-sample number is still
-in-sample.
+**The two windows now agree**, at +25.3% against +27.3% for v2 and +14.1% against +10.4% for v1.
+That is worth stating carefully rather than celebrating. **It is not independent confirmation.** The
+morning's figures were +30.7% and +3.7%, an eightfold gap, and it closed because two different fixes
+were applied to two different windows: the OI gate pulled in-sample down, and rupee-weighting pushed
+out-of-sample up. Both are defensible from first principles and neither was chosen to make the
+numbers meet. But the prediction was that in-sample would fall to out-of-sample, and instead the
+other half rose through a mechanism that was not being tested. Treat the agreement as encouraging,
+not as proof.
 
-**Out-of-sample cannot rank the books.** Bootstrapped 90% intervals on ROM: v2 **[−27.8%, +39.7%]**,
-v1 **[−5.0%, +13.3%]**, v0 **[−14.8%, +12.5%]**. All three span zero. v2's 58 trades include a
-four-trade 2024 stub. The point estimates put v1 (+4.8%) and v2 (+3.7%) in a tie, and an earlier
-claim in this repo that v1 was clearly ahead of v2 does not survive the fourth correction.
+**What in-sample can and cannot claim.** It is the better-measured window — 191/322/216 trades over
+five and a half years, spot from parity, open interest enforced. It is **not independent evidence**,
+because the c/w gate, the geometry and the exits were all chosen on this data. Note also that the
+bhavcopy pickle ends **2024-07-05**, so the "sixth year" is a six-month stub.
 
-**v0 is the one that changed most.** It reads +17.8% in-sample across six positive years and −0.7%
-out-of-sample, against the −11.5% an earlier version of this study reported. It stays live as a
-paper forward-test by the user's decision of 15-Aug-2026.
+**What out-of-sample can and cannot claim.** Bootstrapped 90% ROM intervals span zero for all three
+books: v2 [−27.8%, +39.7%], v1 [−5.0%, +13.3%], v0 [−14.8%, +12.5%]. v2's 58 trades include a
+four-trade 2024 stub. **This window cannot rank the books.** v1 is the best-measured of the three at
+192 trades and 3 of 3 positive years; v2 pays more per trade and fires a third as often.
 
-## 6. Rupee calibration — what the books are worth per month (16-Aug-2026, final)
+**Still not modelled, stated plainly:** the live bid-ask gate, the 5-new-per-day and 20-open caps,
+current lot sizes applied to older trades, margin as (width − credit) rather than exchange SPAN, and
+out-of-sample has no OI gate (its candles exist only for contracts that traded, so it is largely
+redundant there, but the two windows are not identical experiments).
+
+**An untested assumption sits under all of it.** `STOCK_CREDIT_MIN_DTE = 10` has no study behind it
+in this repo. Every study that mentions DTE holds it fixed at 10 while sweeping something else, and
+the only "DTE sweep" on record belongs to the rejected low-c/w rescue. The rule pushes the books
+into far expiries where strikes are thin — the same illiquidity correction 5 now filters out — so it
+may be creating the problem the OI gate removes. Sweeping it is the obvious next test.
+
+## 6. Rupee calibration — what the books are worth per month (17-Aug-2026)
 
 Every trade multiplied by its own current lot size, median cohort, at the deployed take-profit.
-The **out-of-sample** column is the one to plan on; in-sample rupees are shown for shape only,
-because bhavcopy prices are settlement prints and 85% of rows above ₹50 carry zero open interest.
+The out-of-sample column is the one to plan on.
 
-| book | signals/mo | avg margin | avg WIN | avg LOSS | win:loss | ₹/trade | ₹/month |
-|---|---|---|---|---|---|---|---|
-| v2 | 2.6 | ₹12,755 | +₹6,022 | −₹10,461 | 0.58 : 1 | +₹3,180 | **+₹8,198** |
-| v1 | 8.6 | ₹11,049 | +₹3,887 | −₹10,324 | 0.38 : 1 | +₹1,016 | **+₹8,711** |
-| v0 | 4.3 | ₹13,683 | +₹3,815 | −₹13,954 | 0.27 : 1 | +₹335 | **+₹1,443** |
+| book | signals/mo | ₹/trade | ₹/month |
+|---|---|---|---|
+| v2 | 2.6 | +₹3,477 | **+₹9,040** |
+| v1 | 8.5 | +₹1,145 | **+₹9,733** |
+| v0 | 4.3 | +₹565 | **+₹2,430** |
 
-Stock books together pay about **₹18,350 a month at 1 lot**. With the two index books (₹2,775 and
-₹3,031) the system totals roughly **₹24,200**, and the standing 80% planning rule puts the number
-to plan on at about **₹19,300**. July 2026 realised ₹44,789 across 24 closed trades, which is above
-this — that month ran under the old harness's assumptions and included trades the live rules would
-now block, so treat it as a good month rather than the baseline.
+Stock books together pay roughly **₹21,200 a month at 1 lot**. With the two index books (₹2,775 and
+₹3,031) the system totals about **₹27,000**, and the standing 80% planning rule puts the number to
+plan on near **₹21,600**. July 2026 realised ₹44,789 across 24 closed trades, above this — that
+month ran under the old assumptions and included trades the current rules would block, so read it as
+a good month rather than the baseline.
 
-**Every book loses more on a loser than it makes on a winner**, from 0.58:1 down to 0.27:1. That is
-normal for selling credit spreads and it is exactly why the win rate has to stay high: v0 at
-80.4% still only clears ₹335 a trade, and a few points of win rate would put it underwater.
+**Every book loses more on a loser than it makes on a winner.** That is normal for selling credit
+spreads and it is exactly why the win rate has to stay high. v0 wins four trades in five and still
+clears only ₹565 each.
 
+---
+
+*Superseded figures.* Everything published before 17-Aug-2026 predates at least one of the six
+corrections above and must not be quoted. The ones most likely to resurface: v2 "87% win /
++41%/margin", "95.4% / +182.8% ROM", "+30.7% IS vs +3.7% OOS", the ₹64,311/mo and ₹106,736/mo
+totals, and any reference to a 3x stop.
