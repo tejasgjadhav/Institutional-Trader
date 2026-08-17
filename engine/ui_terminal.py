@@ -451,7 +451,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · WIN 85% over 2019–Sep 2024 / 86% over Oct 2024–now at this target · +ve every yr · TP-40/no-stop deployed 2026-07-30 (was TP-75/stop-2×: 64%/73%) · ~16/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · WIN 85% over 2019–Sep 2024 / 86% over Oct 2024–now at this target · +ve 4 of 6 yrs · TP-40/no-stop deployed 2026-07-30 (was TP-75/stop-2×: 64%/73%) · ~4.3/mo · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -866,7 +866,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> (leader) — SELL 2 strikes OTM, BUY 4 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v1</b> — SELL 1 strike OTM, BUY 3 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v0</b> — same strikes as v2, but takes the band v2 rejects: credit ÷ width between <b>0.35 and 0.40</b>.")}
-{p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium, bid-ask ≤ 6%, OI ≥ 100. If it fails, skip it — thin options eat the edge.")}
+{p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium, bid-ask ≤ 6%, open interest present on both legs. If it fails, skip it — thin options eat the edge.")}
 {p("<b>6.</b> Place it <b>between 15:36 and 15:40</b> — derivatives now close at 15:40, so that is the whole window. The 15:17 watchlist names the likely candidates ~19 minutes ahead, so pre-stage from it and treat the 15:36 signal as confirmation. Spreads are roughly twice as wide in this window as at 14:45, so use limit orders.")}
 {p("<b>7.</b> Exit — this is what sets the win rate, more than the entry does:")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> — buy the spread back when it costs <b>50%</b> of the credit you collected. <b>No stop</b>, same as v1 and v0: a stop priced as a multiple of the credit cannot be reached above c/w 1/3, because the spread can never cost more than its width. The bought wing is the stop.")}
@@ -1221,11 +1221,9 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         if getattr(self, "_fired_day", None) != today:
             self._fired_day = today
             self._fired_today = []
-            try:    # refresh the daily CSV snapshot of signals.db (once per day)
-                from engine import signal_db
-                signal_db.export_csv()
-            except Exception:
-                pass
+            # The CSV export used to run HERE, which made the viewer a writer and broke the
+            # decoupling this architecture depends on (audit 17-Aug-2026). The engine owns every
+            # write; the viewer only ever reads. Moved to engine_runner's daily EOD step.
         self._seed_fired_from_log(today)   # re-read the trade log each refresh (read-only viewer)
 
     def _seed_fired_from_log(self, today):

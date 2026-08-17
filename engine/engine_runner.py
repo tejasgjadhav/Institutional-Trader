@@ -62,6 +62,7 @@ class EngineRunner:
         self._last_swing_resolve = 0.0
         self._swing_scan_day = None
         self._last_stockcr_resolve = 0.0
+        self._csv_day = None
         self._stockcr_scan_day = None
         self._watchlist_tg_day = None
         self._watchlist_build_day = None
@@ -174,9 +175,20 @@ class EngineRunner:
         trade log is the critical record; no trade may be left unbooked once the day is done.
         """
         m = now.hour * 60 + now.minute
-        after_close = now.weekday() >= 5 or m >= 15 * 60 + 40   # FNO_CLOSE (NSE 3-Aug-2026)
+        from engine.config import FNO_CLOSE
+        _fc = FNO_CLOSE.split(":")
+        after_close = now.weekday() >= 5 or m >= int(_fc[0]) * 60 + int(_fc[1])
         if not after_close:
             return
+        # The daily CSV snapshot of signals.db belongs to the ENGINE. It used to run in the viewer,
+        # which made the read-only viewer a writer and broke the decoupling (audit 17-Aug-2026).
+        if self._csv_day != now.date():
+            self._csv_day = now.date()
+            try:
+                from engine import signal_db
+                signal_db.export_csv()
+            except Exception as e:
+                logger.warning("daily signals CSV export failed: %s", e)
         pending = [t for t in self.agent.trade_log.trades if t.get("outcome") is None]
         if not pending:
             return
@@ -253,7 +265,7 @@ class EngineRunner:
             "• Donchian-union breakout fade · credit/width ≥ 0.40 · nearest expiry at least 10 days out\n"
             "• In-sample (1-Jan-2019 → 5-Jul-2024): 140 trades · <b>74.3%</b> win rate · +13.7% on margin · ₹1,897 net per trade · positive 5 of 6 years\n"
             "• Out-of-sample is being re-measured after six corrections to the backtest, so no figure is quoted for it today\n"
-            "• The backtest cannot model the live bid-ask gate, which rejected 10 of 17 candidates on 17-Aug, so read this as a ceiling",
+            "• The backtest cannot model the live bid-ask gate, which rejects most candidates, so read this as a ceiling",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
             "• The weakest evidence of the three stock books · forward paper-test at 1 lot\n"
@@ -312,7 +324,11 @@ class EngineRunner:
                 send_telegram(f"🟢 <b>EXECUTE NOW — {kind} SIGNAL</b>\n{book} · new signal(s) — "
                               f"details on the dashboard.")
                 return
+            # PER-SIGNAL ISOLATION (audit 17-Aug-2026). The whole loop used to sit inside one try,
+            # so a single malformed signal killed every message after it and left one WARNING behind.
+            # Each signal now fails on its own and the rest still go out.
             for s in items:
+              try:
                 if not isinstance(s, dict):
                     send_telegram(f"🟢 <b>EXECUTE NOW — {kind} SIGNAL</b>\n{book} · new signal — "
                                   f"details on the dashboard."); continue
@@ -384,6 +400,9 @@ class EngineRunner:
                     lines.append(ana)
                 lines.append(self._TG_DISCLAIMER)
                 send_telegram("\n".join(lines))
+              except Exception as e:
+                logger.error("telegram notify (%s): signal %s FAILED, continuing with the rest: %s",
+                             book, (s.get("symbol") if isinstance(s, dict) else "?"), e)
         except Exception as e:
             logger.warning(f"telegram notify ({book}): {e}")
 

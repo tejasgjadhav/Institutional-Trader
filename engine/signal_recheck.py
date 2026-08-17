@@ -261,7 +261,22 @@ def build_message():
 
 
 def run(send: bool = True) -> str:
-    """Build and (optionally) send. De-duped per signal-date so a restart cannot re-send."""
+    """Build and (optionally) send. De-duped per signal-date so a restart cannot re-send.
+
+    THE DE-DUPE CHECK COMES FIRST (audit 17-Aug-2026). It used to run AFTER build_message(), which
+    re-priced every position from the last session on every engine cycle — every five seconds from
+    09:30 to 15:40. With five positions that is roughly 66,000 needless Upstox calls a day, and it
+    was the proximate cause of the rate exhaustion that took the feed down at 15:15 on 17-Aug and
+    made the engine mistake a network failure for an exchange holiday. Nothing is fetched now until
+    we know the message has not already gone out.
+    """
+    if send:
+        try:
+            _seen = set(json.load(open(STATE_PATH))) if os.path.exists(STATE_PATH) else set()
+        except Exception:
+            _seen = set()
+        if date.today().isoformat() in _seen:
+            return ""                      # already sent today — do not price anything
     text, n, dropped = build_message()
     if not text:
         logger.info("signal_recheck: nothing from the last session still passes "
