@@ -76,13 +76,11 @@ REJECT = collections.Counter()   # why candidates died, per DTE
 # model mark harvests theta with no friction and no gap risk, which is the most likely single cause
 # of the in-sample +30.7% against the out-of-sample +3.7%. Both legs must clear this on entry day.
 MIN_OI = 1            # open interest must EXIST — mirrors config.STOCK_CREDIT_MIN_OI
-# The floor must MIRROR LIVE, which gates at MIN_OI_LOTS * lot - 1 lot since 17-Aug-2026,
-# 625-5,000 units depending on the name. A flat 100 units is under one lot everywhere and excludes
-# only open interest of exactly zero, so the harness was measuring a population roughly THREE TIMES
-# larger than the engine will ever trade (audit, 17-Aug-2026).
-# Money-weighted ROM needs each name's lot. ROM pooled in strike POINTS over- and under-weights
-# names arbitrarily, because lot sizes vary roughly twentyfold inversely with price. Rupee margin
-# is what an account actually commits.
+# The floor MIRRORS LIVE (config.STOCK_CREDIT_MIN_OI = 1): the contract must have open interest at
+# all. It is a fidelity rule, not an edge filter — an exchange CLOSE on a contract that never traded
+# is a theoretical settlement price, not a fillable quote, and pricing off those halved the in-sample
+# ROM when it was fixed. Bucketing by OI found no link between open interest and returns, so no lot
+# multiple is justified; see engine/config.py for the numbers.
 try:
     LOTMAP = json.load(open("/tmp/lotmap.json"))
 except Exception:
