@@ -925,7 +925,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "included trades the live one-position-per-symbol rule now blocks, so read it as a good month rather "
      "than the baseline. Treat ₹19,327 as the plan and the forward record as the test. The harness does not "
      "model the live bid-ask and OI quote gate, the 5-new-per-day cap or the 20-open cap, and it applies "
-     "today\u2019s lot sizes to older trades. <b>Read the win:loss shape.</b> Every book loses more on a loser "
+     "the current lot sizes to older trades. <b>Read the win:loss shape.</b> Every book loses more on a loser "
      "than it makes on a winner — 0.58:1 for v2 down to 0.27:1 for v0 — which is normal for selling credit "
      "spreads and is exactly why the win rate has to stay high. <b>v0 wins 80.4% of its trades out-of-sample "
      "and still clears only ₹335 each</b>; it stays live as a paper forward-test by the decision of "
@@ -933,10 +933,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
-     "The three stock rows come from the production harness of 15-Aug-2026: win rates are IS / OOS, and the rupee columns are "
+     "The three stock rows come from the production harness of 16-Aug-2026: win rates are IS / OOS, and the rupee columns are "
      "the OUT-OF-SAMPLE window only, each trade at its own current lot size. <b>NIFTY</b> comes from the 73-trade FLIP sample "
-     "and <b>SENSEX</b> from the 89-expiry study. v2 is the one book whose winners outsize its losers, and that is why it "
-     "carries the book even at 4.3 signals a month.")}
+     "and <b>SENSEX</b> from the 89-expiry study. No stock book has a winner larger than its loser, so all three depend on "
+     "keeping the win rate near 80%.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
 <tr><td>★ Stock v2 UNION</td><td>32,852</td><td>667 IS · 58 OOS</td><td>82.2% / 82.8%</td><td>+₹6,022</td><td>−₹10,461</td><td>0.58 : 1</td></tr>
@@ -963,8 +963,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{TEXT_DIM};"><td>Monthly long-call</td><td>SHELVED 07-13</td><td>gap/luck-dependent, unreliable</td></tr>
 <tr style="color:{TEXT_DIM};"><td>3-Family + ORB+VWAP option-buying</td><td>OFF</td><td>direction is real but does not survive option-buying costs</td></tr>
 </table>
-<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE 14-AUG EVIDENCE AUDIT — every deployed book re-checked</p>
-{res("<b>An adversarial audit re-checked the validation behind every live book.</b> All three stock-credit OOS scripts carried a date-alignment bug (option legs compared across different days); the 0DTE index books were clean by construction. The corrected re-run CONFIRMS the deployed gate — the cliff at 0.40 is real on clean code. File: DEPLOYED_EVIDENCE_AUDIT.md")}
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE EVIDENCE AUDIT, 14–16 AUG — every deployed book re-measured</p>
 {res("<b>The production harness is the number of record, after four corrections.</b> Option legs are joined by DATE; v1 scans Donchian-10 only and stands down while v2 holds a name; spot is derived from the option chain by put-call parity, because split-adjusted closes against unadjusted strike ladders were fabricating deep-ITM trades; and each book now skips a name it already holds open, which removed 59% of in-sample trades that the live engine could never have taken. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
 {res("<b>Read on the median cohort — credit/width 0.40–0.50, where all 21 real live fills sit.</b> IS 2019–2024: v2 82.2% / +30.7% ROM · v1 79.9% / +19.9% · v0 83.1% / +17.8%, and all three are positive in every one of the six years. OOS 2024–2026: v2 82.8% / +3.7% · v1 79.8% / +4.8% · v0 80.4% / −0.7%. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
 {res("<b>Out-of-sample cannot rank the books, and saying so is the honest result.</b> Bootstrapped 90% intervals on ROM span zero for all three: v2 [−27.8%, +39.7%] on 58 trades, v1 [−5.0%, +13.3%] on 193, v0 [−14.8%, +12.5%] on 97. In-sample is far better measured but is NOT independent — the gate, the geometry and the exits were all chosen on that window. The forward record is the only instrument that settles it.")}
