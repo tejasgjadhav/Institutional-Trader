@@ -1,5 +1,98 @@
 # Handoff — institutional-trader
 
+## 17-Aug FINAL BOTH-WINDOW TABLE (OI-gated IS + money-weighted ROM) — THE GAP CLOSED
+              IS ROM-Rs   n    yrs |  OOS ROM-Rs   n    yrs   Rs/trade
+  v2            +26.1%   200   6/6 |    +24.9%    58   2/3    Rs3,180
+  v1            +12.1%   336   6/6 |     +9.1%   192   3/3    Rs1,003
+  v0            +13.7%   223   5/6 |     +2.4%    97   2/3      Rs335
+This morning the same comparison read +30.7% vs +3.7%. Two changes closed it: the OI gate cut the
+untraded contracts out of IS, and money-weighting lifted OOS (v2 +3.7 -> +24.9 from weighting by
+rupee margin instead of strike points; v0 SIGN FLIPPED -0.7 -> +2.4).
+*** CAVEAT TO CARRY: the convergence is NOT independent confirmation. I applied a different fix to
+each window and they moved toward each other. Both fixes are defensible on first principles (match
+live gate; rupee margin is what an account commits) and neither was chosen to make them agree - but
+I predicted IS would FALL to OOS, and instead OOS ROSE to IS via a different mechanism. Treat the
+agreement as encouraging, not as proof. ***
+STILL OPEN (audit): settle() falls back to the ADJUSTED close (~4-5% of trades, catastrophic per
+trade on a corporate-action name); parity returns the FORWARD not spot (25-39% of chains pick a
+different strike, needs discounting); OOS has NO OI gate so the two windows are still not the same
+experiment; caps unmodelled; IS window is 2019-01-01 to 2024-07-05 so 6 years is 5 + a stub; v2 stop
+skippable only in the profitable direction; cost model thinner than the repo standard 2.5%+Rs20x4.
+AND: the OI-gate + money-weighting code is itself UNREVIEWED - no audit since it was added.
+UI/studies/Telegram still carry the pre-OI-gate numbers = STALE. Correction pass owed.
+
+## 17-Aug 10:49 DEPLOYED: size-aware OI floor (10 lots) on all three stock books
+config STOCK_CREDIT_MIN_OI_LOTS=10; gate is max(100, 10*lot) on the SHORT leg in stock_credit.py
+and stock_credit_v2.py (v0 inherits); watchlist liq_ok uses the same floor. Engine restarted 10:49,
+clean. Ledger + engine.db recorded it. Revert: git checkout 4db9563~1 -- engine/config.py
+engine/stock_credit_v2.py engine/stock_credit.py
+MEASURED FIRST (bhavcopy 2019->Jul-2024, deployed geometry): of signals passing the old 100-unit
+gate, 85% survive at v2/v0 geometry and 89% at v1 - removes ~1 signal in 8, the thinnest contracts.
+Underlying number that matters more: only 25-34% of raw candidates carry ANY meaningful OI.
+CORRECTION I MADE IN-TURN: I wrote "markets closed" in the deploy note and commit message. It was
+MONDAY 10:49 and markets were OPEN. Safe (freeze window is 15:15-15:40) but the change is live for
+TODAY 15:36 scan, not idle. Commit message on 4db9563 carries the wrong claim - do not repeat it.
+STILL SHORT-LEG ONLY: the long wing is the illiquid leg (it drove the 70% IS cut). Gating both legs
+is the open decision the user has not answered.
+OOS backtest (OI gate + money-weighted ROM) still running -> /tmp/dbt8_oos.log, 85/113 at 11:23.
+UI/studies/Telegram still carry PRE-OI-GATE numbers = stale; correction pass owed after OOS lands.
+
+## 16-Aug BLOCKER FIXED (OI gate) + money-weighted ROM. IS HALVED. OOS RUNNING.
+OI UNITS SETTLED (user challenged this): bhavcopy OPEN_INT and Upstox `oi` are BOTH in UNITS
+(shares), not contracts. Proof: HAL/INFY/ACC OI 100% divisible by lot; OFSS live oi 34,300 / lot
+100 = 343 lots. So harness MIN_OI=100 matches live STOCK_CREDIT_MIN_OI=100 exactly.
+*** FINDING ABOUT THE LIVE ENGINE: 100 units is LESS THAN ONE LOT for every name (lots 125-1000),
+so the live "OI >= 100" gate is effectively "OI > 0". It is not a liquidity filter; the bid-ask
+<= 6% check does all the real work. Raising it to ~10 lots is a config change, user's call. ***
+IS WITH THE GATE (median cohort, both weightings now printed by the harness of record itself):
+  v2 n 667->200  WIN 82.2->78.5%  ROM-pts +30.7->+16.9%  ROM-Rs +26.1%  Rs5,428/tr  6/6 yrs
+  v1 n 477->336  WIN 79.9->80.7%  ROM-pts +19.9->+11.5%  ROM-Rs +12.1%  Rs2,338/tr  6/6->5/6
+  v0 n 569->223  WIN 83.1->83.4%  ROM-pts +17.8->+16.9%  ROM-Rs +13.7%  Rs3,331/tr  6/6->5/6
+The audit's theory was RIGHT: IS ROM roughly halved. Gap to OOS narrows but does not close.
+70% of v2's trades were cut, not the 30% the audit measured, because the audit counted only the
+SHORT leg - BOTH legs must clear and the LONG WING is the illiquid one.
+Money vs points weighting genuinely differs: v2 +16.9 pts vs +26.1 Rs; v0 +16.9 pts vs +13.7 Rs.
+USE THE RUPEE COLUMN.
+Also fixed: deployed_backtest.py now prints MEDIAN COHORT + FULL BAND itself (audit MAJOR #2 - it
+previously could not reproduce its own published headline).
+STILL OPEN from the audit: settle() adjusted-close fallback -> should be `continue` (MAJOR #4);
+parity returns forward not spot, needs discounting (MAJOR #3); OOS has no OI gate (its candles only
+exist if traded, so largely redundant but NOT identical); caps unmodelled; IS window is really
+2019-01-01 to 2024-07-05 so "6 years" is 5 + a stub.
+OOS run in flight -> /tmp/dbt8_oos.log. NOTHING deployed. Published UI/study/Telegram numbers are
+now STALE AGAIN (they carry the pre-OI-gate figures) and must be updated after OOS lands.
+
+## 16-Aug HARNESS AUDIT (post-parity, post-open_until) — 1 BLOCKER, 5 MAJOR. IS ROM IS AN UPPER BOUND.
+The four completed fixes were attacked directly and HELD: parity_spot maths + CE/PE arg order at
+both call sites, open_until string compare and max(), the date-keyed leg join, Donchian/gap/DTE all
+match live, and tp_sweep has NO logic drift from deployed_backtest.
+NEW FINDINGS:
+1 BLOCKER - IS prices 24% (1-OTM) to 30% (2-OTM) of its SHORT legs off contracts with OPEN_INT==0.
+  Bhavcopy CLOSE for an untraded contract is NSE THEORETICAL SETTLEMENT, not a print. Live refuses
+  OI<100 (stock_credit_v2.py:411); OOS structurally cannot include them (a candle exists only if it
+  traded). This is the most likely single cause of IS +30.7% vs OOS +3.7%. FIX = one line: gate
+  OPEN_INT>=100 on both legs at entry in the IS path. bhavcopy already carries the column.
+2 MAJOR - deployed_backtest.py has NO median-cohort filter; it prints the FULL band (IS v2 +51.1%).
+  The published 667/+30.7% figures come from tp_sweep.py. The harness of record cannot reproduce
+  its own headline. Fix: add the cohort print to deployed_backtest.py.
+3 MAJOR - parity_spot returns the FORWARD not spot (S = K + C - P omits discounting). Measured
+  +0.20..+0.30% bias on 5 liquid names; ATM strike differs from the true-close ATM in 25-39% of
+  chains, tilted one strike UP. Fix: S = K*exp(-r*T) + C - P.
+4 MAJOR - settle() silently falls back to the ADJUSTED close when expiry-day parity is unavailable,
+  reintroducing bug 3 at settlement. Pickle ends 2024-07-05 so all later expiries hit it (~4-5% of
+  each cohort). Catastrophic per trade on a corporate-action name. Fix: `continue`, never fall back.
+5 MAJOR - ROM pools in strike POINTS not money. Lot-weighted: OOS v2 +3.7 -> +24.9%, v1 +4.8 ->
+  +9.2%, v0 -0.7 -> +2.4% (SIGN FLIPS). The published ROM is not what an account earns.
+6 MAJOR - IS and OOS are not the same experiment (5 differences incl. OOS dropping ALL
+  corporate-action names via ATM_MAX_DRIFT). "OOS confirms IS" is not supported by construction.
+7-11 MINOR - v2 stop skippable in the profitable direction only; cost model thinner than the repo's
+  own 2.5%+Rs20x4 standard; IS window is 2019-01-01 to 2024-07-05 NOT Sep-2024 (so "6/6 years" is
+  5 years + a 6-month stub); caps/liquidity gate unmodelled; tp_sweep exits[bk] trap if a deployed
+  TP ever leaves SWEEP_TPS.
+AUDITOR RATING: 6/10. PRIORITY ORDER: (a) OI>=100 gate in IS, (b) cohort print in the harness of
+record, (c) settle() fallback -> continue, (d) lot-weighted ROM, (e) discounted parity.
+NOTHING deployed. Published numbers stand as an UPPER BOUND until (a) is run.
+
 ## 16-Aug CONSOLIDATED UPDATE SHIPPED (studies + UI + Telegram + CLAUDE.md)
 Final numbers everywhere = production harness after 4 corrections, MEDIAN COHORT c/w 0.40-0.50:
   IS  v2 82.2%/+30.7% (n=667, 6/6) · v1 79.9%/+19.9% (n=477, 6/6) · v0 83.1%/+17.8% (n=569, 6/6)

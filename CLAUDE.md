@@ -19,7 +19,7 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50) | `STOCK_CREDIT_ENABLED` | 82.2% IS / 82.8% OOS | ₹8,198 (2.6/mo × ₹3,180) | IS +30.7% ROM, +ve 6/6 yrs (n=667); OOS +3.7%, 2/3 yrs (n=58, CI spans zero) |
+| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 82.2% IS / 82.8% OOS | ₹8,198 (2.6/mo × ₹3,180) | IS +30.7% ROM, +ve 6/6 yrs (n=667); OOS +3.7%, 2/3 yrs (n=58, CI spans zero) |
 | Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.9% IS / 79.8% OOS | ₹8,711 (8.6/mo × ₹1,016) | IS +19.9% ROM, +ve 6/6 yrs (n=477); OOS +4.8%, **3/3 yrs** (n=193) — the best-measured stock book |
 | Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 80.4% OOS | ₹1,443 (4.3/mo × ₹335) | IS +17.8% ROM, +ve 6/6 yrs (n=569); OOS **−0.7%**, 2/3 yrs (n=97). Kept live as a paper forward-test, user 2026-08-15 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
@@ -44,6 +44,16 @@ spanning zero, and v2's 58 trades include a four-trade 2024 stub. **The out-of-s
 rank the books.** Stock books total about ₹18,350/mo at 1 lot; with the index books ~₹24,200, and the
 80% planning rule puts it at ~₹19,300. **Keep lots at 1.** The forward record, restarted 6-Aug-2026,
 is the only instrument that settles this.
+
+**NO BOOK HAS A WORKING STOP, and that is correct — do not "fix" it by adding one.** All three
+stock books run take-profit only; risk is capped by the bought wing at (width − credit).
+`STOCK_CREDIT_STOP_MULT` and `STOCK_CREDIT_V0_STOP_MULT` are both 99.0 for a structural reason: a
+stop priced as a multiple of the credit is unreachable above c/w 1/3, because a vertical spread can
+never cost more than its width. At the deployed c/w 0.40 a 3x-credit stop would sit at 1.2x the
+width, while full loss arrives at 1.0x width, i.e. 2.5x credit. The user derived this on
+17-Aug-2026; the UI and the backtest harness had both been describing a "3x stop" that could not
+fire, and both were corrected. A stop that DOES bite (say 2x credit = 0.8x width at c/w 0.40) is a
+real strategy change and needs both windows measured before anyone proposes it.
 
 **Take-profit is settled — do NOT re-tune it.** Swept 30/40/50/60/70 on both windows (`tp_sweep.py`):
 v2 is flat across the whole range, and v1's slope INVERTS between windows (lower is better in-sample,

@@ -412,8 +412,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self.pm_watch)
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
-        # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · stop 3×.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · STOP 3× credit is INERT at c/w≥0.40 (held to expiry, floor = max loss) · WIN 84% over 2019–Sep 2024 / 87% over Oct 2024–now at this target/stop · ~7.6/mo (113-name universe) · SELL ★")
+        # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · NO stop.
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · NO STOP — a credit-multiple stop cannot be reached above c/w 1/3, so the bought wing is the stop and max loss is width−credit · ~2.6/mo (113-name universe) · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -559,7 +559,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._panel_title("SWING TRADE LOG  -  credit spreads (what to SELL & BUY)", CYAN))
         # ★ STOCK CREDIT v2 — the TP-50 upgrade. Kept FIRST + gold-highlighted: the leader book,
         # watch it closest. Backtest stats live on PM DECISIONS / STUDIES; this log shows LIVE only.
-        v2hdr = QLabel("★ STOCK CREDIT v2 UNION ★   sell the breakout spread · book at half credit · stop 3×")
+        v2hdr = QLabel("★ STOCK CREDIT v2 UNION ★   sell the breakout spread · book at half credit · no stop, the bought wing caps the loss")
         v2hdr.setWordWrap(True)
         v2hdr.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         v2hdr.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -869,7 +869,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium, bid-ask ≤ 6%, OI ≥ 100. If it fails, skip it — thin options eat the edge.")}
 {p("<b>6.</b> Place it <b>between 15:36 and 15:40</b> — derivatives now close at 15:40, so that is the whole window. The 15:17 watchlist names the likely candidates ~19 minutes ahead, so pre-stage from it and treat the 15:36 signal as confirmation. Spreads are roughly twice as wide in this window as at 14:45, so use limit orders.")}
 {p("<b>7.</b> Exit — this is what sets the win rate, more than the entry does:")}
-{dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> — buy the spread back when it costs <b>50%</b> of the credit you collected. Stop at 3× credit (almost never reached).")}
+{dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> — buy the spread back when it costs <b>50%</b> of the credit you collected. <b>No stop</b>, same as v1 and v0: a stop priced as a multiple of the credit cannot be reached above c/w 1/3, because the spread can never cost more than its width. The bought wing is the stop.")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v1 and v0</b> — buy it back at <b>40%</b> of the credit. <b>No stop</b> — the wing you bought already caps the loss.")}
 {p("<b>8.</b> If nothing is bought back, it settles itself at expiry. Max loss is always (width − credit) × lot, known the moment you enter.")}
 {p("<b>9.</b> If <b>v1 and v0 both signal the same stock, take v1 only</b> — the engine already suppresses v0's, so you will see one signal.")}
@@ -893,7 +893,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, stop 3×)</span></td><td>82.2% · +30.7% on margin · positive every year <span style="color:{TEXT_DIM};">(667 trades)</span></td><td>82.8% · +3.7% · positive 2 of 3 years <span style="color:{TEXT_DIM};">(58 trades)</span></td><td><b>~2.6</b></td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>82.2% · +30.7% on margin · positive every year <span style="color:{TEXT_DIM};">(667 trades)</span></td><td>82.8% · +3.7% · positive 2 of 3 years <span style="color:{TEXT_DIM};">(58 trades)</span></td><td><b>~2.6</b></td></tr>
 <tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.9% · +19.9% · positive every year <span style="color:{TEXT_DIM};">(477 trades)</span></td><td>79.8% · +4.8% · positive every year <span style="color:{TEXT_DIM};">(193 trades)</span></td><td><b>~8.6</b></td></tr>
 <tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.1% · +17.8% · positive every year <span style="color:{TEXT_DIM};">(569 trades)</span></td><td style="color:{AMBER};">80.4% · <b>−0.7% on margin</b> · positive 2 of 3 years <span style="color:{TEXT_DIM};">(97 trades)</span></td><td><b>~4.3</b></td></tr>
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>

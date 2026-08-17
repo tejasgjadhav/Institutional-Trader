@@ -3,7 +3,13 @@
 Written 14-Aug-2026 after the leg-misalignment incident, to the standing rule that research
 scripts are production code. This is the single harness of record for the deployed configs:
 
-    v2  c/w >= 0.40    short 2-OTM width 4   TP-50   stop 3x credit
+    v2  c/w >= 0.40    short 2-OTM width 4   TP-50   NO STOP
+        (live config.STOCK_CREDIT_STOP_MULT = 99.0. A stop set as a multiple of the credit is
+        UNREACHABLE above c/w 1/3: at c/w 0.40 a 3x-credit stop sits at 1.2x the width, and a
+        vertical can never cost more than its width because the bought wing caps it. Full loss
+        arrives at 1.0x width, i.e. 2.5x credit, long before any 3x trigger. The harness carried
+        stop=3.0 while live carried 99.0 — numerically identical, since neither can fire, but the
+        harness now mirrors live. User caught this on 17-Aug-2026.)
     v1  c/w >= 0.40    short 1-OTM width 3   TP-40   no stop
     v0  c/w 0.35-0.40  short 2-OTM width 4   TP-40   no stop
 
@@ -63,7 +69,7 @@ PARITY_MAX_SPAN = 0.02      # accept the parity anchor only if CE and PE agree w
 # 0.45 against 0.78 in-sample, because the 2024-2026 window contains far fewer corporate actions.
 ATM_MAX_DRIFT      = 0.05   # nearest strike must sit within 5% of the close
 ATM_MIN_LADDER_POS = 0.15   # ATM must sit mid-ladder, not at its edge
-BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=3.0, band=(0.40, 99.0)),
+BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
          "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0)),
          "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40))}
 SWEEP_TPS = [0.30, 0.40, 0.50, 0.60, 0.70]
