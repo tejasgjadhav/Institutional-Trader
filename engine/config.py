@@ -485,7 +485,8 @@ ZERO_DTE_MULTI_MIN_CW = 0.04
 # Audit (ndte20) found no bug that flips the sign; the one bias it did find (no CONTRACTS floor on the
 # long wing) would FLATTER the book, so rejecting is the conservative side of that error.
 # Set back to True only with fresh evidence — see studies/BANKNIFTY_0DTE_REJECTION.md.
-DTE_MULTI_BANKNIFTY_ENABLED = False
+# DTE_MULTI_BANKNIFTY_ENABLED removed 2026-08-20 — the book itself is gone from
+# engine/dte_multi.py, so there is nothing left for a flag to switch.
 
 ZERO_DTE_SCAN_AFTER   = "09:16"  # enter right after the open (matches the backtest's open fill)
 ZERO_DTE_ENTRY_CUTOFF = "09:45"  # too far from the open after this — skip the day

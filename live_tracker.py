@@ -18,7 +18,6 @@ BOOKS = [
     ("Stock fade v2 UNION", "stock_credit_v2_positions.json", 88, 21500, "A"),
     ("NIFTY Tue 0DTE (FLIP)", "zero_dte_positions.json",        91, 2360,  "A"),
     ("SENSEX Thu 0DTE",       "sensex_dte_positions.json",      89, 3200,  "A"),
-    ("BANKNIFTY mo 0DTE",     "bnf_dte_positions.json",         91, 820,   "A"),
     ("Stock credit v1 (control)", "stock_credit_positions.json", 73, 9000, "ctrl"),
     ("Monthly futures pullback", "monthly_fut_positions.json",   76, 43000,"B"),
 ]

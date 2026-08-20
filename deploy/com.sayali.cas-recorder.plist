@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.sayali.cas-recorder</string>
+
+  <!-- CAS NIFTY AND SENSEX DATA — records the 15:15-15:40 close window every session,
+       then the calc-vs-print row (constituent reconstruction vs official close). -->
+  <key>ProgramArguments</key>
+  <array>
+    <string>/bin/bash</string>
+    <string>-c</string>
+    <string>cd /Users/sayali/files/institutional-trader &amp;&amp; /usr/bin/arch -arm64 .venv/bin/python -m engine.cas_recorder; /usr/bin/arch -arm64 .venv/bin/python studies/CAS_NIFTY_SENSEX_DATA/calc_vs_print_recorder.py</string>
+  </array>
+
+  <key>WorkingDirectory</key>
+  <string>/Users/sayali/files/institutional-trader</string>
+
+  <!-- 15:50, ten minutes after the 15:40 F&O close. The 16:20 pass is a retry: writes are
+       idempotent upserts keyed on (date, idx[, opt_type]), so a second run costs nothing
+       and covers a failed or offline first attempt. -->
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>50</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>50</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>50</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>50</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>50</integer></dict>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>20</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>16</integer><key>Minute</key><integer>20</integer></dict>
+  </array>
+
+  <key>RunAtLoad</key>
+  <false/>
+
+  <key>StandardOutPath</key>
+  <string>/Users/sayali/files/institutional-trader/logs/cas_recorder.out.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/sayali/files/institutional-trader/logs/cas_recorder.err.log</string>
+</dict>
+</plist>

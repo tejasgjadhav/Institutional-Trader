@@ -2720,3 +2720,76 @@ DONE-OOS
 ## DTE OOS LANDED 2026-08-20 06:16
 
 (no table)
+
+## DTE OOS LANDED 2026-08-20 06:36
+
+(crashed - see research/dte_oos.log)
+
+## 20-Aug USER HYPOTHESIS CONFIRMED: liquidity degrades with tenor
+He argued DTE>=10 has a liquidity problem and that IS would hide it while OOS would expose it.
+The IS sweep already measured it: OI rejections rise 3.5x from DTE-3 (7,615) to DTE-25 (26,501),
+monotonically. Longer tenor = thinner strikes. Premium rejections move the OPPOSITE way
+(60,766 -> 41,974), which is why the two forces trade off.
+OOS will corroborate differently and more strictly: an Upstox candle exists only for a contract
+that actually traded, so illiquid far-expiry legs cannot produce a trade at all. Expect OOS trade
+counts to fall at high DTE relative to IS. DTE OOS sweep restarted 06:38 after two crashes
+(leg-cache format mismatch, then mixed formats in the shared cache) -> research/DTE_OOS_RESULT.txt
+
+---
+
+## 2026-08-20 · DTE 5-vs-10 settled out-of-sample; 0DTE skip notification requested
+
+### DTE question is CLOSED — keep 10 on all three books
+
+`studies/ndte/dte_sweep_5v10.py` (a copy; the harness of record is untouched) ran OOS on
+2025-10-08 → 2026-07-22, 393 trades, median cohort. **Zero fetch failures on both floors.**
+
+| book | DTE | IS full | IS last yr | OOS | OOS n | OOS Rs/mo |
+|---|---|---|---|---|---|---|
+| v2 | 5 | +26.2% | +29.5% | +29.4% | 15 | 4,565 |
+| v2 | **10** | +27.2% | +31.0% | +27.1% | 32 | **9,365** |
+| v1 | 5 | +13.3% | +15.5% | +10.7% | 81 | 8,544 |
+| v1 | **10** | +10.3% | +9.5% | **+11.8%** | 100 | **12,034** |
+| v0 | 5 | +7.5% | +6.9% | +6.8% | 51 | 4,293 |
+| v0 | **10** | +14.4% | +13.0% | **+8.6%** | 66 | **7,007** |
+
+**v1's in-sample case INVERTED out-of-sample.** IS said 5 > 10 in both cuts; OOS says 10 > 5 on
+ROM, win rate, trade count, Rs/month and positive months — every column. Same signature as the
+take-profit sweep, which is what a parameter carrying no information looks like. Bootstraps overlap
+almost entirely (v1: [+0.2,+20.2] at 5 vs [+3.0,+20.7] at 10). Nothing deployed;
+`STOCK_CREDIT_MIN_DTE` stays 10.
+
+**The liquidity hypothesis was NOT confirmed.** DTE-10 produced MORE trades than DTE-5 in every
+book. Premium rejections 11,275 at DTE-5 vs 9,922 at DTE-10 — a shorter tenor kills more candidates
+on the Rs50 premium floor than it rescues from illiquidity. Limit on the claim: OOS OI rejections
+are 4-5 because an Upstox candle exists only for a contract that traded, so a dead contract is
+invisible rather than rejected. OOS measures the NET of premium and liquidity, not liquidity alone.
+
+### Harness bug found and fixed (would have faked the answer)
+
+`leg()` returned `{}` both when Upstox failed after six retries AND when a contract genuinely never
+traded. A network timeout therefore silently deleted a signal. Because the two DTE floors run
+SEQUENTIALLY, whichever floor ran while Upstox was throttling would show fewer trades and be read as
+"thinner liquidity" — the hypothesis under test. Now: a failed request returns None, only a
+`status == success` body counts as evidence of no trade, and drops are counted per floor and printed
+as `DROPPED ON FETCH FAILURE n`. Also fixed: the OOS window opened with an empty book, so the state
+is now warmed from 2025-08-01 and only trades from 2025-10-01 are recorded.
+
+### SENSEX 0DTE did not fire today — correctly
+
+`09:18:53 | dte_multi[SENSEX]: SKIP — credit/width 0.038 < 0.04 (uncompensated tail risk)`.
+A designed skip against `ZERO_DTE_MULTI_MIN_CW`, on real computed numbers, 5% below the floor.
+Note 17 Upstox timeouts logged today; some overlap the sweep's four workers, so contention cannot be
+ruled out, but the SENSEX decision preceded the 09:25 batch-LTP failure.
+
+### IN FLIGHT — user request, not yet built
+
+Send a Telegram message at 09:18 when NIFTY / BANKNIFTY / SENSEX 0DTE skip, saying why, in the same
+format as the other Telegram messages. Show him the text before anything sends.
+
+### Still open (unchanged)
+
+- `studies/MIN_DTE_SWEEP.md` and the UI still carry the IS-only verdict and call v1's DTE-25 result
+  "the single most actionable finding". Both need the OOS table above.
+- Audit items unfixed: per-invocation daily cap, once-a-day markers burnt before work runs, no
+  re-check of frozen exit parameters against config, `_stock_settlement_due` open 24/7.

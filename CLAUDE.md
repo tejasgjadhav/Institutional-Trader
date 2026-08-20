@@ -24,7 +24,7 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 | Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 80.4% OOS | ₹1,443 (4.3/mo × ₹335) | IS +17.8% ROM, +ve 6/6 yrs (n=569); OOS **−0.7%**, 2/3 yrs (n=97). Kept live as a paper forward-test, user 2026-08-15 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
-| ~~0DTE BANKNIFTY~~ | `DTE_MULTI_BANKNIFTY_ENABLED=False` | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 |
+| ~~0DTE BANKNIFTY~~ | **REMOVED 2026-08-20** | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 · book deleted from `engine/dte_multi.py`, never opened a position |
 | Index swing fade | `SWING_CREDIT_ENABLED` | 54% | ~₹0 | regime-dep · failed OOS |
 | Monthly futures | `MONTHLY_FUT_ENABLED` | 75.7% | ₹0 now | REGIME-OFF · needs ~₹15L |
 

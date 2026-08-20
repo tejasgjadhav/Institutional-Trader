@@ -1,12 +1,19 @@
 """
-0DTE expiry-day CE credit spreads — SENSEX (BSE weekly, ~Thu) + BANKNIFTY (NSE monthly).
+0DTE expiry-day CE credit spreads — SENSEX (BSE weekly, ~Thu).
 Same validated structure as the NIFTY book (engine/zero_dte.py, deliberately untouched):
 at the open of that index's expiry day SELL the CE ~0.5% OTM of spot, BUY the CE ~0.83% of
 spot further out, NO stop, settle intrinsic at 15:30. Parameters are exactly the backtested
-ones — no extra filters (SENSEX validated unfiltered 88.8%/+7.6%m on 89 expiries Oct'24→Jul'26;
-BANKNIFTY structure validated on 273 weeklies 2019-24 + 23 monthlies, deployable only on its
-monthly expiry). Books: data/sensex_dte_*.json, data/bnf_dte_*.json (same schema as the other
-credit books so the UI's generic renderer works).
+ones — no extra filters (SENSEX validated unfiltered 88.8%/+7.6%m on 89 expiries Oct'24→Jul'26).
+Books: data/sensex_dte_*.json (same schema as the other credit books so the UI's generic renderer
+works).
+
+BANKNIFTY was REMOVED from this module on 2026-08-20 (user instruction: "remove bank nifty from
+intra day totally"). It had been carried since the 2026-07-19 rejection as a disabled book, kept
+only so an open position could still settle. It never opened one — data/bnf_dte_positions.json was
+never created — so nothing was left to settle and the book is gone rather than merely switched off.
+The rejection evidence stands in studies/BANKNIFTY_0DTE_REJECTION.md: the edge was
+indistinguishable from zero (t=+0.10), the entire profit came from 3 trades, and the worst day
+cost about 102 months of profit.
 """
 import os
 import io
@@ -16,8 +23,7 @@ import logging
 from datetime import datetime, date
 
 from engine.config import (
-    ZERO_DTE_EARLY_CLOSE_FRAC,IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW,
-                           DTE_MULTI_BANKNIFTY_ENABLED)
+    ZERO_DTE_EARLY_CLOSE_FRAC,IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW)
 from engine.data_fetcher import SESSION, UPSTOX_BASE, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
 from engine.instruments import to_instrument_key, encode_key
 
@@ -30,9 +36,6 @@ BOOKS = [
     dict(name="SENSEX", src="BSE", spot_key="BSE_INDEX|SENSEX", otm=0.005, wing_pct=0.0083,
          lots=1, book=os.path.join(DATA_DIR, "sensex_dte_positions.json"),
          status=os.path.join(DATA_DIR, "sensex_dte_status.json")),
-    dict(name="BANKNIFTY", src="NSE", spot_key=None, otm=0.005, wing_pct=0.0083,
-         lots=1, book=os.path.join(DATA_DIR, "bnf_dte_positions.json"),
-         status=os.path.join(DATA_DIR, "bnf_dte_status.json")),
 ]
 
 
@@ -146,6 +149,9 @@ def _quote(key):
     return None
 
 
+SCAN_TRACE = {}   # {index: why it stood down today}, filled by scan_signals()
+
+
 def _scan_book(bk):
     today = date.today()
     book = _load_json(bk["book"], [])
@@ -155,10 +161,15 @@ def _scan_book(bk):
     # short premium is the wrong trade against a bimodal outcome. Rs0 measured historical cost.
     if today.isoformat() in (ZERO_DTE_ELECTION_BLACKOUT or []):
         logger.info(f"dte_multi[{bk['name']}]: SKIP — election blackout ({today.isoformat()})")
+        SCAN_TRACE[bk["name"]] = "a scheduled binary event falls inside the session, so the election blackout applies."
         return []
     chain = _chain_today(bk)
     if not chain:
-        return []
+        return []            # not this book's expiry day — nothing to explain
+    # From here the book IS eligible today, so any exit without a position owes him a reason.
+    # This default covers the silent data returns below (no spot, no quote, clamped chain).
+    SCAN_TRACE[bk["name"]] = ("the market did not offer a quotable spread. The option chain, the "
+                              "index price or a two-sided quote was unavailable.")
     spot = _spot(bk)
     if not spot:
         return []
@@ -176,13 +187,16 @@ def _scan_book(bk):
     credit = round(sm - lm, 2)
     if credit <= 0:
         return []
-    # MINIMUM CREDIT/WIDTH (structural, 2026-07-19) — SENSEX/BANKNIFTY only; NIFTY unchanged.
+    # MINIMUM CREDIT/WIDTH (structural, 2026-07-19) — this module only; NIFTY unchanged.
     # Below this the spread is negative-EV by arithmetic: near-zero credit against a full
     # settlement tail. The c/W<0.04 bucket had the HIGHEST win rate (91.7%) and still LOST money.
     # 0.04 is the structural boundary of that dead bucket, NOT the sweep's argmax. See config.
     if ZERO_DTE_MULTI_MIN_CW and credit / width < ZERO_DTE_MULTI_MIN_CW:
         logger.info(f"dte_multi[{bk['name']}]: SKIP — credit/width {credit/width:.3f} < "
                     f"{ZERO_DTE_MULTI_MIN_CW} (uncompensated tail risk)")
+        SCAN_TRACE[bk["name"]] = (f"the spread paid credit ÷ width of {credit/width:.3f}, below the "
+                                  f"{ZERO_DTE_MULTI_MIN_CW} floor. The market was not paying enough for "
+                                  f"the risk of a full-width loss.")
         return []
     lot = int(short.get("lot") or 0)
     if lot <= 0:
@@ -205,6 +219,7 @@ def _scan_book(bk):
     }
     book.append(pos)
     _save_json(bk["book"], book)
+    SCAN_TRACE.pop(bk["name"], None)          # it fired, so there is nothing to explain
     logger.info(f"dte_multi: opened {pos['order_label']} (spot {spot:.0f})")
     return [pos]
 
@@ -296,7 +311,7 @@ def _write_status(bk):
         spot = _spot(bk)
         st["spot"] = spot
         if spot:
-            step = 100 if bk["name"] in ("SENSEX", "BANKNIFTY") else 50
+            step = 100 if bk["name"] == "SENSEX" else 50
             ks = round(spot * (1 + bk["otm"]) / step) * step
             st["preview_short"] = ks
             st["preview_wing"] = ks + round(spot * bk["wing_pct"] / step) * step
@@ -310,14 +325,13 @@ def _write_status(bk):
 
 def scan_signals() -> list:
     """Returns the NEW position dicts (was a bare count — the Telegram formatter needs the
-    legs/premiums). Truthiness unchanged for the single engine_runner caller."""
+    legs/premiums). Truthiness unchanged for the single engine_runner caller.
+
+    Also fills SCAN_TRACE with the reason each ELIGIBLE book stood down, so the engine can tell him
+    why nothing fired instead of leaving him with silence (user request, 20-Aug-2026)."""
+    SCAN_TRACE.clear()
     new = []
     for bk in BOOKS:
-        # BANKNIFTY REJECTED 2026-07-19 — edge indistinguishable from zero (t=+0.10), entire profit
-        # was 3 trades, worst day = ~102 months of profit. See studies/BANKNIFTY_0DTE_REJECTION.md.
-        # Resolution still runs below so any already-open position settles normally.
-        if bk["name"] == "BANKNIFTY" and not DTE_MULTI_BANKNIFTY_ENABLED:
-            continue
         try:
             new.extend(_scan_book(bk) or [])
         except Exception as e:

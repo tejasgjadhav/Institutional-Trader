@@ -185,6 +185,9 @@ def write_status() -> None:
         logger.warning(f"zero_dte status save: {e}")
 
 
+SCAN_TRACE = {}   # {index: why it stood down today}, filled by scan_signal()
+
+
 def scan_signal() -> list:
     """Once per expiry day, right after the open: open THE spread (one trade, one index).
     Returns the new position (in a list) or []."""
@@ -200,15 +203,21 @@ def scan_signal() -> list:
     book = _load_book()
     if any(p["entry_date"] == today.isoformat() for p in book):
         return []
+    SCAN_TRACE.clear()
     chain = _todays_ce_chain()
     if not chain:            # not a weekly-expiry day
-        return []
+        return []            # nothing to explain
+    # NIFTY IS eligible today, so any exit without a position owes him a reason. This default
+    # covers the silent data returns below (no spot, no quote, clamped chain, no lot size).
+    SCAN_TRACE[ZERO_DTE_INDEX] = ("the market did not offer a quotable spread. The option chain, the "
+                                  "index price or a two-sided quote was unavailable.")
     # ELECTION BLACKOUT (structural, 2026-07-19): scheduled inside-window binary — short premium is
     # the wrong trade against a bimodal outcome. Never triggered in 448 backtested expiries, so the
     # measured cost is Rs0; this is insurance against the ruin mode, not an edge. See config.
     _bl = ZERO_DTE_ELECTION_BLACKOUT or []
     if today.isoformat() in _bl:
         logger.info(f"zero_dte: SKIP — election blackout ({today.isoformat()}): scheduled binary event")
+        SCAN_TRACE[ZERO_DTE_INDEX] = "a scheduled binary event falls inside the session, so the election blackout applies."
         return []
     # The blackout is a HAND-MAINTAINED list — there is no news feed behind it. If every entry is in
     # the past the filter is dead code and cannot protect anything, so say so loudly rather than
@@ -223,6 +232,8 @@ def scan_signal() -> list:
     rv = _rv5()
     if ZERO_DTE_RV5_MAX and rv is not None and rv >= ZERO_DTE_RV5_MAX:
         logger.info(f"zero_dte: SKIP — calm-regime filter (rv5 {rv:.2f}% >= {ZERO_DTE_RV5_MAX}%)")
+        SCAN_TRACE[ZERO_DTE_INDEX] = (f"NIFTY's 5-day realised volatility is {rv:.2f}%, at or above the "
+                                      f"{ZERO_DTE_RV5_MAX}% ceiling. This book only sells into a calm week.")
         return []
     # FLIP rule (user-approved): momentum week -> sell the PE side instead of the CE
     ret5 = getattr(_rv5, "ret5", None)
@@ -252,6 +263,9 @@ def scan_signal() -> list:
         return []
     if ZERO_DTE_MIN_CREDIT_PCT and credit < spot * ZERO_DTE_MIN_CREDIT_PCT / 100:
         logger.info(f"zero_dte: SKIP — thin credit ({credit:.1f} pts < {spot*ZERO_DTE_MIN_CREDIT_PCT/100:.1f} = {ZERO_DTE_MIN_CREDIT_PCT}% of spot) — dead-EV week")
+        SCAN_TRACE[ZERO_DTE_INDEX] = (f"the spread paid only {credit:.1f} points against the "
+                                      f"{spot*ZERO_DTE_MIN_CREDIT_PCT/100:.1f}-point floor "
+                                      f"({ZERO_DTE_MIN_CREDIT_PCT}% of spot). That is too thin to carry the risk to settlement.")
         return []
     lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
     if lot <= 0:
@@ -277,6 +291,7 @@ def scan_signal() -> list:
         "closed_date": None, "exit_cost": None,
     }
     book.append(pos)
+    SCAN_TRACE.pop(ZERO_DTE_INDEX, None)      # it fired, so there is nothing to explain
     new = [pos]
     # FLIP-CONDOR HYBRID (user-approved paper 2026-07-31): also sell the OPPOSITE side, short
     # ~ZERO_DTE_HYBRID_OTM OTM with the same wing, ONLY if its own credit/width >= the floor.

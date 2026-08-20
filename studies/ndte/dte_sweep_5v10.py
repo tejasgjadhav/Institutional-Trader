@@ -65,8 +65,9 @@ from engine.config import UNIVERSE
 
 WINDOW = sys.argv[1] if len(sys.argv) > 1 else "OOS"
 MIN_DTE, REENTRY, MIN_PREM = 10, 3, 50.0
-DTE_GRID = [3, 5, 7, 10, 15, 20, 25]
+DTE_GRID = [5, 10]   # narrowed 20-Aug-2026: the only open question is v1 at 5 against the deployed 10
 REJECT = collections.Counter()   # why candidates died, per DTE
+FETCHFAIL = collections.Counter()   # signals dropped because Upstox would not answer, per DTE floor
 # OPEN-INTEREST FLOOR (added 16-Aug-2026 — the audit's BLOCKER finding, matching the live gate).
 # Bhavcopy publishes a CLOSE for every listed contract, and for one that never traded that CLOSE is
 # NSE's THEORETICAL SETTLEMENT price, not a print. Measured on the strikes this harness actually
@@ -116,7 +117,7 @@ BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
          "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0)),
          "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40))}
 spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
-OUT = f"research/dtesweep_{WINDOW.lower()}_rows.json"
+OUT = f"research/dte5v10_{WINDOW.lower()}_rows.json"
 
 def parity_spot(ce_px, pe_px):
     """Implied spot from the chain itself: at the strike where |CE - PE| is smallest, S = K + C - P.
@@ -327,8 +328,16 @@ def leg(key, d0, to):
     with LK:
         if ck in LEGC: return LEGC[ck]
     j = _gj(f"{UPSTOX_BASE}/v2/expired-instruments/historical-candle/{encode_key(key)}/day/{to}/{d0}")
+    # _get_json returns {} after six failed attempts, which is INDISTINGUISHABLE from a contract
+    # that simply never traded. Both used to yield an empty dict, so a network timeout silently
+    # deleted a signal. That matters here because the two DTE floors run sequentially under
+    # different throttling, so whichever floor ran while Upstox was slow would show fewer trades
+    # and be read as "thinner liquidity" - which is the hypothesis under test. A failed request
+    # now returns None and is COUNTED; a successful response with no candles stays {}.
+    if not j or j.get("status") != "success":
+        return None                          # no answer, or an error body - not evidence of no trade
     out = {}
-    if j.get("status") == "success":
+    if True:
         for c in j.get("data", {}).get("candles", []) or []:
             out[str(c[0])[:10]] = float(c[4])
     if out:                                   # never cache an empty (network-poisoned) result
@@ -338,7 +347,11 @@ def leg(key, d0, to):
 def run_oos():
     from engine.data_fetcher import fetch_upstox_historical
     from engine.expired_options import get_expiries, get_contracts
-    START = date(2024, 10, 1)
+    START = date(2025, 10, 1)   # last ~11 months only, the regime whose liquidity we are testing
+    # The re-entry gap is 3 days and a position can stay open ~45, so the book has to be warm
+    # before the first recorded day. Starting the LOOP at START would open the window with an
+    # empty book and take entries the live engine would have blocked, inflating the first weeks.
+    WARM = date(2025, 8, 1)
     rows = []; done = [0]
     def work(tk):
         sym = tk.replace(".NS", "")
@@ -354,7 +367,7 @@ def run_oos():
         mine = []; last_entry = None; open_until = {}
         for d, c, typ, d10_hit in breakout_days(u):
             dd = date.fromisoformat(d)
-            if dd < START: continue
+            if dd < WARM: continue
             if last_entry and (dd - last_entry).days < REENTRY: continue
             try:
                 exps = [e for e in get_expiries(sym) if e >= (dd + timedelta(days=MIN_DTE)).isoformat()]
@@ -375,6 +388,9 @@ def run_oos():
             def px(si, li, chain=chain, d=d, to=to):
                 sp = leg(chain[si]["instrument_key"], d, to)
                 lp = leg(chain[li]["instrument_key"], d, to)
+                if sp is None or lp is None:
+                    with LK: FETCHFAIL[MIN_DTE] += 1             # network, not liquidity
+                    return None
                 if d not in sp or d not in lp: return None       # both legs must trade on entry day
                 both = sorted(set(sp) & set(lp))
                 # The OOS leg cache stores [close, open_interest] per date. This script still
@@ -400,6 +416,7 @@ def run_oos():
                 last_entry = dd
                 for _b, _x in ex.items():
                     open_until[_b] = max(open_until.get(_b, ""), _x)
+        mine = [r for r in mine if r["day"] >= START.isoformat()]   # warm-up trades build state only
         with LK:
             rows.extend(mine); done[0] += 1
             if done[0] % 5 == 0:
@@ -418,11 +435,12 @@ for _d in DTE_GRID:
     _r = run_is() if WINDOW == "IS" else run_oos()
     for x in _r: x["dte_floor"] = _d
     ALL[_d] = dict(rows=_r, prem=REJECT[(_d, "premium")], oi=REJECT[(_d, "openint")])
-    print(f"  DTE>={_d}: {len(_r)} trades · rejected on premium {REJECT[(_d,'premium')]} · on OI {REJECT[(_d,'openint')]}", flush=True)
+    print(f"  DTE>={_d}: {len(_r)} trades · rejected on premium {REJECT[(_d,'premium')]} · "
+          f"on OI {REJECT[(_d,'openint')]} · DROPPED ON FETCH FAILURE {FETCHFAIL[_d]}", flush=True)
 rows = [x for v in ALL.values() for x in v["rows"]]
 json.dump(rows, open(OUT, "w"))
 lbl = "IS 2019-01-01 -> 2024-07-05 (bhavcopy)" if WINDOW == "IS" else "OOS Oct-2024 -> date (Upstox)"
-MON = 66.0 if WINDOW == "IS" else 22.5
+MON = 66.0 if WINDOW == "IS" else 10.7   # Oct-2025 -> 20-Aug-2026
 print(f"\n=== MIN-DTE SWEEP · {lbl} · MEDIAN COHORT (c/w 0.40-0.50; v0 0.35-0.40) ===")
 print("Deployed floor is 10. 'rej prem' / 'rej OI' are candidates killed by those gates at that DTE.\n")
 for bk in ("v2", "v1", "v0"):

@@ -46,8 +46,6 @@ ZDTE_BOOK = _os.path.join(DATA_DIR, "zero_dte_positions.json")
 ZDTE_STATUS = _os.path.join(DATA_DIR, "zero_dte_status.json")
 SDTE_BOOK = _os.path.join(DATA_DIR, "sensex_dte_positions.json")
 SDTE_STATUS = _os.path.join(DATA_DIR, "sensex_dte_status.json")
-BDTE_BOOK = _os.path.join(DATA_DIR, "bnf_dte_positions.json")
-BDTE_STATUS = _os.path.join(DATA_DIR, "bnf_dte_status.json")
 
 # ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#000000"   # pure black screen
@@ -637,10 +635,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sdte_status = self._stats_label(); v.addWidget(self.sdte_status)
         self.sdte_stats = self._stats_label(); v.addWidget(self.sdte_stats)
         self.sdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sdte_table, 1)
-        v.addWidget(self._section_label("BANKNIFTY EXPIRY-DAY — MONTHLY (~1/mo) · WIN 79.5% over 2019–Sep 2024 (weeklies, +7.4%m) / 91% over Oct 2024–now (Oct'24–now, monthlies, +11%m)", PURPLE))
-        self.bdte_status = self._stats_label(); v.addWidget(self.bdte_status)
-        self.bdte_stats = self._stats_label(); v.addWidget(self.bdte_stats)
-        self.bdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.bdte_table, 1)
         v.addStretch(0)
         return self._scroll(inner)
 
@@ -671,7 +665,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             if hasattr(self, "log_stats"):
                 import json as _j
                 W = L = 0; rs = 0.0
-                for bp in (ZDTE_BOOK, SDTE_BOOK, BDTE_BOOK):
+                for bp in (ZDTE_BOOK, SDTE_BOOK):
                     try:
                         for p in (_j.load(open(bp)) if _os.path.exists(bp) else []):
                             if p.get("status") == "WIN": W += 1
@@ -691,12 +685,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                 self._fill_swing_table(self.log_zdte, ZDTE_BOOK)   # full history in TRADE LOG tab
             if hasattr(self, "log_sdte"):
                 self._fill_swing_table(self.log_sdte, SDTE_BOOK)
-                self._fill_swing_table(self.log_bdte, BDTE_BOOK)
             if hasattr(self, "sdte_table"):
                 self._fill_swing_table(self.sdte_table, SDTE_BOOK, self.sdte_stats, open_only=True)
-                self._fill_swing_table(self.bdte_table, BDTE_BOOK, self.bdte_stats, open_only=True)
                 self._fill_dte_status(self.sdte_status, SDTE_STATUS, "SENSEX")
-                self._fill_dte_status(self.bdte_status, BDTE_STATUS, "BANKNIFTY")
         except Exception as e:
             logger.warning(f"zero_dte tab fill: {e}")
         try:
@@ -772,8 +763,6 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_zdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_zdte, 1)
         v.addWidget(self._section_label("INTRADAY  —  SENSEX expiry-day CE spread (Thursdays)", AMBER))
         self.log_sdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_sdte, 1)
-        v.addWidget(self._section_label("INTRADAY  —  BANKNIFTY expiry-day CE spread (monthly)", PURPLE))
-        self.log_bdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_bdte, 1)
         v.addWidget(self._section_label("ORB+VWAP INDEX  —  BANKNIFTY", AMBER))
         self.log_bnf = self._make_log_table(); v.addWidget(self.log_bnf, 1)
         v.addStretch(1)
@@ -951,7 +940,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{TEXT_DIM};"><td>3-Family + ORB+VWAP option-buying</td><td>OFF</td><td>direction is real but does not survive option-buying costs</td></tr>
 </table>
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE EVIDENCE AUDIT, 14–16 AUG — every deployed book re-measured</p>
-{res("<b>The 10-day expiry floor, tested for the first time.</b> It has governed every stock signal ever fired and no study had ever measured it. v2's deployed 10 IS its peak — +27.2% on margin, rising smoothly to it and falling after, which is what a real optimum looks like. <b>v1 runs the opposite way and its deployed setting is its WORST cell</b>: 25 days pays +17.5% against +10.3%, on a higher win rate and fewer trades, worth roughly ₹7,300 a month more. v0's peak at 10 is a spike between two low neighbours, so noise. IN-SAMPLE ONLY — nothing moves until the out-of-sample sweep runs. File: MIN_DTE_SWEEP.md")}
+{res("<b>The 10-day expiry floor, tested in both windows — and it stays.</b> In-sample, v1 looked like the exception: 5 days paid +13.3% against 10's +10.3%, and +15.5% against +9.5% in the recent year. <b>Out-of-sample the ranking inverted.</b> On 393 trades entered Oct-2025 to Jul-2026, v1 at 10 days beat 5 on ROM (+11.8% vs +10.7%), win rate (80.0% vs 79.0%), trade count (100 vs 81) and rupees a month (₹12,034 vs ₹8,544). v2 and v0 also favour 10. Two windows disagreeing is the same signature the take-profit sweep left, which is what a parameter carrying no information looks like. <b>The liquidity worry did not appear</b>: 10 days produced MORE trades than 5 in every book, because a shorter tenor kills more candidates on the ₹50 premium floor than it saves from thin contracts. DEPLOYED FLOOR CONFIRMED AT 10. File: MIN_DTE_SWEEP.md")}
 {res("<b>Nearer expiry buys liquidity and loses premium — both effects are real.</b> Across the whole DTE grid, candidates killed by the ₹50 premium floor outnumber those killed by open interest about eight to one. Shortening from 25 days to 3 costs ~19,000 extra premium rejections and saves ~19,000 open-interest rejections. The net optimum lands differently per book, because v2's 2-OTM/width-4 and v1's 1-OTM/width-3 price time value differently.")}
 {res("<b>Open interest: the buckets decay the wrong way, and it is unresolved.</b> In-sample, v2 pays +38.2% at 2–5 lots of open interest and <b>+2.4% at 25+</b> — the thinnest contracts pay most and the most liquid pay almost nothing. Either illiquid marks are stale and flattering the result, or illiquid names genuinely carry richer premium. The out-of-sample window decides it, because an Upstox candle exists only for a contract that actually traded. The live floor stays at 'open interest greater than zero' until then. File: DEPLOYED_EVIDENCE_AUDIT.md §7")}
 {res("<b>The harness of record, after six corrections.</b> Legs joined by DATE; v1 scans Donchian-10 only and stands down while v2 holds a name; spot derived from the option chain by put-call parity, because split-adjusted closes against unadjusted strike ladders were fabricating deep-ITM trades; each book skips a name it already holds open; open interest required on BOTH legs at entry AND on every exit-check day; and expiry settled from each option's own closing price. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}

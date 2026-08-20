@@ -14,6 +14,31 @@ trading config is a worse failure mode than the one it would prevent.
 
 ---
 
+## 2026-08-20 10:32:32 IST
+
+commit at snapshot: `0d36c56 (UNCOMMITTED EDITS)` — ui: one signals-per-month figure everywhere, from the measured OOS rate
+
+| tunable | before | after |
+|---|---|---|
+| `DTE_MULTI_BANKNIFTY_ENABLED` | `false` | `"\u2205"` |
+
+Roll back with: `git checkout 0d36c56 (UNCOMMITTED EDITS) -- engine/config.py`
+
+---
+
+## 2026-08-17 17:11:35 IST
+
+commit at snapshot: `947a709 (UNCOMMITTED EDITS)` — ui+telegram: current in-sample numbers, OOS withdrawn, phantom stop removed
+
+| tunable | before | after |
+|---|---|---|
+| `STOCK_CREDIT_MIN_OI` | `100` | `1` |
+| `STOCK_CREDIT_MIN_OI_LOTS` | `1` | `"\u2205"` |
+
+Roll back with: `git checkout 947a709 (UNCOMMITTED EDITS) -- engine/config.py`
+
+---
+
 ## 2026-08-17 16:18:41 IST
 
 commit at snapshot: `6847419 (UNCOMMITTED EDITS)` — OI floor is exactly 5 lots, not max(100, 5*lot)

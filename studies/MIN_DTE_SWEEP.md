@@ -78,7 +78,54 @@ about 19,000 open-interest rejections — the two effects are of similar size an
 exactly as the user predicted. The net optimum then lands differently per book, because v2's
 2-OTM/width-4 geometry and v1's 1-OTM/width-3 geometry price time value differently.
 
-## Verdict: change nothing yet
+## OUT-OF-SAMPLE, 20-Aug-2026: the deciding test ran, and v1's result did NOT replicate
+
+`studies/ndte/dte_sweep_5v10.py`, Upstox, entries 2025-10-08 -> 2026-07-22, 393 trades, median
+cohort, floors 5 and 10 only. The book state is warmed from 2025-08-01 so the window does not open
+with an empty book. **Zero signals were dropped on a fetch failure on either floor.**
+
+| book | DTE | IS full | IS last yr | **OOS** | OOS n | OOS win | OOS Rs/mo | +ve months |
+|---|---|---|---|---|---|---|---|---|
+| v2 | 5 | +26.2% | +29.5% | +29.4% | 15 | 86.7% | Rs4,565 | 6/6 |
+| v2 | **10** | +27.2% | +31.0% | +27.1% | 32 | 84.4% | **Rs9,365** | 7/9 |
+| v1 | 5 | +13.3% | +15.5% | +10.7% | 81 | 79.0% | Rs8,544 | 7/10 |
+| v1 | **10** | +10.3% | +9.5% | **+11.8%** | 100 | **80.0%** | **Rs12,034** | **8/10** |
+| v0 | 5 | +7.5% | +6.9% | +6.8% | 51 | 80.4% | Rs4,293 | 7/10 |
+| v0 | **10** | +14.4% | +13.0% | **+8.6%** | 66 | **83.3%** | **Rs7,007** | 7/10 |
+
+**v1's slope inverted between windows.** In-sample 5 beat 10 in both cuts, and the recent-year gap
+was wide (+15.5% against +9.5%). Out-of-sample 10 wins on ROM, on win rate, on trade count, on
+rupees a month and on positive months - every column, one direction. This is the same signature the
+take-profit sweep produced for v1, which this repo already records as what a parameter carrying no
+information looks like. Two windows disagreeing is the answer, not a puzzle.
+
+Bootstrapped 90% ROM intervals overlap almost entirely, so no floor is statistically separable:
+v2 [+4.7%, +50.3%] at 5 vs [+12.6%, +39.8%] at 10; v1 [+0.2%, +20.2%] vs [+3.0%, +20.7%];
+v0 [-5.2%, +18.2%] vs [-1.0%, +17.6%].
+
+**The liquidity hypothesis was not confirmed.** The in-sample open-interest curve suggested that a
+longer tenor buys illiquidity, and it does in bhavcopy. Out-of-sample DTE-10 produced MORE trades
+than DTE-5 in every book. Premium rejections explain it: 11,275 at DTE-5 against 9,922 at DTE-10.
+Shortening the tenor kills more candidates on the Rs50 premium floor than it rescues from thin
+contracts.
+
+**Limit on that claim.** Out-of-sample open-interest rejections are 4 and 5, effectively nil,
+because an Upstox candle exists only for a contract that actually traded - a dead contract is
+invisible rather than rejected. So this window measures the NET of premium and liquidity together
+and cannot isolate liquidity on its own. The net favours 10, which is what governs deployment.
+
+**A harness bug was found and fixed before this run, and it would have faked the answer.** `leg()`
+returned an empty dict both when Upstox failed after six retries AND when a contract genuinely
+never traded, so a network timeout silently deleted a signal. The two floors run sequentially, so
+whichever floor ran while the API was slow would have shown fewer trades and been read as thinner
+liquidity - the hypothesis under test. A failed request now returns None, only a `status ==
+success` body counts as evidence of no trade, and drops are counted and printed per floor.
+
+**DEPLOYED SETTING CONFIRMED: `STOCK_CREDIT_MIN_DTE` stays at 10 for v2, v1 and v0.** The DTE-25
+result flagged below as "the single most actionable finding" was in-sample only and is superseded
+by this table.
+
+## Verdict at the time (in-sample only, superseded above): change nothing yet
 
 v2 is already at its best setting. v0's peak is noise. v1's result is genuinely interesting and
 points at 25 days, but **this is in-sample only, and in-sample is the window that chose these

@@ -643,6 +643,45 @@ class EngineRunner:
             if _fired == 0:
                 self._tg_no_signal(now)
 
+    def _tg_intraday_skip(self, now, reasons):
+        """Say why the same-day index books did not trade (user request, 20-Aug-2026).
+
+        The 15:36 message already covers the stock books. This is its counterpart for the 09:16
+        window, and it exists for the same reason: on 20-Aug the SENSEX book skipped on a credit
+        ratio of 0.038 against a 0.040 floor and nothing told him, so a designed skip and a dead
+        engine looked identical from the outside.
+        """
+        try:
+            from engine.notifications import send_telegram
+            lines = [
+                "\u26aa <b>NO INTRADAY TRADE TODAY \u2014 SCAN COMPLETE</b>",
+                f"{now.strftime('%A, %d %b %Y')} \u00b7 scanned at {now.strftime('%H:%M')} on the open",
+                "",
+                "Thank you for waiting. The same-day books have run and none of them has a trade "
+                "for you today.",
+                "",
+            ]
+            for idx in sorted(reasons):
+                lines.append(f"\u2022 <b>{idx}</b> \u2014 {reasons[idx]}")
+            lines += [
+                "",
+                "<b>Standing down is the strategy working, not failing.</b> These books sell a "
+                "same-day spread only when the market pays properly for carrying the risk to "
+                "settlement. When the credit is thin the loss is still the full width, so a cheap "
+                "trade is the one that gives the edge back.",
+                "",
+                "The next intraday scan runs on the following expiry, just after the open.",
+                self._TG_DISCLAIMER,
+            ]
+            # send_telegram returns False on a missing/rotated token and every caller used to
+            # discard it. This message exists so that silence is never ambiguous, so a silent
+            # delivery failure would defeat the whole point. Say so in the log.
+            if not send_telegram("\n".join(lines)):
+                logger.warning("_tg_intraday_skip: Telegram delivery FAILED — the skip notice did "
+                               "not reach him. Check TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID.")
+        except Exception as e:
+            logger.warning(f"_tg_intraday_skip: {e}")
+
     def _tg_no_signal(self, now):
         """Tell him the scan ran and found nothing (user request, 18-Aug-2026).
 
@@ -679,8 +718,11 @@ class EngineRunner:
                 "The next scan runs tomorrow at 15:36, after the closing auction.",
                 self._TG_DISCLAIMER,
             ]
-            send_telegram("\n".join(lines))
-            logger.info("no-signal notice sent (watchlist %d, universe %d)", n_wl, len(config.UNIVERSE))
+            if send_telegram("\n".join(lines)):
+                logger.info("no-signal notice sent (watchlist %d, universe %d)", n_wl, len(config.UNIVERSE))
+            else:
+                logger.warning("no-signal notice: Telegram delivery FAILED — the 15:36 notice did "
+                               "not reach him. Check TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID.")
         except Exception as e:
             logger.warning("no-signal notice failed: %s", e)
 
@@ -708,7 +750,7 @@ class EngineRunner:
                 zero_dte.write_status()   # pre-market "signal expected?" checker for the UI
             except Exception as e:
                 logger.warning(f"zero_dte status: {e}")
-        # SENSEX + BANKNIFTY 0DTE books (engine/dte_multi.py) share the cadence
+        # SENSEX 0DTE book (engine/dte_multi.py) shares the cadence
         try:
             from engine import dte_multi
             hs, ms_ = map(int, config.ZERO_DTE_SETTLE_AFTER.split(":"))
@@ -741,9 +783,21 @@ class EngineRunner:
                     logger.info(f"dte_multi: opened {len(n)} spread(s)")
                     # each index gets its OWN clearly-labelled message (user: never combined)
                     self._tg("INTRADAY SENSEX", [p for p in n if p.get("symbol") == "SENSEX"])
-                    self._tg("INTRADAY BANKNIFTY", [p for p in n if p.get("symbol") == "BANKNIFTY"])
             except Exception as e:
                 logger.warning(f"dte_multi scan: {e}")
+            # Tell him why the intraday books stood down (user request, 20-Aug-2026). Same reason
+            # as the 15:36 no-signal message: silence cannot distinguish "the gate held" from "the
+            # engine never ran". Only ELIGIBLE books appear — a book whose expiry is not today has
+            # nothing to explain and is left out.
+            try:
+                reasons = {}
+                reasons.update(getattr(zero_dte, "SCAN_TRACE", {}) or {})
+                from engine import dte_multi as _dm
+                reasons.update(getattr(_dm, "SCAN_TRACE", {}) or {})
+                if reasons:
+                    self._tg_intraday_skip(now, reasons)
+            except Exception as e:
+                logger.warning(f"intraday skip notice: {e}")
 
     def _manage_wakelock(self):
         """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended
@@ -775,7 +829,6 @@ class EngineRunner:
         ("SWING CREDIT · multi-day", "swing_positions.json"),
         ("INTRADAY NIFTY (same-day)", "zero_dte_positions.json"),
         ("INTRADAY SENSEX (same-day)", "sensex_dte_positions.json"),
-        ("INTRADAY BANKNIFTY", "bnf_dte_positions.json"),   # disabled 07-19; retained so any open pos still settles
         # MONTHLY FUTURES was MISSING here (found in the 2026-08-01 bug sweep). It is REGIME_OFF today
         # so nothing was lost, but the moment NIFTY clears its 200DMA it trades again and every WIN/LOSS
         # would have resolved SILENTLY — no Telegram result and absent from the portfolio summary. The
@@ -886,7 +939,7 @@ class EngineRunner:
 
     # Books whose expiry is same-day (0DTE) — everything else is a multi-day, month/week-end
     # spread. Drives the intraday-vs-month-end split in the portfolio summary.
-    _INTRADAY_BOOKS = {"zero_dte_positions.json", "sensex_dte_positions.json", "bnf_dte_positions.json"}
+    _INTRADAY_BOOKS = {"zero_dte_positions.json", "sensex_dte_positions.json"}
     # Short display tag per book for the open-positions breakdown.
     _BOOK_TAG = {
         "stock_credit_v2_positions.json": "v2",
@@ -895,7 +948,6 @@ class EngineRunner:
         "swing_positions.json": "SWING",
         "zero_dte_positions.json": "0DTE NIFTY",
         "sensex_dte_positions.json": "0DTE SENSEX",
-        "bnf_dte_positions.json": "0DTE BNF",
         "monthly_fut_positions.json": "MONTHLY FUT",
     }
 
