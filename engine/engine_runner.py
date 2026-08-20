@@ -263,19 +263,19 @@ class EngineRunner:
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
             "• Donchian-union breakout fade · credit/width ≥ 0.40 · nearest expiry at least 10 days out\n"
-            "• In-sample (1-Jan-2019 → 5-Jul-2024): 140 trades · <b>74.3%</b> win rate · +13.7% on margin · ₹1,897 net per trade · positive 5 of 6 years\n"
-            "• Out-of-sample is being re-measured after six corrections to the backtest, so no figure is quoted for it today\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 217 trades · <b>78.8%</b> win rate · +27.2% on margin · ₹5,798 net per trade · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 49 trades · <b>83.7%</b> win rate · +28.0% on margin · ₹3,675 net per trade · positive every year\n"
             "• The backtest cannot model the live bid-ask gate, which rejects most candidates, so read this as a ceiling",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
             "• The weakest evidence of the three stock books · forward paper-test at 1 lot\n"
-            "• In-sample (1-Jan-2019 → 5-Jul-2024): 185 trades · <b>78.9%</b> win rate · +6.2% on margin · ₹1,210 net per trade · positive 5 of 6 years\n"
-            "• Out-of-sample is being re-measured; the earlier figure was withdrawn rather than left standing\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 237 trades · <b>83.1%</b> win rate · +14.4% on margin · ₹3,460 net per trade · positive 5 of 6 years\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 90 trades · <b>80.0%</b> win rate · only +3.0% on margin and positive just <b>1 of 3 years</b>\n"
             "• It wins about four trades in five and still clears the least of the three books per trade",
         "STOCK CREDIT v1":
             "• Same fade, short 1-OTM · width 3 · book at 40% of credit · Donchian-10 · nearest expiry at least 10 days out\n"
-            "• In-sample (1-Jan-2019 → 5-Jul-2024): 285 trades · <b>79.3%</b> win rate · +8.4% on margin · ₹1,364 net per trade · positive 4 of 6 years\n"
-            "• Out-of-sample is being re-measured after six corrections to the backtest\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 359 trades · <b>79.1%</b> win rate · +10.3% on margin · ₹2,016 net per trade · positive every year\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 169 trades · <b>81.1%</b> win rate · +11.5% on margin · ₹1,263 net per trade · positive every year\n"
             "• Fires about twice as often as v2 and rests on the larger measured sample",
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
@@ -608,12 +608,14 @@ class EngineRunner:
         after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
         if (self.agent.is_market_open() and after_cutoff and self._stockcr_scan_day != now.date()):
             self._stockcr_scan_day = now.date()
+            _fired = 0        # counts signals across all three books, for the no-signal notice
             # v2 (the leader) scans FIRST so v1 can defer to it — one position per stock across
             # both books (no doubling-down on the same name). User request 2026-07-08.
             try:
                 new2 = stock_credit_v2.scan_signals()
                 if new2:
                     logger.info(f"stock_credit_v2: opened {len(new2)} new spread(s)")
+                    _fired += len(new2)
                     self._tg("STOCK CREDIT v2 UNION", new2)
             except Exception as e:
                 logger.warning(f"stock_credit_v2 scan: {e}")
@@ -621,6 +623,7 @@ class EngineRunner:
                 new = stock_credit.scan_signals()
                 if new:
                     logger.info(f"stock_credit: opened {len(new)} new spread(s)")
+                    _fired += len(new)
                     self._tg("STOCK CREDIT v1", new)
             except Exception as e:
                 logger.warning(f"stock_credit scan: {e}")
@@ -633,9 +636,53 @@ class EngineRunner:
                     new3 = stock_credit_v0.scan_signals()
                     if new3:
                         logger.info(f"stock_credit_v0: opened {len(new3)} new spread(s)")
+                        _fired += len(new3)
                         self._tg("STOCK CREDIT v0 (c/w 0.35-0.40)", new3)
                 except Exception as e:
                     logger.warning(f"stock_credit_v0 scan: {e}")
+            if _fired == 0:
+                self._tg_no_signal(now)
+
+    def _tg_no_signal(self, now):
+        """Tell him the scan ran and found nothing (user request, 18-Aug-2026).
+
+        Silence used to be ambiguous — a quiet 15:36 could mean no breakout qualified, or it could
+        mean the engine never scanned. On 17-Aug a DNS outage made the engine call a live session an
+        exchange holiday and the watchlist came back empty, and nothing said so. This message closes
+        that gap: if it does not arrive, something is wrong.
+        """
+        try:
+            from engine.notifications import send_telegram
+            from engine import config
+            n_wl = 0
+            try:
+                _raw = json.load(open(os.path.join(DATA_DIR, "union_watchlist.json")))
+                n_wl = len(_raw if isinstance(_raw, list) else (_raw.get("rows") or []))
+            except Exception:
+                pass
+            lines = [
+                "⚪ <b>NO SIGNAL TODAY — SCAN COMPLETE</b>",
+                f"{now.strftime('%A, %d %b %Y')} · scanned at {now.strftime('%H:%M')} on the official close",
+                "",
+                "Thank you for waiting. The scan has run and the system has no trade for you today.",
+                "",
+                f"• The full {len(config.UNIVERSE)}-stock universe was scanned on the closing-auction price",
+                f"• {n_wl} name(s) reached the watchlist, and none cleared every gate" if n_wl
+                else "• No stock closed outside its Donchian band, so nothing reached the watchlist",
+                "• A trade needs all four: a breakout, credit ÷ width ≥ 0.40, premium ≥ ₹50, "
+                "and a live two-sided market",
+                "",
+                "<b>Sitting out is the strategy working, not failing.</b> These books fade a breakout "
+                "only when the market pays richly for it. On a quiet day that premium is not there, "
+                "and taking a thin trade is how a good edge is given back.",
+                "",
+                "The next scan runs tomorrow at 15:36, after the closing auction.",
+                self._TG_DISCLAIMER,
+            ]
+            send_telegram("\n".join(lines))
+            logger.info("no-signal notice sent (watchlist %d, universe %d)", n_wl, len(config.UNIVERSE))
+        except Exception as e:
+            logger.warning("no-signal notice failed: %s", e)
 
     def _zero_dte(self, now):
         """0DTE INTRADAY (5th strategy) — NIFTY expiry-day CE credit spread. One entry right

@@ -2662,3 +2662,61 @@ proven, keep tiers separate, validate 2019-24 first, 1 lot is right sizing.
 ## iter-2 status: agent stopped w/ 4 DETACHED runs live (sg2x_dl_oos, sg2x_oos_upstox, stkfade_lowcw_geometry, stkfade_lowcw_oos; logs /tmp/lowcw*.log + scratchpad sg2x*). SIGNAL_GEOMETRY_OPT2.md partial (6.3KB). Watcher b43fr9vr5 armed — on completion: read tails, finish study, UI card, commit both repos.
 
 ## SEARCH LOOPS STOPPED (user, 2026-07-31): diminishing returns confirmed — de-novo mining keeps re-deriving 'gated short premium is the edge'; real wins all came from optimizing proven books (universe +13, v1 TP-40, hybrid). Iter-2 detached runs finish free (watcher b43fr9vr5) — read earnings-crush verdict when it lands, write SIGNAL_GEOMETRY_OPT2 close-out, then NO further search iterations. Priority now: live forward test → 20-30-trade gates → lot scaling (the ₹1L path).
+
+## OOS RESULT LANDED 2026-08-18 09:16
+
+=== DEPLOYED CONFIGS · OOS Oct-2024 -> date (Upstox, guards) ===
+Read the MEDIAN COHORT (c/w 0.40-0.50; v0 0.35-0.40) — where all 21 real live fills sit.
+ROM-pts pools strike points; ROM-Rs pools rupee margin, which is what an account commits.
+
+--- MEDIAN COHORT ---
+book       n     WIN   ROM-pts    ROM-Rs   Rs/trade  +ve yrs
+v2        49   83.7%    +24.3%    +28.0%     +3,675     3/3 
+v1       169   81.1%     +7.0%    +11.5%     +1,263     3/3 
+v0        90   80.0%     -0.1%     +3.0%       +411     1/3 
+
+--- FULL BAND ---
+book       n     WIN   ROM-pts    ROM-Rs   Rs/trade  +ve yrs
+v2        61   83.6%    +24.4%    +29.4%     +3,678     3/3 
+v1       201   82.6%    +19.0%    +20.2%     +2,088     3/3 
+v0        90   80.0%     -0.1%     +3.0%       +411     1/3 
+
+NOTE: underlying-derived settlement used on 10 legs (contract stopped trading before expiry); every other held trade settled on its own expiry-day option prices.
+
+=== OI BUCKETS · median cohort · does OI predict win rate and ROM? ===
+The gate is justified as a FIDELITY fix (untraded contracts are not fillable). This asks the
+separate question: among tradeable contracts, does MORE open interest earn MORE?
+
+--- v2 (n=49) ---
+OI (lots)         n     WIN    ROM-Rs   Rs/trade
+0 lots            1   (too few)
+1-2               4   (too few)
+2-5               5   (too few)
+5-10              8   (too few)
+10-25             9   (too few)
+25+              22   77.3%    +19.0%     +2,323
+
+--- v1 (n=167) ---
+OI (lots)         n     WIN    ROM-Rs   Rs/trade
+0 lots            1   (too few)
+1-2               0   (too few)
+2-5               8   (too few)
+5-10              4   (too few)
+10-25            24   87.5%    +19.5%     +2,337
+25+             130   80.0%     +9.9%     +1,075
+
+--- v0 (n=90) ---
+OI (lots)         n     WIN    ROM-Rs   Rs/trade
+0 lots            1   (too few)
+1-2               3   (too few)
+2-5               2   (too few)
+5-10              6   (too few)
+10-25            13   84.6%    +12.0%     +1,747
+25+              65   80.0%     +3.2%       +427
+
+DONE-OOS
+
+
+## DTE OOS LANDED 2026-08-20 06:16
+
+(no table)

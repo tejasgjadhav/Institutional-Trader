@@ -241,6 +241,64 @@ median cohort):
    about ₹7,300 a month, and in-sample is exactly the window that cannot be trusted to say so.
 
 
+## 9. FINAL — both windows on the corrected harness (18-Aug-2026)
+
+The out-of-sample run completed on 18-Aug. These are the first numbers in this repo measured
+identically on both windows: open interest required on both legs at entry AND on every exit-check
+day, legs joined by date, parity spot in-sample, expiry settled from each option's own close, one
+open position per symbol, the live hierarchy, exit costs charged, no stop.
+
+| book | IS 2019 → Sep-2024 | OOS Oct-2024 → Aug-2026 |
+|---|---|---|
+| v2 | 78.8% · **+27.2%** ROM-₹ · 6/6 yrs (n=217) | 83.7% · **+28.0%** · **3/3 yrs** (n=49) |
+| v1 | 79.1% · **+10.3%** · 6/6 yrs (n=359) | 81.1% · **+11.5%** · **3/3 yrs** (n=169) |
+| v0 | 83.1% · +14.4% · 5/6 yrs (n=237) | 80.0% · **+3.0%** · **1/3 yrs** (n=90) |
+
+**v2 and v1 agree across the two windows to within one point** — 27.2 against 28.0, and 10.3
+against 11.5 — on independent data with identical gating. That is the first genuinely like-for-like
+comparison this system has produced, and it holds. Note this is convergence between windows that
+were NOT adjusted toward each other, unlike the 15-Aug episode recorded in §5.
+
+**v0 does not agree, and it is the weak book.** +14.4% in-sample against +3.0% out-of-sample, and
+positive in only 1 of 3 out-of-sample years. It clears ₹411 a trade because a loser costs three
+times a winner. It stays live as a paper forward-test by the user's decision of 15-Aug.
+
+### Rupee calibration, out-of-sample, at current lot sizes
+
+| book | signals/mo | avg WIN | avg LOSS | win:loss | ₹/trade | ₹/month |
+|---|---|---|---|---|---|---|
+| v2 | 2.2 | +₹6,274 | −₹9,645 | 0.65 : 1 | +₹3,675 | **₹8,003** |
+| v1 | 7.5 | +₹3,838 | −₹9,758 | 0.39 : 1 | +₹1,263 | **₹9,490** |
+| v0 | 4.0 | +₹3,814 | −₹13,199 | 0.29 : 1 | +₹411 | **₹1,644** |
+
+Stock books **₹19,137/month** at 1 lot. With the two index books (₹2,775 and ₹3,031) the system
+totals about **₹24,943**, and the 80% planning rule puts the number to plan on near **₹19,955**.
+
+Every book loses more on a loser than it makes on a winner. That is normal for selling credit
+spreads and it is exactly why the win rate has to stay high.
+
+### The open-interest question, settled
+
+§7 recorded an in-sample pattern where ROM DECAYED as open interest rose — v2 paid +38.2% at 2–5
+lots and +2.4% at 25+ — which looked like stale illiquid marks flattering the result and argued for
+raising the floor above zero.
+
+**Out-of-sample that pattern does not appear.** Nearly every trade sits in the 25+ bucket and the
+low-OI cells are almost empty: v2 has 1, 4, 5 and 8 trades in its bottom four buckets. This is the
+confirmation the question needed. An Upstox expired-option candle exists only for a contract that
+actually traded, so the phantom low-OI trades that inflated in-sample cannot occur there at all.
+**The in-sample decay was an artifact, the fidelity argument was right, and the floor at `> 0` is
+correct. Do not raise it.**
+
+### Still open
+
+The **out-of-sample DTE sweep** — whether v1's minimum tenor should move from 10 days to 25. The
+in-sample sweep says yes, worth about ₹7,300 a month (`MIN_DTE_SWEEP.md`), but v1's take-profit
+slope already inverted between windows once, so an in-sample-only DTE result deserves the same
+suspicion. That run is in flight; results land in `research/DTE_OOS_RESULT.txt`. **Nothing changes
+until it does.**
+
+
 ---
 
 *Superseded figures.* Everything published before 17-Aug-2026 predates at least one of the six
