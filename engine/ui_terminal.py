@@ -435,7 +435,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                       "WIN 83.1% over 2019–Sep 2024 (+14.4% on margin, 237 trades, positive 5 of 6 yrs) / "
                       "80.0% over Oct 2024–Aug 2026 (90 trades) but only +3.0% on margin and positive just 1 of 3 yrs, ₹411 a trade · "
                       "PAPER FORWARD-TEST — the backtest does not clear its costs, so this book is running to see whether "
-                      "real fills disagree · 1 lot · max 3/day, 10 open · ~4.4 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
+                      "real fills disagree · 1 lot · max 3/day, 10 open · ~4.0 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
         pmv0.setWordWrap(True)
         pmv0.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         pmv0.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -451,7 +451,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · WIN 85% over 2019–Sep 2024 / 86% over Oct 2024–now at this target · +ve 4 of 6 yrs · TP-40/no-stop deployed 2026-07-30 (was TP-75/stop-2×: 64%/73%) · ~4.3/mo · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · 79.1% IS (+10.3% on margin, 6/6 yrs) / 81.1% OOS (+11.5%, 3/3 yrs) · ~7.5/mo measured out-of-sample · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -573,7 +573,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._section_label("INDEX SWING — NIFTY/FINNIFTY · fade the breakout · hold to expiry (fwd-test only) · ~3/mo", CYAN))
         self.sw_idx_stats = self._stats_label(); v.addWidget(self.sw_idx_stats)
         self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx)
-        v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~10/mo · SELL", GREEN))
+        v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~7.5/mo · SELL", GREEN))
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
         v0hdr = QLabel("STOCK CREDIT v0 (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
@@ -890,7 +890,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
 <tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~29/mo</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~21.7/mo</b></td></tr>
 </table>
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the only money table</p>
