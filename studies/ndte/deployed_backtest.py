@@ -110,13 +110,15 @@ def parity_spot(ce_px, pe_px):
     return spot
 
 SETTLE_FALLBACKS = collections.Counter()
+FETCHFAIL = collections.Counter()   # signals dropped because Upstox would not answer
+_CNT_LK = threading.Lock()          # run_oos increments these from four worker threads
 
 def settle(cb, exp, ks, si, li, typ, width, fallback_spot):
     """LAST RESORT only — used when a leg stopped trading before expiry, so the expiry-day option
     prices do not exist. Derives intrinsic from an underlying price, which is the path that can
     disagree with the strike scale on a split or bonus name. Counted so the report can state how
     often it ran instead of hiding it."""
-    SETTLE_FALLBACKS["used"] += 1
+    with _CNT_LK: SETTLE_FALLBACKS["used"] += 1
     es = cb.get(exp) or (cb[max(x for x in cb if x <= exp)] if any(x <= exp for x in cb) else fallback_spot)
     iS = max(0.0, es - ks[si]) if typ == "CE" else max(0.0, ks[si] - es)
     iL = max(0.0, es - ks[li]) if typ == "CE" else max(0.0, ks[li] - es)
@@ -147,14 +149,14 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         if credit <= 0 or credit >= width: continue
         cw = credit / width
         if not (cfg["band"][0] <= cw < cfg["band"][1]): continue
-        fired[bk] = (si, li, se, le, credit, width, cw, walk)
+        fired[bk] = (si, li, se, le, credit, width, cw, walk, oi)
     if "v2" in fired and "v1" in fired:      # same-day: v1 defers to v2
         del fired["v1"]
     if "v1" in fired and "v0" in fired:      # engine rule: v1 wins the same-stock clash
         del fired["v0"]
     if not fired: return False, {}
     exits = {}
-    for bk, (si, li, se, le, credit, width, cw, walk) in fired.items():
+    for bk, (si, li, se, le, credit, width, cw, walk, oi) in fired.items():
         cfg = BOOKS[bk]; close = None; xc = 0.0; exit_day = exp
         for (wd, s2, l2) in walk:
             cost = s2 - l2
@@ -177,7 +179,13 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         exits[bk] = exit_day
         net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
         _lot = LOTMAP.get(sym, 0)
-        _oiu = min(oi) if oi else None                      # binding leg's OI, in units
+        # OI IS NOW CARRIED PER BOOK (fixed 21-Aug-2026). `oi` used to be read here from whatever
+        # the LAST iteration of the gate loop above left behind, which is v0's legs, not this
+        # book's. v0 and v2 share a geometry so they were unaffected, but v1 sells a different
+        # strike and every v1 row therefore recorded the WRONG contract's open interest. The gate
+        # itself always used the right value; only the recorded column was wrong — which matters
+        # because the OI-bucket table below is what justified the floor.
+        _oiu = min(oi) if oi is not None else None          # binding leg's OI, in units
         rows.append(dict(book=bk, sym=sym, day=day, yr=int(day[:4]), cw=round(cw, 3),
                          oi_units=_oiu, oi_lots=(round(_oiu / _lot, 1) if (_oiu and _lot) else None),
                          net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0),
@@ -190,7 +198,10 @@ def breakout_days(u):
     the DC-10 band alone triggers with the SAME direction — live v1's scanner."""
     days = [str(i)[:10] for i in u.index]
     cl, hi, lo = u["Close"].values, u["High"].values, u["Low"].values
-    for i in range(20, len(u) - 1):
+    # `len(u) - 1` used to drop the FINAL bar, so the newest breakout was never evaluated —
+    # out-of-sample that silently discarded the most recent signal on every symbol. Nothing here
+    # looks ahead to i+1, so there is no reason to stop short (fixed 21-Aug-2026).
+    for i in range(20, len(u)):
         c = float(cl[i]); typ = None
         for dc in (5, 10, 15, 20):
             if c > float(hi[i-dc:i].max()): typ = "CE"; break
@@ -290,6 +301,25 @@ def run_is():
 
 # ---------------- OOS: Upstox expired options, date-keyed ----------------
 CACHE = "research/cache/oos_legcache_oi.json"   # {key: {date: [close, oi]}} — OI added 17-Aug-2026
+
+def save_cache():
+    """Write the leg cache atomically. `json.dump(LEGC, open(CACHE, "w"))` truncates the file the
+    instant it opens, so a run killed mid-dump leaves a half-written or empty cache. That already
+    happened: a crashed run on 20-Aug-2026 left the file holding a MIX of [close, oi] pairs and
+    bare floats, and the next run had to normalise both formats on read. Writing to a temp file and
+    renaming means the cache is either the old one or the new one, never a fragment."""
+    import os, tempfile
+    d = os.path.dirname(CACHE) or "."
+    os.makedirs(d, exist_ok=True)
+    fd, tmp = tempfile.mkstemp(dir=d, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as fh:
+            json.dump(LEGC, fh)
+        os.replace(tmp, CACHE)          # atomic on POSIX
+    except Exception:
+        try: os.unlink(tmp)
+        except Exception: pass
+        raise
 try: LEGC = json.load(open(CACHE))
 except Exception: LEGC = {}
 LK = threading.Lock()
@@ -302,10 +332,19 @@ def leg(key, d0, to):
     with LK:
         if ck in LEGC: return LEGC[ck]
     j = _gj(f"{UPSTOX_BASE}/v2/expired-instruments/historical-candle/{encode_key(key)}/day/{to}/{d0}")
+    # FETCH FAILURE IS NOT EVIDENCE OF NO TRADE (fixed 21-Aug-2026, found auditing this file).
+    # _get_json returns {} after six failed attempts, and a contract that genuinely never traded
+    # ALSO yields {}. Both used to return an empty dict, so every persistent network timeout
+    # silently deleted a signal with no count and no log line. That made this harness
+    # NON-DETERMINISTIC: the same run on a flaky morning produced fewer trades than on a good one,
+    # and nothing in the output said so. Every OOS figure published before this date was produced
+    # by that code. A failed request now returns None, only a `success` body counts as evidence of
+    # no trade, and the drops are counted and printed.
+    if not j or j.get("status") != "success":
+        return None
     out = {}
-    if j.get("status") == "success":
-        for c in j.get("data", {}).get("candles", []) or []:
-            out[str(c[0])[:10]] = [float(c[4]), float(c[6]) if len(c) > 6 and c[6] is not None else 0.0]
+    for c in j.get("data", {}).get("candles", []) or []:
+        out[str(c[0])[:10]] = [float(c[4]), float(c[6]) if len(c) > 6 and c[6] is not None else 0.0]
     if out:                                   # never cache an empty (network-poisoned) result
         with LK: LEGC[ck] = out
     return out
@@ -350,6 +389,9 @@ def run_oos():
             def px(si, li, chain=chain, d=d, to=to):
                 sp = leg(chain[si]["instrument_key"], d, to)
                 lp = leg(chain[li]["instrument_key"], d, to)
+                if sp is None or lp is None:
+                    with LK: FETCHFAIL["dropped"] += 1           # network, not liquidity
+                    return None
                 if d not in sp or d not in lp: return None       # both legs must trade on entry day
                 both = sorted(set(sp) & set(lp))
                 _f = MIN_OI
@@ -366,63 +408,81 @@ def run_oos():
             rows.extend(mine); done[0] += 1
             if done[0] % 5 == 0:
                 print(f"  OOS {done[0]}/{len(UNIVERSE)} · {len(rows)} trades", flush=True)
-                json.dump(LEGC, open(CACHE, "w"))
+                save_cache()
     with cf.ThreadPoolExecutor(max_workers=4) as ex:
         list(ex.map(work, UNIVERSE))
-    json.dump(LEGC, open(CACHE, "w"))
+    save_cache()
     return rows
 
-rows = run_is() if WINDOW == "IS" else run_oos()
-json.dump(rows, open(OUT, "w"))
-lbl = ("IS 2019-01-01 -> 2024-07-05 (bhavcopy, parity spot, OI>=100)" if WINDOW == "IS"
-       else "OOS Oct-2024 -> date (Upstox, guards)")
-print(f"\n=== DEPLOYED CONFIGS · {lbl} ===")
-print("Read the MEDIAN COHORT (c/w 0.40-0.50; v0 0.35-0.40) — where all 21 real live fills sit.")
-print("ROM-pts pools strike points; ROM-Rs pools rupee margin, which is what an account commits.\n")
-for scope in ("MEDIAN COHORT", "FULL BAND"):
-    print(f"--- {scope} ---")
-    print(f"{'book':<5}{'n':>7}{'WIN':>8}{'ROM-pts':>10}{'ROM-Rs':>10}{'Rs/trade':>11}{'+ve yrs':>9}")
-    for bk, cfg in BOOKS.items():
-        g = [x for x in rows if x["book"] == bk]
-        if scope == "MEDIAN COHORT":
-            lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
-            g = [x for x in g if lo <= x["cw"] < hi]
-        if len(g) < 20:
-            print(f"{bk:<5}{len(g):>7}   (too few)"); continue
-        by = collections.defaultdict(list)
-        for x in g: by[x["yr"]].append(x["net_rs"])
-        pos = sum(1 for v in by.values() if sum(v) > 0)
-        mrs = sum(x["margin_rs"] for x in g)
-        rom_rs = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
-        rs_tr = (sum(x["net_rs"] for x in g) / len(g)) if g else 0.0
-        print(f"{bk:<5}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%"
-              f"{sum(x['net'] for x in g)/sum(x['margin'] for x in g)*100:>+9.1f}%{rom_rs:>+9.1f}%"
-              f"{rs_tr:>+11,.0f}{pos:>6}/{len(by):<2}")
-    print()
-if SETTLE_FALLBACKS["used"]:
-    print(f"NOTE: underlying-derived settlement used on {SETTLE_FALLBACKS['used']} legs "
-          f"(contract stopped trading before expiry); every other held trade settled on its own "
-          f"expiry-day option prices.")
-# ---- OI BUCKETS: does open interest actually predict outcome, or only exclude the untradeable? ----
-BUCKETS = [(0, 0.999, "0 lots"), (1, 2, "1-2"), (2, 5, "2-5"), (5, 10, "5-10"),
-           (10, 25, "10-25"), (25, 1e9, "25+")]
-print("\n=== OI BUCKETS · median cohort · does OI predict win rate and ROM? ===")
-print("The gate is justified as a FIDELITY fix (untraded contracts are not fillable). This asks the")
-print("separate question: among tradeable contracts, does MORE open interest earn MORE?\n")
-for bk in ("v2", "v1", "v0"):
-    lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
-    g0 = [x for x in rows if x["book"] == bk and lo <= x["cw"] < hi and x.get("oi_lots") is not None]
-    if len(g0) < 40: 
-        print(f"--- {bk}: only {len(g0)} rows carry OI, skipping"); continue
-    print(f"--- {bk} (n={len(g0)}) ---")
-    print(f"{'OI (lots)':<12}{'n':>7}{'WIN':>8}{'ROM-Rs':>10}{'Rs/trade':>11}")
-    for a, b, lbl in BUCKETS:
-        g = [x for x in g0 if a <= x["oi_lots"] < b]
-        if len(g) < 10:
-            print(f"{lbl:<12}{len(g):>7}   (too few)"); continue
-        mrs = sum(x["margin_rs"] for x in g)
-        rom = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
-        print(f"{lbl:<12}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%{rom:>+9.1f}%"
-              f"{sum(x['net_rs'] for x in g)/len(g):>+11,.0f}")
-    print()
-print(f"DONE-{WINDOW}")
+# NO WORK AT IMPORT TIME (added 21-Aug-2026, found while unit-testing this file).
+# Everything below used to run on import, so `import deployed_backtest` started a multi-hour
+# backtest — and the json.dump three lines down OVERWRITES research/deployed_bt_<window>_rows.json,
+# the stored results every study reads. A stray import could therefore destroy the record it was
+# meant to reproduce. It also made the module impossible to unit-test.
+if __name__ == "__main__":
+    if WINDOW not in ("IS", "OOS"):
+        # Defaulting an unrecognised argument to OOS silently ran the wrong window and wrote its
+        # rows file. Refuse instead.
+        sys.exit(f"usage: deployed_backtest.py IS|OOS   (got {WINDOW!r})")
+    rows = run_is() if WINDOW == "IS" else run_oos()
+    json.dump(rows, open(OUT, "w"))
+    lbl = ("IS 2019-01-01 -> 2024-07-05 (bhavcopy, parity spot, OI>=100)" if WINDOW == "IS"
+           else "OOS Oct-2024 -> date (Upstox, guards)")
+    print(f"\n=== DEPLOYED CONFIGS · {lbl} ===")
+    print("Read the MEDIAN COHORT (c/w 0.40-0.50; v0 0.35-0.40) — where all 21 real live fills sit.")
+    print("ROM-pts pools strike points; ROM-Rs pools rupee margin, which is what an account commits.\n")
+    for scope in ("MEDIAN COHORT", "FULL BAND"):
+        print(f"--- {scope} ---")
+        print(f"{'book':<5}{'n':>7}{'WIN':>8}{'ROM-pts':>10}{'ROM-Rs':>10}{'Rs/trade':>11}{'+ve yrs':>9}")
+        for bk, cfg in BOOKS.items():
+            g = [x for x in rows if x["book"] == bk]
+            if scope == "MEDIAN COHORT":
+                lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
+                g = [x for x in g if lo <= x["cw"] < hi]
+            if len(g) < 20:
+                print(f"{bk:<5}{len(g):>7}   (too few)"); continue
+            by = collections.defaultdict(list)
+            for x in g: by[x["yr"]].append(x["net_rs"])
+            pos = sum(1 for v in by.values() if sum(v) > 0)
+            mrs = sum(x["margin_rs"] for x in g)
+            rom_rs = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
+            rs_tr = (sum(x["net_rs"] for x in g) / len(g)) if g else 0.0
+            print(f"{bk:<5}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%"
+                  f"{sum(x['net'] for x in g)/sum(x['margin'] for x in g)*100:>+9.1f}%{rom_rs:>+9.1f}%"
+                  f"{rs_tr:>+11,.0f}{pos:>6}/{len(by):<2}")
+        print()
+    # A run that silently lost signals to the network must not read as a clean run. State it either
+    # way, so "0" is positive evidence rather than the absence of a warning.
+    if WINDOW == "OOS":
+        _fd = FETCHFAIL["dropped"]
+        print(f"\nFETCH INTEGRITY: {_fd} signal(s) dropped because Upstox would not answer after six "
+              f"retries." + ("  <-- these are NETWORK losses, not liquidity; the run is not "
+                             "reproducible and the counts below are a FLOOR." if _fd else
+                             "  Every candidate was decided on real data."))
+    if SETTLE_FALLBACKS["used"]:
+        print(f"NOTE: underlying-derived settlement used on {SETTLE_FALLBACKS['used']} legs "
+              f"(contract stopped trading before expiry); every other held trade settled on its own "
+              f"expiry-day option prices.")
+    # ---- OI BUCKETS: does open interest actually predict outcome, or only exclude the untradeable? ----
+    BUCKETS = [(0, 0.999, "0 lots"), (1, 2, "1-2"), (2, 5, "2-5"), (5, 10, "5-10"),
+               (10, 25, "10-25"), (25, 1e9, "25+")]
+    print("\n=== OI BUCKETS · median cohort · does OI predict win rate and ROM? ===")
+    print("The gate is justified as a FIDELITY fix (untraded contracts are not fillable). This asks the")
+    print("separate question: among tradeable contracts, does MORE open interest earn MORE?\n")
+    for bk in ("v2", "v1", "v0"):
+        lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
+        g0 = [x for x in rows if x["book"] == bk and lo <= x["cw"] < hi and x.get("oi_lots") is not None]
+        if len(g0) < 40: 
+            print(f"--- {bk}: only {len(g0)} rows carry OI, skipping"); continue
+        print(f"--- {bk} (n={len(g0)}) ---")
+        print(f"{'OI (lots)':<12}{'n':>7}{'WIN':>8}{'ROM-Rs':>10}{'Rs/trade':>11}")
+        for a, b, lbl in BUCKETS:
+            g = [x for x in g0 if a <= x["oi_lots"] < b]
+            if len(g) < 10:
+                print(f"{lbl:<12}{len(g):>7}   (too few)"); continue
+            mrs = sum(x["margin_rs"] for x in g)
+            rom = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
+            print(f"{lbl:<12}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%{rom:>+9.1f}%"
+                  f"{sum(x['net_rs'] for x in g)/len(g):>+11,.0f}")
+        print()
+    print(f"DONE-{WINDOW}")

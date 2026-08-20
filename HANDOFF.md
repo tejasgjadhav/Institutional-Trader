@@ -2793,3 +2793,62 @@ format as the other Telegram messages. Show him the text before anything sends.
   "the single most actionable finding". Both need the OOS table above.
 - Audit items unfixed: per-invocation daily cap, once-a-day markers burnt before work runs, no
   re-check of frozen exit parameters against config, `_stock_settlement_due` open 24/7.
+
+## DTE 5 vs 10 OOS Oct-2025 to Aug-2026 (finished 2026-08-20)
+
+
+## 2026-08-21 · state confirmed after an interrupted session
+
+Commit `3ee0c42` landed and is pushed to BOTH remotes (0 unpushed on origin and private):
+DTE settled at 10 out-of-sample, BANKNIFTY removed from `engine/dte_multi.py` entirely, and the
+0DTE skip notice live. `STOCK_CREDIT_MIN_DTE = 10` unchanged. Engine running.
+
+### Backtest quality: 7/10, held — see the per-dimension breakdown
+
+Composition changed even though the scalar did not. The harness improved (two more defects fixed,
+fetch-failure accounting added, and it successfully REFUTED an in-sample finding). But the estimate
+of its prior quality fell, because the bug-discovery rate has not reached zero.
+
+NEW RISK, not previously recorded: **the Oct-2024 -> 2026 Upstox window is being mined.** It has now
+answered c/w bands, the TP sweep, OI buckets, the 7-floor DTE sweep and the 5-vs-10 sweep. Every
+additional question asked of the same window erodes its independence. Treat the next OOS result as
+weaker evidence than the last, and prefer the forward paper record for anything new.
+
+## 2026-08-21 · audit of the production harness (studies/ndte/deployed_backtest.py) — IN PROGRESS
+
+Six defects found and fixed in `studies/ndte/deployed_backtest.py`. Each has a reproduction.
+
+1. **HIGH — a fetch failure was indistinguishable from an untraded contract.** `leg()` returned {}
+   both when `_get_json` gave up after six retries and when the contract genuinely never traded, so
+   every persistent Upstox timeout silently deleted a signal, uncounted. The harness was therefore
+   NON-DETERMINISTIC: a flaky morning produced fewer trades than a good one and nothing said so.
+   Every OOS figure in this repo was produced by that code. Fixed: a failed request returns None,
+   only a `status == success` body counts as evidence of no trade, drops are counted and the run
+   prints `FETCH INTEGRITY: n signal(s) dropped` either way, so 0 is positive evidence.
+   (Same bug was fixed in the derived dte_sweep copy on 20-Aug; the harness of record still had it.)
+2. **MEDIUM — open interest leaked across books.** `oi` was assigned in the gate loop and read in
+   the exit loop, so it held whatever the LAST book evaluated left behind. v0 and v2 share a
+   geometry so they were unaffected, but **every v1 row recorded v2's open interest**, not its own.
+   The gate always used the right value; only the recorded column was wrong — which matters because
+   the OI-bucket table is what justified `MIN_OI = 1`. Reproduced against the pre-fix copy
+   (v1 row carried 222 when its own legs held 777) and confirmed fixed.
+3. **MEDIUM — importing the module ran the whole backtest.** No `__main__` guard, so `import
+   deployed_backtest` started a multi-hour run, and the `json.dump` overwrites
+   `research/deployed_bt_<window>_rows.json` — a stray import could destroy the stored record. Also
+   made the file impossible to unit-test. Fixed, plus an unknown WINDOW argument now exits with a
+   usage message instead of silently running OOS.
+4. **MEDIUM — the leg cache was written non-atomically.** `json.dump(LEGC, open(CACHE,"w"))`
+   truncates on open, so a killed run leaves a fragment. This ALREADY happened on 20-Aug: the cache
+   ended up holding a mix of [close, oi] pairs and bare floats. Now writes to a temp file and
+   renames.
+5. **LOW/MEDIUM — the most recent bar never produced a signal.** `range(20, len(u) - 1)` dropped the
+   final bar although nothing looks ahead to i+1, so out-of-sample the newest breakout on every
+   symbol was silently discarded. Fixed to `range(20, len(u))`; verified a final-bar breakout is now
+   detected.
+6. **LOW — the settlement-fallback counter was incremented from four worker threads** without a
+   lock, so it under-reported. Now locked.
+
+**CONSEQUENCE: the stored rows files are STALE.** Fixes 1 and 5 both change trade counts. Nothing has
+been re-run; `research/deployed_bt_is_rows.json` (17-Aug) and `_oos_rows.json` (18-Aug) still hold
+pre-fix results, and so does every number quoted in the UI and studies. A re-run is needed before any
+of those figures are quoted again.
