@@ -3013,3 +3013,34 @@ SENSEX=Thu) and no book was eligible. Verified: 0 positions opened today in eith
 
 **Stub-year correction propagated** to Telegram, UI and CLAUDE.md: OOS "positive every year" is now
 "positive in both full years (2024 is a 3-month stub)", and v0 is "1 of 2 full years" not "1 of 3".
+
+## 2026-08-21 · forward record is LIVE, and the 30-trade rule is pre-registered
+
+`data/forward_record.db` (`engine/forward_record.py`), wired into the engine cycle. 34 positions
+backfilled. **The 30-trade counter starts at 0** — v2+v1 entered on/after the 6-Aug stale-bar fix
+and closed. At ~8 v1 signals/month that is 3-4 months.
+
+**Criteria fixed BEFORE any data** in `studies/FORWARD_RECORD_DECISION_RULE.md`: win rate >=70%,
+ROM bootstrap lower bound > -5%, take rate >=40%, no single trade eating >25% of net. ALL FOUR
+required. v0 excluded from the lot decision (its OOS interval spans zero).
+
+**What it records that nothing else did:** every REJECTION at the live gates (the take rate — the
+fraction of backtest trades actually fillable, unmeasured until now; 7 of 17 on 17-Aug), and
+`spread_pct` at entry. P&L stays on MIDS, same basis as both backtest windows — the user was right
+that switching to crossing prices would break comparability, since bhavcopy has no bid/ask.
+
+Daily report: `.venv/bin/python studies/ndte/daily_record.py [YYYY-MM-DD]`.
+
+### Correction the user made, and he was right
+
+I described every 0DTE loss as a full-width event. **Measured average loss is well below max**:
+NIFTY avg win +Rs1,202 vs avg loss -Rs6,274 (93.2% win, expectancy +Rs693/trade); SENSEX +Rs1,427
+vs -Rs4,549 (88.8%, +Rs758/trade). A loss only reaches full width if the index settles beyond the
+long strike. The honest concern is narrower: a loss costs ~5 average wins on NIFTY, and at a 6.8%
+loss rate one loss per ~15 trades is expected, so 6 winners with no loser is the BASE RATE and
+carries no information either way.
+
+### 0DTE forward record — untouched by the stale-bar bug
+
+That bug was about the daily CLOSE for stock breakouts; 0DTE enters at 09:16 off the OPEN. So all
+12 closed 0DTE paper trades are valid history: NIFTY 6/6 +Rs4,196, SENSEX 6/6 +Rs6,667.
