@@ -3059,3 +3059,25 @@ width if the underlying settles beyond the long strike):
 - **Telegram**: the portfolio summary now carries `Average win X · average loss Y` per bucket.
   Currently intraday 12/12 avg win Rs+905, no loss yet; month-end 16W/5L avg win Rs+5,040 avg loss
   Rs-8,168. Per-trade RESULT messages with realised P&L already existed.
+
+### 21-Aug: losses can only be realised at expiry — now enforced, not merely configured
+
+User's model, confirmed correct: **no stop on v1/v0/v2, so a loss can only crystallise at expiry
+settlement (15:40); profit books any day via take-profit.** Verified on all three surfaces —
+harness `BOOKS` has `stop=None` for all three, config carries the unreachable 99.0, and every open
+position has `stop_cost=None`. The backtested numbers being decided on ARE no-stop numbers.
+
+**Checking his model against the data found a real hole.** Three historical losses were booked
+22–28 days EARLY: GODREJPROP (closed 06-Jul vs 28-Jul expiry), BAJAJ-AUTO (28-Jul vs 25-Aug),
+BAJAJFINSV (03-Aug vs 25-Aug). All three carry `stop_cost` = 2x credit, FROZEN IN AT ENTRY when a
+reachable stop still existed. Config had removed it; the positions had not. That is the standing
+unfixed audit item — no book re-checks frozen exit parameters against current config — and it had
+already cost real closes.
+
+**Fixed:** the stop branch in both books now calls `_stop_allowed()`, which refuses unconditionally
+and logs a WARNING naming the position. A stale frozen parameter can never again realise a loss
+before the underlying has settled. Verified False on both books; no open position carries a stop.
+
+Also this session: `sync()` moved to the main cycle (it ran at 15:36, four minutes before 0DTE
+settles at 15:40, so an intraday loss would have reached the DB only the NEXT day); UI and Telegram
+now report **average REALISED loss**, never max loss.

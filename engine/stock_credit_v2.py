@@ -478,6 +478,26 @@ def scan_signals() -> list:
     return new
 
 
+def _stop_allowed(p) -> bool:
+    """NO BOOK HAS A STOP — so a loss can only crystallise at expiry settlement (15:40).
+
+    Settled by the user on 17-Aug-2026 ("no exit rule is no stop now for v0, v1 and v2, we wont
+    change") and restated 21-Aug: losses are realised on expiries only, while profit can be booked
+    any day by the take-profit. Config alone did not enforce it, because `stop_cost` is FROZEN INTO
+    EACH POSITION AT ENTRY — three historical losses (GODREJPROP, BAJAJ-AUTO, BAJAJFINSV) were
+    booked 22-28 days EARLY off a 2x-credit stop that had already been removed from config, and
+    BAJAJ-AUTO-2026-07-29 carried a reachable stop for nineteen days afterwards.
+
+    This refuses the stop branch outright and says so, so a stale frozen parameter can never again
+    realise a loss before the underlying has actually settled.
+    """
+    logger.warning(
+        "%s carries stop_cost=%s from an older config, but NO BOOK HAS A STOP. Refusing to close "
+        "early; it will settle at expiry. Clear the field on this position.",
+        p.get("id"), p.get("stop_cost"))
+    return False
+
+
 def resolve_positions() -> int:
     """Mark-to-market each OPEN spread; close on hard stop (>=2x credit) or at expiry (intrinsic).
     Overnight carry. Returns # newly closed."""
@@ -572,7 +592,7 @@ def resolve_positions() -> int:
                 p["status"] = "WIN"; p["closed_date"] = today.isoformat()
                 closed += 1
                 logger.info(f"stock_credit: {p['symbol']} {p['side']} TOOK PROFIT {tp:.0%} pnl {p['pnl_pts']:+.1f}")
-            elif p.get("stop_cost") and cost >= p["stop_cost"]:
+            elif p.get("stop_cost") and cost >= p["stop_cost"] and _stop_allowed(p):
                 p["exit_cost"] = round(min(cost, p["width_pts"]), 2)
                 p["pnl_pts"] = round(p["credit"] - p["exit_cost"], 2)
                 p["status"] = "LOSS"; p["closed_date"] = today.isoformat()
