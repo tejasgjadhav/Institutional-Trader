@@ -3081,3 +3081,16 @@ before the underlying has settled. Verified False on both books; no open positio
 Also this session: `sync()` moved to the main cycle (it ran at 15:36, four minutes before 0DTE
 settles at 15:40, so an intraday loss would have reached the DB only the NEXT day); UI and Telegram
 now report **average REALISED loss**, never max loss.
+
+### 21-Aug: READMEs de-staled (repo + UI tab)
+
+`README.md` was last touched 17-Aug and still listed **0DTE BANKNIFTY as a live book at 91%**,
+deleted from `engine/dte_multi.py` on 20-Aug. Also carried v2 at 87%/~5-6-per-month and v1 at
+73%/~16-per-month, both superseded, and omitted v0 entirely. Corrected to the measured OOS figures
+(v2 83.6% ~2.4/mo, v1 79.3% ~8/mo, v0 79.6% ~4/mo) and a new **"Where the evidence stands"** section
+carries the full IS/OOS table with intervals, the FETCH INTEGRITY caveat, the no-stop enforcement and
+the pointer to the forward record and its pre-registered criteria.
+
+The in-app README tab described "THREE 0DTE expiry-day spreads (NIFTY / SENSEX / BANKNIFTY monthly)"
+and listed BANKNIFTY among the wired Telegram sources. Both corrected; zero stale BANKNIFTY-as-live
+references remain anywhere.

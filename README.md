@@ -18,12 +18,50 @@ money-maker — live fills remain the unproven link, so plan on **~half of model
 
 | Book | What it does | Win (OOS) | Cadence |
 |---|---|---|---|
-| ★ Stock fade **v2 UNION** (leader) | sell a credit spread against a stock breakout, book at half credit | 87% | ~5–6/mo |
-| Stock fade **v1** (control) | same fade, higher-frequency geometry | 73% | ~16/mo |
+| ★ Stock fade **v2 UNION** (leader) | sell a credit spread against a stock breakout, book at half credit | 83.6% | ~2.4/mo |
+| Stock fade **v1** (control) | same fade, higher-frequency geometry | 79.3% | ~8/mo |
+| Stock fade **v0** (c/w 0.35–0.40) | the tier just below the gate; v1 wins a same-stock clash | 79.6% | ~4/mo |
 | **0DTE NIFTY** (Tue) | expiry-day index credit spread, flips side on momentum; since 07-31 also sells the opposite side when it pays c/w ≥ 0.08 (hybrid add, shared margin — paper) | 87% | ~4–5/mo |
 | **0DTE SENSEX** (Thu) | expiry-day index credit spread | 89% | ~4–5/mo |
-| **0DTE BANKNIFTY** (monthly) | expiry-day index credit spread | 91% | ~1/mo |
 | **Monthly Futures** pullback | buy oversold front-month futures (needs ~₹15L; regime-gated) | 76% | 5/cycle |
+
+## Where the evidence stands (21-Aug-2026)
+
+The backtest is **finished**. `studies/ndte/deployed_backtest.py` is the single harness of record,
+locked by `studies/ndte/test_harness.py` (19 checks, mutation-tested). Median cohort, c/w 0.40–0.50:
+
+| book | in-sample 2019→Sep-2024 | out-of-sample Oct-2024→date |
+|---|---|---|
+| v2 | 78.8% · **+27.2%** ROM [+18.4, +34.7] · 6/6 yrs · n=217 | 83.6% · **+27.2%** [+16.4, +37.2] · 2/2 full yrs · n=55 |
+| v1 | 79.1% · **+10.3%** [+2.9, +17.1] · 6/6 yrs · n=359 | 79.3% · **+9.5%** [+2.5, +15.9] · 2/2 full yrs · n=179 |
+| v0 | 83.1% · +14.4% [+5.9, +21.9] · 5/6 yrs · n=237 | 79.6% · **+3.0%** [−6.2, +11.5] · **1/2 full yrs** · n=93 |
+
+**v2 and v1 clear zero in both windows.** v0 does not, and is excluded from any sizing decision.
+The v2 figures agree to 0.04 points across windows, which is coincidence rather than precision —
+both intervals are about 18 points wide.
+
+**The backtest is a CEILING, not an estimate.** NSE bhavcopy carries no bid/ask, so no backtest here
+can model the live spread gate — and on 17-Aug that gate took only 7 of 17 candidates. The
+out-of-sample run also reported `FETCH INTEGRITY: 293 signals dropped` where Upstox would not answer,
+so every OOS `n` is a floor and the run is not reproducible. No further sweep fixes either problem.
+
+**No book has a stop**, so a loss can only be realised at expiry settlement (15:40) while profit
+books any day on the take-profit. Enforced in code, not just config: `_stop_allowed()` refuses the
+stop branch outright, after three historical losses were booked 22–28 days early off a `stop_cost`
+frozen into the position before the stop was removed.
+
+**What decides it now is the forward record**, not another backtest. `data/forward_record.db`
+(`engine/forward_record.py`) records every signal taken, every candidate the live gates rejected —
+the take rate, which no backtest can produce — and realised loss at settlement. The pass/fail
+criteria were fixed **before any data existed** in `studies/FORWARD_RECORD_DECISION_RULE.md`:
+30 closed v2+v1 trades, win rate ≥70%, ROM bootstrap lower bound >−5%, take rate ≥40%, and no single
+trade eating >25% of the net. All four required.
+
+Daily: `.venv/bin/python studies/ndte/daily_record.py`
+
+**0DTE BANKNIFTY was REMOVED on 20-Aug-2026** — rejected 19-Jul (t = +0.10, interval spanning
+zero, its entire profit coming from three trades) and the book has now been deleted from
+`engine/dte_multi.py`. It never opened a position.
 
 No single book *is* the system — it's the **portfolio** that matters, each validated in-sample
 **and** out-of-sample and run as a parallel paper forward-test. Consolidated model P&L (1 lot /

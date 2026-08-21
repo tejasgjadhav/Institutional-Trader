@@ -1071,7 +1071,7 @@ Paper forward-test only. For educational use. Not financial advice.
      "fires signals and records them daily; YOU place every order manually in Upstox. It never auto-trades.")}
 {p("<b>TELEGRAM ALERTS — LIVE (2026-07-13):</b> every book's new signal is pushed to the Telegram channel the "
    "moment the engine opens the position — all 8 sources wired (3-Family, Stock Credit v1 + v2 UNION, "
-   "Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX/BANKNIFTY 0DTE). One post per signal, "
+   "Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX 0DTE). One post per signal, "
    "no repeats; place the order manually in Upstox as usual. A quiet channel = nothing cleared the gates "
    "that day. Config in .env (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID; a channel id fans out to all joiners).")}
 
@@ -1079,8 +1079,8 @@ Paper forward-test only. For educational use. Not financial advice.
 {p(f"A paper-trading engine for NSE options + futures running <b>6 parallel strategy books</b> on "
    f"~{len(C.UNIVERSE)} stocks + NIFTY/BANKNIFTY/FINNIFTY/SENSEX. It scans, scores, and surfaces "
    "BUY/SELL signals on a dashboard; you place the orders. The books: <b>stock fade v2 UNION</b> (the "
-   "leader) + stock fade v1 (SELL credit spreads), THREE <b>0DTE expiry-day spreads</b> (NIFTY Tue flip · "
-   "SENSEX Thu · BANKNIFTY monthly), the index-fade forward-test, the <b>monthly FUTURES pullback</b> "
+   "leader) + stock fade v1 and v0 (SELL credit spreads), TWO <b>0DTE expiry-day spreads</b> (NIFTY Tue flip · "
+   "SENSEX Thu — BANKNIFTY was REMOVED 20-Aug-2026), the index-fade forward-test, the <b>monthly FUTURES pullback</b> "
    "(REV1-v2, BUY front-month futures — paper, needs ~₹15L), and the intraday 3-Family scanner "
    "(hidden; data heartbeat). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
 
