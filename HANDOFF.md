@@ -2935,3 +2935,7 @@ with data in it.
 
 Open position to watch: **BAJAJ-AUTO is now -125.62 pts** (was -99.35 this morning), entered 29-Jul,
 no stop by policy.
+
+### Pushed 21-Aug 08:34 — commits ea7d05c, 4a04c34, d1b116e, ee9f4ac to origin + private
+The six-defect harness audit, the shared-cache format fix, the corrected MIN_OI justification, and
+the regression suite / freeze / forward-record work. OOS re-run was at 100/113 at push time.
