@@ -431,7 +431,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         pmv0 = QLabel("STOCK CREDIT v0 · c/w 0.35–0.40 (the band below the v2 gate) · same geometry as v2 "
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
                       "WIN 83.1% over 2019–Sep 2024 (+14.4% on margin, 237 trades, positive 5 of 6 yrs) / "
-                      "80.0% over Oct 2024–Aug 2026 (90 trades) but only +3.0% on margin and positive just 1 of 3 yrs, ₹411 a trade · "
+                      "79.6% over Oct 2024–Aug 2026 (93 trades) but only +3.0% on margin and positive just 1 of 3 yrs, ₹405 a trade · "
                       "PAPER FORWARD-TEST — the backtest does not clear its costs, so this book is running to see whether "
                       "real fills disagree · 1 lot · max 3/day, 10 open · ~4.0 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
         pmv0.setWordWrap(True)
@@ -805,89 +805,16 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         return f"""
 <div style="color:{TEXT};">
-
-{dim("<b>Incident record.</b> Two defects were found and fixed this month and both are written up in "
-     "full on GitHub rather than here, so this tab stays a record of results. The stale-bar incident "
-     "(5-Aug) — for six weeks the scan read the PREVIOUS session's close, because the Upstox daily "
-     "feed publishes no same-day bar during the session; every signal faded yesterday's breakout. "
-     "Fixed, verified against the exchange, and the forward record restarts 6-Aug-2026. The "
-     "leg-misalignment incident (14-Aug) — every out-of-sample validation compared option prices "
-     "from different calendar days. Files: studies/STALE_BAR_INCIDENT.md and "
-     "studies/DEPLOYED_EVIDENCE_AUDIT.md.")}
-
-<p style="color:{AMBER};font-size:17px;font-weight:bold;">⚠ NSE SESSION CHANGED — 3-AUG-2026 · ALL OUR TIMINGS MOVED</p>
-{p("NSE moved the equity-<b>derivatives</b> close from <b>15:30 to 15:40</b> and introduced a <b>Closing Auction Session</b>. "
-   "F&amp;O stocks now stop continuous trading at <b>15:15</b>, auction 15:15–15:35, and their official closing price is the "
-   "<b>auction equilibrium price</b> — not the old 15:00–15:30 average. Every stock we trade is an F&amp;O stock, so this "
-   "applies to all of them.")}
-{res("<b>OUR NEW TIMINGS —</b> watchlist <b>15:17</b> · signals <b>15:36</b> · place by <b>15:40</b> · everything settles at "
-     "<b>15:40</b> · intraday books also close early at <b>95% of max profit</b>.")}
-{p("<b>Why it matters:</b> the old 15:10 scan read a price that no longer decides anything. Replaying 3-Aug across all 113 "
-   "names: <b>32 breakouts on the 15:10 price vs 46 on the official close</b> — <b>+44%</b>, 15 names gained, 1 false signal "
-   "(PNB) removed. The typical name drifts <b>0.68%</b> between 15:10 and the close, and 66 of 113 moved at least 0.5%. So "
-   "moving the scan later <b>gains</b> signals; it does not cost them.")}
-{p("<b>Is the 15:36–15:40 window tradeable?</b> Measured on 4-Aug across 18 watchlist names: <b>17 of 18</b> quote two-sided, "
-   "<b>15 of 17</b> clear our liquidity gate, and c/w barely moves across the auction (GRASIM 0.35 → 0.38). But bid-ask "
-   "roughly <b>doubles</b>, ~1% → 2–4%, so entry costs more than the model assumes.")}
-{dim("Also fixed: the close had been hardcoded in SEVEN separate places, and the swing/stock books preferred the live price "
-     "over the official close — so every expiry was settling on a pre-auction print. There is now one setting "
-     "(SETTLE_AFTER = 15:40) and settlement takes the official close first. <b>Caveat:</b> the 95% early-close rule cannot "
-     "be backtested — intraday option premium history does not exist — so it ships unmeasured and can be switched off. "
-     "Full record: studies/NSE_SESSION_CHANGE_2026_08_03.md")}
-
-<p style="color:{CYAN};font-size:18px;font-weight:bold;">HOW TO EXECUTE — step by step</p>
-{dim("Everything below is a paper forward-test. The engine only SIGNALS; you place the order yourself in Upstox. Keep lots at 1.")}
-
-<p style="color:{AMBER};font-size:15px;font-weight:bold;margin-top:14px;">THE STOCK BOOKS — v2, v1, v0 (one scan a day)</p>
-{p("<b>1.</b> The engine scans ONCE at <b>15:36</b>, after the closing auction has struck the official close. Nothing fires before that. (It scanned at 15:10 until 4-Aug-2026 — NSE moved the close, see the notice at the top of this tab.)")}
-{p("<b>2.</b> A stock that closed ABOVE its Donchian high or BELOW its Donchian low is a breakout. You <b>FADE</b> it — you sell against the move, not with it.")}
-{p("<b>3.</b> Up-break → sell a <b>BEAR CALL</b> spread. Down-break → sell a <b>BULL PUT</b> spread. Nearest monthly expiry at least <b>10 days</b> out.")}
-{p("<b>4.</b> Which strikes, per book:")}
-{dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> (leader) — SELL 2 strikes OTM, BUY 4 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
-{dim("&nbsp;&nbsp;&nbsp;• <b>v1</b> — SELL 1 strike OTM, BUY 3 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
-{dim("&nbsp;&nbsp;&nbsp;• <b>v0</b> — same strikes as v2, but takes the band v2 rejects: credit ÷ width between <b>0.35 and 0.40</b>.")}
-{p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium, bid-ask ≤ 6%, open interest present on both legs. If it fails, skip it — thin options eat the edge.")}
-{p("<b>6.</b> Place it <b>between 15:36 and 15:40</b> — derivatives now close at 15:40, so that is the whole window. The 15:17 watchlist names the likely candidates ~19 minutes ahead, so pre-stage from it and treat the 15:36 signal as confirmation. Spreads are roughly twice as wide in this window as at 14:45, so use limit orders.")}
-{p("<b>7.</b> Exit — this is what sets the win rate, more than the entry does:")}
-{dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> — buy the spread back when it costs <b>50%</b> of the credit you collected. <b>No stop</b>, same as v1 and v0: a stop priced as a multiple of the credit cannot be reached above c/w 1/3, because the spread can never cost more than its width. The bought wing is the stop.")}
-{dim("&nbsp;&nbsp;&nbsp;• <b>v1 and v0</b> — buy it back at <b>40%</b> of the credit. <b>No stop</b> — the wing you bought already caps the loss.")}
-{p("<b>8.</b> If nothing is bought back, it settles itself at expiry. Max loss is always (width − credit) × lot, known the moment you enter.")}
-{p("<b>9.</b> If <b>v1 and v0 both signal the same stock, take v1 only</b> — the engine already suppresses v0's, so you will see one signal.")}
-
-<p style="color:{AMBER};font-size:15px;font-weight:bold;margin-top:14px;">THE EXPIRY-DAY BOOKS — NIFTY (Tue) and SENSEX (Thu)</p>
-{p("<b>1.</b> Only on that index's expiry day. The engine posts a pre-market status strip by 9:00 telling you whether it expects a signal.")}
-{p("<b>2.</b> At <b>09:16</b>, off the opening price: SELL the call about <b>0.5% out of the money</b>, BUY the call <b>200 points</b> further out.")}
-{p("<b>3.</b> NIFTY skips the week when 5-day realised volatility is ≥ 0.9% — losses cluster when the tape is already hot. The engine applies this for you.")}
-{p("<b>4.</b> <b>Hold to the 15:40 settlement</b> — or until the spread has given back <b>95%</b> of its credit, whichever comes first. No stop — the bought wing is the stop. Margin ≈ ₹14k/lot and that is also the worst case.")}
-{p("<b>5.</b> Entry time is the edge: the opening theta and IV crush is what you are paid for. Entering at 11:00 or later turns it negative.")}
-
-<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:14px;">THE FOUR RULES BEHIND ALL OF IT</p>
-{p("<b>• Sell premium, do not buy it.</b> Every long-premium structure tested here lost money in both eras.")}
-{p("<b>• Only sell when the premium is rich.</b> credit ÷ width ≥ 0.40 IS the edge — it is a proxy for elevated post-breakout IV. Strip it and the same trade loses.")}
-{p("<b>• Fade the breakout, never follow it.</b> The follow version wins ~40% of the time.")}
-{p("<b>• Book early.</b> Taking 40–50% of the credit beats holding to expiry on every book measured.")}
-
-<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">LIVE STRATEGIES — 1 lot</p>
-{dim("Both windows named in full. The first is the years each strategy was built on; the second is later years it had never "
-     "seen, which is the one that decides. <b>Rupees are NOT in this table</b> — they are all in the PROFIT AND LOSS table "
-     "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
-<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
-<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>78.8% · +27.2% on margin · positive every year <span style="color:{TEXT_DIM};">(217 trades)</span></td><td>83.6% · +27.2% · positive every year <span style="color:{TEXT_DIM};">(55 trades)</span></td><td><b>~2.2</b></td></tr>
-<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.1% · +10.3% · positive every year <span style="color:{TEXT_DIM};">(359 trades)</span></td><td>79.3% · +9.5% · positive every year <span style="color:{TEXT_DIM};">(179 trades)</span></td><td><b>~7.5</b></td></tr>
-<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.1% · +14.4% · positive 5 of 6 years <span style="color:{TEXT_DIM};">(237 trades)</span></td><td style="color:{AMBER};">80.0% · +3.0% · positive <b>1 of 3 years</b> <span style="color:{TEXT_DIM};">(90 trades)</span></td><td><b>~4.0</b></td></tr>
-<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
-<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
-<tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~21.7/mo</b></td></tr>
-</table>
+{dim("This tab is a record of RESULTS. The incident write-ups and the NSE session change live on GitHub — studies/STALE_BAR_INCIDENT.md, studies/DEPLOYED_EVIDENCE_AUDIT.md and studies/NSE_SESSION_CHANGE_2026_08_03.md — so they do not crowd the numbers here.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the only money table</p>
 {dim("<b>Out-of-sample, Oct-2024 to Aug-2026, on the corrected harness.</b> Read on the median "
      "cohort — credit/width 0.40–0.50, where all 21 real live fills sit. Every leg is a contract that "
      "actually traded, checked at entry and on every exit-check day, and each trade is multiplied by "
-     "its own lot size. <b>In-sample agrees closely</b>: v2 +27.2% against +27.2% here, v1 +10.3% "
-     "against +9.5% — two independent windows, same gating, same answer. Still a ceiling, because "
+     "its own lot size. <b>In-sample agrees closely</b>: v2 +27.20% against +27.24% here, v1 +10.3% "
+     "against +9.5% — two independent windows, same gating. The v2 match to two decimals is luck, "
+     "not precision: both bootstrap intervals are about 18 points wide, so read it as agreement "
+     "well inside the error bars, not as the same number. Still a ceiling, because "
      "the harness cannot model the live bid-ask gate, which rejects most candidates.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>measured</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
@@ -907,6 +834,22 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "three lose more on a loser than they make on a winner, which is normal for selling credit "
      "spreads and is exactly why the win rate has to stay high.")}
 
+
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">LIVE STRATEGIES — 1 lot</p>
+{dim("Both windows named in full. The first is the years each strategy was built on; the second is later years it had never "
+     "seen, which is the one that decides. <b>Rupees are NOT in this table</b> — they are all in the PROFIT AND LOSS table above "
+     "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
+<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>78.8% · +27.2% on margin · positive every year <span style="color:{TEXT_DIM};">(217 trades)</span></td><td>83.6% · +27.2% · positive every year <span style="color:{TEXT_DIM};">(55 trades)</span></td><td><b>~2.2</b></td></tr>
+<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.1% · +10.3% · positive every year <span style="color:{TEXT_DIM};">(359 trades)</span></td><td>79.3% · +9.5% · positive every year <span style="color:{TEXT_DIM};">(179 trades)</span></td><td><b>~7.5</b></td></tr>
+<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.1% · +14.4% · positive 5 of 6 years <span style="color:{TEXT_DIM};">(237 trades)</span></td><td style="color:{AMBER};">79.6% · +3.0% · positive <b>1 of 3 years</b> <span style="color:{TEXT_DIM};">(93 trades)</span></td><td><b>~4.0</b></td></tr>
+<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
+<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~21.7/mo</b></td></tr>
+</table>
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
      "The three stock rows come from the production harness, re-run 21-Aug-2026 after a six-defect audit: win rates are IS / OOS, and the rupee columns are "
@@ -925,7 +868,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 </table>
 {dim("Read the win:loss column, not just the win rate. <b>Every book loses more on a loser than it makes "
      "on a winner</b> — 0.58:1 for v2 down to 0.27:1 for v0. That is normal for selling credit spreads and it "
-     "is exactly why the win rate has to stay high: v0 wins 80.4% of its trades out-of-sample and still only "
+     "is exactly why the win rate has to stay high: v0 wins 79.6% of its trades out-of-sample and still only "
      "clears ₹335 each, so a few points of win rate would put it underwater. A high win rate with a bad payoff "
      "ratio is the illusion the 227,000-trade sweep was run to expose: a 0.15%-target bot prints 83.6% win and "
      "still loses money.")}
@@ -967,6 +910,39 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("• <b>BANKNIFTY 0DTE</b> — edge ≈ 0 (t = +0.10, confidence interval spans zero).")}
 {dim("• <b>Event/news avoidance for 0DTE</b> — RBI, Budget, FOMC, VIX, gaps, earnings: all tested, all cost money. This book is PAID for visible fear.")}
 {dim("• <b>Classic strategies</b> (Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays) — 227k trades: nothing beats the credit books after costs. A 0.15%-target bot prints 83.6% win with NEGATIVE expectancy — win rate alone proves nothing.")}
+
+<p style="color:{CYAN};font-size:18px;font-weight:bold;">HOW TO EXECUTE — step by step</p>
+{dim("Everything below is a paper forward-test. The engine only SIGNALS; you place the order yourself in Upstox. Keep lots at 1.")}
+
+<p style="color:{AMBER};font-size:15px;font-weight:bold;margin-top:14px;">THE STOCK BOOKS — v2, v1, v0 (one scan a day)</p>
+{p("<b>1.</b> The engine scans ONCE at <b>15:36</b>, after the closing auction has struck the official close. Nothing fires before that. (It scanned at 15:10 until 4-Aug-2026 — NSE moved the close, see the notice at the top of this tab.)")}
+{p("<b>2.</b> A stock that closed ABOVE its Donchian high or BELOW its Donchian low is a breakout. You <b>FADE</b> it — you sell against the move, not with it.")}
+{p("<b>3.</b> Up-break → sell a <b>BEAR CALL</b> spread. Down-break → sell a <b>BULL PUT</b> spread. Nearest monthly expiry at least <b>10 days</b> out.")}
+{p("<b>4.</b> Which strikes, per book:")}
+{dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> (leader) — SELL 2 strikes OTM, BUY 4 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
+{dim("&nbsp;&nbsp;&nbsp;• <b>v1</b> — SELL 1 strike OTM, BUY 3 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
+{dim("&nbsp;&nbsp;&nbsp;• <b>v0</b> — same strikes as v2, but takes the band v2 rejects: credit ÷ width between <b>0.35 and 0.40</b>.")}
+{p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium, bid-ask ≤ 6%, open interest present on both legs. If it fails, skip it — thin options eat the edge.")}
+{p("<b>6.</b> Place it <b>between 15:36 and 15:40</b> — derivatives now close at 15:40, so that is the whole window. The 15:17 watchlist names the likely candidates ~19 minutes ahead, so pre-stage from it and treat the 15:36 signal as confirmation. Spreads are roughly twice as wide in this window as at 14:45, so use limit orders.")}
+{p("<b>7.</b> Exit — this is what sets the win rate, more than the entry does:")}
+{dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> — buy the spread back when it costs <b>50%</b> of the credit you collected. <b>No stop</b>, same as v1 and v0: a stop priced as a multiple of the credit cannot be reached above c/w 1/3, because the spread can never cost more than its width. The bought wing is the stop.")}
+{dim("&nbsp;&nbsp;&nbsp;• <b>v1 and v0</b> — buy it back at <b>40%</b> of the credit. <b>No stop</b> — the wing you bought already caps the loss.")}
+{p("<b>8.</b> If nothing is bought back, it settles itself at expiry. Max loss is always (width − credit) × lot, known the moment you enter.")}
+{p("<b>9.</b> If <b>v1 and v0 both signal the same stock, take v1 only</b> — the engine already suppresses v0's, so you will see one signal.")}
+
+<p style="color:{AMBER};font-size:15px;font-weight:bold;margin-top:14px;">THE EXPIRY-DAY BOOKS — NIFTY (Tue) and SENSEX (Thu)</p>
+{p("<b>1.</b> Only on that index's expiry day. The engine posts a pre-market status strip by 9:00 telling you whether it expects a signal.")}
+{p("<b>2.</b> At <b>09:16</b>, off the opening price: SELL the call about <b>0.5% out of the money</b>, BUY the call <b>200 points</b> further out.")}
+{p("<b>3.</b> NIFTY skips the week when 5-day realised volatility is ≥ 0.9% — losses cluster when the tape is already hot. The engine applies this for you.")}
+{p("<b>4.</b> <b>Hold to the 15:40 settlement</b> — or until the spread has given back <b>95%</b> of its credit, whichever comes first. No stop — the bought wing is the stop. Margin ≈ ₹14k/lot and that is also the worst case.")}
+{p("<b>5.</b> Entry time is the edge: the opening theta and IV crush is what you are paid for. Entering at 11:00 or later turns it negative.")}
+
+<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:14px;">THE FOUR RULES BEHIND ALL OF IT</p>
+{p("<b>• Sell premium, do not buy it.</b> Every long-premium structure tested here lost money in both eras.")}
+{p("<b>• Only sell when the premium is rich.</b> credit ÷ width ≥ 0.40 IS the edge — it is a proxy for elevated post-breakout IV. Strip it and the same trade loses.")}
+{p("<b>• Fade the breakout, never follow it.</b> The follow version wins ~40% of the time.")}
+{p("<b>• Book early.</b> Taking 40–50% of the credit beats holding to expiry on every book measured.")}
+
 
 <p style="color:{CYAN};font-size:15px;font-weight:bold;margin-top:18px;">FULL STUDIES — every backtest, script and result</p>
 {p('<a href="https://github.com/tejasgjadhav/Institutional-Trader/tree/main/studies" '

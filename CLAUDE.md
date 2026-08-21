@@ -19,7 +19,7 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 78.8% IS / 83.6% OOS | ₹8,450 (2.4/mo × ₹3,457) | IS **+27.2%** ROM [+18.4, +34.7], 6/6 yrs (n=217); OOS **+27.2%** [+16.4, +37.2], **3/3 yrs** (n=55). The two windows land on the SAME number |
+| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 78.8% IS / 83.6% OOS | ₹8,450 (2.4/mo × ₹3,457) | IS **+27.2%** ROM [+18.4, +34.7], 6/6 yrs (n=217); OOS **+27.2%** [+16.4, +37.2], **3/3 yrs** (n=55). Agree to 0.04pp — luck, not precision: the intervals are ~18pp wide |
 | Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.1% IS / 79.3% OOS | ₹8,359 (8.0/mo × ₹1,051) | IS **+10.3%** [+2.9, +17.1], 6/6 yrs (n=359); OOS **+9.5%** [+2.5, +15.9], **3/3 yrs** (n=179). Both intervals EXCLUDE zero — the best-measured stock book |
 | Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 79.6% OOS | ₹1,674 (4.1/mo × ₹405) | IS +14.4% [+5.9, +21.9], 5/6 yrs (n=237); OOS **+3.0%** [−6.2, +11.5], **1/3 yrs** (n=93). Interval spans zero. Kept live as a paper forward-test, user 2026-08-15 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
@@ -42,7 +42,9 @@ must not be quoted. Read on the MEDIAN COHORT, c/w 0.40–0.50, where all 21 rea
 
 **What the two windows can and cannot say.** In-sample is still not independent — the c/w gate, the
 geometry and the exits were all chosen on that data. What changed on 21-Aug is that out-of-sample got
-strong enough to speak: **v2 lands on +27.2% in BOTH windows**, and **v1's OOS interval [+2.5, +15.9]
+strong enough to speak: **v2 comes in at +27.20% in-sample against +27.24% out** — a match to two
+decimals that is COINCIDENCE, since both bootstrap intervals are about 18 points wide, so read it as
+agreement well inside the error bars and never as the same number — and **v1's OOS interval [+2.5, +15.9]
 now excludes zero** on 179 trades, where the previous run's [−5.0, +13.3] did not. Two independent
 windows, different data vendors, identical gating, agreeing to within a point on both books.
 

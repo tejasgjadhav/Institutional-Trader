@@ -2964,3 +2964,16 @@ and evidence paragraph, `studies/README.md`, `engine/ui_terminal.py` (8 figures)
 `_TG_ANALYSIS` blocks in `engine/engine_runner.py`. **Telegram format verified byte-identical apart
 from digits** (3 lines differ, zero wording changes) per the append-only rule. Regression suite green.
 Nothing sent to Telegram — user will say when.
+
+### 21-Aug: UI studies tab restructured
+
+New order: **PROFIT AND LOSS (money + signals/mo) FIRST**, then LIVE STRATEGIES, THE WORK BEHIND
+THOSE NUMBERS, HOW TO EXECUTE, FULL STUDIES. **Removed from the UI entirely** (kept in git and
+memory, per user): the NSE Closing-Auction-Session block and the incident record — a one-line
+pointer to studies/NSE_SESSION_CHANGE_2026_08_03.md, STALE_BAR_INCIDENT.md and
+DEPLOYED_EVIDENCE_AUDIT.md replaces them. 26 lines dropped. Every stale figure swept from all tabs
+(0 remaining).
+
+**Wording corrected in CLAUDE.md and the UI**: v2's IS/OOS match is +27.20% vs +27.24%, a rounding
+coincidence, NOT "the same number". Both bootstrap intervals are ~18pp wide. The user caught this
+and was right to — presenting it as confirmation reads noise as signal.
