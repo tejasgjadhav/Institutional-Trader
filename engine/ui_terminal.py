@@ -795,68 +795,86 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         return f'<p style="color:{TEXT_DIM};margin:3px 0;">{t}</p>'
 
     def _forward_record_html(self) -> str:
-        """The live paper record, computed from the position files on every refresh.
+        """The live paper record, read from data/forward_record.db on every refresh.
 
-        This is the only genuinely out-of-sample instrument the system has, and until
-        21-Aug-2026 it was on no tab at all. It is split at the 6-Aug-2026 stale-bar fix:
-        everything entered before that date was fired off the PREVIOUS session's breakout,
-        a different strategy that no backtest here describes, so pooling the two answers
-        the wrong question.
+        Shows ACTUAL REALISED loss, never max loss. The user's point on 21-Aug-2026 and he was
+        right: a credit spread only loses its full width if the underlying settles beyond the long
+        strike, which is rare. Quoting max loss as though it were the typical loss overstates the
+        risk by 2-3x on these books - measured, the 0DTE average loss is Rs6,274 on NIFTY against a
+        far larger width, and Rs4,549 on SENSEX. What matters is realised average loss against
+        realised average win, so that is what this table shows.
         """
-        import json as _json, os as _os
-        FIX = "2026-08-06"
-        files = (("v2", "stock_credit_v2_positions.json"),
-                 ("v1", "stock_credit_positions.json"),
-                 ("v0", "stock_credit_v0_positions.json"))
-        post, pre, opn = [], [], []
-        for bk, fn in files:
-            fp = _os.path.join(DATA_DIR, fn)
-            if not _os.path.exists(fp):
-                continue
-            try:
-                book = _json.load(open(fp))
-            except Exception:
-                continue
-            for q in book:
-                if q.get("status") == "OPEN":
-                    opn.append((bk, q))
-                    continue
-                v = q.get("pnl_rs")
-                if v is None:
-                    v = (q.get("pnl_pts") or 0) * (q.get("qty") or q.get("lot") or 0)
-                (post if (q.get("entry_date") or "") >= FIX else pre).append(float(v))
-        def money(v):
-            c = GREEN if v > 0 else (RED if v < 0 else TEXT_DIM)
-            sign = "+" if v >= 0 else "-"
-            return f'<span style="color:{c};">{sign}Rs{abs(v):,.0f}</span>'
-        def row(label, v):
+        import sqlite3, os as _os
+        DB = _os.path.join(DATA_DIR, "forward_record.db")
+        rows = []
+        try:
+            with sqlite3.connect(DB, timeout=5) as c:
+                rows = list(c.execute(
+                    """SELECT book, entry_date, status, pnl_rs FROM fills
+                       WHERE status='CLOSED' AND pnl_rs IS NOT NULL"""))
+                n_open = c.execute("SELECT COUNT(*) FROM fills WHERE status='OPEN'").fetchone()[0]
+                counter = c.execute("""SELECT COUNT(*) FROM fills WHERE book IN ('v2','v1')
+                                       AND entry_date>='2026-08-06' AND status='CLOSED'""").fetchone()[0]
+                rej = c.execute("SELECT COUNT(*) FROM rejections").fetchone()[0]
+        except Exception:
+            return self._d("Forward record unavailable (data/forward_record.db not readable).")
+
+        def stat(sel):
+            v = [r[3] for r in rows if sel(r)]
             if not v:
-                return f'<tr><td>{label}</td><td colspan="3" style="color:{TEXT_DIM};">none yet</td></tr>'
-            w = sum(1 for x in v if x > 0)
-            return f'<tr><td>{label}</td><td>{len(v)}</td><td>{w}/{len(v)}</td><td>{money(sum(v))}</td></tr>'
-        n = len(post)
-        if n < 30:
-            verdict = (f"<b>{n} closed trade(s).</b> Far too few to conclude anything. At about eight "
-                       "v1 signals a month, a sample worth trusting is months away. Until then the "
-                       "backtest below is the best available estimate.")
-        else:
-            verdict = f"<b>{n} closed trades.</b> Now worth comparing against the backtest below."
-        openline = ", ".join(f"{b} {q.get('symbol','?')} ({q.get('pnl_pts')} pts)" for b, q in opn) if opn else "none"
-        head = f'<p style="color:{GREEN};font-size:17px;font-weight:bold;margin-top:4px;">THE FORWARD PAPER RECORD - what has actually happened</p>'
+                return None
+            wins = [x for x in v if x > 0]
+            loss = [x for x in v if x <= 0]
+            return dict(n=len(v), w=len(wins), net=sum(v),
+                        aw=(sum(wins) / len(wins)) if wins else 0.0,
+                        al=(sum(loss) / len(loss)) if loss else None,
+                        worst=min(v))
+
+        def money(v, good_when_positive=True):
+            c = GREEN if v > 0 else (RED if v < 0 else TEXT_DIM)
+            return f'<span style="color:{c};">{"+" if v >= 0 else "-"}Rs{abs(v):,.0f}</span>'
+
+        def line(label, st):
+            if not st:
+                return f'<tr><td>{label}</td><td colspan="5" style="color:{TEXT_DIM};">none closed yet</td></tr>'
+            al = (money(st["al"]) if st["al"] is not None
+                  else f'<span style="color:{TEXT_DIM};">no loss yet</span>')
+            return (f"<tr><td>{label}</td><td>{st['n']}</td><td>{st['w']}/{st['n']}</td>"
+                    f"<td>{money(st['net'])}</td><td>{money(st['aw'])}</td><td>{al}</td></tr>")
+
+        POST = lambda r: r[1] >= "2026-08-06"
+        blocks = [
+            ("<b>Stock books v2+v1</b> (post 6-Aug, counts toward the 30)",
+             stat(lambda r: r[0] in ("v2", "v1") and POST(r))),
+            ("Stock v0 (post 6-Aug, excluded from the lot decision)",
+             stat(lambda r: r[0] == "v0" and POST(r))),
+            ("Intraday NIFTY (0DTE)", stat(lambda r: r[0] == "0DTE-NIFTY")),
+            ("Intraday SENSEX (0DTE)", stat(lambda r: r[0] == "0DTE-SENSEX")),
+            ("<span style=\"color:%s;\">Before 6-Aug - T-1 signals, NOT this strategy</span>" % TEXT_DIM,
+             stat(lambda r: r[0] in ("v2", "v1", "v0") and not POST(r))),
+        ]
+        head = (f'<p style="color:{GREEN};font-size:17px;font-weight:bold;margin-top:4px;">'
+                f'THE FORWARD PAPER RECORD - what has actually happened</p>')
         tbl = (f'<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">'
-               f'<tr style="color:{CYAN};font-weight:bold;"><td>Record</td><td>Closed</td><td>Won</td><td>Net</td></tr>'
-               + row("<b>The deployed strategy</b> (entered on/after 6-Aug-2026)", post)
-               + row("Before the stale-bar fix - T-1 signals, NOT this strategy", pre)
-               + "</table>")
+               f'<tr style="color:{CYAN};font-weight:bold;"><td>Record</td><td>Closed</td><td>Won</td>'
+               f'<td>Net</td><td>Avg win</td><td>Avg loss (REALISED)</td></tr>'
+               + "".join(line(l, st) for l, st in blocks) + "</table>")
         return (head
-                + self._d("This updates itself from the live position files. It is the ONLY genuinely "
-                          "out-of-sample instrument here; everything below it is a backtest.")
+                + self._d("Read from the forward-record database on every refresh. This is the ONLY "
+                          "genuinely out-of-sample instrument here; everything below it is a backtest.")
                 + tbl
-                + self._d(verdict)
-                + self._d("<b>Never pool the two rows.</b> The earlier trades faded the PREVIOUS "
-                          "session's breakout, because the Upstox daily feed publishes no same-day "
-                          "bar during the session. No backtest on this tab describes that.")
-                + self._d("Currently open: " + openline))
+                + self._d("<b>Avg loss is REALISED, not max loss.</b> A credit spread only loses its "
+                          "full width if the underlying settles beyond the long strike, which is "
+                          "rare. Quoting max loss as the typical loss overstates the risk by two to "
+                          "three times on these books.")
+                + self._d(f"<b>30-trade counter: {counter}/30</b> closed on v2+v1 since 6-Aug. "
+                          f"{n_open} position(s) open. {rej} candidate(s) rejected by the live gates "
+                          f"so far - that ratio is the take rate, and no backtest can produce it. "
+                          f"Criteria were fixed before any data: studies/FORWARD_RECORD_DECISION_RULE.md.")
+                + self._d("<b>Never pool the last row with the rest.</b> Those trades faded the "
+                          "PREVIOUS session's breakout, because the Upstox daily feed publishes no "
+                          "same-day bar during the session. No backtest here describes that."))
+
     def _studies_html(self) -> str:
         def h(t):
             return f'<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:20px;">{t}</p>'

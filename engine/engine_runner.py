@@ -642,14 +642,7 @@ class EngineRunner:
                     logger.warning(f"stock_credit_v0 scan: {e}")
             if _fired == 0:
                 self._tg_no_signal(now)
-        # Reconcile the forward-record DB against the books every cycle. Idempotent and cheap, and
-        # it catches every close path - take-profit, stop, expiry settlement - rather than relying on
-        # a hook at each site (added 21-Aug-2026, studies/FORWARD_RECORD_DECISION_RULE.md).
-        try:
-            from engine import forward_record as _fr
-            _fr.sync()
-        except Exception as e:
-            logger.debug(f"forward_record sync: {e}")
+
 
     def _tg_intraday_skip(self, now, reasons):
         """Say why the same-day index books did not trade (user request, 20-Aug-2026).
@@ -971,7 +964,12 @@ class EngineRunner:
         same-day expiry) and month-end (multi-day, held to weekly/monthly expiry). Win/loss/
         win% are CLOSED-only (an open position is neither yet); open trades carry a live MTM and
         their settlement date(s). First line stamps the exact date measurement began."""
-        buck = {"i": dict(w=0, l=0, pl=0.0), "m": dict(w=0, l=0, pl=0.0)}
+        # `wv`/`lv` hold the individual rupee results so the message can report the AVERAGE
+        # REALISED loss (user, 21-Aug-2026). Max loss is the wrong number to quote: a credit spread
+        # only loses its full width if the underlying settles beyond the long strike, which is rare,
+        # so max loss overstates the typical loss by two to three times on these books.
+        buck = {"i": dict(w=0, l=0, pl=0.0, wv=[], lv=[]),
+                "m": dict(w=0, l=0, pl=0.0, wv=[], lv=[])}
         openn = 0; open_pl = 0.0; opens = []; start = None
         for _label, fname in self._OUTCOME_BOOKS:
             path = os.path.join(DATA_DIR, fname)
@@ -992,9 +990,9 @@ class EngineRunner:
                 pp = p.get("pnl_pts")
                 rs = pp * qty if isinstance(pp, (int, float)) and qty else 0.0
                 if st == "WIN":
-                    b["w"] += 1; b["pl"] += rs
+                    b["w"] += 1; b["pl"] += rs; b["wv"].append(rs)
                 elif st == "LOSS":
-                    b["l"] += 1; b["pl"] += rs
+                    b["l"] += 1; b["pl"] += rs; b["lv"].append(rs)
                 elif st == "OPEN":
                     openn += 1; open_pl += rs
                     opens.append({"exp": p.get("expiry"), "tag": tag,
@@ -1018,10 +1016,17 @@ class EngineRunner:
             if cc == 0:
                 return "   No closed trades yet."
             w = c["w"] / cc * 100
+            aw = (sum(c["wv"]) / len(c["wv"])) if c["wv"] else None
+            al = (sum(c["lv"]) / len(c["lv"])) if c["lv"] else None
+            avg = ("   Average win <b>₹{:+,.0f}</b> · average loss <b>{}</b>".format(
+                       aw if aw is not None else 0,
+                       f"₹{al:+,.0f}" if al is not None else "no loss yet")
+                   if (aw is not None or al is not None) else "")
             return (f"   Total trades = <b>{cc}</b> out of which our system achieved "
                     f"<b>{c['w']} Win{'s' if c['w'] != 1 else ''}</b> and "
                     f"<b>{c['l']} Loss{'es' if c['l'] != 1 else ''}</b>.\n"
-                    f"   Win-rate <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>")
+                    f"   Win-rate <b>{w:.1f}%</b> · P/L <b>₹{c['pl']:+,.0f}</b>"
+                    + ("\n" + avg if avg else ""))
 
         lines = [
             f"📈 <b>Saavi Institutional Trader has till date delivered for live trade from {self._fmt_d(start, with_year=True)}-</b>",
@@ -1102,6 +1107,16 @@ class EngineRunner:
         now = datetime.now(IST)
         self._market(now)
         self._manage_wakelock()
+        # FORWARD RECORD. On the MAIN CYCLE, not inside the 15:36 stock scan, because the 0DTE
+        # books settle at 15:40 (SETTLE_AFTER) - four minutes AFTER that scan. Syncing there meant an
+        # intraday loss would not reach the DB until the NEXT trading day (found 21-Aug-2026 when the
+        # user asked whether actual intraday losses get recorded end of day). Idempotent and cheap,
+        # so running it every tick costs nothing and catches every close path within seconds.
+        try:
+            from engine import forward_record as _fr
+            _fr.sync()
+        except Exception as e:
+            logger.debug(f"forward_record sync: {e}")
         self._maybe_eod(now)
         self._fast_resolve()
         self._swing(now)

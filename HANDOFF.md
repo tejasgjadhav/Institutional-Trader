@@ -3044,3 +3044,18 @@ carries no information either way.
 
 That bug was about the daily CLOSE for stock breakouts; 0DTE enters at 09:16 off the OPEN. So all
 12 closed 0DTE paper trades are valid history: NIFTY 6/6 +Rs4,196, SENSEX 6/6 +Rs6,667.
+
+### 21-Aug: realised loss everywhere, and a sync-timing bug the user's question exposed
+
+**BUG FOUND BY THE USER'S QUESTION** ("hope for intraday on engine you will record actual loss end of
+the day"). `sync()` was called inside the 15:36 stock scan, but the 0DTE books settle at **15:40**
+(`SETTLE_AFTER`) — four minutes later. An intraday loss would not have reached the DB until the NEXT
+trading day. Moved to the MAIN CYCLE, so any settlement lands within seconds. Idempotent, cheap.
+
+**REALISED loss, never max loss** (his correction, and it is right — a credit spread only loses full
+width if the underlying settles beyond the long strike):
+- **UI**: the forward-record block now has an "Avg loss (REALISED)" column per book, showing
+  "no loss yet" where none has occurred, plus the 30-trade counter and rejection count.
+- **Telegram**: the portfolio summary now carries `Average win X · average loss Y` per bucket.
+  Currently intraday 12/12 avg win Rs+905, no loss yet; month-end 16W/5L avg win Rs+5,040 avg loss
+  Rs-8,168. Per-trade RESULT messages with realised P&L already existed.
