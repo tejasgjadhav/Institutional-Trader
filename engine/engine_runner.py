@@ -642,6 +642,14 @@ class EngineRunner:
                     logger.warning(f"stock_credit_v0 scan: {e}")
             if _fired == 0:
                 self._tg_no_signal(now)
+        # Reconcile the forward-record DB against the books every cycle. Idempotent and cheap, and
+        # it catches every close path - take-profit, stop, expiry settlement - rather than relying on
+        # a hook at each site (added 21-Aug-2026, studies/FORWARD_RECORD_DECISION_RULE.md).
+        try:
+            from engine import forward_record as _fr
+            _fr.sync()
+        except Exception as e:
+            logger.debug(f"forward_record sync: {e}")
 
     def _tg_intraday_skip(self, now, reasons):
         """Say why the same-day index books did not trade (user request, 20-Aug-2026).

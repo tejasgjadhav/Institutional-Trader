@@ -259,6 +259,17 @@ def scan_signals() -> list:
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
             if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
+                # RECORD THE REJECTION. A blocked candidate leaves no trace anywhere else, so the
+                # take rate - the fraction of backtest trades actually fillable - was unmeasured.
+                try:
+                    from engine import forward_record as _fr
+                    _fr.record_rejection(
+                        "v1", sym,
+                        "spread" if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT else "open_interest",
+                        f"spread {spread_pct:.2f}% oi {soi}", spread_pct, soi, sm,
+                        (credit / width_pts) if width_pts else None)
+                except Exception:
+                    pass
                 continue
             if lot <= 0:                                            # no lot size -> not tradeable
                 continue
@@ -297,6 +308,11 @@ def scan_signals() -> list:
                 "closed_date": None, "exit_cost": None,
             }
             book.append(pos); new.append(pos)
+            try:
+                from engine import forward_record as _fr
+                _fr.record_entry("v1", pos, spread_pct=spread_pct)
+            except Exception:
+                pass
             logger.info(f"stock_credit: opened {side} {sym} (fade {bdir}) credit Rs{credit} c/w {pos['credit_width']} exp {expiry}")
         except Exception as e:
             logger.warning(f"stock_credit scan {sym}: {e}")

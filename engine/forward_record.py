@@ -153,3 +153,70 @@ def summary():
     except Exception as e:
         logger.warning(f"forward_record.summary: {e}")
         return {}
+
+
+BOOK_FILES = {"v2": "stock_credit_v2_positions.json",
+              "v1": "stock_credit_positions.json",
+              "v0": "stock_credit_v0_positions.json",
+              "0DTE-NIFTY": "zero_dte_positions.json",
+              "0DTE-SENSEX": "sensex_dte_positions.json"}
+
+
+def sync():
+    """Reconcile the DB against the JSON books. Idempotent, so it is safe to run every cycle.
+
+    Positions close down several paths - take-profit, stop, and expiry settlement - and hooking each
+    site would mean three chances to miss one. Reconciling instead catches every path, including any
+    added later, and doubles as the backfill for trades that predate this table. Entry rows are still
+    written by record_entry() at signal time because that is the only moment `spread_pct` exists.
+    """
+    import json as _json
+    n_new = n_closed = 0
+    try:
+        with _conn() as c:
+            have = {r[0]: r[1] for r in c.execute("SELECT id, status FROM fills")}
+            for book, fn in BOOK_FILES.items():
+                fp = os.path.join(os.path.dirname(DB), fn)
+                if not os.path.exists(fp):
+                    continue
+                try:
+                    rows = _json.load(open(fp))
+                except Exception:
+                    continue
+                for p in rows:
+                    pid, st = p.get("id"), (p.get("status") or "").upper()
+                    if not pid:
+                        continue
+                    closed = st not in ("OPEN", "")
+                    if pid not in have:
+                        qty = int(p.get("qty") or 0)
+                        width = float(p.get("width_pts") or 0)
+                        credit = p.get("credit")
+                        c.execute("""INSERT INTO fills
+                            (id, book, symbol, side, entry_ts, entry_date, expiry, short_strike,
+                             long_strike, width, lot, num_lots, qty, credit, cw, margin_rs, status)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                            (pid, book, p.get("symbol"), p.get("side"),
+                             p.get("entry_date"), p.get("entry_date"), p.get("expiry"),
+                             p.get("short_strike"), p.get("long_strike"), width, p.get("lot"),
+                             p.get("num_lots"), qty, credit, p.get("credit_width"),
+                             ((width - (credit or 0)) * qty) if width else None,
+                             "CLOSED" if closed else "OPEN"))
+                        n_new += 1
+                        have[pid] = "CLOSED" if closed else "OPEN"
+                    if closed and have.get(pid) != "CLOSED":
+                        ec = p.get("exit_cost")
+                        qty = int(p.get("qty") or 0)
+                        pnl = (p.get("pnl_pts") or 0) * qty
+                        c.execute("""UPDATE fills SET exit_date=?, exit_reason=?, exit_cost=?,
+                                     pnl_rs=?, status='CLOSED' WHERE id=?""",
+                                  (p.get("closed_date"), st, ec, pnl, pid))
+                        n_closed += 1
+                    elif closed:
+                        # already CLOSED in the DB, but refresh P&L in case the book re-marked it
+                        c.execute("UPDATE fills SET pnl_rs=?, exit_cost=? WHERE id=? AND status='CLOSED'",
+                                  ((p.get("pnl_pts") or 0) * int(p.get("qty") or 0),
+                                   p.get("exit_cost"), pid))
+    except Exception as e:
+        logger.warning(f"forward_record.sync: {e}")
+    return n_new, n_closed
