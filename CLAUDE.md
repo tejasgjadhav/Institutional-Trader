@@ -313,6 +313,23 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
   cost, net unmeasured. He asks for this explicitly and repeatedly. When a question has a mixed
   answer, give the mixed answer and say plainly which part is measured and which is not.
 
+- **TELEGRAM IS THE TRADE LOG — DO NOT REDESIGN IT, AND NEVER REWRITE HISTORY (standing rule,
+  user 2026-08-21).** He said it plainly: *"keep telegram messages the same as it is like a trade
+  log for us"* and *"dont change what was before 6th august and all"*. The messages that go to
+  Telegram ARE the running record of what this system decided and when, so they are append-only.
+  - **Do not change the format, wording, structure or emoji** of the existing message types (signal,
+    digest, 15:36 no-signal, 09:16 intraday skip). Familiarity is the point: he reads these daily
+    and a redesign breaks the log's continuity.
+  - **Never retroactively alter anything dated before 6-Aug-2026** — not the trade records, not the
+    position files, not the sent messages. The 6-Aug stale-bar fix is the boundary: everything
+    before it was a T-1 signal, and that history stays exactly as it is. Where the two eras must be
+    told apart, SPLIT them for reporting (`studies/ndte/forward_record.py` does this) — never edit,
+    merge or delete the earlier rows.
+  - **This OVERRIDES the RESULTS → STUDIES → UI → GITHUB rule for Telegram only.** When a backtest
+    re-run changes the numbers, update `studies/` and the UI as normal, and LEAVE the Telegram
+    evidence blocks alone unless he asks. A new message TYPE is a separate request; adding one is
+    fine, changing an existing one is not.
+
 - **Honesty over optimism.** This is a thin, unproven edge. Always frame results gross-vs-net,
   sample size, and out-of-sample fragility. Don't sell a curve-fit.
 - **Commits:** branch off main if needed; end commit messages with the Co-Authored-By trailer.
