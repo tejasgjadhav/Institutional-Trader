@@ -42,6 +42,7 @@ from engine.config import UNIVERSE
 
 WINDOW = sys.argv[1] if len(sys.argv) > 1 else "OOS"
 MIN_DTE, REENTRY, MIN_PREM = 10, 3, 50.0
+MIN_YR_N = 10         # a calendar year needs this many trades before it counts toward "+ve yrs"
 # OPEN-INTEREST FLOOR (added 16-Aug-2026 — the audit's BLOCKER finding, matching the live gate).
 # Bhavcopy publishes a CLOSE for every listed contract, and for one that never traded that CLOSE is
 # NSE's THEORETICAL SETTLEMENT price, not a print. Measured on the strikes this harness actually
@@ -459,13 +460,21 @@ if __name__ == "__main__":
                 print(f"{bk:<5}{len(g):>7}   (too few)"); continue
             by = collections.defaultdict(list)
             for x in g: by[x["yr"]].append(x["net_rs"])
-            pos = sum(1 for v in by.values() if sum(v) > 0)
+            # A YEAR NEEDS ENOUGH TRADES TO BE A YEAR (fixed 21-Aug-2026). Out-of-sample 2024 is an
+            # Oct-Dec stub: v2 has ONE trade in it, v0 has one. Counting those as full years turned
+            # "positive 2 of 2 years plus a single observation" into the much stronger-sounding
+            # "positive 3 of 3 years". Years under MIN_YR_N are shown as stubs, never folded in.
+            full = {y: v for y, v in by.items() if len(v) >= MIN_YR_N}
+            stub = {y: v for y, v in by.items() if len(v) < MIN_YR_N}
+            pos = sum(1 for v in full.values() if sum(v) > 0)
             mrs = sum(x["margin_rs"] for x in g)
             rom_rs = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
             rs_tr = (sum(x["net_rs"] for x in g) / len(g)) if g else 0.0
             print(f"{bk:<5}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%"
                   f"{sum(x['net'] for x in g)/sum(x['margin'] for x in g)*100:>+9.1f}%{rom_rs:>+9.1f}%"
-                  f"{rs_tr:>+11,.0f}{pos:>6}/{len(by):<2}")
+                  f"{rs_tr:>+11,.0f}{pos:>6}/{len(full):<2}"
+                  + (("  (+%d stub yr: " % len(stub))
+                     + ", ".join(f"{y} n={len(v)}" for y, v in sorted(stub.items())) + ")" if stub else ""))
         print()
     # A run that silently lost signals to the network must not read as a clean run. State it either
     # way, so "0" is positive evidence rather than the absence of a warning.

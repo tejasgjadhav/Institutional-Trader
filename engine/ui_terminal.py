@@ -791,6 +791,72 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(doc)
         return w
 
+    def _d(self, t):
+        return f'<p style="color:{TEXT_DIM};margin:3px 0;">{t}</p>'
+
+    def _forward_record_html(self) -> str:
+        """The live paper record, computed from the position files on every refresh.
+
+        This is the only genuinely out-of-sample instrument the system has, and until
+        21-Aug-2026 it was on no tab at all. It is split at the 6-Aug-2026 stale-bar fix:
+        everything entered before that date was fired off the PREVIOUS session's breakout,
+        a different strategy that no backtest here describes, so pooling the two answers
+        the wrong question.
+        """
+        import json as _json, os as _os
+        FIX = "2026-08-06"
+        files = (("v2", "stock_credit_v2_positions.json"),
+                 ("v1", "stock_credit_positions.json"),
+                 ("v0", "stock_credit_v0_positions.json"))
+        post, pre, opn = [], [], []
+        for bk, fn in files:
+            fp = _os.path.join(DATA_DIR, fn)
+            if not _os.path.exists(fp):
+                continue
+            try:
+                book = _json.load(open(fp))
+            except Exception:
+                continue
+            for q in book:
+                if q.get("status") == "OPEN":
+                    opn.append((bk, q))
+                    continue
+                v = q.get("pnl_rs")
+                if v is None:
+                    v = (q.get("pnl_pts") or 0) * (q.get("qty") or q.get("lot") or 0)
+                (post if (q.get("entry_date") or "") >= FIX else pre).append(float(v))
+        def money(v):
+            c = GREEN if v > 0 else (RED if v < 0 else TEXT_DIM)
+            sign = "+" if v >= 0 else "-"
+            return f'<span style="color:{c};">{sign}Rs{abs(v):,.0f}</span>'
+        def row(label, v):
+            if not v:
+                return f'<tr><td>{label}</td><td colspan="3" style="color:{TEXT_DIM};">none yet</td></tr>'
+            w = sum(1 for x in v if x > 0)
+            return f'<tr><td>{label}</td><td>{len(v)}</td><td>{w}/{len(v)}</td><td>{money(sum(v))}</td></tr>'
+        n = len(post)
+        if n < 30:
+            verdict = (f"<b>{n} closed trade(s).</b> Far too few to conclude anything. At about eight "
+                       "v1 signals a month, a sample worth trusting is months away. Until then the "
+                       "backtest below is the best available estimate.")
+        else:
+            verdict = f"<b>{n} closed trades.</b> Now worth comparing against the backtest below."
+        openline = ", ".join(f"{b} {q.get('symbol','?')} ({q.get('pnl_pts')} pts)" for b, q in opn) if opn else "none"
+        head = f'<p style="color:{GREEN};font-size:17px;font-weight:bold;margin-top:4px;">THE FORWARD PAPER RECORD - what has actually happened</p>'
+        tbl = (f'<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">'
+               f'<tr style="color:{CYAN};font-weight:bold;"><td>Record</td><td>Closed</td><td>Won</td><td>Net</td></tr>'
+               + row("<b>The deployed strategy</b> (entered on/after 6-Aug-2026)", post)
+               + row("Before the stale-bar fix - T-1 signals, NOT this strategy", pre)
+               + "</table>")
+        return (head
+                + self._d("This updates itself from the live position files. It is the ONLY genuinely "
+                          "out-of-sample instrument here; everything below it is a backtest.")
+                + tbl
+                + self._d(verdict)
+                + self._d("<b>Never pool the two rows.</b> The earlier trades faded the PREVIOUS "
+                          "session's breakout, because the Upstox daily feed publishes no same-day "
+                          "bar during the session. No backtest on this tab describes that.")
+                + self._d("Currently open: " + openline))
     def _studies_html(self) -> str:
         def h(t):
             return f'<p style="color:{GREEN};font-size:15px;font-weight:bold;margin-top:20px;">{t}</p>'
@@ -805,6 +871,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         return f"""
 <div style="color:{TEXT};">
+{self._forward_record_html()}
 {dim("This tab is a record of RESULTS. The incident write-ups and the NSE session change live on GitHub — studies/STALE_BAR_INCIDENT.md, studies/DEPLOYED_EVIDENCE_AUDIT.md and studies/NSE_SESSION_CHANGE_2026_08_03.md — so they do not crowd the numbers here.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the only money table</p>

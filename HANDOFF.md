@@ -2977,3 +2977,18 @@ DEPLOYED_EVIDENCE_AUDIT.md replaces them. 26 lines dropped. Every stale figure s
 **Wording corrected in CLAUDE.md and the UI**: v2's IS/OOS match is +27.20% vs +27.24%, a rounding
 coincidence, NOT "the same number". Both bootstrap intervals are ~18pp wide. The user caught this
 and was right to — presenting it as confirmation reads noise as signal.
+
+### 21-Aug: second harness audit + UI improvement
+
+**One more real defect found and fixed: `+ve yrs` counted a stub year as a full year.**
+Out-of-sample 2024 is an Oct-Dec stub holding ONE v2 trade and ONE v0 trade, yet it was reported as
+a third confirming year — turning "positive 2 of 2 years plus a single observation" into the much
+stronger-sounding "positive 3 of 3 years". Added `MIN_YR_N = 10`; years under it are now printed
+as `(+1 stub yr: 2024 n=1)` rather than folded into the ratio. Checked and NOT bugs: no `lot==0`
+rows exist in either window, and the 45-day leg-fetch cap never truncates (monthly expiries land
+at most ~41 days out).
+
+**UI: the forward paper record is now the FIRST thing on the studies tab**, computed live from the
+position files on every refresh. It splits at the 6-Aug fix and refuses to pool the two eras:
+deployed strategy 1 closed (+Rs3,490), pre-fix T-1 signals 17 closed (+Rs34,162), plus the open
+positions with live points. Verified by rendering the method directly.
