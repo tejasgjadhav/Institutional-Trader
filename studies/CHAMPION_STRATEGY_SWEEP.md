@@ -1,5 +1,8 @@
 # Champion-strategy sweep — can anything but credit spreads print >80% win AND positive net? (2026-07-31)
 
+**Why this study exists.** The user challenged the premise directly: if credit spreads are the only thing that works here, has anything else actually been tried? This sweeps the well-known intraday systems on 5-minute candles to answer whether >80% win with positive net is reachable any other way, so that 'sell premium' is a measured conclusion rather than the only thing anyone looked at.
+
+
 **User challenge (retail-quant-firm framing):** "Apart from credit spreads is there no way to get
 >80% win rate? Did you scan 5-min candles and apply top trading-champion strategies?"
 

@@ -3094,3 +3094,24 @@ the pointer to the forward record and its pre-registered criteria.
 The in-app README tab described "THREE 0DTE expiry-day spreads (NIFTY / SENSEX / BANKNIFTY monthly)"
 and listed BANKNIFTY among the wired Telegram sources. Both corrected; zero stale BANKNIFTY-as-live
 references remain anywhere.
+
+### 21-Aug: every study now says why it exists
+
+Audit: 45 of 64 already stated a **Question** or **Goal** (my first pass grepped only for "why" and
+wrongly reported 60 missing — corrected). 16 genuinely lacked one and now carry a
+**"Why this study exists."** line written from each file's own content, not templated. Seven
+index/summary docs (README, LIVE_STRATEGIES, CONSOLIDATED_PNL, NEXT_ACTIONS, OBJECTIVE_SPEC,
+STRATEGY_SUMMARY, WIN_RATE_RESEARCH_LOG) are not studies and are exempt.
+
+Also updated `studies/DEPLOYED_EVIDENCE_AUDIT.md` to the 21-Aug re-run: the 18-Aug figures it
+carried (v2 +28.0% n=49, v1 +11.5% n=169, v0 +3.0% n=90, all "3/3 yrs") are superseded, the
+"3/3 years" claim corrected to "2/2 full years" (OOS 2024 is a stub with ONE v2 trade), the
+FETCH INTEGRITY caveat added, and the v2 cross-window match documented as a rounding coincidence.
+
+**Measured 21-Aug:** parity is NOT a hidden filter — on 6,916 sampled symbol-expiry chains it
+derives spot on 98.8%, dropping 1.2% on the 2%-span guard and 0% for want of common strikes. It runs
+on EVERY in-sample candidate, so it is the universal spot source, not a patch applied to some.
+
+**Clarified:** bhavcopy DOES carry premiums (`CLOSE`) and open interest (`OPEN_INT`), both 100%
+populated. The ONLY thing it lacks is the order book — bid/ask. Earlier wording that implied
+"no premium or OI" was loose and the user was right to challenge it.

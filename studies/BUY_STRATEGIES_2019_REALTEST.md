@@ -1,5 +1,8 @@
 # BUY strategies on REAL 5-min data, ALL years 2019→date (Zerodha Kite)
 
+**Why this study exists.** The credit-spread fades could be tested back to 2019 because daily option closes suffice for a multi-day trade. The two intraday BUY books could not, so their edge rested on a short window. This asks whether they survive on real 5-minute data across every regime since 2019, or whether they were fitted to a recent one.
+
+
 The credit-spread fades could be tested back to 2019 because they're multi-day (daily option
 closes from [NSE bhavcopy] suffice). The two **intraday BUY** strategies — ORB+VWAP index and
 3-Family stocks — need *intraday* data, which Upstox only holds ~1–2 years back. **Zerodha Kite

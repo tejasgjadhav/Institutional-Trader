@@ -1,5 +1,8 @@
 # Final Strategy Testing — 60 Day
 
+**Why this study exists.** Gate 3, the market-alignment filter, was about to go live on the 3-Family stock book. Nothing ships here on a hunch, so this measures the exact configuration over 30 and 60 days before it runs in production.
+
+
 The live 3-Family stock strategy with the **market-alignment gate (Gate 3)** added,
 backtested over 30 and 60 days. This is the configuration now running in production.
 

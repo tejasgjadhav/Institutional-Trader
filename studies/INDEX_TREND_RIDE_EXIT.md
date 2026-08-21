@@ -1,5 +1,8 @@
 # Index ORB+VWAP — Trend-Ride Exit (the fix for the daily index losses)
 
+**Why this study exists.** The live index ORB+VWAP book was losing nearly every day, and a book that loses daily is either broken or wrongly exited. This finds the root cause and tests the fix, so the change is evidence rather than a guess at what went wrong.
+
+
 The live NIFTY/BANKNIFTY ORB+VWAP strategy was losing nearly every day. Root cause
 found and fixed; this is the evidence. **Only the index strategy changed — the 3-Family
 stock system is untouched.**

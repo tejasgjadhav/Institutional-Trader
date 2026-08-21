@@ -1,5 +1,8 @@
 # Study: Real-option optimization — and the 1-year reality check
 
+**Why this study exists.** The stock configuration looked profitable on a 180-day window of real option premiums. A short window can be a regime rather than an edge, so this re-tests the same configuration over a full year to find out which one it was.
+
+
 ## ⚠️ CORRECTION (read this first) — the stock "edge" did NOT hold over a full year
 The optimization below was tuned and "validated" on a **180-day** window with a train/test
 split. Re-run on the **full ~1 year** of real option data (232 trades, Jan 2025→May 2026), the

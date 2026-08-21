@@ -1,5 +1,8 @@
 # Stock Fade v2 UNION — Put/Call, Stop-Loss & Timing analysis
 
+**Why this study exists.** The v2 fade was validated as a single rule, but three things inside it had never been tested separately: whether puts and calls behave the same, whether a stop helps or hurts, and whether entry timing matters. This separates them so each is decided on its own evidence.
+
+
 Extends the validated v2 UNION credit-spread fade (see `studies/ndte/stkfade_union.py`, `STOCK_OPTIONS_NO_EDGE.md` Part 10). Strategy held fixed except the swept parameter: UNION Donchian(5/10/15/20) daily breakout → SELL a credit spread AGAINST it (up→bear-call short 2-OTM CE +4 wide; down→bull-put short 2-OTM PE −4), gates credit/width≥0.40, short prem≥₹50, OI≥1, min-DTE 10, reentry 3d, TP 50% of credit, hard stop 3× credit, else settle intrinsic at monthly expiry.
 
 - **IS** = NSE bhavcopy 2019→Sep 2024 (close-only sim), **n=387 trades**.

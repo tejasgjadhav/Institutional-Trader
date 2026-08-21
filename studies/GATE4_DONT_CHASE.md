@@ -1,5 +1,8 @@
 # Gate 4 — "Don't Chase" (entry-extension filter)
 
+**Why this study exists.** A signal that fires after the stock has already run may be buying the end of a move rather than the start. This tests whether refusing an extended entry improves the 3-Family book, or whether it only removes trades that were going to win anyway.
+
+
 A 4th gate on the 3-Family stock system: **skip a signal if the stock has already moved
 more than `MAX_ENTRY_EXTENSION_PCT` (2.9%) in the trade's direction from the day's open.**
 Buying an already-extended stock is buying the top — it loses directional edge.

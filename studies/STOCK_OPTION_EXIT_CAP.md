@@ -1,5 +1,8 @@
 # Stock Option Exit Cap — should we remove the +10% target?
 
+**Why this study exists.** Booking at +10% caps every winner while the stop lets losers run to -20%, which is the wrong shape if the moves are larger than the cap. This tests whether removing the cap improves the book, or whether the cap is what keeps the win rate high enough to pay for the losers.
+
+
 Stock options book at **+10% / −20%** on premium. The +10% is an upper cap on the winner.
 We tested raising/removing it (let winners ride to the close), keeping the −20% stop and the
 live gates. **Not deployed — live config stays at +10%.**

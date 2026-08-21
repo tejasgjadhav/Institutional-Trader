@@ -1,5 +1,8 @@
 # c/w bands below the gate, scored at EACH BOOK's own geometry (13-Aug-2026)
 
+**Why this study exists.** Earlier band studies scored every candidate at ONE geometry, but v2, v1 and v0 sell different strikes and widths, so the same c/w means a different trade in each book. This re-scores the bands below the gate at each book's own geometry, to test whether the band was rejected on its merits or on a mismatched measurement.
+
+
 > ## ⚠ AUDIT CORRECTION, 14-Aug-2026 — the OOS tables below are INVALID and the band is DEAD
 >
 > An adversarial audit (user-requested, before any deployment decision) found that the OOS script

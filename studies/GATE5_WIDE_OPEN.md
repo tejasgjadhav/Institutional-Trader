@@ -1,5 +1,8 @@
 # Gate 5 — "Wide Open" (opening-range width filter)
 
+**Why this study exists.** A narrow opening range may mean there is no real morning move to trade, so the breakout is noise. This tests whether requiring a wide opening range improves the 3-Family book, or whether it is a plausible-sounding filter that costs signals and buys nothing.
+
+
 A 5th gate on the 3-Family stock system: **only trade when the first-30-min opening range is
 at least `ORB_RANGE_WIDTH_MIN` (0.8%) of price wide.** A wide opening range = real morning
 momentum (cleaner breakouts); a narrow, quiet open is chop.

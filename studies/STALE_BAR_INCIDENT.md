@@ -1,5 +1,8 @@
 # The stale-bar incident — six weeks of T-1 signals, found, fixed, verified (5–6 Aug 2026)
 
+**Why this study exists.** Written because the system traded the WRONG DAY'S breakout for six weeks and no code review found it. It exists so the failure mode is never repeated: the Upstox daily endpoint publishes no same-day bar during the session, so correct-looking code read the previous session's close. It is the origin of the four-layer bug check now in CLAUDE.md.
+
+
 The most consequential bug in this repo's history: **the daily stock-credit scan never read the
 current day's close.** Every live signal from June onward was computed on the *previous* session's
 close, so the system faithfully executed a strategy nobody had backtested — fade yesterday's

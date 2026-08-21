@@ -1,5 +1,8 @@
 # 0DTE heavyweight earnings & market shocks — avoid or not? (2026-07-19)
 
+**Why this study exists.** Third and final part of the event-avoidance series. The intuition is that a short-vol book should stand aside on heavyweight earnings and market shocks. This tests it, because if the book is PAID for visible fear then avoiding the scary days removes exactly the trades that pay most.
+
+
 Third and final part of the event-avoidance series (`ZERO_DTE_EVENT_DAYS.md` = calendar events,
 `ZERO_DTE_PREOPEN_SIGNALS.md` = gap/vol signals). This one tests the user's specific ask: **index
 heavyweight results (RELIANCE, HDFCBANK, ICICIBANK…) and known geopolitical shocks.**

@@ -250,9 +250,34 @@ open position per symbol, the live hierarchy, exit costs charged, no stop.
 
 | book | IS 2019 → Sep-2024 | OOS Oct-2024 → Aug-2026 |
 |---|---|---|
-| v2 | 78.8% · **+27.2%** ROM-₹ · 6/6 yrs (n=217) | 83.7% · **+28.0%** · **3/3 yrs** (n=49) |
-| v1 | 79.1% · **+10.3%** · 6/6 yrs (n=359) | 81.1% · **+11.5%** · **3/3 yrs** (n=169) |
-| v0 | 83.1% · +14.4% · 5/6 yrs (n=237) | 80.0% · **+3.0%** · **1/3 yrs** (n=90) |
+| v2 | 78.8% · **+27.2%** ROM-₹ [+18.4, +34.7] · 6/6 yrs (n=217) | 83.6% · **+27.2%** [+16.4, +37.2] · **2/2 full yrs** (n=55) |
+| v1 | 79.1% · **+10.3%** [+2.9, +17.1] · 6/6 yrs (n=359) | 79.3% · **+9.5%** [+2.5, +15.9] · **2/2 full yrs** (n=179) |
+| v0 | 83.1% · +14.4% [+5.9, +21.9] · 5/6 yrs (n=237) | 79.6% · **+3.0%** [−6.2, +11.5] · **1/2 full yrs** (n=93) |
+
+**SUPERSEDED 21-Aug-2026 — these are the RE-RUN figures.** The 18-Aug numbers that stood here
+(v2 +28.0% n=49, v1 +11.5% n=169, v0 +3.0% n=90, all "3/3 yrs") came from the harness BEFORE a
+six-defect audit. Two things changed and both matter:
+
+1. **"3/3 years" was wrong** and is now "2/2 full years". Out-of-sample 2024 is an Oct–Dec stub
+   holding ONE v2 trade and ONE v0 trade. Counting a single observation as a confirming year turned
+   "positive in both full years plus one trade" into a much stronger-sounding claim. `MIN_YR_N = 10`
+   now reports short years as stubs instead of folding them into the ratio.
+2. **The audit did NOT move the result.** In-sample came back bit-identical, out-of-sample moved by
+   at most two points. That is the outcome that says the conclusion never rested on the bugs.
+
+**And the binding limit is now the data feed, not the sample.** The re-run printed
+`FETCH INTEGRITY: 293 signal(s) dropped` — book-level evaluations abandoned because Upstox would not
+answer after six retries, roughly 100–150 unique signal days against 374 trades kept. Earlier runs
+lost trades the same way and never counted them. **Every OOS `n` above is a FLOOR and the run is not
+reproducible.** No further sweep fixes this; the cause is vendor availability.
+
+**On the v2 match.** +27.2% in both windows is +27.203% against +27.245% at full precision — a
+rounding collision, not a match. Both bootstrap intervals are ~18 points wide, so two draws landing
+0.04pp apart is luck. Read it as agreement well inside the error bars, never as the same number.
+
+**Parity is not a hidden filter.** Measured 21-Aug on 6,916 sampled symbol-expiry chains: it derives
+spot successfully on 98.8%, dropping 1.2% on the 2%-span guard and 0% for lack of common strikes.
+It runs on EVERY in-sample candidate, so it is the universal spot source, not a patch for some.
 
 **v2 and v1 agree across the two windows to within one point** — 27.2 against 28.0, and 10.3
 against 11.5 — on independent data with identical gating. That is the first genuinely like-for-like

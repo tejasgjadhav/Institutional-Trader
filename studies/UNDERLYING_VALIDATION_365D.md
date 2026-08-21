@@ -1,5 +1,8 @@
 # 365-Day Underlying-Proxy Validation (does the signal have a year-long edge?)
 
+**Why this study exists.** Option-premium history from Upstox reaches back only about a month, so no option-level test can cover a year. This validates the DIRECTION edge on the underlying across 365 days instead, to separate 'the signal is right about direction' from 'the trade makes money after costs'.
+
+
 Option-premium history from Upstox only reaches ~1 month back, so the option-level
 backtests are short. But **5-minute underlying price data reaches ~365 days** — enough to
 test the *directional edge* of the signal over a full year. We measured whether the stock

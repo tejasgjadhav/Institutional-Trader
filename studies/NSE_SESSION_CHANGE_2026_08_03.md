@@ -1,5 +1,8 @@
 # NSE session change, 3-Aug-2026 — what moved, what it broke, what we changed
 
+**Why this study exists.** NSE moved the derivatives close to 15:40 and introduced a Closing Auction Session. Every scan time, settle time and backtest assumption in this system was built on the old session, so this establishes what actually changed, what it broke, and what the engine had to change in response.
+
+
 > **CORRECTION (6-Aug-2026).** Measurement 1 below ("moving the scan GAINS signals, +44%") priced a
 > counterfactual the system never ran: the scan read a STALE daily bar at any hour, so both 15:10 and
 > 15:36 saw the previous session's close. The retiming was still right in principle, but the gain was

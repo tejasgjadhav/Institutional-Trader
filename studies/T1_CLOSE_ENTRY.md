@@ -1,5 +1,8 @@
 # T-1 CLOSE entry — sell at the expiry-eve close. IS/OOS validated, 3 indices (11-Aug-2026)
 
+**Why this study exists.** The 0DTE books enter at the open on expiry day. If the same premium can be sold the evening before, the trade collects an extra session of decay for the same structure. This tests whether that is real or whether the overnight gap gives back more than the decay is worth.
+
+
 **Verdict: the strongest new candidate this repo has found since v0. BEAR CALL 0.5% OTM, width 6,
 holds in BOTH windows on all three indices. NOT deployed — see "Before deploying".**
 

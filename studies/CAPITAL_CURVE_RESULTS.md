@@ -1,5 +1,8 @@
 # Capital-Curve Backtest — Results (2026-06-29)
 
+**Why this study exists.** Percentage returns per trade say nothing about what an ACCOUNT does, because margin is committed and released unevenly and a bad draw can arrive early. This replays the validated index fade on real expired-option premiums as a capital curve, to see what the equity path actually looks like rather than what the average trade implies.
+
+
 Spec: `OBJECTIVE_SPEC.md`. Script: `capital_curve_bt.py`. Strategy: the **validated index fade
 credit spread** (`swing_credit`, frozen config), replayed on real expired-option premiums.
 
