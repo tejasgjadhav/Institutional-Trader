@@ -51,9 +51,13 @@ runs, because the TP sweep already showed v1's slope inverting between windows.
 FOUR corrections (14–16 Aug 2026): legs joined by DATE, v1 given its real D10 population, spot
 derived by put-call parity (split-adjusted closes vs unadjusted strikes were fabricating deep-ITM
 trades and printing +182.8% ROM), and the live one-position-per-symbol rule applied. Final, on the
-median cohort c/w 0.40–0.50: IS v2 82.2%/+30.7%, v1 79.9%/+19.9%, v0 83.1%/+17.8%, all 6/6 years;
-OOS v2 82.8%/+3.7%, v1 79.8%/+4.8% (3/3 yrs), v0 80.4%/−0.7%. OOS intervals all span zero, so that
-window cannot rank the books. TP swept 30–70 and left alone. Nothing deployed.
+median cohort c/w 0.40–0.50, RE-RUN 21-Aug after a six-defect audit of the harness itself:
+IS v2 78.8%/+27.2% (6/6 yrs), v1 79.1%/+10.3% (6/6), v0 83.1%/+14.4% (5/6);
+OOS v2 83.6%/+27.2% (3/3 yrs, n=55), v1 79.3%/+9.5% (3/3, n=179), v0 79.6%/+3.0% (1/3, n=93).
+**v2 lands on the same +27.2% in both windows and v1's OOS interval [+2.5, +15.9] now excludes
+zero** — the earlier run's did not. The binding limit is no longer sample size but the data feed:
+that run dropped 293 book-level evaluations because Upstox would not answer, so every OOS n is a
+FLOOR and the run is not reproducible. TP swept 30–70 and left alone. Nothing deployed.
 
 ---
 

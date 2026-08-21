@@ -19,31 +19,42 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 82.2% IS / 82.8% OOS | ₹8,198 (2.6/mo × ₹3,180) | IS +30.7% ROM, +ve 6/6 yrs (n=667); OOS +3.7%, 2/3 yrs (n=58, CI spans zero) |
-| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.9% IS / 79.8% OOS | ₹8,711 (8.6/mo × ₹1,016) | IS +19.9% ROM, +ve 6/6 yrs (n=477); OOS +4.8%, **3/3 yrs** (n=193) — the best-measured stock book |
-| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 80.4% OOS | ₹1,443 (4.3/mo × ₹335) | IS +17.8% ROM, +ve 6/6 yrs (n=569); OOS **−0.7%**, 2/3 yrs (n=97). Kept live as a paper forward-test, user 2026-08-15 |
+| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 78.8% IS / 83.6% OOS | ₹8,450 (2.4/mo × ₹3,457) | IS **+27.2%** ROM [+18.4, +34.7], 6/6 yrs (n=217); OOS **+27.2%** [+16.4, +37.2], **3/3 yrs** (n=55). The two windows land on the SAME number |
+| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.1% IS / 79.3% OOS | ₹8,359 (8.0/mo × ₹1,051) | IS **+10.3%** [+2.9, +17.1], 6/6 yrs (n=359); OOS **+9.5%** [+2.5, +15.9], **3/3 yrs** (n=179). Both intervals EXCLUDE zero — the best-measured stock book |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 79.6% OOS | ₹1,674 (4.1/mo × ₹405) | IS +14.4% [+5.9, +21.9], 5/6 yrs (n=237); OOS **+3.0%** [−6.2, +11.5], **1/3 yrs** (n=93). Interval spans zero. Kept live as a paper forward-test, user 2026-08-15 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | **REMOVED 2026-08-20** | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 · book deleted from `engine/dte_multi.py`, never opened a position |
 | Index swing fade | `SWING_CREDIT_ENABLED` | 54% | ~₹0 | regime-dep · failed OOS |
 | Monthly futures | `MONTHLY_FUT_ENABLED` | 75.7% | ₹0 now | REGIME-OFF · needs ~₹15L |
 
-**THE NUMBERS ABOVE ARE THE 16-AUG-2026 PRODUCTION HARNESS** (`studies/ndte/deployed_backtest.py`),
-after four corrections that each changed the answer materially: option legs joined BY DATE, v1 given
+**THE NUMBERS ABOVE ARE THE 21-AUG-2026 RE-RUN** of `studies/ndte/deployed_backtest.py`, after a
+six-defect audit of the harness itself (a fetch failure that looked like an untraded contract, open
+interest leaking between books, no `__main__` guard, a non-atomic cache, a dropped final bar, an
+unlocked counter — see `studies/ndte/test_harness.py`, which now locks the answer). **The audit did
+NOT move the result**: in-sample came back bit-identical and out-of-sample moved by at most two
+points. They also carry the four earlier corrections, each of which DID change the answer: option legs joined BY DATE, v1 given
 its real Donchian-10 population, spot derived from the option chain by put-call parity (split-adjusted
 closes against unadjusted strike ladders had been fabricating deep-ITM trades and printing +182.8%
 ROM), and the live one-position-per-symbol rule applied (59% of in-sample trades were re-entries the
 engine could never have taken). Every earlier figure in this repo predates at least one of those and
 must not be quoted. Read on the MEDIAN COHORT, c/w 0.40–0.50, where all 21 real live fills sit.
 
-**What the two windows can and cannot say.** In-sample is far better measured — 667/477/569 trades,
-six full years, all three books positive in every year — but it is NOT independent, because the c/w
-gate, the geometry and the exits were all chosen on that data. Out-of-sample is honest but thin:
-bootstrapped 90% ROM intervals are v2 [−27.8%, +39.7%], v1 [−5.0%, +13.3%], v0 [−14.8%, +12.5%], all
-spanning zero, and v2's 58 trades include a four-trade 2024 stub. **The out-of-sample window cannot
-rank the books.** Stock books total about ₹18,350/mo at 1 lot; with the index books ~₹24,200, and the
-80% planning rule puts it at ~₹19,300. **Keep lots at 1.** The forward record, restarted 6-Aug-2026,
-is the only instrument that settles this.
+**What the two windows can and cannot say.** In-sample is still not independent — the c/w gate, the
+geometry and the exits were all chosen on that data. What changed on 21-Aug is that out-of-sample got
+strong enough to speak: **v2 lands on +27.2% in BOTH windows**, and **v1's OOS interval [+2.5, +15.9]
+now excludes zero** on 179 trades, where the previous run's [−5.0, +13.3] did not. Two independent
+windows, different data vendors, identical gating, agreeing to within a point on both books.
+
+**The limit is no longer sample size, it is the data feed.** The 21-Aug run reported
+`FETCH INTEGRITY: 293 signal(s) dropped` — book-level evaluations abandoned because Upstox would not
+answer after six retries, roughly 100–150 unique signal days, against 374 trades kept. Earlier runs
+lost the same way and never counted it. **So every OOS n is a FLOOR, not a count, and the run is not
+reproducible** — network luck gives a different sample each time. No further sweep fixes this,
+because the cause is the vendor's availability. Stock books total about ₹18,500/mo at 1 lot; the 80%
+planning rule puts it near ₹14,800. **Keep lots at 1.** The forward record, restarted 6-Aug-2026, is
+the only instrument that improves from here — and it holds ONE closed trade
+(`studies/ndte/forward_record.py`).
 
 **NO BOOK HAS A STOP. SETTLED — do not add one.** The user closed this on 17-Aug-2026: *"no exit rule is no stop now for v0, v1 and v2, we wont change"*. All three
 stock books run take-profit only; risk is capped by the bought wing at (width − credit).

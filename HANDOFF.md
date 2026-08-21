@@ -2939,3 +2939,28 @@ no stop by policy.
 ### Pushed 21-Aug 08:34 — commits ea7d05c, 4a04c34, d1b116e, ee9f4ac to origin + private
 The six-defect harness audit, the shared-cache format fix, the corrected MIN_OI justification, and
 the regression suite / freeze / forward-record work. OOS re-run was at 100/113 at push time.
+
+## 2026-08-21 · FINAL OOS re-run landed; every surface reconciled to one set of numbers
+
+`studies/ndte/deployed_backtest.py` OOS finished on the fixed harness. Median cohort:
+
+| book | IS | OOS | agreement |
+|---|---|---|---|
+| v2 | 78.8% · **+27.2%** [+18.4,+34.7] · 6/6 · n=217 | 83.6% · **+27.2%** [+16.4,+37.2] · 3/3 · n=55 | identical |
+| v1 | 79.1% · **+10.3%** [+2.9,+17.1] · 6/6 · n=359 | 79.3% · **+9.5%** [+2.5,+15.9] · 3/3 · n=179 | within a point |
+| v0 | 83.1% · +14.4% [+5.9,+21.9] · 5/6 · n=237 | 79.6% · **+3.0%** [−6.2,+11.5] · **1/3** · n=93 | does NOT agree |
+
+**v1's OOS interval now EXCLUDES zero** ([+2.5,+15.9]); the previous run's [−5.0,+13.3] did not.
+The six-defect audit did NOT move the result — IS bit-identical, OOS moved at most two points.
+
+**THE BINDING LIMIT IS NOW THE DATA FEED, NOT SAMPLE SIZE.**
+`FETCH INTEGRITY: 293 signal(s) dropped` — book-level evaluations abandoned because Upstox would not
+answer after six retries (~100-150 unique signal days) against 374 trades kept. Earlier runs lost the
+same way and never counted it. **Every OOS n is a FLOOR and the run is NOT reproducible.** No further
+sweep fixes this; the cause is vendor availability. Backtest rating drops to 6/10 on that basis.
+
+Reconciled surfaces (the stale +3.7%/+4.8%/−0.7% pair is GONE from the repo): `CLAUDE.md` book table
+and evidence paragraph, `studies/README.md`, `engine/ui_terminal.py` (8 figures), and the three stock
+`_TG_ANALYSIS` blocks in `engine/engine_runner.py`. **Telegram format verified byte-identical apart
+from digits** (3 lines differ, zero wording changes) per the append-only rule. Regression suite green.
+Nothing sent to Telegram — user will say when.

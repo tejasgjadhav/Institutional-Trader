@@ -411,7 +411,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · NO stop.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · NO STOP — a credit-multiple stop cannot be reached above c/w 1/3, so the bought wing is the stop and max loss is width−credit · ~2.2/mo · 78.8% IS (+27.2% on margin, 6/6 yrs) / 83.7% OOS (+28.0%, 3/3 yrs) · SELL ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · NO STOP — a credit-multiple stop cannot be reached above c/w 1/3, so the bought wing is the stop and max loss is width−credit · ~2.2/mo · 78.8% IS (+27.2% on margin, 6/6 yrs) / 83.6% OOS (+27.2%, 3/3 yrs) · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -449,7 +449,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · 79.1% IS (+10.3% on margin, 6/6 yrs) / 81.1% OOS (+11.5%, 3/3 yrs) · ~7.5/mo measured out-of-sample · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · 79.1% IS (+10.3% on margin, 6/6 yrs) / 79.3% OOS (+9.5%, 3/3 yrs) · ~8.0/mo measured out-of-sample · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -575,7 +575,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
         v0hdr = QLabel("STOCK CREDIT v0 (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
-                       "83.1% IS (+14.4%, +ve 5/6 yrs) · 80.0% OOS but only +3.0% and +ve 1 of 3 yrs (90 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
+                       "83.1% IS (+14.4%, +ve 5/6 yrs) · 79.6% OOS but only +3.0% and +ve 1 of 3 yrs (93 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
         v0hdr.setWordWrap(True)
         v0hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         v0hdr.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -873,8 +873,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>78.8% · +27.2% on margin · positive every year <span style="color:{TEXT_DIM};">(217 trades)</span></td><td>83.7% · +28.0% · positive every year <span style="color:{TEXT_DIM};">(49 trades)</span></td><td><b>~2.2</b></td></tr>
-<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.1% · +10.3% · positive every year <span style="color:{TEXT_DIM};">(359 trades)</span></td><td>81.1% · +11.5% · positive every year <span style="color:{TEXT_DIM};">(169 trades)</span></td><td><b>~7.5</b></td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>78.8% · +27.2% on margin · positive every year <span style="color:{TEXT_DIM};">(217 trades)</span></td><td>83.6% · +27.2% · positive every year <span style="color:{TEXT_DIM};">(55 trades)</span></td><td><b>~2.2</b></td></tr>
+<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>79.1% · +10.3% · positive every year <span style="color:{TEXT_DIM};">(359 trades)</span></td><td>79.3% · +9.5% · positive every year <span style="color:{TEXT_DIM};">(179 trades)</span></td><td><b>~7.5</b></td></tr>
 <tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.1% · +14.4% · positive 5 of 6 years <span style="color:{TEXT_DIM};">(237 trades)</span></td><td style="color:{AMBER};">80.0% · +3.0% · positive <b>1 of 3 years</b> <span style="color:{TEXT_DIM};">(90 trades)</span></td><td><b>~4.0</b></td></tr>
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
 <tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
@@ -886,8 +886,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("<b>Out-of-sample, Oct-2024 to Aug-2026, on the corrected harness.</b> Read on the median "
      "cohort — credit/width 0.40–0.50, where all 21 real live fills sit. Every leg is a contract that "
      "actually traded, checked at entry and on every exit-check day, and each trade is multiplied by "
-     "its own lot size. <b>In-sample agrees closely</b>: v2 +27.2% against +28.0% here, v1 +10.3% "
-     "against +11.5% — two independent windows, same gating, same answer. Still a ceiling, because "
+     "its own lot size. <b>In-sample agrees closely</b>: v2 +27.2% against +27.2% here, v1 +10.3% "
+     "against +9.5% — two independent windows, same gating, same answer. Still a ceiling, because "
      "the harness cannot model the live bid-ask gate, which rejects most candidates.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>measured</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
@@ -909,13 +909,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WORK BEHIND THOSE NUMBERS</p>
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
-     "The three stock rows come from the production harness of 16-Aug-2026: win rates are IS / OOS, and the rupee columns are "
+     "The three stock rows come from the production harness, re-run 21-Aug-2026 after a six-defect audit: win rates are IS / OOS, and the rupee columns are "
      "the OUT-OF-SAMPLE window only, each trade at its own current lot size. <b>NIFTY</b> comes from the 73-trade FLIP sample "
      "and <b>SENSEX</b> from the 89-expiry study. No stock book has a winner larger than its loser, so all three depend on "
      "keeping the win rate near 80%.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>217 IS · 49 OOS</td><td>78.8% / 83.7%</td><td>+₹6,274</td><td>−₹9,645</td><td>0.65 : 1</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>217 IS · 55 OOS</td><td>78.8% / 83.6%</td><td>+₹6,274</td><td>−₹9,645</td><td>0.65 : 1</td></tr>
 <tr><td>Stock v1</td><td>25,978</td><td>359 IS · 169 OOS</td><td>79.1% / 81.1%</td><td>+₹3,838</td><td>−₹9,758</td><td>0.39 : 1</td></tr>
 <tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>237 IS · 90 OOS</td><td>83.1% / 80.0%</td><td>+₹3,814</td><td>−₹13,199</td><td>0.29 : 1</td></tr>
 <tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td>+₹1,202</td><td>−₹6,274</td><td>0.2 : 1</td></tr>
