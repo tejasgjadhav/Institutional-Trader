@@ -4,10 +4,9 @@ This is the one strategy that ships with this repository. It lives in
 [engine/example_vwap.py](../engine/example_vwap.py) and every number it uses is visible in
 [engine/config.py](../engine/config.py).
 
-**It has not been tested.** There is no backtest behind it, no win rate, no expectancy and no
-out-of-sample window. The author does not trade it. The numbers in it were chosen to be readable.
-This note exists to state the rule precisely and to set out how you would find out whether it is
-worth anything, because that is the work the book is about.
+**It has now been tested, and it loses.** The result is below. The author does not trade it and
+never did. The numbers in it were chosen to be readable, not because a test said so. This note
+states the rule precisely, sets out how it was tested, and gives the answer.
 
 ## The rule, stated so it can be tested
 
@@ -60,26 +59,67 @@ the stretch and the exits on an earlier window, freeze them, and look at the lat
 [HIGH_WIN_RATE_IS_NOT_PROFIT.md](HIGH_WIN_RATE_IS_NOT_PROFIT.md). Moving the exits will buy you
 any win rate you like and it will not buy you money.
 
-## Your results
+## The result
 
-Fill this in from your own run. It is blank because nobody has run it.
+The rule above was run on real 5-minute data. Ten liquid NSE names, 4,860 sessions, September
+2024 to October 2026. The signal fired on 2,362 of those sessions, which is 48.6 percent of them.
+
+This measures the move in the **underlying** from the signal bar's close to 15:15. It does not
+include the option. That is deliberate, and it is enough to settle the question, because a bought
+call cannot make money if the underlying does not go up.
 
 | | |
 |---|---|
-| Window tested | |
-| Universe | |
-| Trades | |
-| Win rate | |
-| Net per trade, after costs | |
-| Worst day | |
-| Random baseline, same exits | |
-| Out-of-sample window | |
-| Out-of-sample result | |
-| Verdict | |
+| Window | 12 Sep 2024 to 30 Oct 2026 |
+| Names | 10 liquid NSE stocks |
+| Sessions scanned | 4,860 |
+| Signals | 2,362 (48.6% of sessions) |
+| Mean move to the exit | **−0.047%** |
+| Median move | −0.068% |
+| Win rate | 45.3% |
+| Standard deviation | 0.84% |
+| t-statistic | **−2.69** |
+| Mean best point reached | +0.60% |
+| Mean worst point reached | −0.67% |
+| Random entry, same window and exit | −0.17%, 38.5% win |
 
-If the verdict is that it does not work, write that down and keep the note. A study that records a
-death is worth more than one that records a hope, because it stops you testing the same thing
-again in six months.
+## What that says
+
+**The signal loses on the underlying.** The mean move after it fires is negative, and the
+t-statistic of −2.69 says that is not noise at this sample size. It is a real, measurable negative
+drift, not a flat line.
+
+**It is better than entering at random, and both are losing.** A random entry in the same window
+with the same exit gave −0.17%. So waiting for a stretch below VWAP and a turn does pick a better
+moment than a coin would. It picks a better moment to lose money.
+
+**The option version is worse than this, necessarily.** This table ignores the option entirely. A
+bought at-the-money call pays the spread twice and pays time decay for every hour it is held. The
+underlying would have to rise enough to cover all of that, and on average it falls.
+
+**The best and worst points are close to symmetric.** The trade reaches +0.60% at its best and
+−0.67% at its worst before the exit. There is no asymmetry for a target and a stop to exploit.
+Moving the exits will change the win rate and will not create an edge, which is the point made in
+[HIGH_WIN_RATE_IS_NOT_PROFIT.md](HIGH_WIN_RATE_IS_NOT_PROFIT.md).
+
+## Verdict
+
+**Falsified for this purpose, on this data.** The shipped example does not have a directional edge
+and should not be traded. It stays in the repository because it is a complete, readable, working
+strategy and the machine needs something to run. It is a teaching example, and now it is a
+teaching example with a measured result attached.
+
+If you want to improve it, the honest next steps are to test a different exit on the same entries,
+to test the short side, or to replace the entry altogether. Do not re-tune the stretch on this
+data. Read [IN_SAMPLE_VS_OUT_OF_SAMPLE.md](IN_SAMPLE_VS_OUT_OF_SAMPLE.md) first and understand
+what re-tuning on the window you just looked at buys you.
+
+## Reproducing it
+
+The rule is in [engine/example_vwap.py](../engine/example_vwap.py) and every number is in
+[engine/config.py](../engine/config.py). Pull your own 5-minute history, apply the seven steps,
+and measure the move to the exit time. You should land close to the table above. If you do not,
+one of us has a bug, and finding out which is a better use of an evening than tuning a parameter.
 
 ---
 

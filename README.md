@@ -23,8 +23,12 @@ option become a paper fill, and a fill become a row on the dashboard.
 **Deploy it at your own risk.** If you run it, or act on anything it prints, that is your
 decision and your risk alone. See [DISCLAIMER.md](DISCLAIMER.md).
 
-[studies/VWAP_EXAMPLE_STRATEGY.md](studies/VWAP_EXAMPLE_STRATEGY.md) states the rule precisely and
-sets out how to test it. Its results table is blank, because nobody has run it.
+It has now been backtested. [studies/VWAP_EXAMPLE_STRATEGY.md](studies/VWAP_EXAMPLE_STRATEGY.md)
+has the numbers: 2,362 signals across 4,860 sessions, a mean of −0.047% per trade on the
+underlying, t = −2.69. It loses, and the note says so and shows the working.
+
+Three more rules ship beside it in `engine/example_daily_rules.py`, each measured over eight years
+with costs charged. See [studies/THREE_SIMPLE_RULES_TESTED.md](studies/THREE_SIMPLE_RULES_TESTED.md).
 
 ## What you get
 
@@ -35,6 +39,7 @@ sets out how to test it. Its results table is blank, because nobody has run it.
 | **Options** | `engine/options.py` — resolve a strike to a tradeable contract, check it is quoted |
 | **Indicators** | `engine/indicators.py` — moving averages, VWAP, ATR, channels, pivots, RSI, MACD |
 | **The example book** | `engine/example_vwap.py` — a complete strategy, end to end |
+| **Three simple rules** | `engine/example_daily_rules.py` — a crossover, a dip buy and a gap fill |
 | **The dashboard** | `engine/ui_terminal.py` — read-only; the engine writes, this reads |
 | **The notes** | `studies/` — how the research was run and what it concluded |
 

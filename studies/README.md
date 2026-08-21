@@ -49,11 +49,22 @@ explains the method in full.
 | [WHEN_TO_STOP_A_SYSTEM.md](WHEN_TO_STOP_A_SYSTEM.md) | Has the edge gone, or is this a normal bad run? |
 | [KEEPING_AN_AUDITABLE_RECORD.md](KEEPING_AN_AUDITABLE_RECORD.md) | Can you explain a trade six months later? |
 
-## The strategy that ships
+## Ideas that were tested and did not survive
+
+| File | The question it answers |
+|---|---|
+| [CANDLESTICK_PATTERNS_FALSIFIED.md](CANDLESTICK_PATTERNS_FALSIFIED.md) | Do candlestick conjunctions work? 760,594 entries say no. |
+| [SEARCHING_FOR_2PCT_A_DAY.md](SEARCHING_FOR_2PCT_A_DAY.md) | Ten studies, 2008 to 2026, looking for two percent a day. |
+
+## The strategies that ship, and what they measured
+
+Both of these run. Both have been backtested on real data with costs charged, and the results are
+in the notes. Neither is recommended and the author trades neither.
 
 | File | |
 |---|---|
-| [VWAP_EXAMPLE_STRATEGY.md](VWAP_EXAMPLE_STRATEGY.md) | The worked VWAP example, stated precisely, with the test plan it has never been put through. The results table is blank because nobody has run it. |
+| [VWAP_EXAMPLE_STRATEGY.md](VWAP_EXAMPLE_STRATEGY.md) | The worked VWAP example. 2,362 signals over 4,860 sessions: mean −0.047% per trade on the underlying, t = −2.69. It loses. |
+| [THREE_SIMPLE_RULES_TESTED.md](THREE_SIMPLE_RULES_TESTED.md) | A crossover, a dip buy and a gap fill, over eight years with costs. One convincing mean, one coin, one that wins often and pays nothing. |
 
 Study notes. Not investment advice. If you trade on anything here you do so at your own risk,
 and Tejas Jadhav accepts no responsibility for your trades. See [DISCLAIMER.md](../DISCLAIMER.md).

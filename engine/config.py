@@ -133,3 +133,21 @@ EXAMPLE_VWAP_EXIT_AT    = "15:15"
 EXAMPLE_VWAP_LOTS       = 1
 EXAMPLE_VWAP_MAX_PER_DAY = 1
 EXAMPLE_VWAP_RESOLVE_INTERVAL = 120
+
+# ---------------------------------------------------------------------------
+# THREE SIMPLE DAILY RULES — engine/example_daily_rules.py
+#
+# A moving-average crossover, an oversold dip buy and a gap fill. All three have been
+# tested on twenty names over eight years with costs charged; the numbers are in
+# studies/THREE_SIMPLE_RULES_TESTED.md. None of them is recommended and the author
+# trades none of them. They are here to be read, run and argued with.
+#
+# These values are the textbook settings, used as taught and not tuned. Change them and
+# you have a different rule, so test it again before you believe it.
+# ---------------------------------------------------------------------------
+RULE_CROSS_FAST     = 20     # fast average, sessions
+RULE_CROSS_SLOW     = 50     # slow average, sessions
+RULE_DIP_RSI_LEN    = 2      # RSI lookback, sessions
+RULE_DIP_RSI_MAX    = 10     # buy below this RSI reading
+RULE_DIP_TREND_LEN  = 200    # only buy while the close is above this average
+RULE_GAP_MIN_PCT    = 1.0    # buy the open after a gap down of at least this percent
