@@ -350,11 +350,25 @@ STOCK_CREDIT_MIN_OI       = 1       # open interest must EXIST on the short leg 
 # The gate's only job is to exclude a contract that never traded. An exchange CLOSE on such a
 # contract is a THEORETICAL SETTLEMENT price, not a fillable quote, and pricing a backtest off one
 # inflates the result — that defect halved the in-sample ROM when it was fixed.
-# It is NOT an edge filter. Bucketing every in-sample trade by the binding leg's open interest found
-# no relationship between OI and returns: v2 paid +22.1% at 5-10 lots, +20.8% at 10-25 and -1.2% at
-# 25+, its MOST liquid bucket being its worst on 63 trades; v1 and v0 were equally unordered. So a
-# 10-lot or 5-lot floor claims something the data does not support, and earlier settings of 10 and
-# then 5 were deployed on signal COUNTS rather than returns, which was an error.
+# It is NOT an edge filter, but the reason has been RESTATED (20-Aug-2026) because the numbers that
+# used to sit here were wrong. The harness recorded the WRONG contract's open interest on every v1
+# row - `oi` leaked from the last book evaluated, and v1 sells a different strike from v2/v0 - so
+# 500 of 566 v1 rows carried v2's figure. On the corrupted data v1 looked unordered, and this
+# comment claimed "no relationship between OI and returns". Corrected, all three books decay
+# monotonically as open interest RISES:
+#     v2   +30.7% (0-2 lots)  +38.7% (2-5)  +26.8% (5-10)  +24.1% (10-25)   +2.0% (25+)
+#     v1   +18.6%             +17.0%         +6.4%          +9.4%           +2.9%
+#     v0     n/a              +26.1%         +9.7%          +8.0%           +7.8%
+# So a relationship DOES exist in-sample. It survives as a fidelity rule anyway, for two reasons
+# that do not depend on it being absent:
+#   1. It runs the WRONG WAY to justify a floor. Thin contracts earn MORE, so taken at face value
+#      the data argues for a LOWER floor, never a higher one. No lot multiple is supportable.
+#   2. It is almost certainly an artifact of the same defect this gate exists to fix: bhavcopy
+#      prices an untraded contract at theoretical settlement, which flatters thin names. The
+#      pattern does not appear out-of-sample, where an Upstox candle exists only if the contract
+#      actually traded.
+# Earlier settings of 10 and then 5 were deployed on signal COUNTS rather than returns, which was
+# an error, and remains one.
 # Live, the gate is close to inert anyway: on 17-Aug the bid-ask gate blocked all four names this
 # one blocked, plus six more. Spread is the binding liquidity constraint; this is the floor under it.
 STOCK_CREDIT_MAX_EXPOSURE = 0      # 0 = NO CAP (user, 2026-07-31)

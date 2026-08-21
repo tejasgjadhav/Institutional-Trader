@@ -54,8 +54,12 @@ MIN_OI = 1            # open interest must EXIST — mirrors config.STOCK_CREDIT
 # The floor MIRRORS LIVE (config.STOCK_CREDIT_MIN_OI = 1): the contract must have open interest at
 # all. It is a fidelity rule, not an edge filter — an exchange CLOSE on a contract that never traded
 # is a theoretical settlement price, not a fillable quote, and pricing off those halved the in-sample
-# ROM when it was fixed. Bucketing by OI found no link between open interest and returns, so no lot
-# multiple is justified; see engine/config.py for the numbers.
+# ROM when it was fixed. Bucketing by OI shows ROM DECAYING as open interest rises in all three
+# books - but that runs the wrong way to justify a floor (thin contracts earn MORE, so the data
+# would argue for a lower one) and it does not appear out-of-sample, so it reads as the same
+# theoretical-settlement artifact rather than an edge. No lot multiple is justified. An earlier
+# version of this note claimed there was NO relationship; that rested on a bug in this file which
+# recorded v2's open interest on v1 rows. See engine/config.py.
 try:
     LOTMAP = json.load(open("research/lotmap.json"))
 except Exception:
