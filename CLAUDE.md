@@ -19,9 +19,9 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 78.8% IS / 83.6% OOS | ₹8,450 (2.4/mo × ₹3,457) | IS **+27.2%** ROM [+18.4, +34.7], 6/6 yrs (n=217); OOS **+27.2%** [+16.4, +37.2], **3/3 yrs** (n=55). Agree to 0.04pp — luck, not precision: the intervals are ~18pp wide |
-| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.1% IS / 79.3% OOS | ₹8,359 (8.0/mo × ₹1,051) | IS **+10.3%** [+2.9, +17.1], 6/6 yrs (n=359); OOS **+9.5%** [+2.5, +15.9], **3/3 yrs** (n=179). Both intervals EXCLUDE zero — the best-measured stock book |
-| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 79.6% OOS | ₹1,674 (4.1/mo × ₹405) | IS +14.4% [+5.9, +21.9], 5/6 yrs (n=237); OOS **+3.0%** [−6.2, +11.5], **1/3 yrs** (n=93). Interval spans zero. Kept live as a paper forward-test, user 2026-08-15 |
+| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 78.8% IS / 83.6% OOS | ₹8,450 (2.4/mo × ₹3,457) | IS **+27.2%** ROM [+18.4, +34.7], 6/6 yrs (n=217); OOS **+27.2%** [+16.4, +37.2], **2/2 full yrs** (n=55, 2024 is a 1-trade stub). Agree to 0.04pp — luck, not precision: the intervals are ~18pp wide |
+| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.1% IS / 79.3% OOS | ₹8,359 (8.0/mo × ₹1,051) | IS **+10.3%** [+2.9, +17.1], 6/6 yrs (n=359); OOS **+9.5%** [+2.5, +15.9], **2/2 full yrs** (n=179, 2024 is a 6-trade stub). Both intervals EXCLUDE zero — the best-measured stock book |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 79.6% OOS | ₹1,674 (4.1/mo × ₹405) | IS +14.4% [+5.9, +21.9], 5/6 yrs (n=237); OOS **+3.0%** [−6.2, +11.5], **1/2 full yrs** (n=93). Interval spans zero. Kept live as a paper forward-test, user 2026-08-15 |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | **REMOVED 2026-08-20** | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 · book deleted from `engine/dte_multi.py`, never opened a position |
@@ -276,7 +276,14 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
 - **Data limits:** real option-premium history is only ~1 month back; index futures ~33 days.
   Daily price = 2+ yrs, 5-min price = ~1 yr. Long backtests must use the underlying proxy or a
   paid vendor — see `studies/DATA_AVAILABILITY_LIMITS.md`.
-- **DEPLOYMENT FREEZE IN THE SIGNAL WINDOW (standing rule, user 2026-08-07).** On trading days, do
+- **DEPLOYMENT FREEZE IN THE SIGNAL WINDOWS (standing rule, user 2026-08-07; SECOND WINDOW added
+  21-Aug-2026).** There are TWO freeze windows, not one. **09:16–09:45** is the 0DTE entry window
+  (`ZERO_DTE_SCAN_AFTER` → `ZERO_DTE_ENTRY_CUTOFF`) and **15:15–15:40** is the stock-credit
+  window. The same mechanism breaks both: the once-a-day markers are IN-MEMORY, so a restart
+  resets them and re-runs that day's scan under whatever was just deployed. The morning window
+  was missing from this rule and got breached on 21-Aug at 09:17 — harmless only because Friday
+  carries no index expiry, so no book was eligible. **Check the day before restarting in the
+  morning: NIFTY expires Tuesday, SENSEX Thursday.** On trading days, do
   NOT deploy code/config or restart the engine between **15:15 and 15:40** (auction start to
   derivatives close) unless fixing an active failure the user knows about. Mechanism: the engine's
   once-a-day markers (watchlist built, digest sent, scan done) are IN-MEMORY, so a mid-window

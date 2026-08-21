@@ -116,6 +116,11 @@ def _yahoo_index_prices(names: list) -> dict:
                 continue
             try:
                 h = yf.Ticker(sym).history(period="1d", interval="5m")
+                if h.empty:
+                    # ^BSESN carries no 5-minute series for much of the day, so SENSEX silently
+                    # dropped out of this fallback entirely (found 21-Aug-2026). Daily is coarser
+                    # but it is a real price, and SENSEX drives the 0DTE book.
+                    h = yf.Ticker(sym).history(period="5d")
                 if not h.empty:
                     out[n] = float(h["Close"].dropna().iloc[-1])
             except Exception:

@@ -2992,3 +2992,24 @@ at most ~41 days out).
 position files on every refresh. It splits at the 6-Aug fix and refuses to pool the two eras:
 deployed strategy 1 closed (+Rs3,490), pre-fix T-1 signals 17 closed (+Rs34,162), plus the open
 positions with live points. Verified by rendering the method directly.
+
+### 21-Aug: yfinance fallback was DEAD, now fixed; freeze rule extended
+
+**`yfinance==0.2.32` returned ZERO rows for every ticker** — ^NSEI, ^NSEBANK, ^INDIAVIX, ^BSESN and
+even AAPL and ^GSPC. Yahoo changed their API and the pinned version broke, so the engine has had **no
+working fallback at all** during Upstox outages (like yesterday's 40-minute one). It failed loudly in
+the log every cycle and nobody connected the ERROR lines to "the safety net does not exist".
+Upgraded to **1.2.0**; all three call sites re-tested and correct (`_yahoo_intraday_fallback`,
+`_yahoo_historical_fallback`, `_yahoo_index_prices`), columns intact, values matching live Upstox.
+requirements.txt now pins `>=1.2.0` with the reason.
+
+**Also fixed:** SENSEX silently dropped out of `_yahoo_index_prices` because `^BSESN` carries no
+5-minute series for much of the day. Falls back to daily now — SENSEX drives the 0DTE book.
+
+**FREEZE RULE EXTENDED — there are TWO windows, not one.** 09:16–09:45 (0DTE entry) as well as
+15:15–15:40 (stock credit). Same mechanism: in-memory once-a-day markers reset on restart. I breached
+the morning one at 09:17 today; harmless only because Friday carries no index expiry (NIFTY=Tue,
+SENSEX=Thu) and no book was eligible. Verified: 0 positions opened today in either 0DTE book.
+
+**Stub-year correction propagated** to Telegram, UI and CLAUDE.md: OOS "positive every year" is now
+"positive in both full years (2024 is a 3-month stub)", and v0 is "1 of 2 full years" not "1 of 3".

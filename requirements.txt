@@ -1,7 +1,7 @@
 python-dotenv==1.0.0
 pandas==2.0.3
 numpy==1.24.3
-yfinance==0.2.32
+yfinance>=1.2.0        # 0.2.32 was DEAD: Yahoo changed their API and every ticker returned 0 rows, so the fallback silently never worked (fixed 21-Aug-2026)
 requests==2.31.0
 scipy==1.11.0
 pytz==2023.3
