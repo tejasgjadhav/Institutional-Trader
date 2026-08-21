@@ -1,5 +1,8 @@
 # The deployed books' evidence, audited and re-measured (14-Aug-2026)
 
+**Why this study exists.** The deployed books were re-measured because an adversarial audit found the harness itself was wrong, not the strategy. Every out-of-sample validation had paired the two option legs BY POSITION rather than by date, so roughly 47% of multi-leg windows compared prices from different calendar days. The bug survived dozens of runs because it crashes nothing and prints plausible numbers, and because each new study copy-pasted the same harness, so the cross-checks were the same bug agreeing with itself. This file is the re-measurement, and the running record of every defect found since.
+
+
 The user asked for the same adversarial audit that killed the low-c/w band study to be run on the
 DEPLOYED strategy. An audit agent read every validating script behind the live books, checked each
 for the two bug classes found on 13–14 Aug (positional leg alignment, stale settlement marks), and

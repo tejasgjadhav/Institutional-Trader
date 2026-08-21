@@ -1,5 +1,8 @@
 # The 30-trade decision rule — written 21-Aug-2026, BEFORE any of the data exists
 
+**Why this study exists.** The backtest is finished and cannot answer whether the edge survives real fills, because bhavcopy carries no order book and the live spread gate is therefore unmodellable. This file fixes the pass/fail criteria for the forward record BEFORE any of its data exists, because a rule written after seeing the result is not a rule — and this repo has twice been saved by specifying the test first, on the take-profit sweep and on v1's DTE-5.
+
+
 The user asked for a forward record of 30 trades and then a judgement on whether to increase lots.
 These criteria are fixed **now**, before a single trade is recorded, because a rule written after
 seeing the result is not a rule. This repo has already been burned twice by the opposite habit: v1's
