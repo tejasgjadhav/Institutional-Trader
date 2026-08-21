@@ -2889,3 +2889,49 @@ purpose: it would silently disable a fidelity gate in the harness of record.
 
 LESSON for the record: a shared mutable cache with no format version is a coupling defect. Any
 future script writing into this cache must write `[close, open_interest]`.
+
+## 2026-08-21 · why the measurement kept being re-run, and what changes
+
+User, frustrated and correct: "why u always go back to backtesting sweeps why u dont do it once for
+all without error". The honest cause, stated plainly.
+
+**It was never done once. It was copied five times.** 60 commits touch `studies/ndte/`. Each new
+question (c/w bands, TP sweep, OI buckets, DTE 7-floor, DTE 5-vs-10) got a COPY of the harness, and
+every copy inherited the parent's defects and added its own. The leg-misalignment bug, the
+fetch-failure bug and the cache-format bug all propagated exactly this way. A backtest bug does not
+crash — it prints a plausible number — so each copy's bug was only found by the next audit.
+
+**And the forward record cannot yet replace it.** Of 18 closed paper trades, 17 were entered BEFORE
+the 6-Aug stale-bar fix and are T-1 signals, not this strategy. **The deployed strategy has exactly
+ONE closed trade (+Rs3,490) and four open.** That is why the backtest kept being the only instrument
+with data in it.
+
+### The change, proposed 21-Aug
+
+1. **This OOS run is the last sweep.** The backtest is closed at ~7/10, ceiling ~8 (no bid/ask, the
+   live spread gate is unmodellable). More polishing does not raise it.
+2. **ONE harness, imported, never copied.** `deployed_backtest.py` becomes the only source; any new
+   question imports its functions instead of duplicating them. The `__main__` guard added 20-Aug
+   makes this possible for the first time.
+3. **A regression test that locks the answer.** IS must reproduce 1,270 rows and v2 +27.2% /
+   v1 +10.3% / v0 +14.4% on the median cohort. Any future edit that moves those fails loudly.
+4. **The decision instrument becomes the forward paper record.** At ~8 v1 signals/month it needs
+   months, and that is the honest timeline — not another sweep.
+
+### 21-Aug: items 2, 3 and 4 done
+
+- **`studies/ndte/test_harness.py`** — 19 checks, runs in seconds, no network. Covers the live
+  hierarchy, both gates, the OI attribution that leaked, TP and expiry exits, `leg()` failure
+  semantics, the final-bar breakout, and a GOLDEN FILE locking the in-sample answer
+  (v2 217/+27.2%, v1 359/+10.3%, v0 237/+14.4%). **Mutation-tested**: reintroducing the OI leak and
+  the silent fetch failure each turn the suite red, and the real file stays green. Run it after ANY
+  edit to the harness.
+- **The two sweep copies are frozen** with a DO-NOT-COPY banner. `deployed_backtest.py` is the
+  single harness of record; new questions import it (the `__main__` guard makes that safe).
+- **`studies/ndte/forward_record.py`** — reports the paper record split at the 6-Aug stale-bar fix.
+  Deployed strategy: **1 closed trade, +Rs3,490**, 4 open. The 17 earlier trades (+Rs34,162) are
+  T-1 signals and must never be pooled with it.
+- Item 1 stands: this OOS run is the last sweep.
+
+Open position to watch: **BAJAJ-AUTO is now -125.62 pts** (was -99.35 this morning), entered 29-Jul,
+no stop by policy.

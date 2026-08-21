@@ -1,3 +1,16 @@
+# ==============================================================================================
+# SUPERSEDED - DO NOT COPY THIS FILE, AND DO NOT BASE A NEW STUDY ON IT.  (frozen 21-Aug-2026)
+#
+# This is one of five copies of the backtest harness. Copying is what caused nine defects in a
+# week: each copy inherited its parent's bugs and added its own, and a backtest bug prints a
+# plausible number instead of crashing, so each one survived until the next audit.
+#
+# THE RULE NOW: studies/ndte/deployed_backtest.py is the single harness of record. A new question
+# IMPORTS its functions - it carries a __main__ guard as of 20-Aug, so importing is safe and starts
+# no run - and is covered by studies/ndte/test_harness.py. Nothing gets duplicated.
+#
+# Kept only so results already published from it can be traced.
+# ==============================================================================================
 """MIN-DTE SWEEP — is the 10-day expiry floor right, and what does it cost?
 
 `STOCK_CREDIT_MIN_DTE = 10` has NO study behind it anywhere in this repo. Every study that mentions
