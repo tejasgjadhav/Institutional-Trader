@@ -339,7 +339,12 @@ def leg(key, d0, to):
     out = {}
     if True:
         for c in j.get("data", {}).get("candles", []) or []:
-            out[str(c[0])[:10]] = float(c[4])
+            # WRITE THE PAIR FORMAT. This cache is SHARED with deployed_backtest.py, which
+            # reads every value as [close, open_interest]. Writing a bare float here poisoned
+            # 6,476 of 37,258 entries and crashed the harness of record on 20-Aug-2026
+            # (TypeError: 'float' object is not subscriptable). One cache, one format.
+            out[str(c[0])[:10]] = [float(c[4]),
+                                   float(c[6]) if len(c) > 6 and c[6] is not None else 0.0]
     if out:                                   # never cache an empty (network-poisoned) result
         with LK: LEGC[ck] = out
     return out

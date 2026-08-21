@@ -2797,7 +2797,7 @@ format as the other Telegram messages. Show him the text before anything sends.
 ## DTE 5 vs 10 OOS Oct-2025 to Aug-2026 (finished 2026-08-20)
 
 
-## 2026-08-21 · state confirmed after an interrupted session
+## 2026-08-20 · state confirmed after an interrupted session
 
 Commit `3ee0c42` landed and is pushed to BOTH remotes (0 unpushed on origin and private):
 DTE settled at 10 out-of-sample, BANKNIFTY removed from `engine/dte_multi.py` entirely, and the
@@ -2814,7 +2814,7 @@ answered c/w bands, the TP sweep, OI buckets, the 7-floor DTE sweep and the 5-vs
 additional question asked of the same window erodes its independence. Treat the next OOS result as
 weaker evidence than the last, and prefer the forward paper record for anything new.
 
-## 2026-08-21 · audit of the production harness (studies/ndte/deployed_backtest.py) — IN PROGRESS
+## 2026-08-20 · audit of the production harness (studies/ndte/deployed_backtest.py) — IN PROGRESS
 
 Six defects found and fixed in `studies/ndte/deployed_backtest.py`. Each has a reproduction.
 
@@ -2852,3 +2852,40 @@ Six defects found and fixed in `studies/ndte/deployed_backtest.py`. Each has a r
 been re-run; `research/deployed_bt_is_rows.json` (17-Aug) and `_oos_rows.json` (18-Aug) still hold
 pre-fix results, and so does every number quoted in the UI and studies. A re-run is needed before any
 of those figures are quoted again.
+
+### Re-run of both windows on the fixed harness — launched 2026-08-20
+
+Pre-fix rows preserved as `research/prefix_bt_is_rows.json` and `research/prefix_bt_oos_rows.json`
+so the impact of the six fixes can be measured rather than assumed. Logs:
+`research/rerun_is.log`, `research/rerun_oos.log`. The OOS run now prints `FETCH INTEGRITY: n`,
+which is the first direct measurement of whether past OOS runs were losing trades to the network.
+
+### OOS re-run started 20-Aug 15:46 (user instruction)
+
+Started after the 15:40 derivatives close, so there is no contention with the live engine and no
+freeze window is needed. Log: `research/rerun_oos.log`; result auto-appended here.
+
+## Fixed-harness OOS finished
+
+
+### 20-Aug evening: the OOS re-run CRASHED, and why it matters
+
+`TypeError: 'float' object is not subscriptable` at deployed_backtest.py px(). ROOT CAUSE: three
+scripts share ONE cache file, `research/cache/oos_legcache_oi.json`, with two different formats.
+`deployed_backtest.py` writes and reads `[close, open_interest]`; `dte_sweep.py` and
+`dte_sweep_5v10.py` wrote a BARE FLOAT. 6,476 of 37,258 entries (17%) carried the wrong shape.
+
+Two consequences, not one:
+1. The harness of record could not run at all. No rows were written, so nothing was corrupted —
+   `research/deployed_bt_oos_rows.json` is still the 18-Aug file.
+2. **The DTE 5-vs-10 result reported on 20-Aug had the OI gate weakened.** That sweep reads
+   tolerantly, treating a bare float as "open interest unknown, let it pass". Practical impact is
+   small — OOS OI rejections were only 4-5 because an Upstox candle exists only if the contract
+   traded — but the gate was not fully applied and that was not stated at the time.
+
+FIXES: both sweeps now write the pair format, and the harness SANITISES its cache on load, dropping
+malformed entries so they refetch with real open interest. Tolerating a bare float was rejected on
+purpose: it would silently disable a fidelity gate in the harness of record.
+
+LESSON for the record: a shared mutable cache with no format version is a coupling defect. Any
+future script writing into this cache must write `[close, open_interest]`.

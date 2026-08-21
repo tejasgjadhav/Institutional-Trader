@@ -179,7 +179,7 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         exits[bk] = exit_day
         net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
         _lot = LOTMAP.get(sym, 0)
-        # OI IS NOW CARRIED PER BOOK (fixed 21-Aug-2026). `oi` used to be read here from whatever
+        # OI IS NOW CARRIED PER BOOK (fixed 20-Aug-2026). `oi` used to be read here from whatever
         # the LAST iteration of the gate loop above left behind, which is v0's legs, not this
         # book's. v0 and v2 share a geometry so they were unaffected, but v1 sells a different
         # strike and every v1 row therefore recorded the WRONG contract's open interest. The gate
@@ -200,7 +200,7 @@ def breakout_days(u):
     cl, hi, lo = u["Close"].values, u["High"].values, u["Low"].values
     # `len(u) - 1` used to drop the FINAL bar, so the newest breakout was never evaluated —
     # out-of-sample that silently discarded the most recent signal on every symbol. Nothing here
-    # looks ahead to i+1, so there is no reason to stop short (fixed 21-Aug-2026).
+    # looks ahead to i+1, so there is no reason to stop short (fixed 20-Aug-2026).
     for i in range(20, len(u)):
         c = float(cl[i]); typ = None
         for dc in (5, 10, 15, 20):
@@ -322,6 +322,18 @@ def save_cache():
         raise
 try: LEGC = json.load(open(CACHE))
 except Exception: LEGC = {}
+# SANITISE ON LOAD (added 20-Aug-2026 after this harness crashed on its own cache). The cache is
+# SHARED with studies/ndte/dte_sweep*.py, which used to write a bare float where this file writes
+# [close, open_interest]. 6,476 of 37,258 entries carried the wrong shape and px() died on
+# `sp[x][1]`. Silently tolerating a bare float would be worse than crashing: it carries no open
+# interest, so treating it as "unknown, let it pass" would quietly disable the OI gate on 17% of
+# legs — a fidelity gate, in the harness of record. Drop them instead and let them refetch.
+_bad = [k for k, v in LEGC.items()
+        if not isinstance(v, dict) or any(not isinstance(x, list) or len(x) < 2 for x in v.values())]
+for k in _bad: del LEGC[k]
+if _bad:
+    print(f"cache: dropped {len(_bad)} malformed entr(ies) of {len(_bad)+len(LEGC)}; they will refetch "
+          f"with open interest", flush=True)
 LK = threading.Lock()
 
 def leg(key, d0, to):
@@ -332,7 +344,7 @@ def leg(key, d0, to):
     with LK:
         if ck in LEGC: return LEGC[ck]
     j = _gj(f"{UPSTOX_BASE}/v2/expired-instruments/historical-candle/{encode_key(key)}/day/{to}/{d0}")
-    # FETCH FAILURE IS NOT EVIDENCE OF NO TRADE (fixed 21-Aug-2026, found auditing this file).
+    # FETCH FAILURE IS NOT EVIDENCE OF NO TRADE (fixed 20-Aug-2026, found auditing this file).
     # _get_json returns {} after six failed attempts, and a contract that genuinely never traded
     # ALSO yields {}. Both used to return an empty dict, so every persistent network timeout
     # silently deleted a signal with no count and no log line. That made this harness
@@ -414,7 +426,7 @@ def run_oos():
     save_cache()
     return rows
 
-# NO WORK AT IMPORT TIME (added 21-Aug-2026, found while unit-testing this file).
+# NO WORK AT IMPORT TIME (added 20-Aug-2026, found while unit-testing this file).
 # Everything below used to run on import, so `import deployed_backtest` started a multi-hour
 # backtest — and the json.dump three lines down OVERWRITES research/deployed_bt_<window>_rows.json,
 # the stored results every study reads. A stray import could therefore destroy the record it was
