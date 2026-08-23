@@ -3158,3 +3158,6 @@ Second run "completed" with 79 symbol-level DNS losses + 163 leg drops; only 9/1
 NOT tabled. `oos_until_clean.sh` now re-runs passes (cache converges each one) until a pass has zero
 underlying failures and zero drops, waiting out DNS outages between passes (ping gate). Guard for
 Monday's live windows still armed. Separation verified: 0 (sym,day) overlap IS vs OOS.
+
+### 23-Aug 22:56 · pass 1 at 35/103, 48 network failures crept in — will not be clean; loop will
+run pass 2+ overnight on a fattening cache. Deliver the qualifier table only from a zero-failure pass.
