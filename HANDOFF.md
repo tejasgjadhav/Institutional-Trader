@@ -3151,3 +3151,10 @@ invisible to FETCHFAIL — that gap is noted for a future fix).
 
 ### 23-Aug 21:17 · expansion2 OOS: 20/103, healthy but slow (~5 names/20 min on cold cache).
 ETA ~02:45. Monitor attached; trading-day guard armed for Monday's windows. IS results complete.
+
+### 23-Aug 21:40 · OOS run 2 ALSO ruined — recurring LOCAL DNS outage; self-healing loop started
+
+Second run "completed" with 79 symbol-level DNS losses + 163 leg drops; only 9/103 symbols measured.
+NOT tabled. `oos_until_clean.sh` now re-runs passes (cache converges each one) until a pass has zero
+underlying failures and zero drops, waiting out DNS outages between passes (ping gate). Guard for
+Monday's live windows still armed. Separation verified: 0 (sym,day) overlap IS vs OOS.
