@@ -3148,3 +3148,6 @@ weekdays and resumes after — it can never contend with the live engine's decis
 DONE: build the IS+OOS name-by-name table for the 24 IS qualifiers (is_rows.json is complete;
 PAGEIND 24/88%/+175,731 leads). Verify all 103 symbols were VISITED (symbol-level DNS losses are
 invisible to FETCHFAIL — that gap is noted for a future fix).
+
+### 23-Aug 21:17 · expansion2 OOS: 20/103, healthy but slow (~5 names/20 min on cold cache).
+ETA ~02:45. Monitor attached; trading-day guard armed for Monday's windows. IS results complete.
