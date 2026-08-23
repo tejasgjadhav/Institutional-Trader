@@ -3138,3 +3138,13 @@ resolve and 85 of 103 symbols were skipped at the underlying-fetch stage — BEF
 fetch-integrity counter, which only sees leg-level drops, so the run looked clean while measuring 18
 names. Killed and relaunched 20:39 once DNS recovered; leg cache reused. NOTE the gap for later:
 underlying-fetch failures are a silent symbol-level loss the FETCHFAIL counter cannot see.
+
+### 23-Aug 20:55 · expansion2 OOS status
+
+Clean restart is at 15/103 and GRINDING: Upstox expired-instruments is read-timing-out again, each
+failed leg costs 6 retries. Drops are counted (FETCHFAIL), not silent. May run into Monday, so
+`research/expansion2/tradingday_guard.sh` (detached) SUSPENDS it 08:50-09:50 and 15:00-15:45 on
+weekdays and resumes after — it can never contend with the live engine's decision windows. When
+DONE: build the IS+OOS name-by-name table for the 24 IS qualifiers (is_rows.json is complete;
+PAGEIND 24/88%/+175,731 leads). Verify all 103 symbols were VISITED (symbol-level DNS losses are
+invisible to FETCHFAIL — that gap is noted for a future fix).
