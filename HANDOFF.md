@@ -3124,3 +3124,17 @@ decide which come inside. Note: user wrote "v3" — reading as v2 (no v3 exists)
 studies/UNIVERSE_EXPANSION.md (2026-07-29 screen that added 13 names) — reuse its shape. The
 IS pickle (research/bhav_optstk.pkl) holds ONLY current-universe symbols, so outsiders need a
 bhavcopy re-extract from research/cache/bhav_days/ (raw days on disk) before the IS leg can run.
+
+## Expansion2 IS finished 2026-08-23 13:52
+  IS 30/103 · 53 trades
+  IS 60/103 · 93 trades
+DONE-EXPAND2-IS 200 trades
+
+### 23-Aug evening · expansion2 status
+
+Download DONE (1,418 sessions, 0.47 GB). IS DONE — 200 trades across the 103 outsiders
+(research/expansion2/is_rows.json). First OOS run RUINED by a DNS outage: api.upstox.com failed to
+resolve and 85 of 103 symbols were skipped at the underlying-fetch stage — BEFORE the
+fetch-integrity counter, which only sees leg-level drops, so the run looked clean while measuring 18
+names. Killed and relaunched 20:39 once DNS recovered; leg cache reused. NOTE the gap for later:
+underlying-fetch failures are a silent symbol-level loss the FETCHFAIL counter cannot see.
