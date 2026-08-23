@@ -3115,3 +3115,12 @@ on EVERY in-sample candidate, so it is the universal spot source, not a patch ap
 **Clarified:** bhavcopy DOES carry premiums (`CLOSE`) and open interest (`OPEN_INT`), both 100%
 populated. The ONLY thing it lacks is the order book — bid/ask. Earlier wording that implied
 "no premium or OI" was loose and the user was right to challenge it.
+
+## 2026-08-21 · IN FLIGHT: universe expansion study, name by name (user request)
+
+PAGEIND-type moves are being missed. NSE F&O has ~206 stock underlyings; UNIVERSE holds 113. Task:
+IS + OOS per candidate name (WIN + NET, v2/v1/v0 at deployed configs) for the ~93 outsiders, then
+decide which come inside. Note: user wrote "v3" — reading as v2 (no v3 exists). Prior art:
+studies/UNIVERSE_EXPANSION.md (2026-07-29 screen that added 13 names) — reuse its shape. The
+IS pickle (research/bhav_optstk.pkl) holds ONLY current-universe symbols, so outsiders need a
+bhavcopy re-extract from research/cache/bhav_days/ (raw days on disk) before the IS leg can run.
