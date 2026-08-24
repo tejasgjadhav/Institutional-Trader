@@ -920,9 +920,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
 <tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>526</b></td><td><b>~24/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹35,916</b></td></tr>
-<tr><td>Universe 24-Aug: +9 admitted · −8 pruned (now 116 with ICICIGI+PIIND side-qualified)</td><td colspan="6" style="color:{TEXT_DIM};">expansion est +₹6–8k/mo · prune adds back ~₹0.7–3.9k/mo (eight never-validated names removed) · measured OOS basis below — forward record decides</td><td><b>+₹7–10k</b></td></tr>
+
 <tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹28,733</b></td></tr>
 </table>
+{dim("The numbers above already include everything decided on 24-Aug: the 9 admitted names, the 8 "
+     "pruned, and ICICIGI + PIIND. Nothing is separate. The only special handling anywhere: if "
+     "ICICIGI or PIIND trades its historically weak side, that fill is tagged ADVISORY and shown on "
+     "its own line instead of the headline — details in the forward record above.")}
 {dim("<b>v0 is the exception and the one to watch.</b> It earns +14.4% in-sample but only +3.0% "
      "out-of-sample, and it is positive in just <b>1 of 3 out-of-sample years</b> — the regime-flip "
      "shape this repo has rejected strategies for before. It wins four trades in five and still clears "

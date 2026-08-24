@@ -3311,3 +3311,8 @@ them so the probation stays measurable. Never dropped — tagged.
 basis: money table (measured OOS avg win/loss + expectancy per book, TOTAL 526 measured ~24/mo
 ₹35,916, plan-80% ₹28,733), strategy table, work table, PM cards, FULL STUDIES lines, v2-match
 note rewritten (+22.0 IS vs +27.0 OOS — no coincidence story). CONSOLIDATED_PNL carries the basis.
+
+### 24-Aug 14:0x · de-cluttered (user: "+7k types becomes so confusing"): the estimate row
+(+₹6–8k/+₹7–10k) removed from the money table — ICICIGI/PIIND are inside the measured numbers, so
+estimates on top were double-telling. One dim note remains explaining the only special handling
+(advisory tag on their weak-side fills).
