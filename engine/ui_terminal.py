@@ -944,7 +944,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
 <tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~21.7/mo</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~24/mo</b></td></tr>
 </table>
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">NAME-WISE RECORD — every traded name, by window, side and strategy</p>
