@@ -68,18 +68,10 @@ UNIVERSE = [
 ]
 assert len(UNIVERSE) == 122, "Universe: 100 base + 13 Tier-5 + 9 Expansion-2 (24-Aug-2026)"
 
-# PRIORITY stocks — the only names whose high gates-1-5 win rate PERSISTED out-of-sample.
-# Found by a 365-day per-stock backtest split into train (older 60%) / held-out test (newer
-# 40%): selecting the top-60 by *train* win rate overfit badly (64% train -> 49% test), but
-# these 13 won in BOTH independent windows (combined ~75% over 110 trades). The engine still
-# scans and fires on all 100; this list ONLY flags these in the read-only UI so you can choose
-# to focus / size up on them. It does NOT change engine selection. Small sample — treat as a
-# tilt, not a guarantee. See studies/PRIORITY_STOCKS_PERSISTENCE.md.
-PRIORITY_STOCKS = [
-    "BAJFINANCE.NS", "RECLTD.NS", "AUROPHARMA.NS", "JINDALSTEL.NS", "INDIANB.NS",
-    "AUBANK.NS", "BAJAJHLDNG.NS", "POWERGRID.NS", "ASHOKLEY.NS", "TATAELXSI.NS",
-    "SHRIRAMFIN.NS", "INDUSINDBK.NS", "PERSISTENT.NS",
-]
+# PRIORITY_STOCKS REMOVED (24-Aug-2026, user): it belonged to the retired 3-Family gates system
+# (SCAN_3FAMILY_ENABLED = False) and only star-flagged names in the read-only UI. The stock credit
+# books have no priority tier - they scan UNIVERSE, and every trade passes the same gates.
+PRIORITY_STOCKS = []   # kept as an empty list so old imports cannot crash
 
 # Index underlyings to scan for options (low capital, liquid weekly/monthly expiries)
 SCAN_INDICES = ["NIFTY", "BANKNIFTY"]
