@@ -72,12 +72,21 @@ for n, tk in enumerate(UNIVERSE):
     # per-window side counts (user, 24-Aug-2026): the IS and OOS lines each state how many
     # bear calls and bull puts they contain
     wc = {"is": {"bc": 0, "bp": 0}, "oos": {"bc": 0, "bp": 0}}
+    # book x side (user, later same day): each BOOK's record split by bear call / bull put too
+    bs = collections.defaultdict(lambda: {"bc": [], "bp": []})
     for x in ROWS_BY_SYM.get(sym, []):
         t = daymap.get(x["day"])
         if not t: continue
         side["BEAR_CALL" if t == "CE" else "BULL_PUT"].append(x["net_rs"])
         w = "is" if x["day"] <= "2024-09-30" else "oos"
         wc[w]["bc" if t == "CE" else "bp"] += 1
+        bs[x["book"]]["bc" if t == "CE" else "bp"].append(x["net_rs"])
+    for bk, dd in bs.items():
+        for sd, v in dd.items():
+            if v:
+                wn = [z for z in v if z > 0]
+                out[sym][f"book_{bk}_{sd}"] = {"n": len(v), "win": round(100*len(wn)/len(v), 1),
+                                               "net": round(sum(v))}
     for w in ("is", "oos"):
         if out[sym].get(w): out[sym][w]["bc"], out[sym][w]["bp"] = wc[w]["bc"], wc[w]["bp"]
     for k, v in side.items():

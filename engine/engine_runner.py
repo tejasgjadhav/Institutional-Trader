@@ -376,9 +376,13 @@ class EngineRunner:
             d = h.get(bk_key) if bk_key else None
             book_line = ""
             if d and d.get("n"):
+                _sd = "bc" if side == "BEAR_CALL" else ("bp" if side == "BULL_PUT" else None)
+                ds = h.get(f"{bk_key}_{_sd}") if _sd else None
+                tail = (f" — of which this side: <b>{ds['n']}</b> tr · <b>{ds['win']:.0f}%</b> · "
+                        f"₹{ds['net']:+,.0f}" if ds and ds.get("n") else "")
                 book_line = (f"\n• In this book ({bk_key[5:]}): <b>{d['n']}</b> trade"
                              f"{'s' if d['n'] != 1 else ''} · <b>{d['win']:.0f}%</b> win · "
-                             f"net ₹{d['net']:+,.0f} (both windows pooled)")
+                             f"net ₹{d['net']:+,.0f} (both windows pooled)" + tail)
             return ("📜 <b>" + sym + " — this stock's own backtest record</b>\n"
                     + scanned
                     + line("In-sample 2019→Sep-24", h.get("is")) + "\n"
