@@ -3335,3 +3335,10 @@ no counter, one-sided. M: 21 late-Sep-2024 IS trades force-settled early; test_h
 legfails.jsonl. FIXING: robust 5-anchor parity median, segment-median rs_scale (no naive snap),
 OOS lot fallback to instrument master, symbol_history de-dup by (book,sym,day), expiry>pickle-end
 guard, legfails path var. IS re-run to follow; engine TG-number restart after 15:40.
+
+## 24-Aug 14:37 · CAUTION CAUGHT MYSELF: the 5-strike-median parity re-anchor moved the whole IS
+answer (v2 ROM-pts 29.6 -> 11.1, n 217 -> 241) — far beyond the audit's <=0.5pp measured impact.
+Anchors agree on clean chains (median 0.00%, p90 0.78%), so the swing is unexplained -> DID NOT
+SHIP. Reverted to tightest-strike anchor + 2% dispersion REJECTION guard (misfires dropped, clean
+trades bit-identical). Re-run v2 in flight (research/rerun_is_audit2.log). NOTHING on UI/studies/TG
+updated from the bad run. If v2 lands close to this morning's basis -> cascade; else HOLD and say so.

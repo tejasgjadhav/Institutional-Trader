@@ -110,15 +110,24 @@ def parity_spot(ce_px, pe_px):
     common = [k for k in ce_px if k in pe_px]
     if len(common) < 3:
         return None
-    # ROBUST ANCHOR (audit 24-Aug-2026): the single min-|CE-PE| strike misfired on 86 of 1,180
-    # entries (AXISBANK 2020-04-03 seeded an ATM that never existed, -40% rupees). Median of the
-    # implied spots from the FIVE tightest strikes; a single bad quote can no longer set spot.
-    cand = sorted(common, key=lambda x: abs(ce_px[x] - pe_px[x]))[:5]
-    imps = sorted(x + ce_px[x] - pe_px[x] for x in cand)
-    spot = imps[len(imps) // 2]
-    k = cand[0]
+    # ANCHOR GUARD (audit 24-Aug-2026, done SURGICALLY). The single min-|CE-PE| strike misfired
+    # on 86 of 1,180 entries (AXISBANK 2020-04-03 seeded an ATM that never existed). First attempt
+    # replaced the anchor with a five-strike MEDIAN - and the whole answer moved (v2 ROM-pts
+    # halved), far beyond the audit's measured impact, so it was re-anchoring good trades, not just
+    # fixing bad ones. Reverted: the tightest strike stays the anchor; a candidate whose five
+    # tightest implied spots DISAGREE by more than 2% is REJECTED instead of re-priced. Clean
+    # entries stay bit-identical; only the misfire class is removed.
+    k = min(common, key=lambda x: abs(ce_px[x] - pe_px[x]))
+    spot = k + ce_px[k] - pe_px[k]
     if spot <= 0 or abs(ce_px[k] - pe_px[k]) / spot > PARITY_MAX_SPAN:
         return None
+    cand = sorted(common, key=lambda x: abs(ce_px[x] - pe_px[x]))[:5]
+    if len(cand) >= 3:
+        imps = sorted(x + ce_px[x] - pe_px[x] for x in cand)
+        med = imps[len(imps) // 2]
+        if med > 0 and abs(spot - med) / med > 0.02:
+            SETTLE_FALLBACKS["parity_disagreement_rejected"] += 1
+            return None
     return spot
 
 SETTLE_FALLBACKS = collections.Counter()
