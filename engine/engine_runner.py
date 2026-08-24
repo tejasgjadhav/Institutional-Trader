@@ -1035,8 +1035,9 @@ class EngineRunner:
                         if fname in self._INTRADAY_BOOKS and \
                                 p.get("entry_date") == datetime.now(IST).date().isoformat():
                             _today_bit = "<b>Today</b> "
+                        _advtag = " · 📎 ADVISORY (weak side — not in the headline totals)" if p.get("advisory") else ""
                         ok = send_telegram(
-                            f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}\n"
+                            f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}{_advtag}\n"
                             f"This is the outcome of the Signal we gave for execution {_today_bit}on "
                             f"<b>{self._ord_date(p.get('entry_date'))}</b>: "
                             f"SELL {g(p.get('short_strike'))} {verb} / BUY {g(p.get('long_strike'))} {verb} "
