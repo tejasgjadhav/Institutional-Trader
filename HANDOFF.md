@@ -3285,3 +3285,8 @@ features (book x side, routing note, bucket labels) now LIVE in-process, ahead o
 ### 24-Aug 09:4x · pooled expectancy line RETIRED from the signal message (user: redundant once
 per-strategy and per-side actuals are shown). Final block: scanned · IS+sides · OOS+sides ·
 strategy line w/ actual per-trade · side split · bold side tail. Engine restarted, live for 15:36.
+
+## 2026-08-24 · IN FLIGHT: adversarial audit of the name-wise backtest (user request)
+Independent agent re-derives per-name IS/OOS, BC/BP and v0/v1/v2 cells from the RAW row files with
+its OWN code (no reuse of build_symbol_history.py), fresh breakout-direction derivation, cell-by-cell
+diff vs data/symbol_history.json. Report -> research/audit_namewise.md.
