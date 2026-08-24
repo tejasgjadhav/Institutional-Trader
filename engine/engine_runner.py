@@ -349,7 +349,8 @@ class EngineRunner:
             try:
                 bc, bp = h.get("bear_call"), h.get("bull_put")
                 def sd(lbl, d):
-                    return (f"{lbl} <b>{d['n']}</b> tr · <b>{d['win']:.0f}%</b> win · ₹{d['net']:+,.0f}"
+                    return (f"{lbl} <b>{d['n']}</b> tr · <b>{d['win']:.0f}%</b> win · "
+                            f"₹{d['net']:+,.0f} actual overall profit"
                             if d else f"{lbl} no past trades")
                 if bc or bp:
                     cur = ("BEAR CALL" if side == "BEAR_CALL" else
