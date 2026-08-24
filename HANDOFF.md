@@ -3264,3 +3264,8 @@ restarted (loads history lazily at 15:36; TG evidence strings need restart -> do
 (bear calls -11,135 over 33 tr vs bull puts +22,101 over 15). All surfaces on true basis; engine
 running since 09:01 with final code. Day's remaining schedule: 15:36 first live scan of the new
 system. Next session: forward record accumulates; 30-trade counter still 0.
+
+### 24-Aug 09:1x · per-book split added to symbol_history + "In this book (vX)" message line.
+TITAN v2: 14 tr 64% net +1,263 vs v1: 19 tr 79% +21,547 vs v0: 15 tr 67% -11,844 — the user's point
+proven: the books differ per name. ENGINE RESTART PENDING (freeze until 09:45) — the new line ships
+on the next restart; file itself is live (lazy load).

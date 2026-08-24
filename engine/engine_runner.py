@@ -295,7 +295,7 @@ class EngineRunner:
                       "Educational signals · invest at your own risk · consult a SEBI-registered advisor.")
     _TG_SIDE = {"BEAR_CALL": "BEAR CALL SPREAD", "BULL_PUT": "BULL PUT SPREAD", "BUY_FUT": "BUY FUTURES"}
 
-    def _sym_history(self, sym, side=""):
+    def _sym_history(self, sym, side="", book=""):
         """Per-name backtest history line for the signal message (user request, 24-Aug-2026):
         when the 15:36 scan names a stock, say how THAT stock has traded historically in both
         windows - trades, win rate, average profit and average loss per trade. Data is the
@@ -367,10 +367,22 @@ class EngineRunner:
                                           f"this side for this stock")
             except Exception:
                 pass
+            # THIS BOOK's own record (user, 24-Aug-2026): the pooled lines mix three exits, so
+            # the signal also quotes the record of the book that fired it.
+            bk_key = {"STOCK CREDIT v2 UNION": "book_v2", "STOCK CREDIT v1": "book_v1"}.get(book)
+            if bk_key is None and "v0" in (book or ""): bk_key = "book_v0"
+            if bk_key is None and "v2" in (book or ""): bk_key = "book_v2"
+            if bk_key is None and "v1" in (book or ""): bk_key = "book_v1"
+            d = h.get(bk_key) if bk_key else None
+            book_line = ""
+            if d and d.get("n"):
+                book_line = (f"\n• In this book ({bk_key[5:]}): <b>{d['n']}</b> trade"
+                             f"{'s' if d['n'] != 1 else ''} · <b>{d['win']:.0f}%</b> win · "
+                             f"net ₹{d['net']:+,.0f} (both windows pooled)")
             return ("📜 <b>" + sym + " — this stock's own backtest record</b>\n"
                     + scanned
                     + line("In-sample 2019→Sep-24", h.get("is")) + "\n"
-                    + line("Out-of-sample Oct-24→date", h.get("oos")) + exp_line + side_line)
+                    + line("Out-of-sample Oct-24→date", h.get("oos")) + book_line + exp_line + side_line)
         except Exception as e:
             logger.debug(f"_sym_history {sym}: {e}")
             return ""
@@ -477,7 +489,7 @@ class EngineRunner:
                 # Donchian/IS/OOS bullets are dropped from the message and the header leads
                 # straight into the stock. Books with no per-name record (the index books) keep
                 # the original analysis block unchanged. Gated until the user approves the sample.
-                sh = (self._sym_history(sym, side=str(s.get("side") or ""))
+                sh = (self._sym_history(sym, side=str(s.get("side") or ""), book=book)
                       if getattr(config, "TG_SYMBOL_HISTORY_ENABLED", False) else "")
                 if sh:
                     lines.append("——————————————")

@@ -27,6 +27,22 @@ def fold(files, key):
 fold(["research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json"], "is")
 fold(["research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"], "oos")
 
+# PER-BOOK SPLIT (user, 24-Aug-2026): v2/v1/v0 carry different exits (TP-50 vs TP-40) and
+# geometries, so a signal must quote ITS OWN book's record, not a pool of three strategies.
+# Windows pooled inside each book to keep n meaningful at per-name grain.
+_all = []
+for f in ("research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json",
+          "research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"):
+    try: _all += json.load(open(f))
+    except Exception: pass
+_bb = collections.defaultdict(lambda: collections.defaultdict(list))
+for x in _all: _bb[x["sym"]][x["book"]].append(x["net_rs"])
+for s2, bks in _bb.items():
+    for bk, v in bks.items():
+        w = [z for z in v if z > 0]
+        out[s2]["book_" + bk] = {"n": len(v), "win": round(100 * len(w) / len(v), 1),
+                                 "net": round(sum(v))}
+
 # SIDE SPLIT (user, 24-Aug-2026): the row files do not store the side, but the side IS the
 # breakout direction - an up-break is faded with a BEAR CALL, a down-break with a BULL PUT -
 # so map each (sym, day) to CE/PE with the same breakout_days() and join the trade rows on it.
