@@ -3236,3 +3236,7 @@ BAJAJHLDNG v2 render verified stub-only. Now rendering the v0 variant on request
 ## 2026-08-24 08:21 · ALL DEPLOYED AND VERIFIED — full day's changes live for the 15:36 scan
 UNIVERSE 114 · TG per-name block ON (final format with per-window side counts) · engine started
 08:17 (newer than last code edit 08:16) · suite 19/19 · 0 unpushed · config ledger committed.
+
+### 24-Aug · TG history is PRECOMPUTED: data/symbol_history.json (built 08:1x, all 114 covered).
+Signal time = dict lookup only, no network. RULE: regenerate via studies/ndte/build_symbol_history.py
+after any backtest re-run or universe change, then restart engine (it caches the file on first use).
