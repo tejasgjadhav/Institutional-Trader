@@ -54,7 +54,12 @@ for f in ("research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json
 ROWS_BY_SYM = collections.defaultdict(list)
 for x in ALL_ROWS: ROWS_BY_SYM[x["sym"]].append(x)
 
-for n, tk in enumerate(UNIVERSE):
+# Cover EVERY name that has rows, not just UNIVERSE (audit finding, 24-Aug-2026): the 48 tested
+# expansion names had no side keys, which blocked exactly the side-level screening the user asked
+# for. Universe names first, then any row-bearing outsiders.
+_extra = sorted({x["sym"] for x in ALL_ROWS} - {t.replace(".NS","") for t in UNIVERSE})
+SCAN_LIST = list(UNIVERSE) + [s + ".NS" for s in _extra]
+for n, tk in enumerate(SCAN_LIST):
     sym = tk.replace(".NS", "")
     try:
         u = fetch_upstox_historical(tk, unit="days", interval=1,

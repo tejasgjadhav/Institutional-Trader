@@ -65,6 +65,12 @@ UNIVERSE = [
     # HDFCAMC (demonstrated OOS failure, -Rs14,679), SRF (flat OOS). ===
     "PAGEIND.NS", "MCX.NS", "TVSMOTOR.NS", "SHREECEM.NS",
     "LTM.NS", "TIINDIA.NS", "SOLARINDS.NS", "BDL.NS", "AMBER.NS",   # IS-blind: OOS+forward only
+    # SIDE-QUALIFIED ADMISSIONS (24-Aug-2026, user): pooled records failed the earlier screen, but
+    # ONE SIDE qualifies in both windows — ICICIGI bear calls 8/8 wins +35,834; PIIND bull puts
+    # 8 tr 88% +23,549 (its bear calls LOST 19,973). Deliberately NO side-blocking in the engine:
+    # the scanner fires both sides and the per-name Telegram block shows the side split, so the
+    # user takes the call at trade time. n=8 cells — thin, probationary, forward record decides.
+    "ICICIGI.NS", "PIIND.NS",
 ]
 # HCLTECH and SBILIFE REMOVED 24-Aug-2026 (user): the only two names negative in BOTH windows
 # (HCLTECH IS -14,583/OOS -4,571 on 7 trades; SBILIFE -9,597/-3,720 on 8). Thin samples, but the
@@ -75,7 +81,7 @@ UNIVERSE = [
 # demonstrated-failure pattern that kept HDFCAMC out), TCS (66 trades, pooled -10,984), TECHM (17,
 # -9,171), HDFCBANK (-18,077, never positive), DMART (-22,822), JINDALSTEL (-21,360). Names with
 # ZERO trades ever stay: they cost nothing, carry no negative evidence, and the gates decide.
-assert len(UNIVERSE) == 114, "Universe: 122 admitted - 8 removed on negative records (24-Aug-2026)"
+assert len(UNIVERSE) == 116, "Universe: 122 - 8 pruned + 2 side-qualified (ICICIGI, PIIND) (24-Aug-2026)"
 
 # Telegram: per-name backtest block in signal messages (user-approved 24-Aug-2026 after four
 # sample iterations - scanned counts, both windows, pooled expectancy, side split, per-lot line).

@@ -3296,3 +3296,8 @@ independently, ZERO disagreements; 0 unmapped side rows of 1,958; 0 boundary vio
 rows). One coverage omission: the 48 non-universe expansion names carry no side keys (builder's side
 loop iterates UNIVERSE only) — harmless, they can never fire a signal. Report:
 research/audit_namewise.md.
+
+## 24-Aug · side-qualified admissions (user call): ICICIGI + PIIND join UNIVERSE (116). NO
+side-blocking mechanism — his decision: scanner open, the Telegram side data informs the trade.
+ICICIGI qualified on bear calls (8/8, +35,834 both windows), PIIND on bull puts (8 tr, 88%,
++23,549 both windows); the other side of each is weak and VISIBLE in every message.
