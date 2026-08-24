@@ -359,6 +359,19 @@ def leg(key, d0, to):
     # by that code. A failed request now returns None, only a `success` body counts as evidence of
     # no trade, and the drops are counted and printed.
     if not j or j.get("status") != "success":
+        # DIAGNOSTIC (24-Aug-2026): record WHAT came back, because two very different things land
+        # here - a network failure ({} after six retries) and an API ERROR BODY. Pass 3 of the
+        # expansion study counted 354 drops with ZERO error lines in the log, meaning Upstox was
+        # answering with error bodies, not timing out. An error body may be a PERMANENT vendor gap
+        # ("no data for this expired contract"), which no retry loop can close; distinguishing the
+        # two decides whether re-running converges or is wasted work.
+        try:
+            with LK:
+                with open("research/expansion2/legfails.jsonl", "a") as _fh:
+                    _fh.write(json.dumps({"key": key, "d0": d0, "to": to,
+                                          "body": (str(j)[:200] if j else "EMPTY/network")}) + "\n")
+        except Exception:
+            pass
         return None
     out = {}
     for c in j.get("data", {}).get("candles", []) or []:
