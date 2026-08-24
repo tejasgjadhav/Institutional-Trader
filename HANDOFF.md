@@ -3259,3 +3259,8 @@ Totals: IS 1,253 · OOS 412 · 1,665 (bear calls 946 + bull puts 719 = 1,665, cr
 Corrected surfaces: TG evidence blocks (6/6), CONSOLIDATED_PNL, golden test (v2 200/23.2, v1
 335/12.5, v0 217/15.7 main-only), symbol_history rebuilt (162 names, corrected rupees). Engine NOT
 restarted (loads history lazily at 15:36; TG evidence strings need restart -> do after 09:45).
+
+### 24-Aug 09:0x · TITAN sample verified post-cascade — the side split exposed a real asymmetry
+(bear calls -11,135 over 33 tr vs bull puts +22,101 over 15). All surfaces on true basis; engine
+running since 09:01 with final code. Day's remaining schedule: 15:36 first live scan of the new
+system. Next session: forward record accumulates; 30-trade counter still 0.
