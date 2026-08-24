@@ -3269,3 +3269,10 @@ system. Next session: forward record accumulates; 30-trade counter still 0.
 TITAN v2: 14 tr 64% net +1,263 vs v1: 19 tr 79% +21,547 vs v0: 15 tr 67% -11,844 — the user's point
 proven: the books differ per name. ENGINE RESTART PENDING (freeze until 09:45) — the new line ships
 on the next restart; file itself is live (lazy load).
+
+### 24-Aug 09:1x · USER PROPOSAL under discussion: route v2-vs-v1 per name by historical record
+(instead of fixed v2-first hierarchy) once a name is scanned; v0 correctly noted as disjoint
+(0.35-0.40 band). Response: per-name routing on 8-20-trade cells = the July overfit trap; offered
+(a) informational message note when the OTHER book's record for the name is stronger, (b) a
+pre-registered routing backtest (route chosen on IS only, judged on OOS) before any hierarchy
+change. Awaiting his pick. 09:46 scheduled engine restart pending (book-x-side message line).
