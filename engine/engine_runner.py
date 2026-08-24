@@ -295,6 +295,32 @@ class EngineRunner:
                       "Educational signals · invest at your own risk · consult a SEBI-registered advisor.")
     _TG_SIDE = {"BEAR_CALL": "BEAR CALL SPREAD", "BULL_PUT": "BULL PUT SPREAD", "BUY_FUT": "BUY FUTURES"}
 
+    def _sym_history(self, sym):
+        """Per-name backtest history line for the signal message (user request, 24-Aug-2026):
+        when the 15:36 scan names a stock, say how THAT stock has traded historically in both
+        windows - trades, win rate, average profit and average loss per trade. Data is the
+        harness-of-record row files folded into data/symbol_history.json (regenerate after any
+        re-run). Missing name -> empty string, never a crash."""
+        try:
+            if not hasattr(self, "_symhist"):
+                self._symhist = json.load(open(os.path.join(DATA_DIR, "symbol_history.json")))
+            h = self._symhist.get(sym)
+            if not h:
+                return ""
+            def line(lbl, d):
+                if not d:
+                    return f"• {lbl}: no trades in this window"
+                al = f"₹{d['avg_loss']:+,.0f}" if d.get("avg_loss") is not None else "no loss"
+                aw = f"₹{d['avg_win']:+,.0f}" if d.get("avg_win") is not None else "no win"
+                return (f"• {lbl}: <b>{d['n']}</b> trades · <b>{d['win']:.0f}%</b> win · "
+                        f"avg profit {aw} · avg loss {al} per trade")
+            return ("\n📜 <b>" + sym + " — this stock's own backtest record</b>\n"
+                    + line("In-sample 2019→Sep-24", h.get("is")) + "\n"
+                    + line("Out-of-sample Oct-24→date", h.get("oos")))
+        except Exception as e:
+            logger.debug(f"_sym_history {sym}: {e}")
+            return ""
+
     def _analysis(self, book, sym=""):
         a = self._TG_ANALYSIS.get(book)
         if a is None and ("SENSEX" in book or sym == "SENSEX"):
@@ -398,6 +424,9 @@ class EngineRunner:
                     lines.append("📚 <b>Why this signal</b> — Tejas Jadhav, CFA has performed extensive "
                                  "analysis of this strategy which gave below historical results —")
                     lines.append(ana)
+                sh = self._sym_history(sym)
+                if sh:
+                    lines.append(sh)
                 lines.append(self._TG_DISCLAIMER)
                 send_telegram("\n".join(lines))
               except Exception as e:
