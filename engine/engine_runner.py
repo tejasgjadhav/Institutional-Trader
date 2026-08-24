@@ -424,9 +424,13 @@ class EngineRunner:
                     lines.append("📚 <b>Why this signal</b> — Tejas Jadhav, CFA has performed extensive "
                                  "analysis of this strategy which gave below historical results —")
                     lines.append(ana)
-                sh = self._sym_history(sym)
-                if sh:
-                    lines.append(sh)
+                # PER-NAME HISTORY BLOCK — built 24-Aug-2026, NOT YET APPROVED for live messages.
+                # The user asked to SEE the message before it ships. Re-enable by removing this
+                # guard once he approves the sample.
+                if getattr(config, "TG_SYMBOL_HISTORY_ENABLED", False):
+                    sh = self._sym_history(sym)
+                    if sh:
+                        lines.append(sh)
                 lines.append(self._TG_DISCLAIMER)
                 send_telegram("\n".join(lines))
               except Exception as e:
