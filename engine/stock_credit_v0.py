@@ -42,6 +42,7 @@ _spec.loader.exec_module(_impl)
 _impl.BOOK_PATH = os.path.join(DATA_DIR, "stock_credit_v0_positions.json")
 _impl.SNAP_PATH = os.path.join(DATA_DIR, "stock_credit_v0.json")
 _impl.logger = logger
+_impl._FR_BOOK = "v0"          # forward-record label (audit C1, 24-Aug-2026)
 
 _impl.STOCK_CREDIT_ENABLED    = bool(getattr(config, "STOCK_CREDIT_V0_ENABLED", False))
 _impl.STOCK_CREDIT_MIN_CW     = float(getattr(config, "STOCK_CREDIT_V0_MIN_CW", 0.35))

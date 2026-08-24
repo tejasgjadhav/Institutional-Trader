@@ -32,6 +32,7 @@ from engine.data_fetcher import fetch_upstox_historical, fetch_upstox_quote, fet
 from engine.instruments import to_instrument_key
 
 logger = logging.getLogger(__name__)
+_FR_BOOK = "v2"   # forward-record book label; stock_credit_v0 REBINDS this after exec
 
 BOOK_PATH = os.path.join(DATA_DIR, "stock_credit_v2_positions.json")
 SNAP_PATH = os.path.join(DATA_DIR, "stock_credit_v2.json")
@@ -415,7 +416,7 @@ def scan_signals() -> list:
                 try:
                     from engine import forward_record as _fr
                     _fr.record_rejection(
-                        "v2", sym,
+                        _FR_BOOK, sym,
                         "spread" if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT else "open_interest",
                         f"spread {spread_pct:.2f}% oi {soi}", spread_pct, soi, sm,
                         (credit / width_pts) if width_pts else None)
@@ -475,7 +476,7 @@ def scan_signals() -> list:
             book.append(pos); new.append(pos)
             try:
                 from engine import forward_record as _fr
-                _fr.record_entry("v2", pos, spread_pct=spread_pct)
+                _fr.record_entry(_FR_BOOK, pos, spread_pct=spread_pct)
             except Exception:
                 pass
             logger.info(f"stock_credit: opened {side} {sym} (fade {bdir}) credit Rs{credit} c/w {pos['credit_width']} exp {expiry}")

@@ -281,6 +281,18 @@ def run(send: bool = True) -> str:
     if not text:
         logger.info("signal_recheck: nothing from the last session still passes "
                     "(%d dropped)", len(dropped))
+        # STAMP THE DAY EVEN WHEN THERE IS NOTHING TO SEND (audit 24-Aug-2026). The de-dupe key was
+        # written only after a SENT message, so on a no-signal day build_message() - and its Upstox
+        # fetch of the previous session - re-ran every 5 seconds from 09:30 to 15:40, ~4,400 wasted
+        # calls burning rate limit straight into the 15:31/15:36 window. "Nothing to say" is also a
+        # once-a-day answer.
+        if send:
+            try:
+                _seen = set(json.load(open(STATE_PATH))) if os.path.exists(STATE_PATH) else set()
+                _seen.add(date.today().isoformat())
+                json.dump(sorted(_seen), open(STATE_PATH, "w"))
+            except Exception as e:
+                logger.warning("signal_recheck: could not stamp no-signal day: %s", e)
         return ""
     if send:
         try:

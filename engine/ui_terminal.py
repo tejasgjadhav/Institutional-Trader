@@ -789,6 +789,12 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         doc.setOpenExternalLinks(True)   # make the studies/GitHub link actually clickable
         doc.setHtml(self._studies_html())
         v.addWidget(doc)
+        # RE-RENDER every 60s (audit H5, 24-Aug-2026): the tab claimed the forward record is read
+        # "on every refresh" but rendered once at startup, freezing the 30-counter and open P&L.
+        self._studies_doc = doc
+        self.studies_timer = QTimer()
+        self.studies_timer.timeout.connect(lambda: self._studies_doc.setHtml(self._studies_html()))
+        self.studies_timer.start(60_000)
         return w
 
     def _d(self, t):
@@ -808,7 +814,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         DB = _os.path.join(DATA_DIR, "forward_record.db")
         rows = []
         try:
-            with sqlite3.connect(DB, timeout=5) as c:
+            with sqlite3.connect(f"file:{DB}?mode=ro", uri=True, timeout=1.0) as c:
                 rows = list(c.execute(
                     """SELECT book, entry_date, status, pnl_rs FROM fills
                        WHERE status='CLOSED' AND pnl_rs IS NOT NULL AND advisory=0"""))
@@ -919,9 +925,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Stock v0 (0.35–0.40)</td><td>99</td><td>~4.4</td><td>81.8%</td><td style="color:{GREEN};">+₹3,810</td><td style="color:{RED};">−₹11,781</td><td>81.8% × ₹3,810 − 18.2% × ₹11,781 = <b style="color:{AMBER};">+₹972</b></td><td><b>₹4,292</b></td></tr>
 <tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
 <tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>526</b></td><td><b>~24/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹35,916</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>526</b></td><td><b>~24/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹36,798</b></td></tr>
 
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹28,733</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹29,438</b></td></tr>
 </table>
 {dim("The numbers above already include everything decided on 24-Aug: the 9 admitted names, the 8 "
      "pruned, and ICICIGI + PIIND. Nothing is separate. The only special handling anywhere: if "
@@ -951,7 +957,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~24/mo</b></td></tr>
 </table>
 
-<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">NAME-WISE RECORD — every traded name, by window, side and strategy</p>
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">NAME-WISE RECORD — all 133 traded names (universe + tested outsiders), by window, side and strategy</p>
 {dim("Seven win-rate views per name plus per-trade P&amp;L by side, from the corrected harness rows — the same data every Telegram signal quotes. Cells under 8 trades are noise, not signal. This table informs SIZING at trade time; it never blocks the scanner.")}
 <div style="max-height:420px;overflow-y:auto;"><table cellpadding="4" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:12px;">
 <tr style="color:{CYAN};font-weight:bold;"><td>name</td><td>IS n</td><td>IS win</td><td>OOS n</td><td>OOS win</td><td>BC n</td><td>BC win</td><td>BC ₹/tr</td><td>BP n</td><td>BP win</td><td>BP ₹/tr</td><td>v2 n</td><td>v2 win</td><td>v1 n</td><td>v1 win</td><td>v0 n</td><td>v0 win</td></tr>
@@ -965,8 +971,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td><b>APOLLOHOSP</b></td><td>29</td><td>79%</td><td>12</td><td>67%</td><td>23</td><td>74%</td><td style="color:{GREEN};">+₹588</td><td>18</td><td>78%</td><td style="color:{GREEN};">+₹759</td><td>14</td><td>86%</td><td>16</td><td>69%</td><td>11</td><td>73%</td></tr>
 <tr><td><b>ADANIENT</b></td><td>23</td><td>83%</td><td>17</td><td>76%</td><td>22</td><td>73%</td><td style="color:{GREEN};">+₹208</td><td>18</td><td>89%</td><td style="color:{GREEN};">+₹3,616</td><td>11</td><td>91%</td><td>17</td><td>82%</td><td>12</td><td>67%</td></tr>
 <tr><td><b>LT</b></td><td>19</td><td>90%</td><td>20</td><td>75%</td><td>24</td><td>75%</td><td style="color:{GREEN};">+₹511</td><td>15</td><td>93%</td><td style="color:{GREEN};">+₹2,486</td><td>12</td><td>75%</td><td>14</td><td>86%</td><td>13</td><td>85%</td></tr>
+<tr><td><b>DIXON</b></td><td>19</td><td>63%</td><td>19</td><td>68%</td><td>18</td><td>61%</td><td style="color:{RED};">-₹254</td><td>20</td><td>70%</td><td style="color:{GREEN};">+₹1,271</td><td>15</td><td>60%</td><td>9</td><td>78%</td><td>14</td><td>64%</td></tr>
 <tr><td><b>HAL</b></td><td>29</td><td>76%</td><td>8</td><td>75%</td><td>24</td><td>71%</td><td style="color:{RED};">-₹36</td><td>13</td><td>85%</td><td style="color:{GREEN};">+₹245</td><td>7</td><td>86%</td><td>20</td><td>80%</td><td>10</td><td>60%</td></tr>
 <tr><td><b>BAJAJ-AUTO</b></td><td>28</td><td>82%</td><td>7</td><td>86%</td><td>19</td><td>84%</td><td style="color:{GREEN};">+₹2,486</td><td>16</td><td>81%</td><td style="color:{GREEN};">+₹980</td><td>13</td><td>69%</td><td>14</td><td>93%</td><td>8</td><td>88%</td></tr>
+<tr><td><b>SRF</b></td><td>26</td><td>73%</td><td>9</td><td>78%</td><td>18</td><td>72%</td><td style="color:{GREEN};">+₹233</td><td>17</td><td>76%</td><td style="color:{GREEN};">+₹180</td><td>10</td><td>40%</td><td>17</td><td>94%</td><td>8</td><td>75%</td></tr>
 <tr><td><b>MRF</b></td><td>31</td><td>90%</td><td>1</td><td>100%</td><td>24</td><td>92%</td><td style="color:{GREEN};">+₹1,898</td><td>8</td><td>88%</td><td style="color:{GREEN};">+₹2,279</td><td>10</td><td>100%</td><td>13</td><td>85%</td><td>9</td><td>89%</td></tr>
 <tr><td><b>ACC</b></td><td>30</td><td>90%</td><td>1</td><td>100%</td><td>14</td><td>86%</td><td style="color:{GREEN};">+₹4,797</td><td>17</td><td>94%</td><td style="color:{GREEN};">+₹6,449</td><td>13</td><td>85%</td><td>14</td><td>93%</td><td>4</td><td>100%</td></tr>
 <tr><td><b>HEROMOTOCO</b></td><td>23</td><td>70%</td><td>8</td><td>100%</td><td>10</td><td>80%</td><td style="color:{GREEN};">+₹1,658</td><td>21</td><td>76%</td><td style="color:{GREEN};">+₹1,840</td><td>8</td><td>75%</td><td>17</td><td>71%</td><td>6</td><td>100%</td></tr>
@@ -977,6 +985,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td><b>BALKRISIND</b></td><td>23</td><td>87%</td><td>5</td><td>100%</td><td>19</td><td>90%</td><td style="color:{GREEN};">+₹4,196</td><td>9</td><td>89%</td><td style="color:{GREEN};">+₹3,813</td><td>13</td><td>92%</td><td>10</td><td>90%</td><td>5</td><td>80%</td></tr>
 <tr><td><b>HINDUNILVR</b></td><td>25</td><td>72%</td><td>3</td><td>100%</td><td>14</td><td>86%</td><td style="color:{GREEN};">+₹4,133</td><td>14</td><td>64%</td><td style="color:{GREEN};">+₹630</td><td>9</td><td>78%</td><td>14</td><td>71%</td><td>5</td><td>80%</td></tr>
 <tr><td><b>DRREDDY</b></td><td>28</td><td>79%</td><td>0</td><td>—</td><td>10</td><td>80%</td><td style="color:{GREEN};">+₹2,214</td><td>18</td><td>78%</td><td style="color:{GREEN};">+₹2,468</td><td>6</td><td>33%</td><td>18</td><td>89%</td><td>4</td><td>100%</td></tr>
+<tr><td><b>HDFCAMC</b></td><td>19</td><td>74%</td><td>8</td><td>62%</td><td>16</td><td>69%</td><td style="color:{RED};">-₹489</td><td>11</td><td>73%</td><td style="color:{GREEN};">+₹159</td><td>10</td><td>70%</td><td>8</td><td>62%</td><td>9</td><td>78%</td></tr>
 <tr><td><b>SHREECEM</b></td><td>24</td><td>83%</td><td>3</td><td>67%</td><td>14</td><td>79%</td><td style="color:{GREEN};">+₹1,495</td><td>13</td><td>85%</td><td style="color:{GREEN};">+₹3,767</td><td>12</td><td>83%</td><td>9</td><td>78%</td><td>6</td><td>83%</td></tr>
 <tr><td><b>BAJFINANCE</b></td><td>26</td><td>81%</td><td>0</td><td>—</td><td>8</td><td>75%</td><td style="color:{GREEN};">+₹1,024</td><td>18</td><td>83%</td><td style="color:{GREEN};">+₹512</td><td>5</td><td>80%</td><td>14</td><td>79%</td><td>7</td><td>86%</td></tr>
 <tr><td><b>TRENT</b></td><td>23</td><td>83%</td><td>3</td><td>100%</td><td>20</td><td>80%</td><td style="color:{GREEN};">+₹1,740</td><td>6</td><td>100%</td><td style="color:{GREEN};">+₹5,146</td><td>10</td><td>70%</td><td>9</td><td>89%</td><td>7</td><td>100%</td></tr>
@@ -1006,40 +1015,85 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td><b>KOTAKBANK</b></td><td>17</td><td>82%</td><td>0</td><td>—</td><td>7</td><td>71%</td><td style="color:{RED};">-₹241</td><td>10</td><td>90%</td><td style="color:{GREEN};">+₹4,150</td><td>5</td><td>60%</td><td>10</td><td>90%</td><td>2</td><td>100%</td></tr>
 <tr><td><b>JUBLFOOD</b></td><td>17</td><td>71%</td><td>0</td><td>—</td><td>8</td><td>50%</td><td style="color:{RED};">-₹2,582</td><td>9</td><td>89%</td><td style="color:{GREEN};">+₹4,332</td><td>5</td><td>60%</td><td>10</td><td>80%</td><td>2</td><td>50%</td></tr>
 <tr><td><b>INDIAMART</b></td><td>16</td><td>88%</td><td>1</td><td>0%</td><td>8</td><td>88%</td><td style="color:{GREEN};">+₹5,442</td><td>9</td><td>78%</td><td style="color:{GREEN};">+₹5,750</td><td>6</td><td>67%</td><td>8</td><td>100%</td><td>3</td><td>67%</td></tr>
+<tr><td><b>OBEROIRLTY</b></td><td>8</td><td>75%</td><td>8</td><td>75%</td><td>6</td><td>83%</td><td style="color:{GREEN};">+₹4,070</td><td>10</td><td>70%</td><td style="color:{GREEN};">+₹1,638</td><td>5</td><td>60%</td><td>11</td><td>82%</td><td>0</td><td>—</td></tr>
+<tr><td><b>PIIND</b></td><td>9</td><td>67%</td><td>7</td><td>86%</td><td>8</td><td>62%</td><td style="color:{RED};">-₹2,497</td><td>8</td><td>88%</td><td style="color:{GREEN};">+₹2,944</td><td>6</td><td>67%</td><td>5</td><td>100%</td><td>5</td><td>60%</td></tr>
+<tr><td><b>TCS</b></td><td>0</td><td>—</td><td>16</td><td>69%</td><td>9</td><td>78%</td><td style="color:{GREEN};">+₹583</td><td>7</td><td>57%</td><td style="color:{RED};">-₹2,480</td><td>0</td><td>—</td><td>9</td><td>67%</td><td>7</td><td>71%</td></tr>
 <tr><td><b>PIDILITIND</b></td><td>15</td><td>87%</td><td>0</td><td>—</td><td>6</td><td>100%</td><td style="color:{GREEN};">+₹5,548</td><td>9</td><td>78%</td><td style="color:{GREEN};">+₹3,731</td><td>6</td><td>67%</td><td>9</td><td>100%</td><td>0</td><td>—</td></tr>
 <tr><td><b>NAUKRI</b></td><td>15</td><td>73%</td><td>0</td><td>—</td><td>9</td><td>67%</td><td style="color:{GREEN};">+₹2,285</td><td>6</td><td>83%</td><td style="color:{GREEN};">+₹5,411</td><td>8</td><td>75%</td><td>7</td><td>71%</td><td>0</td><td>—</td></tr>
 <tr><td><b>UBL</b></td><td>13</td><td>85%</td><td>1</td><td>100%</td><td>7</td><td>86%</td><td style="color:{GREEN};">+₹1,964</td><td>7</td><td>86%</td><td style="color:{GREEN};">+₹4,845</td><td>3</td><td>67%</td><td>11</td><td>91%</td><td>0</td><td>—</td></tr>
 <tr><td><b>INDUSINDBK</b></td><td>11</td><td>91%</td><td>0</td><td>—</td><td>3</td><td>100%</td><td style="color:{GREEN};">+₹10,108</td><td>8</td><td>88%</td><td style="color:{GREEN};">+₹6,210</td><td>3</td><td>100%</td><td>4</td><td>100%</td><td>4</td><td>75%</td></tr>
 <tr><td><b>SHRIRAMFIN</b></td><td>10</td><td>90%</td><td>1</td><td>100%</td><td>7</td><td>100%</td><td style="color:{GREEN};">+₹2,844</td><td>4</td><td>75%</td><td style="color:{GREEN};">+₹784</td><td>4</td><td>75%</td><td>6</td><td>100%</td><td>1</td><td>100%</td></tr>
 <tr><td><b>HAVELLS</b></td><td>8</td><td>75%</td><td>3</td><td>67%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+₹288</td><td>6</td><td>67%</td><td style="color:{GREEN};">+₹172</td><td>5</td><td>60%</td><td>4</td><td>75%</td><td>2</td><td>100%</td></tr>
-<tr><td><b>TIINDIA</b></td><td>0</td><td>—</td><td>11</td><td>82%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+₹2,093</td><td>6</td><td>83%</td><td style="color:{GREEN};">+₹2,957</td><td>4</td><td>50%</td><td>7</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>ICICIGI</b></td><td>10</td><td>90%</td><td>1</td><td>100%</td><td>8</td><td>100%</td><td style="color:{GREEN};">+₹4,479</td><td>3</td><td>67%</td><td style="color:{GREEN};">+₹403</td><td>5</td><td>80%</td><td>6</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>MAZDOCK</b></td><td>0</td><td>—</td><td>11</td><td>64%</td><td>4</td><td>50%</td><td style="color:{RED};">-₹3,220</td><td>7</td><td>71%</td><td style="color:{GREEN};">+₹1,246</td><td>1</td><td>100%</td><td>4</td><td>50%</td><td>6</td><td>67%</td></tr>
 <tr><td><b>SOLARINDS</b></td><td>0</td><td>—</td><td>11</td><td>82%</td><td>7</td><td>86%</td><td style="color:{GREEN};">+₹2,733</td><td>4</td><td>75%</td><td style="color:{GREEN};">+₹299</td><td>3</td><td>100%</td><td>3</td><td>67%</td><td>5</td><td>80%</td></tr>
+<tr><td><b>TIINDIA</b></td><td>0</td><td>—</td><td>11</td><td>82%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+₹2,093</td><td>6</td><td>83%</td><td style="color:{GREEN};">+₹2,957</td><td>4</td><td>50%</td><td>7</td><td>100%</td><td>0</td><td>—</td></tr>
 <tr><td><b>ADANIPORTS</b></td><td>8</td><td>75%</td><td>2</td><td>50%</td><td>6</td><td>67%</td><td style="color:{RED};">-₹300</td><td>4</td><td>75%</td><td style="color:{GREEN};">+₹2,854</td><td>2</td><td>50%</td><td>6</td><td>83%</td><td>2</td><td>50%</td></tr>
 <tr><td><b>M&M</b></td><td>4</td><td>100%</td><td>6</td><td>100%</td><td>5</td><td>100%</td><td style="color:{GREEN};">+₹2,568</td><td>5</td><td>100%</td><td style="color:{GREEN};">+₹2,431</td><td>2</td><td>100%</td><td>4</td><td>100%</td><td>4</td><td>100%</td></tr>
+<tr><td><b>OFSS</b></td><td>0</td><td>—</td><td>10</td><td>70%</td><td>4</td><td>75%</td><td style="color:{RED};">-₹1,958</td><td>6</td><td>67%</td><td style="color:{RED};">-₹4,320</td><td>1</td><td>100%</td><td>5</td><td>60%</td><td>4</td><td>75%</td></tr>
+<tr><td><b>KAYNES</b></td><td>0</td><td>—</td><td>10</td><td>70%</td><td>2</td><td>50%</td><td style="color:{RED};">-₹2,066</td><td>8</td><td>75%</td><td style="color:{RED};">-₹792</td><td>2</td><td>50%</td><td>4</td><td>75%</td><td>4</td><td>75%</td></tr>
 <tr><td><b>VOLTAS</b></td><td>7</td><td>86%</td><td>2</td><td>100%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+₹1,940</td><td>4</td><td>100%</td><td style="color:{GREEN};">+₹3,540</td><td>2</td><td>100%</td><td>4</td><td>100%</td><td>3</td><td>67%</td></tr>
 <tr><td><b>TATAELXSI</b></td><td>0</td><td>—</td><td>9</td><td>67%</td><td>1</td><td>0%</td><td style="color:{RED};">-₹10,942</td><td>8</td><td>75%</td><td style="color:{GREEN};">+₹1,396</td><td>3</td><td>100%</td><td>5</td><td>40%</td><td>1</td><td>100%</td></tr>
 <tr><td><b>LTM</b></td><td>0</td><td>—</td><td>9</td><td>100%</td><td>3</td><td>100%</td><td style="color:{GREEN};">+₹4,827</td><td>6</td><td>100%</td><td style="color:{GREEN};">+₹7,460</td><td>2</td><td>100%</td><td>4</td><td>100%</td><td>3</td><td>100%</td></tr>
 <tr><td><b>TATASTEEL</b></td><td>8</td><td>75%</td><td>0</td><td>—</td><td>3</td><td>67%</td><td style="color:{GREEN};">+₹97</td><td>5</td><td>80%</td><td style="color:{RED};">-₹113</td><td>1</td><td>0%</td><td>4</td><td>75%</td><td>3</td><td>100%</td></tr>
+<tr><td><b>GLENMARK</b></td><td>3</td><td>67%</td><td>5</td><td>80%</td><td>7</td><td>71%</td><td style="color:{GREEN};">+₹3,054</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹6,825</td><td>3</td><td>100%</td><td>4</td><td>75%</td><td>1</td><td>0%</td></tr>
 <tr><td><b>BDL</b></td><td>0</td><td>—</td><td>7</td><td>86%</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹6,368</td><td>5</td><td>80%</td><td style="color:{GREEN};">+₹3,729</td><td>3</td><td>100%</td><td>3</td><td>67%</td><td>1</td><td>100%</td></tr>
 <tr><td><b>CHOLAFIN</b></td><td>4</td><td>75%</td><td>2</td><td>100%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+₹3,123</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹22,249</td><td>4</td><td>75%</td><td>2</td><td>100%</td><td>0</td><td>—</td></tr>
-<tr><td><b>ADANIGREEN</b></td><td>0</td><td>—</td><td>6</td><td>100%</td><td>5</td><td>100%</td><td style="color:{GREEN};">+₹6,001</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹6,926</td><td>2</td><td>100%</td><td>1</td><td>100%</td><td>3</td><td>100%</td></tr>
 <tr><td><b>AUROPHARMA</b></td><td>5</td><td>60%</td><td>1</td><td>100%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+₹743</td><td>1</td><td>0%</td><td style="color:{RED};">-₹3,273</td><td>2</td><td>0%</td><td>4</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>ADANIGREEN</b></td><td>0</td><td>—</td><td>6</td><td>100%</td><td>5</td><td>100%</td><td style="color:{GREEN};">+₹6,001</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹6,926</td><td>2</td><td>100%</td><td>1</td><td>100%</td><td>3</td><td>100%</td></tr>
+<tr><td><b>MANKIND</b></td><td>0</td><td>—</td><td>6</td><td>83%</td><td>2</td><td>50%</td><td style="color:{RED};">-₹2,128</td><td>4</td><td>100%</td><td style="color:{GREEN};">+₹4,392</td><td>2</td><td>100%</td><td>3</td><td>100%</td><td>1</td><td>0%</td></tr>
 <tr><td><b>INFY</b></td><td>4</td><td>100%</td><td>1</td><td>0%</td><td>3</td><td>100%</td><td style="color:{GREEN};">+₹8,700</td><td>2</td><td>50%</td><td style="color:{RED};">-₹2,920</td><td>4</td><td>75%</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
 <tr><td><b>CIPLA</b></td><td>4</td><td>50%</td><td>1</td><td>100%</td><td>4</td><td>50%</td><td style="color:{RED};">-₹139</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹3,400</td><td>3</td><td>67%</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
 <tr><td><b>AUBANK</b></td><td>5</td><td>100%</td><td>0</td><td>—</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹10,338</td><td>3</td><td>100%</td><td style="color:{GREEN};">+₹8,502</td><td>3</td><td>100%</td><td>1</td><td>100%</td><td>1</td><td>100%</td></tr>
+<tr><td><b>BHARATFORG</b></td><td>5</td><td>60%</td><td>0</td><td>—</td><td>4</td><td>50%</td><td style="color:{GREEN};">+₹20</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹5,760</td><td>1</td><td>0%</td><td>3</td><td>67%</td><td>1</td><td>100%</td></tr>
+<tr><td><b>CONCOR</b></td><td>5</td><td>100%</td><td>0</td><td>—</td><td>4</td><td>100%</td><td style="color:{GREEN};">+₹13,809</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹14,220</td><td>4</td><td>100%</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
 <tr><td><b>AMBER</b></td><td>0</td><td>—</td><td>5</td><td>100%</td><td>3</td><td>100%</td><td style="color:{GREEN};">+₹6,381</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹7,790</td><td>1</td><td>100%</td><td>4</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>POLICYBZR</b></td><td>0</td><td>—</td><td>5</td><td>100%</td><td>4</td><td>100%</td><td style="color:{GREEN};">+₹4,569</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹4,196</td><td>0</td><td>—</td><td>3</td><td>100%</td><td>2</td><td>100%</td></tr>
+<tr><td><b>POWERINDIA</b></td><td>0</td><td>—</td><td>5</td><td>80%</td><td>4</td><td>75%</td><td style="color:{GREEN};">+₹2,755</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹8,036</td><td>0</td><td>—</td><td>3</td><td>67%</td><td>2</td><td>100%</td></tr>
 <tr><td><b>GODREJCP</b></td><td>4</td><td>50%</td><td>0</td><td>—</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹568</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹3,852</td><td>2</td><td>50%</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
+<tr><td><b>MFSL</b></td><td>4</td><td>25%</td><td>0</td><td>—</td><td>3</td><td>33%</td><td style="color:{RED};">-₹1,757</td><td>1</td><td>0%</td><td style="color:{RED};">-₹3,689</td><td>2</td><td>0%</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
+<tr><td><b>APLAPOLLO</b></td><td>0</td><td>—</td><td>4</td><td>75%</td><td>3</td><td>67%</td><td style="color:{RED};">-₹1,127</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹7,385</td><td>0</td><td>—</td><td>3</td><td>67%</td><td>1</td><td>100%</td></tr>
+<tr><td><b>BLUESTARCO</b></td><td>0</td><td>—</td><td>4</td><td>50%</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹1,740</td><td>2</td><td>50%</td><td style="color:{RED};">-₹3,542</td><td>2</td><td>50%</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
+<tr><td><b>COCHINSHIP</b></td><td>0</td><td>—</td><td>4</td><td>75%</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹5,345</td><td>2</td><td>50%</td><td style="color:{RED};">-₹4,952</td><td>0</td><td>—</td><td>3</td><td>67%</td><td>1</td><td>100%</td></tr>
 <tr><td><b>AXISBANK</b></td><td>3</td><td>100%</td><td>0</td><td>—</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹13,982</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹14,731</td><td>3</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
 <tr><td><b>TATACONSUM</b></td><td>3</td><td>67%</td><td>0</td><td>—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹4,922</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹1,921</td><td>1</td><td>100%</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
 <tr><td><b>SUNPHARMA</b></td><td>2</td><td>100%</td><td>1</td><td>100%</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹4,490</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹3,593</td><td>0</td><td>—</td><td>3</td><td>100%</td><td>0</td><td>—</td></tr>
 <tr><td><b>BHARTIARTL</b></td><td>1</td><td>100%</td><td>2</td><td>100%</td><td>3</td><td>100%</td><td style="color:{GREEN};">+₹3,859</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td>2</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>GODFRYPHLP</b></td><td>1</td><td>100%</td><td>2</td><td>100%</td><td>3</td><td>100%</td><td style="color:{GREEN};">+₹2,674</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td>1</td><td>100%</td><td>1</td><td>100%</td></tr>
+<tr><td><b>ICICIPRULI</b></td><td>3</td><td>33%</td><td>0</td><td>—</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹3,677</td><td>1</td><td>0%</td><td style="color:{RED};">-₹11,470</td><td>3</td><td>33%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>LICHSGFIN</b></td><td>3</td><td>67%</td><td>0</td><td>—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹8,014</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹3,300</td><td>0</td><td>—</td><td>3</td><td>67%</td><td>0</td><td>—</td></tr>
+<tr><td><b>SBICARD</b></td><td>3</td><td>67%</td><td>0</td><td>—</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>3</td><td>67%</td><td style="color:{GREEN};">+₹2,835</td><td>3</td><td>67%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>UPL</b></td><td>3</td><td>67%</td><td>0</td><td>—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹20,255</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹5,115</td><td>3</td><td>67%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>TECHM</b></td><td>0</td><td>—</td><td>3</td><td>67%</td><td>2</td><td>50%</td><td style="color:{RED};">-₹7,674</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹5,251</td><td>1</td><td>100%</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
+<tr><td><b>DMART</b></td><td>0</td><td>—</td><td>3</td><td>33%</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>3</td><td>33%</td><td style="color:{RED};">-₹7,607</td><td>0</td><td>—</td><td>2</td><td>50%</td><td>1</td><td>0%</td></tr>
 <tr><td><b>BAJAJHLDNG</b></td><td>0</td><td>—</td><td>3</td><td>100%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹4,971</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹6,294</td><td>0</td><td>—</td><td>3</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>BSE</b></td><td>0</td><td>—</td><td>3</td><td>67%</td><td>2</td><td>50%</td><td style="color:{GREEN};">+₹1,236</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹7,449</td><td>1</td><td>0%</td><td>2</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>CDSL</b></td><td>0</td><td>—</td><td>3</td><td>67%</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>3</td><td>67%</td><td style="color:{GREEN};">+₹1,162</td><td>1</td><td>100%</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
+<tr><td><b>KEI</b></td><td>0</td><td>—</td><td>3</td><td>33%</td><td>1</td><td>0%</td><td style="color:{RED};">-₹15,481</td><td>2</td><td>50%</td><td style="color:{RED};">-₹2,150</td><td>1</td><td>100%</td><td>2</td><td>0%</td><td>0</td><td>—</td></tr>
 <tr><td><b>HDFCLIFE</b></td><td>2</td><td>100%</td><td>0</td><td>—</td><td>2</td><td>100%</td><td style="color:{GREEN};">+₹11,758</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>0</td><td>—</td><td>2</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>IEX</b></td><td>2</td><td>100%</td><td>0</td><td>—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹25,454</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹18,284</td><td>2</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>HCLTECH</b></td><td>0</td><td>—</td><td>2</td><td>50%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹3,809</td><td>1</td><td>0%</td><td style="color:{RED};">-₹8,380</td><td>1</td><td>0%</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>SBILIFE</b></td><td>0</td><td>—</td><td>2</td><td>50%</td><td>1</td><td>0%</td><td style="color:{RED};">-₹12,056</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹8,336</td><td>0</td><td>—</td><td>2</td><td>50%</td><td>0</td><td>—</td></tr>
+<tr><td><b>ADANIENSOL</b></td><td>0</td><td>—</td><td>2</td><td>100%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹9,166</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹8,032</td><td>0</td><td>—</td><td>2</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>PHOENIXLTD</b></td><td>0</td><td>—</td><td>2</td><td>50%</td><td>2</td><td>50%</td><td style="color:{RED};">-₹2,386</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>1</td><td>0%</td></tr>
 <tr><td><b>ICICIBANK</b></td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹6,907</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
 <tr><td><b>RECLTD</b></td><td>1</td><td>100%</td><td>0</td><td>—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹7,970</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
 <tr><td><b>BPCL</b></td><td>1</td><td>100%</td><td>0</td><td>—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹4,757</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
 <tr><td><b>DABUR</b></td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹9,438</td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
 <tr><td><b>DLF</b></td><td>1</td><td>100%</td><td>0</td><td>—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹10,602</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>BIOCON</b></td><td>1</td><td>0%</td><td>0</td><td>—</td><td>1</td><td>0%</td><td style="color:{RED};">-₹7,756</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>0%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>HINDPETRO</b></td><td>1</td><td>0%</td><td>0</td><td>—</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>0%</td><td style="color:{RED};">-₹2,585</td><td>1</td><td>0%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>INDUSTOWER</b></td><td>1</td><td>0%</td><td>0</td><td>—</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>0%</td><td style="color:{RED};">-₹10,455</td><td>1</td><td>0%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>RBLBANK</b></td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹26,618</td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>HYUNDAI</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹7,623</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>LAURUSLABS</b></td><td>0</td><td>—</td><td>1</td><td>0%</td><td>1</td><td>0%</td><td style="color:{RED};">-₹20,910</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>0%</td><td>0</td><td>—</td><td>0</td><td>—</td></tr>
+<tr><td><b>KFINTECH</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹11,158</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>PAYTM</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹1,665</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>RADICO</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹3,980</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>PRESTIGE</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹3,596</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>SUPREMEIND</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹10,029</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>UNITDSPR</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹2,020</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
+<tr><td><b>WAAREEENER</b></td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td><td style="color:{TEXT_DIM};">—</td><td>1</td><td>100%</td><td style="color:{GREEN};">+₹3,874</td><td>0</td><td>—</td><td>1</td><td>100%</td><td>0</td><td>—</td></tr>
 </table></div>
 {dim("BC = bear call (fade of an up-break) · BP = bull put (fade of a down-break) · ₹/tr = actual net ÷ trades, both windows pooled, corrected rupee scale · v2/v1/v0 = each strategy&#39;s own record on the name.")}
 
@@ -1051,7 +1105,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "keeping the win rate near 80%.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>217 IS · 55 OOS</td><td>78.8% / 83.6%</td><td>+₹6,274</td><td>−₹9,645</td><td>0.65 : 1</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>224 IS · 79 OOS</td><td>78.6% / 83.5%</td><td>+₹5,558</td><td>−₹8,363</td><td>0.66 : 1</td></tr>
 <tr><td>Stock v1</td><td>25,978</td><td>356 IS · 186 OOS</td><td>80.9% / 83.3%</td><td>+₹4,015</td><td>−₹9,020</td><td>0.45 : 1</td></tr>
 <tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>237 IS · 90 OOS</td><td>83.1% / 80.0%</td><td>+₹3,814</td><td>−₹13,199</td><td>0.29 : 1</td></tr>
 <tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td>+₹1,202</td><td>−₹6,274</td><td>0.2 : 1</td></tr>
@@ -1060,7 +1114,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL RESEARCH</b></td><td><b>~287,000 signals/trades</b></td><td><b>~2,500 analysed</b></td><td colspan="4"><b>56 written studies · 106 runnable scripts · 2019 → 2026</b></td></tr>
 </table>
 {dim("Read the win:loss column, not just the win rate. <b>Every book loses more on a loser than it makes "
-     "on a winner</b> — 0.58:1 for v2 down to 0.27:1 for v0. That is normal for selling credit spreads and it "
+     "on a winner</b> — 0.66:1 for v2 down to 0.27:1 for v0. That is normal for selling credit spreads and it "
      "is exactly why the win rate has to stay high: v0 wins 79.6% of its trades out-of-sample and still only "
      "clears ₹335 each, so a few points of win rate would put it underwater. A high win rate with a bad payoff "
      "ratio is the illusion the 227,000-trade sweep was run to expose: a 0.15%-target bot prints 83.6% win and "
@@ -1080,7 +1134,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {res("<b>Nearer expiry buys liquidity and loses premium — both effects are real.</b> Across the whole DTE grid, candidates killed by the ₹50 premium floor outnumber those killed by open interest about eight to one. Shortening from 25 days to 3 costs ~19,000 extra premium rejections and saves ~19,000 open-interest rejections. The net optimum lands differently per book, because v2's 2-OTM/width-4 and v1's 1-OTM/width-3 price time value differently.")}
 {res("<b>Open interest: the buckets decay the wrong way, and it is unresolved.</b> In-sample, v2 pays +38.2% at 2–5 lots of open interest and <b>+2.4% at 25+</b> — the thinnest contracts pay most and the most liquid pay almost nothing. Either illiquid marks are stale and flattering the result, or illiquid names genuinely carry richer premium. The out-of-sample window decides it, because an Upstox candle exists only for a contract that actually traded. The live floor stays at 'open interest greater than zero' until then. File: DEPLOYED_EVIDENCE_AUDIT.md §7")}
 {res("<b>The harness of record, after six corrections.</b> Legs joined by DATE; v1 scans Donchian-10 only and stands down while v2 holds a name; spot derived from the option chain by put-call parity, because split-adjusted closes against unadjusted strike ladders were fabricating deep-ITM trades; each book skips a name it already holds open; open interest required on BOTH legs at entry AND on every exit-check day; and expiry settled from each option's own closing price. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
-{res("<b>In-sample, median cohort (c/w 0.40–0.50), 2019 → Sep-2024, corrected rupee scale, 116-name basis.</b> v2 78.6% win · +22.0% on margin · ₹2,733 a trade · 6 of 6 years. v1 79.1% · +10.3% · ₹2,016 · 6 of 6. v0 83.1% · +14.4% · ₹3,460 · 5 of 6. The out-of-sample window is being re-measured on the corrected harness; its previous figures were withdrawn rather than left on screen.")}
+{res("<b>In-sample, median cohort (c/w 0.40–0.50), 2019 → Sep-2024, corrected rupee scale, 116-name basis.</b> v2 78.6% win · +22.0% on margin · ₹2,624 a trade · 6 of 6 years. v1 80.9% · +13.1% · ₹1,127 · 6 of 6. v0 84.7% · +15.2% · ₹1,807 · 5 of 6. The out-of-sample window is being re-measured on the corrected harness; its previous figures were withdrawn rather than left on screen.")}
 {res("<b>Open interest does NOT predict returns.</b> Bucketed in-sample by the binding leg's open interest: v2 pays +22.1% at 5–10 lots, +20.8% at 10–25, and <b>−1.2% at 25+</b> — its most liquid bucket is its worst, on 63 trades at a 68.3% win rate. v1 and v0 are equally unordered. So there is no return-based case for any lot threshold; the live floor is 1 lot, which excludes untraded contracts and claims nothing more.")}
 {res("<b>No book has a working stop, and none can.</b> A stop priced as a multiple of the credit is unreachable above c/w 1/3, because a vertical can never cost more than its width. At c/w 0.40 a 3× stop sits at 1.2× the width while full loss arrives at 1.0×. Live had already disabled it; the UI and the harness had both been describing a stop that could never fire.")}
 {res("<b>The take-profit level does not carry the edge.</b> Swept 30/40/50/60/70 on both windows: v2 is flat across the whole range, and v1's slope INVERTS between windows — lower is better in-sample, higher is better out-of-sample — which is what a parameter with no information looks like. Deployed settings stay: v2 TP-50, v1 TP-40, v0 TP-40.")}
@@ -1262,7 +1316,7 @@ Paper forward-test only. For educational use. Not financial advice.
 {p("<b>BUY strategies:</b> the PM row gives the exact BUY — e.g. 'BUY RELIANCE 1400 CE @ Rs X'. Place it in "
    "Upstox; exit at the shown target/stop. <b>Credit spreads (SELL):</b> place <b>both legs together</b> — "
    "the SELL row first (you receive the credit), the BUY row as the hedge (caps the loss). Read the strikes, "
-   "type and premiums straight off the two rows. Hold to expiry unless the stop (2× credit) triggers. "
+   "type and premiums straight off the two rows. Hold to expiry or the take-profit — NO stop; the bought wing caps the loss"
    "<b>Monthly futures (BUY FUT):</b> buy 1 lot of the front-month future named in the row; exit "
    "market-on-close the day the close crosses the TP or SL shown in the AMOUNT column, else hold to "
    "expiry. PAPER-ONLY at current capital — the book needs ~₹15L to trade for real.")}
@@ -2038,7 +2092,7 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         try:
             self._fill_swing_table(self.sw_stk2, STOCKCR2_BOOK, self.sw_stk2_stats, book_label="v2")
             if hasattr(self, "sw_v0"):
-                self._fill_swing_table(self.sw_v0, STOCKV0_BOOK, self.sw_v0_stats, book_label="T2")
+                self._fill_swing_table(self.sw_v0, STOCKV0_BOOK, self.sw_v0_stats, book_label="v0")
             self._fill_swing_table(self.sw_idx, SWING_BOOK, self.sw_idx_stats)
             self._fill_swing_table(self.sw_stk, STOCKCR_BOOK, self.sw_stk_stats, book_label="v1")
         except Exception as e:

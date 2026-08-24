@@ -302,9 +302,14 @@ class EngineRunner:
         harness-of-record row files folded into data/symbol_history.json (regenerate after any
         re-run). Missing name -> empty string, never a crash."""
         try:
-            if not hasattr(self, "_symhist"):
-                self._symhist = json.load(open(os.path.join(DATA_DIR, "symbol_history.json")))
-            h = self._symhist.get(sym)
+            _shp = os.path.join(DATA_DIR, "symbol_history.json")
+            _mt = os.path.getmtime(_shp)
+            if getattr(self, "_symhist_mt", None) != _mt:
+                self._symhist = json.load(open(_shp)); self._symhist_mt = _mt   # reload on rebuild
+
+            import html as _html
+            h = self._symhist.get(sym) or self._symhist.get(_html.unescape(str(sym)))
+            sym = _html.escape(_html.unescape(str(sym)))   # M&M: look up raw, render escaped
             if not h:
                 return ""
             def line(lbl, d):

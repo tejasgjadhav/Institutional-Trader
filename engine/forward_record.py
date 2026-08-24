@@ -82,14 +82,15 @@ def record_entry(book, pos, spread_pct=None):
         with _conn() as c:
             c.execute("""INSERT OR REPLACE INTO fills
                 (id, book, symbol, side, entry_ts, entry_date, expiry, short_strike, long_strike,
-                 width, lot, num_lots, qty, credit, cw, spread_pct, margin_rs, status)
-                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'OPEN')""",
+                 width, lot, num_lots, qty, credit, cw, spread_pct, margin_rs, status, advisory)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'OPEN',?)""",
                 (pos.get("id"), book, pos.get("symbol"), pos.get("side"),
                  datetime.now().isoformat(timespec="seconds"), pos.get("entry_date"), pos.get("expiry"),
                  pos.get("short_strike"), pos.get("long_strike"), width,
                  pos.get("lot"), pos.get("num_lots"), qty, credit,
                  pos.get("credit_width"), spread_pct,
-                 ((width - (credit or 0)) * qty) if width else None))
+                 ((width - (credit or 0)) * qty) if width else None,
+                 1 if pos.get("advisory") else 0))
     except Exception as e:
         logger.warning(f"forward_record.record_entry: {e}")
 
@@ -220,6 +221,22 @@ def sync():
                         c.execute("UPDATE fills SET pnl_rs=?, exit_cost=? WHERE id=? AND status='CLOSED'",
                                   ((p.get("pnl_pts") or 0) * int(p.get("qty") or 0),
                                    p.get("exit_cost"), pid))
+            # ORPHAN GUARD (audit 24-Aug-2026): a fill inserted at entry whose position JSON was
+            # never saved (crash between record_entry and _save_book) would sit OPEN forever. Any
+            # OPEN fill older than a day with no JSON counterpart is marked ORPHAN, out of every
+            # headline query, loudly.
+            known = set()
+            for _, fn in BOOK_FILES.items():
+                fp = os.path.join(os.path.dirname(DB), fn)
+                try:
+                    known |= {q.get("id") for q in _json.load(open(fp))}
+                except Exception:
+                    pass
+            for (oid,) in c.execute("""SELECT id FROM fills WHERE status='OPEN'
+                                       AND entry_ts < datetime('now','-1 day')""").fetchall():
+                if oid not in known:
+                    c.execute("UPDATE fills SET status='ORPHAN' WHERE id=?", (oid,))
+                    logger.warning(f"forward_record: fill {oid} has no book counterpart — marked ORPHAN")
     except Exception as e:
         logger.warning(f"forward_record.sync: {e}")
     return n_new, n_closed
