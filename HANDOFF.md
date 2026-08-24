@@ -3210,3 +3210,19 @@ Purge: all four retired systems verified GATED at entry (3-Family/ORB runner:113
 monthly_call:484); swing resolver intentionally alive for legacy positions (0 open). No live-path
 deletions needed; the editable-structure hazard (PRIORITY_STOCKS) is gone. P&L: CONSOLIDATED_PNL.md
 updated for 122 names — stock ₹18,483 + expansion est ₹6–8k → plan-on-80% ≈ ₹24,300/mo. UI row added.
+
+### 24-Aug · per-name Telegram history block: relabelled "historical expected profit as per
+backtesting" (bold), still GATED OFF pending user approval (TG_SYMBOL_HISTORY_ENABLED).
+
+### 24-Aug · Telegram per-name block: final form approved-pending. Whole last line now one bold
+run ("TORNTPHARM bear calls in the past: 16 trades · 81% win · actual profit ₹+33,956"). Still
+gated (TG_SYMBOL_HISTORY_ENABLED absent=False). Awaiting his "go" to flip+restart+push.
+
+## 2026-08-24 08:0x · UNIVERSE PRUNED 122 -> 114 on the user's validation principle
+
+His words: "entire system is built on backtest we dont want to waste efforts on something which is
+not validated in the past." Removed all EIGHT names with net-negative records and no positive
+validation in either window: HCLTECH, SBILIFE (negative both windows), then OFSS, TCS, TECHM,
+HDFCBANK, DMART, JINDALSTEL. Zero-trade names stay (no evidence either way, zero cost, gates
+decide). IT-sector pattern noted: HCLTECH/TCS/TECHM/OFSS all read weak for the fade. Engine
+restarted clean. Telegram per-name block STILL GATED awaiting his go.

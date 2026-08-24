@@ -32,8 +32,8 @@ PAPER_TRADING_MIN_PF = 1.0
 UNIVERSE = [
     # Reverted to the proven 94 (beat mcap-100 head-to-head 67% vs 61% on same window),
     # + 5 persistent-winner priority names not already in it + ETERNAL (ex-ZOMATO).
-    "TCS.NS", "INFY.NS", "WIPRO.NS", "TECHM.NS", "MPHASIS.NS",
-    "COFORGE.NS", "PERSISTENT.NS", "OFSS.NS", "HDFCBANK.NS", "ICICIBANK.NS", "KOTAKBANK.NS",
+    "INFY.NS", "WIPRO.NS", "MPHASIS.NS",
+    "COFORGE.NS", "PERSISTENT.NS", "ICICIBANK.NS", "KOTAKBANK.NS",
     "SBIN.NS", "AXISBANK.NS", "INDUSINDBK.NS", "FEDERALBNK.NS", "IDFCFIRSTB.NS", "BANDHANBNK.NS",
     "BANKBARODA.NS", "PNB.NS", "UNIONBANK.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS", "HDFCLIFE.NS",
     "CHOLAFIN.NS", "MUTHOOTFIN.NS", "SHRIRAMFIN.NS", "RECLTD.NS", "PFC.NS",
@@ -46,8 +46,8 @@ UNIVERSE = [
     "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "TATACONSUM.NS", "ASIANPAINT.NS",
     "GODREJCP.NS", "MARICO.NS", "DABUR.NS", "PIDILITIND.NS", "SUNPHARMA.NS", "DRREDDY.NS",
     "CIPLA.NS", "DIVISLAB.NS", "APOLLOHOSP.NS", "LUPIN.NS", "TORNTPHARM.NS", "AUROPHARMA.NS",
-    "ZYDUSLIFE.NS", "TITAN.NS", "DMART.NS", "TRENT.NS", "JUBLFOOD.NS", "BHARTIARTL.NS",
-    "NAUKRI.NS", "INDIGO.NS", "DLF.NS", "GODREJPROP.NS", "JINDALSTEL.NS", "INDIANB.NS",
+    "ZYDUSLIFE.NS", "TITAN.NS", "TRENT.NS", "JUBLFOOD.NS", "BHARTIARTL.NS",
+    "NAUKRI.NS", "INDIGO.NS", "DLF.NS", "GODREJPROP.NS", "INDIANB.NS",
     "AUBANK.NS", "BAJAJHLDNG.NS", "TATAELXSI.NS", "ETERNAL.NS",
     # === TIER-5 EXPANSION (2026-07-29, user-approved) — 13 F&O names that clear the c/w>=0.40
     # gate and ADD signals without diluting: blend 5.78->7.56 trades/mo (+31%), 84.1->85.5% win,
@@ -69,7 +69,13 @@ UNIVERSE = [
 # HCLTECH and SBILIFE REMOVED 24-Aug-2026 (user): the only two names negative in BOTH windows
 # (HCLTECH IS -14,583/OOS -4,571 on 7 trades; SBILIFE -9,597/-3,720 on 8). Thin samples, but the
 # user does not want names with an all-negative record; the gates rarely admitted them anyway.
-assert len(UNIVERSE) == 120, "Universe: 100 base + 13 Tier-5 + 9 Expansion-2 - 2 removed (24-Aug-2026)"
+# SIX MORE REMOVED 24-Aug-2026 (user: "entire system is built on backtest we dont want to waste
+# efforts on something which is not validated in the past"): every name whose record is net-negative
+# with NO positive validation in either window. OFSS (IS +28,626 -> OOS -33,752 on n=10, the same
+# demonstrated-failure pattern that kept HDFCAMC out), TCS (66 trades, pooled -10,984), TECHM (17,
+# -9,171), HDFCBANK (-18,077, never positive), DMART (-22,822), JINDALSTEL (-21,360). Names with
+# ZERO trades ever stay: they cost nothing, carry no negative evidence, and the gates decide.
+assert len(UNIVERSE) == 114, "Universe: 122 admitted - 8 removed on negative records (24-Aug-2026)"
 
 # PRIORITY_STOCKS REMOVED (24-Aug-2026, user): it belonged to the retired 3-Family gates system
 # (SCAN_3FAMILY_ENABLED = False) and only star-flagged names in the read-only UI. The stock credit
