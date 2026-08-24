@@ -151,3 +151,52 @@ RULE_DIP_RSI_LEN    = 2      # RSI lookback, sessions
 RULE_DIP_RSI_MAX    = 10     # buy below this RSI reading
 RULE_DIP_TREND_LEN  = 200    # only buy while the close is above this average
 RULE_GAP_MIN_PCT    = 1.0    # buy the open after a gap down of at least this percent
+
+
+# ---------------------------------------------------------------------------
+# THE THREE-FAMILY SIGNAL SYSTEM — engine/three_family.py
+#
+# The system the book describes. Three families vote, a weighted alpha-z decides, and an
+# opening-range break on a volume surge confirms. It was tested on real five-minute history
+# back to 2019: 19,454 signals, 50.6% hit, +0.107% per trade on direction, positive every
+# year. Bought as an option over a full year on real premiums it came in at -1.0%.
+#
+# It is RETIRED. The directional edge is real and it is smaller than the cost of expressing
+# it with a bought option. Nothing in this repository calls it. The weights and thresholds
+# below are the ones that produced the numbers above, published so you can reproduce them.
+# See studies/THE_THREE_FAMILY_SYSTEM.md.
+# ---------------------------------------------------------------------------
+ALPHA_Z_THRESHOLD   = 0.55   # |alpha-z| must be strictly greater than this
+MIN_FAMILIES_AGREE  = 2      # at least two of the three families must point the same way
+MARKET_ALIGN_FILTER = True   # only go long with the index up, short with it down
+MOMENTUM_BARS       = 12
+ORB_BARS            = 6      # opening range is the first six 5-minute bars, 09:15 to 09:44
+ORB_LOOKBACK_MINUTES = 6     # kept for backward compatibility; it is a bar count
+ORB_BREAKOUT_THRESHOLD_PCT = 0.01   # the close must clear the range by this percent
+VOLUME_SURGE_MULTIPLIER = 1.2       # the latest bar needs this multiple of recent volume
+VOL_LOOKBACK_BARS   = 10            # the recent-volume baseline, in bars
+VOLUME_BENCHMARK_MODE = "rolling"
+
+FAMILY_WEIGHTS = {
+    "TREND": {
+        "weight": 0.72,
+        "factors": ["momentum", "trend_quality", "microstructure"],
+        "factor_weights": {"momentum": 0.37, "trend_quality": 0.24, "microstructure": 0.04},
+    },
+    "FLOW": {
+        "weight": 0.18,
+        "factors": ["pcr_ratio", "macro_regime"],
+    },
+    "EVENT": {
+        # Down-weighted after a 30-day test showed keyword sentiment did not lift the win rate.
+        "weight": 0.10,
+        "factors": ["news_sentiment", "corporate_events"],
+    },
+}
+
+# How the signal was expressed when it traded: buy one strike out of the money, book at
+# +10 percent on the premium, cut at -15 percent. The tighter stop beat -20 percent.
+OPTION_STRIKE_OFFSET = 1
+PREMIUM_TARGET_PCT   = 10.0
+PREMIUM_STOP_PCT     = 15.0
+MIN_OPTION_PREMIUM   = 30.0   # skip cheap options: they bleed and their spreads are ~3x wider

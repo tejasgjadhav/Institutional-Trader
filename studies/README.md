@@ -65,6 +65,7 @@ in the notes. Neither is recommended and the author trades neither.
 |---|---|
 | [VWAP_EXAMPLE_STRATEGY.md](VWAP_EXAMPLE_STRATEGY.md) | The worked VWAP example. 2,362 signals over 4,860 sessions: mean −0.047% per trade on the underlying, t = −2.69. It loses. |
 | [THREE_SIMPLE_RULES_TESTED.md](THREE_SIMPLE_RULES_TESTED.md) | A crossover, a dip buy and a gap fill, over eight years with costs. One convincing mean, one coin, one that wins often and pays nothing. |
+| [THE_THREE_FAMILY_SYSTEM.md](THE_THREE_FAMILY_SYSTEM.md) | The system the book describes. 19,454 signals, +0.107% per signal on direction, positive every year since 2019, and −1.0% once you buy the option. A real edge that costs more to trade than it earns. |
 
 Study notes. Not investment advice. If you trade on anything here you do so at your own risk,
 and Tejas Jadhav accepts no responsibility for your trades. See [DISCLAIMER.md](../DISCLAIMER.md).

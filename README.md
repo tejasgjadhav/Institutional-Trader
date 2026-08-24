@@ -40,6 +40,7 @@ with costs charged. See [studies/THREE_SIMPLE_RULES_TESTED.md](studies/THREE_SIM
 | **Indicators** | `engine/indicators.py` — moving averages, VWAP, ATR, channels, pivots, RSI, MACD |
 | **The example book** | `engine/example_vwap.py` — a complete strategy, end to end |
 | **Three simple rules** | `engine/example_daily_rules.py` — a crossover, a dip buy and a gap fill |
+| **The book's signal system** | `engine/three_family.py` — the three-family scorer, retired and measured ([study](studies/THE_THREE_FAMILY_SYSTEM.md)) |
 | **The dashboard** | `engine/ui_terminal.py` — read-only; the engine writes, this reads |
 | **The notes** | `studies/` — how the research was run and what it concluded |
 
