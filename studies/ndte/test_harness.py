@@ -99,7 +99,11 @@ check("the final bar can produce a signal",
       str(u.index[-1])[:10] in [d for d,_,_,_ in H.breakout_days(u)], True)
 
 print("=== GOLDEN FILE: in-sample answer is locked ===")
-GOLD = {"v2": (217, 27.2), "v1": (359, 10.3), "v0": (237, 14.4)}   # median cohort, 20-Aug-2026
+# GOLD updated 24-Aug-2026: the 20-Aug values (v2 217/+27.2) predate three deliberate changes -
+# the split-name rupee-scale fix (points now converted at each day's own price scale), the
+# universe prune to 114 (the eight removed names' trades left the basis), and rupee reweighting
+# that follows from both. Counts moved 217->200 etc. because the pruned names are gone.
+GOLD = {"v2": (200, 23.2), "v1": (335, 12.5), "v0": (217, 15.7)}   # median cohort, 24-Aug-2026
 try:
     rows = json.load(open("research/deployed_bt_is_rows.json"))
     for bk, (n_want, rom_want) in GOLD.items():

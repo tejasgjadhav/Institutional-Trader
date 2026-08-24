@@ -3252,3 +3252,10 @@ OOS unaffected (drift guard rejects scale-mismatched entries). Both IS runs re-r
 (research/rerun_is_scale.log); on DONE-BOTH: update golden test, rebuild symbol_history, recompute
 book aggregates + P&L, update studies/UI/Telegram base numbers, push. Suspect list beyond NESTLEIND:
 EICHERMOT, BAJAJFINSV, DRREDDY, NAUKRI, AXISBANK (any pre-2025 split/bonus name).
+
+## 24-Aug ~09:0x · SPLIT FIX CASCADE COMPLETE — true basis everywhere
+Totals: IS 1,253 · OOS 412 · 1,665 (bear calls 946 + bull puts 719 = 1,665, cross-checked). My own
+1,792 was wrong (summed 127 IS trades of non-admitted outsiders); the side-split table caught it.
+Corrected surfaces: TG evidence blocks (6/6), CONSOLIDATED_PNL, golden test (v2 200/23.2, v1
+335/12.5, v0 217/15.7 main-only), symbol_history rebuilt (162 names, corrected rupees). Engine NOT
+restarted (loads history lazily at 15:36; TG evidence strings need restart -> do after 09:45).

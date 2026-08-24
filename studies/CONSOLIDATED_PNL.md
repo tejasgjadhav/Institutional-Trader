@@ -124,3 +124,22 @@ out-of-sample. Removing them RAISES the measured stock-book base by roughly **+�
 | **plan on 80%** | ₹22,700 | **₹25,900** | ₹30,200 |
 
 Estimates until the forward record confirms; the spread gate taxes them first.
+
+## 24-Aug-2026 (final) — corrected rupee scale, 114-name basis, expansion folded in
+
+The split-name rupee fix (NESTLEIND +63,490 → +3,172/trade) plus the prune re-based every rupee
+figure. **Totals: 1,253 IS trades · 412 OOS trades = 1,665** — universe names only (an earlier
+draft said 1,792 by wrongly summing the 127 IS trades of NON-admitted expansion candidates; the
+name-wise side-split table caught it, since 946 bear calls + 719 bull puts = 1,665). Median
+cohort, deployed universe:
+
+| | IS | OOS |
+|---|---|---|
+| v2 | 217 tr · 79.3% · +23.3% · ₹2,733/tr | 78 tr · 83.3% · +27.0% · ₹3,276/tr |
+| v1 | 354 tr · 80.8% · +12.9% · ₹1,115/tr | 183 tr · 83.1% · +16.2% · ₹1,799/tr |
+| v0 | 227 tr · 85.0% · +15.2% · ₹1,823/tr | 96 tr · 82.3% · +7.6% · ₹1,038/tr |
+
+**Stock books measured: IS ₹21,236/mo · OOS ₹30,417/mo.** The earlier planning figure ₹25,500/mo
+sits between the two windows; it stands. Earlier rupee figures (v2 ₹5,798/trade etc.) were inflated
+by split names carrying today's lot on yesterday's points; ROM percentages were never affected in
+ratio, only in pooled weighting.
