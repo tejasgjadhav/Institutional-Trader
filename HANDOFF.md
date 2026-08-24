@@ -3316,3 +3316,11 @@ note rewritten (+22.0 IS vs +27.0 OOS — no coincidence story). CONSOLIDATED_PN
 (+₹6–8k/+₹7–10k) removed from the money table — ICICIGI/PIIND are inside the measured numbers, so
 estimates on top were double-telling. One dim note remains explaining the only special handling
 (advisory tag on their weak-side fills).
+
+## 24-Aug 14:2x · FOUR PARALLEL AUDITS RUNNING (engine/UI/backtest/integration). UI landed first:
+C1 money TOTAL wrong (rows sum 36,798, printed 35,916; plan-80% wrong too); C2 name-wise table
+row-set stale (85 of 133 names — ICICIGI/PIIND missing); H1-H4 cross-tab contradictions (old lines
+at :1055-1064,:1083, PM ~2.2/mo, NIFTY money row mixes live-73-trade record with backtest rates);
+H5 STUDIES tab renders once at startup, never refreshes; H6 README still instructs a 2x stop; M:
+5.3s GUI block on locked DB, v0 log column mislabelled "T2", unguarded refresh chain :1981.
+Fixing UI now (viewer-only, no freeze constraint); engine/backtest fixes await their audits.
