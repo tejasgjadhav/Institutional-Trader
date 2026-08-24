@@ -3226,3 +3226,6 @@ validation in either window: HCLTECH, SBILIFE (negative both windows), then OFSS
 HDFCBANK, DMART, JINDALSTEL. Zero-trade names stay (no evidence either way, zero cost, gates
 decide). IT-sector pattern noted: HCLTECH/TCS/TECHM/OFSS all read weak for the fade. Engine
 restarted clean. Telegram per-name block STILL GATED awaiting his go.
+
+### 24-Aug 08:1x · SHIPPED: per-name Telegram block LIVE (flag ON, sample delivered to Telegram);
+universe 114 deployed; P&L updated in CONSOLIDATED_PNL.md + UI (plan-on-80% ≈ ₹25,900/mo).

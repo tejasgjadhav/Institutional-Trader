@@ -909,7 +909,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
 <tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>470</b></td><td><b>~21.7/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹24,943</b></td></tr>
-<tr><td>Expansion-2 · 9 names (24-Aug)</td><td colspan="6" style="color:{TEXT_DIM};">estimate +₹6–8k/mo (IS +₹4.3k · OOS floor +₹10.5k) — forward record decides; IS-blind five on probation</td><td><b>+₹6–8k</b></td></tr>
+<tr><td>Universe 24-Aug: +9 admitted · −8 pruned (net 114)</td><td colspan="6" style="color:{TEXT_DIM};">expansion est +₹6–8k/mo · prune adds back ~₹0.7–3.9k/mo (eight never-validated names removed) · plan-on-80% ≈ ₹25,900/mo — forward record decides</td><td><b>+₹7–10k</b></td></tr>
 <tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹19,955</b></td></tr>
 </table>
 {dim("<b>v0 is the exception and the one to watch.</b> It earns +14.4% in-sample but only +3.0% "

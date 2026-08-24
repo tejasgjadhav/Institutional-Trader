@@ -104,3 +104,23 @@ expectancy; the live spread gate takes its cut first, the OOS window is one favo
 the defence/manufacturing entrants, and the IS-blind five are on probation by construction. The
 forward-record DB tags their trades from day one; the 30-trade rule is unchanged and the expansion
 does not reset its counter.
+
+## 24-Aug-2026 (later) — pruned to 114 on the validation principle
+
+Eight names removed the same day ("we dont want to waste efforts on something which is not
+validated in the past"): HCLTECH, SBILIFE (negative both windows), OFSS, TCS, TECHM, HDFCBANK,
+DMART, JINDALSTEL (net-negative, never validated positive). Four of eight are IT names — the fade
+reads structurally weak in that sector.
+
+**Impact on the measured base:** the eight contributed −₹690/mo in-sample and −₹3,939/mo
+out-of-sample. Removing them RAISES the measured stock-book base by roughly **+₹0.7–3.9k/mo**
+(centre ~+₹2k). Nothing else changes: the expansion increment stands at +₹6–8k/mo.
+
+**Updated totals at 1 lot (114 names):**
+| | conservative | planning | optimistic |
+|---|---|---|---|
+| stock books | ₹23,500 | **₹27,500** | ₹32,900 |
+| + index books | ₹28,400 | **₹32,400** | ₹37,800 |
+| **plan on 80%** | ₹22,700 | **₹25,900** | ₹30,200 |
+
+Estimates until the forward record confirms; the spread gate taxes them first.

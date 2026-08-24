@@ -295,7 +295,7 @@ class EngineRunner:
                       "Educational signals · invest at your own risk · consult a SEBI-registered advisor.")
     _TG_SIDE = {"BEAR_CALL": "BEAR CALL SPREAD", "BULL_PUT": "BULL PUT SPREAD", "BUY_FUT": "BUY FUTURES"}
 
-    def _sym_history(self, sym):
+    def _sym_history(self, sym, side=""):
         """Per-name backtest history line for the signal message (user request, 24-Aug-2026):
         when the 15:36 scan names a stock, say how THAT stock has traded historically in both
         windows - trades, win rate, average profit and average loss per trade. Data is the
@@ -314,9 +314,59 @@ class EngineRunner:
                 aw = f"₹{d['avg_win']:+,.0f}" if d.get("avg_win") is not None else "no win"
                 return (f"• {lbl}: <b>{d['n']}</b> trades · <b>{d['win']:.0f}%</b> win · "
                         f"avg profit {aw} · avg loss {al} per trade")
-            return ("\n📜 <b>" + sym + " — this stock's own backtest record</b>\n"
+            # POOLED EXPECTANCY (user, 24-Aug-2026): weight each window's win rate by its trade
+            # count (e.g. 18/29 x 72% + 11/29 x 73%), pool avg win/loss the same way, and state
+            # the expected profit per trade = win% x avg win - loss% x avg loss.
+            exp_line = ""
+            try:
+                i, o = h.get("is"), h.get("oos")
+                parts = [d for d in (i, o) if d and d.get("n")]
+                N = sum(d["n"] for d in parts)
+                if N:
+                    wr = sum(d["n"] * d["win"] for d in parts) / N / 100.0
+                    wins = [(d["n"] * d["win"] / 100.0, d.get("avg_win") or 0) for d in parts]
+                    loss = [(d["n"] * (1 - d["win"] / 100.0), abs(d.get("avg_loss") or 0)) for d in parts]
+                    nw, nl = sum(w for w, _ in wins), sum(l for l, _ in loss)
+                    aw = sum(w * v for w, v in wins) / nw if nw else 0
+                    al = sum(l * v for l, v in loss) / nl if nl else 0
+                    ev = wr * aw - (1 - wr) * al
+                    exp_line = (f"\n• Pooled ({N} trades): win rate <b>{wr*100:.0f}%</b> · "
+                                f"<b>historical expected profit as per backtesting: ₹{ev:+,.0f} per trade</b> "
+                                f"({wr*100:.0f}% × ₹{aw:,.0f} − {(1-wr)*100:.0f}% × ₹{al:,.0f})")
+            except Exception:
+                pass
+            sc_i, sc_o = h.get("scanned_is") or 0, h.get("scanned_oos") or 0
+            scanned = (f"• Breakout signals scanned for {sym}: <b>{sc_i}</b> in-sample · "
+                       f"<b>{sc_o}</b> out-of-sample — the gates admitted the trades below\n"
+                       if (sc_i or sc_o) else "")
+            # SIDE SPLIT (user, 24-Aug-2026): both sides' records, with THIS signal's side named.
+            side_line = ""
+            try:
+                bc, bp = h.get("bear_call"), h.get("bull_put")
+                def sd(lbl, d):
+                    return (f"{lbl} <b>{d['n']}</b> tr · <b>{d['win']:.0f}%</b> win · ₹{d['net']:+,.0f}"
+                            if d else f"{lbl} no past trades")
+                if bc or bp:
+                    cur = ("BEAR CALL" if side == "BEAR_CALL" else
+                           ("BULL PUT" if side == "BULL_PUT" else ""))
+                    side_line = "\n• By side — " + sd("bear call:", bc) + "  |  " + sd("bull put:", bp)
+                    if cur:
+                        d = bc if side == "BEAR_CALL" else bp
+                        if d and d.get("n"):
+                            per = d["net"] / d["n"]
+                            side_line += (f"\n• <b>This signal is a {cur} for which {sym} has given "
+                                          f"{d['n']} {cur.lower()} trade{'s' if d['n'] != 1 else ''} · {d['win']:.0f}% win · "
+                                          f"actual profit ₹{d['net']:+,.0f} till date = "
+                                          f"₹{per:+,.0f} per lot per trade</b>")
+                        else:
+                            side_line += (f"\n• <b>This signal is a {cur}</b> — no past trades on "
+                                          f"this side for this stock")
+            except Exception:
+                pass
+            return ("📜 <b>" + sym + " — this stock's own backtest record</b>\n"
+                    + scanned
                     + line("In-sample 2019→Sep-24", h.get("is")) + "\n"
-                    + line("Out-of-sample Oct-24→date", h.get("oos")))
+                    + line("Out-of-sample Oct-24→date", h.get("oos")) + exp_line + side_line)
         except Exception as e:
             logger.debug(f"_sym_history {sym}: {e}")
             return ""
@@ -418,19 +468,25 @@ class EngineRunner:
                     tgt_stop = self._tgt_stop(book)
                     if tgt_stop:
                         lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
-                ana = self._analysis(book, sym)
-                if ana:
+                # PER-NAME EVIDENCE (user, 24-Aug-2026): when the named stock has its own
+                # backtest record, THAT is the evidence a reader needs — the book-level
+                # Donchian/IS/OOS bullets are dropped from the message and the header leads
+                # straight into the stock. Books with no per-name record (the index books) keep
+                # the original analysis block unchanged. Gated until the user approves the sample.
+                sh = (self._sym_history(sym, side=str(s.get("side") or ""))
+                      if getattr(config, "TG_SYMBOL_HISTORY_ENABLED", False) else "")
+                if sh:
                     lines.append("——————————————")
                     lines.append("📚 <b>Why this signal</b> — Tejas Jadhav, CFA has performed extensive "
                                  "analysis of this strategy which gave below historical results —")
-                    lines.append(ana)
-                # PER-NAME HISTORY BLOCK — built 24-Aug-2026, NOT YET APPROVED for live messages.
-                # The user asked to SEE the message before it ships. Re-enable by removing this
-                # guard once he approves the sample.
-                if getattr(config, "TG_SYMBOL_HISTORY_ENABLED", False):
-                    sh = self._sym_history(sym)
-                    if sh:
-                        lines.append(sh)
+                    lines.append(sh)
+                else:
+                    ana = self._analysis(book, sym)
+                    if ana:
+                        lines.append("——————————————")
+                        lines.append("📚 <b>Why this signal</b> — Tejas Jadhav, CFA has performed extensive "
+                                     "analysis of this strategy which gave below historical results —")
+                        lines.append(ana)
                 lines.append(self._TG_DISCLAIMER)
                 send_telegram("\n".join(lines))
               except Exception as e:

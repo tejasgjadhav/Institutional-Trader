@@ -77,6 +77,10 @@ UNIVERSE = [
 # ZERO trades ever stay: they cost nothing, carry no negative evidence, and the gates decide.
 assert len(UNIVERSE) == 114, "Universe: 122 admitted - 8 removed on negative records (24-Aug-2026)"
 
+# Telegram: per-name backtest block in signal messages (user-approved 24-Aug-2026 after four
+# sample iterations - scanned counts, both windows, pooled expectancy, side split, per-lot line).
+TG_SYMBOL_HISTORY_ENABLED = True
+
 # PRIORITY_STOCKS REMOVED (24-Aug-2026, user): it belonged to the retired 3-Family gates system
 # (SCAN_3FAMILY_ENABLED = False) and only star-flagged names in the read-only UI. The stock credit
 # books have no priority tier - they scan UNIVERSE, and every trade passes the same gates.
