@@ -53,9 +53,17 @@ for n, tk in enumerate(UNIVERSE):
         if d <= "2024-09-30": out[sym]["scanned_is"] += 1
         elif d >= "2024-10-01": out[sym]["scanned_oos"] += 1
     side = {"BEAR_CALL": [], "BULL_PUT": []}
+    # per-window side counts (user, 24-Aug-2026): the IS and OOS lines each state how many
+    # bear calls and bull puts they contain
+    wc = {"is": {"bc": 0, "bp": 0}, "oos": {"bc": 0, "bp": 0}}
     for x in ROWS_BY_SYM.get(sym, []):
         t = daymap.get(x["day"])
-        if t: side["BEAR_CALL" if t == "CE" else "BULL_PUT"].append(x["net_rs"])
+        if not t: continue
+        side["BEAR_CALL" if t == "CE" else "BULL_PUT"].append(x["net_rs"])
+        w = "is" if x["day"] <= "2024-09-30" else "oos"
+        wc[w]["bc" if t == "CE" else "bp"] += 1
+    for w in ("is", "oos"):
+        if out[sym].get(w): out[sym][w]["bc"], out[sym][w]["bp"] = wc[w]["bc"], wc[w]["bp"]
     for k, v in side.items():
         out[sym][k.lower()] = ({"n": len(v), "win": round(100 * sum(1 for z in v if z > 0) / len(v), 1),
                                 "net": round(sum(v))} if v else None)

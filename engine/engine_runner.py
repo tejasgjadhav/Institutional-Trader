@@ -312,7 +312,11 @@ class EngineRunner:
                     return f"• {lbl}: no trades in this window"
                 al = f"₹{d['avg_loss']:+,.0f}" if d.get("avg_loss") is not None else "no loss"
                 aw = f"₹{d['avg_win']:+,.0f}" if d.get("avg_win") is not None else "no win"
-                return (f"• {lbl}: <b>{d['n']}</b> trades · <b>{d['win']:.0f}%</b> win · "
+                bc, bp = d.get("bc"), d.get("bp")
+                sides = (f" ({bc} bear call{'s' if bc != 1 else ''} · "
+                         f"{bp} bull put{'s' if bp != 1 else ''})"
+                         if (bc is not None and bp is not None and (bc or bp)) else "")
+                return (f"• {lbl}: <b>{d['n']}</b> trades{sides} · <b>{d['win']:.0f}%</b> win · "
                         f"avg profit {aw} · avg loss {al} per trade")
             # POOLED EXPECTANCY (user, 24-Aug-2026): weight each window's win rate by its trade
             # count (e.g. 18/29 x 72% + 11/29 x 73%), pool avg win/loss the same way, and state

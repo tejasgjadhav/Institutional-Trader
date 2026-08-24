@@ -3229,3 +3229,6 @@ restarted clean. Telegram per-name block STILL GATED awaiting his go.
 
 ### 24-Aug 08:1x · SHIPPED: per-name Telegram block LIVE (flag ON, sample delivered to Telegram);
 universe 114 deployed; P&L updated in CONSOLIDATED_PNL.md + UI (plan-on-80% ≈ ₹25,900/mo).
+
+### 24-Aug 08:1x · health all green (engine 10377, viewer 10440, 0 errors, suite 19/19);
+BAJAJHLDNG v2 render verified stub-only. Now rendering the v0 variant on request.
