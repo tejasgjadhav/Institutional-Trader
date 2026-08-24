@@ -14,8 +14,14 @@ from engine.config import UNIVERSE
 out = collections.defaultdict(lambda: {"is": None, "oos": None, "scanned_is": 0, "scanned_oos": 0})
 def fold(files, key):
     rows = []
-    for f in files:
-        try: rows += json.load(open(f))
+    seen = set()
+    for f in files:                       # main files listed FIRST, and they win a collision
+        try:
+            for x in json.load(open(f)):
+                k = (x["book"], x["sym"], x["day"])
+                if k in seen: continue    # DE-DUP (audit 24-Aug-2026): once an admitted name is in
+                seen.add(k)               # the main rows, its expansion rows must not double-count
+                rows.append(x)
         except Exception: pass
     by = collections.defaultdict(list)
     for x in rows: by[x["sym"]].append(x["net_rs"])
@@ -31,9 +37,14 @@ fold(["research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"]
 # geometries, so a signal must quote ITS OWN book's record, not a pool of three strategies.
 # Windows pooled inside each book to keep n meaningful at per-name grain.
 _all = []
+_seen_bb = set()
 for f in ("research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json",
           "research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"):
-    try: _all += json.load(open(f))
+    try:
+        for x in json.load(open(f)):
+            k = (x["book"], x["sym"], x["day"])
+            if k in _seen_bb: continue
+            _seen_bb.add(k); _all.append(x)
     except Exception: pass
 _bb = collections.defaultdict(lambda: collections.defaultdict(list))
 for x in _all: _bb[x["sym"]][x["book"]].append(x["net_rs"])

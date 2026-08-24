@@ -98,6 +98,7 @@ BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
 spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
 OUT = f"research/deployed_bt_{WINDOW.lower()}_rows.json"
 IS_PICKLE = "research/bhav_optstk.pkl"   # overridable by drivers (universe expansion 23-Aug-2026)
+LEGFAIL_PATH = "research/expansion2/legfails.jsonl"   # tests override to a scratch path
 
 def parity_spot(ce_px, pe_px):
     """Implied spot from the chain itself: at the strike where |CE - PE| is smallest, S = K + C - P.
@@ -109,8 +110,13 @@ def parity_spot(ce_px, pe_px):
     common = [k for k in ce_px if k in pe_px]
     if len(common) < 3:
         return None
-    k = min(common, key=lambda x: abs(ce_px[x] - pe_px[x]))
-    spot = k + ce_px[k] - pe_px[k]
+    # ROBUST ANCHOR (audit 24-Aug-2026): the single min-|CE-PE| strike misfired on 86 of 1,180
+    # entries (AXISBANK 2020-04-03 seeded an ATM that never existed, -40% rupees). Median of the
+    # implied spots from the FIVE tightest strikes; a single bad quote can no longer set spot.
+    cand = sorted(common, key=lambda x: abs(ce_px[x] - pe_px[x]))[:5]
+    imps = sorted(x + ce_px[x] - pe_px[x] for x in cand)
+    spot = imps[len(imps) // 2]
+    k = cand[0]
     if spot <= 0 or abs(ce_px[k] - pe_px[k]) / spot > PARITY_MAX_SPAN:
         return None
     return spot
@@ -259,12 +265,19 @@ def run_is():
         u = u.sort_index()
         cb = {str(i)[:10]: float(u["Close"].loc[i]) for i in u.index}
         last_entry = None; open_until = {}
+        _pending_ratio = []          # (row-index-before-append, raw adjusted/parity ratio)
         for d, c, typ, d10_hit in breakout_days(u):
             dd = date.fromisoformat(d)
             if last_entry and (dd - last_entry).days < REENTRY: continue   # CROSS-BOOK gap
             fut = sorted(e for e in exps_by.get((sym, typ), ())
                          if date.fromisoformat(e) >= dd + timedelta(days=MIN_DTE))
             if not fut: continue
+            # a trade whose expiry lies beyond the data cannot be held to settlement; force-settling
+            # it early off an equity close fabricated up to 4 weeks of early exit on 21 trades
+            # (audit 24-Aug-2026)
+            if fut[0] > "2024-09-30":
+                SETTLE_FALLBACKS["beyond_data_skipped"] += 1
+                continue
             exp = fut[0]; P = PX.get((sym, exp, typ))
             Q = PX.get((sym, exp, "PE" if typ == "CE" else "CE"))
             if not P or d not in P["didx"] or not Q or d not in Q["didx"]: continue
@@ -305,13 +318,38 @@ def run_is():
                 es_t = parity_spot(eA, eB) if typ == "CE" else parity_spot(eB, eA)
                 if es_t: cb_t[exp] = es_t          # settle on the chain's own scale
             _r = (c / spot_t) if spot_t else 1.0
-            rs_scale = 1.0 if 0.75 < _r < 1.25 else _r
+            # raw ratio recorded per trade; the SEGMENT-MEDIAN pass below converts it to the final
+            # rs_scale. The old +/-25% snap misclassified real bonuses at 0.75 (ASTRAL 1:3) and
+            # mixed snapped and raw rows within one name (audit 24-Aug-2026).
+            _len0 = len(rows)
             ok, ex = eval_books(d, sym, typ, ks, atm, px, cb_t, exp, spot_t, d10_hit, rows, open_until,
-                                rs_scale=rs_scale)
+                                rs_scale=1.0)
+            if len(rows) > _len0:
+                _pending_ratio.append((list(range(_len0, len(rows))), _r))
             if ok:
                 last_entry = dd
                 for _b, _x in ex.items():
                     open_until[_b] = max(open_until.get(_b, ""), _x)
+        # SEGMENT-MEDIAN RUPEE SCALE (audit 24-Aug-2026). Within one symbol the true factor is
+        # piecewise-constant (it changes only at a split/bonus). Segment the trade sequence where
+        # the raw ratio jumps >10%, take each segment's median, snap a segment to 1.0 only when its
+        # median sits within 3% of 1 - then rescale that segment's rows (net_rs and margin_rs
+        # together, preserving per-trade ROM).
+        if _pending_ratio:
+            segs = [[_pending_ratio[0]]]
+            for it in _pending_ratio[1:]:
+                if abs(it[1] / segs[-1][-1][1] - 1) > 0.10:
+                    segs.append([it])
+                else:
+                    segs[-1].append(it)
+            for seg in segs:
+                med = sorted(r for _, r in seg)[len(seg) // 2]
+                f = 1.0 if 0.97 < med < 1.03 else med
+                if f != 1.0:
+                    for idxs, _ in seg:
+                        for irow in idxs:
+                            rows[irow]["net_rs"] = round(rows[irow]["net_rs"] * f, 2)
+                            rows[irow]["margin_rs"] = round(rows[irow]["margin_rs"] * f, 2)
         if n % 15 == 0: print(f"  IS {n}/{len(UNIVERSE)} · {len(rows)} trades", flush=True)
     return rows
 
@@ -377,7 +415,7 @@ def leg(key, d0, to):
         # two decides whether re-running converges or is wasted work.
         try:
             with LK:
-                with open("research/expansion2/legfails.jsonl", "a") as _fh:
+                with open(LEGFAIL_PATH, "a") as _fh:
                     _fh.write(json.dumps({"key": key, "d0": d0, "to": to,
                                           "body": (str(j)[:200] if j else "EMPTY/network")}) + "\n")
         except Exception:
@@ -393,6 +431,20 @@ def leg(key, d0, to):
 def run_oos():
     from engine.data_fetcher import fetch_upstox_historical
     from engine.expired_options import get_expiries, get_contracts
+    # LOTS FOR EVERY NAME (audit 24-Aug-2026): lotmap.json lacks the 11 names admitted on 24-Aug,
+    # and a lot of 0 makes a trade weightless in ROM-Rs while still counting in n and win%.
+    try:
+        from engine.options import _load_index
+        from engine.instruments import to_instrument_key
+        for _tk in UNIVERSE:
+            _sy = _tk.replace(".NS", "")
+            if not LOTMAP.get(_sy):
+                _ch = _load_index().get(to_instrument_key(_tk)) or []
+                _ls = [int(x.get("lot") or 0) for x in _ch if x.get("lot")]
+                if _ls:
+                    LOTMAP[_sy] = max(set(_ls), key=_ls.count)
+    except Exception as _e:
+        print(f"  LOTMAP fallback failed: {_e}", flush=True)
     START = date(2024, 10, 1)
     rows = []; done = [0]
     def work(tk):
