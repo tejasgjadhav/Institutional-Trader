@@ -334,9 +334,10 @@ class EngineRunner:
                     aw = sum(w * v for w, v in wins) / nw if nw else 0
                     al = sum(l * v for l, v in loss) / nl if nl else 0
                     ev = wr * aw - (1 - wr) * al
-                    exp_line = (f"\n• Pooled ({N} trades): win rate <b>{wr*100:.0f}%</b> · "
-                                f"<b>historical expected profit as per backtesting: ₹{ev:+,.0f} per trade</b> "
-                                f"({wr*100:.0f}% × ₹{aw:,.0f} − {(1-wr)*100:.0f}% × ₹{al:,.0f})")
+                    # pooled line RETIRED (user, 24-Aug-2026): once the message quotes the firing
+                    # strategy's own per-trade profit and the side split, a blend of both sides
+                    # and all books adds no decision value.
+                    exp_line = ""
             except Exception:
                 pass
             sc_i, sc_o = h.get("scanned_is") or 0, h.get("scanned_oos") or 0

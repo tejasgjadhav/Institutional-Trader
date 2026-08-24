@@ -3281,3 +3281,7 @@ change. Awaiting his pick. 09:46 scheduled engine restart pending (book-x-side m
 09:16-09:45 freeze protects nothing today (the 0DTE books cannot fire). All of today's message
 features (book x side, routing note, bucket labels) now LIVE in-process, ahead of the 09:46 job
 (which will harmlessly re-kick or find the process already current). First live signal: 15:36.
+
+### 24-Aug 09:4x · pooled expectancy line RETIRED from the signal message (user: redundant once
+per-strategy and per-side actuals are shown). Final block: scanned · IS+sides · OOS+sides ·
+strategy line w/ actual per-trade · side split · bold side tail. Engine restarted, live for 15:36.
