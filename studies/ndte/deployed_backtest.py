@@ -130,7 +130,7 @@ def settle(cb, exp, ks, si, li, typ, width, fallback_spot):
     iL = max(0.0, es - ks[li]) if typ == "CE" else max(0.0, ks[li] - es)
     return min(max(iS - iL, 0.0), width)
 
-def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, rows, open_until):
+def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, rows, open_until, rs_scale=1.0):
     """walk yields (walk_day, se, le) after entry, same-day pairs only. Applies the live hierarchy:
     v2 first; v1 only on a D10 breakout and only if v2 neither fires today nor holds the name; v0
     only if v1 did not fire. `open_until` is {book: exit_day} for THIS symbol - a book holding an
@@ -185,6 +185,13 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         exits[bk] = exit_day
         net = (credit - close) - (se*spf(se) + le*spf(le))/100.0 - xc
         _lot = LOTMAP.get(sym, 0)
+        # RUPEE SCALE (fixed 24-Aug-2026, user-caught via NESTLEIND's +Rs63k/trade). Point values
+        # sit on the UNADJUSTED strike scale of their day, but rupees were computed with TODAY'S
+        # lot - so a name that later split 1:10 had its pre-split rupee nets inflated ~10x (NESTLEIND
+        # measured ~19x including a bonus). rs_scale = adjusted_close / parity_spot converts points
+        # to today's scale before the lot multiplies them; snapped to 1.0 inside +/-25% so ordinary
+        # parity-vs-close noise never touches unsplit names. OOS passes 1.0 - its drift guard already
+        # rejects any entry whose scales disagree.
         # OI IS NOW CARRIED PER BOOK (fixed 20-Aug-2026). `oi` used to be read here from whatever
         # the LAST iteration of the gate loop above left behind, which is v0's legs, not this
         # book's. v0 and v2 share a geometry so they were unaffected, but v1 sells a different
@@ -195,8 +202,8 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         rows.append(dict(book=bk, sym=sym, day=day, yr=int(day[:4]), cw=round(cw, 3),
                          oi_units=_oiu, oi_lots=(round(_oiu / _lot, 1) if (_oiu and _lot) else None),
                          net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0),
-                         lot=_lot, net_rs=round(net * _lot, 2),
-                         margin_rs=round((width - credit) * _lot, 2)))
+                         lot=_lot, net_rs=round(net * _lot * rs_scale, 2),
+                         margin_rs=round((width - credit) * _lot * rs_scale, 2)))
     return True, exits
 
 def breakout_days(u):
@@ -297,7 +304,10 @@ def run_is():
                 eB = {float(k): float(v) for k, v in zip(Q["ks"], Q["C"][fi]) if np.isfinite(v)}
                 es_t = parity_spot(eA, eB) if typ == "CE" else parity_spot(eB, eA)
                 if es_t: cb_t[exp] = es_t          # settle on the chain's own scale
-            ok, ex = eval_books(d, sym, typ, ks, atm, px, cb_t, exp, spot_t, d10_hit, rows, open_until)
+            _r = (c / spot_t) if spot_t else 1.0
+            rs_scale = 1.0 if 0.75 < _r < 1.25 else _r
+            ok, ex = eval_books(d, sym, typ, ks, atm, px, cb_t, exp, spot_t, d10_hit, rows, open_until,
+                                rs_scale=rs_scale)
             if ok:
                 last_entry = dd
                 for _b, _x in ex.items():

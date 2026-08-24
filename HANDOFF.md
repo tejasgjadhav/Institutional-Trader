@@ -3240,3 +3240,15 @@ UNIVERSE 114 · TG per-name block ON (final format with per-window side counts) 
 ### 24-Aug · TG history is PRECOMPUTED: data/symbol_history.json (built 08:1x, all 114 covered).
 Signal time = dict lookup only, no network. RULE: regenerate via studies/ndte/build_symbol_history.py
 after any backtest re-run or universe change, then restart engine (it caches the file on first use).
+
+## 2026-08-24 08:3x · SPLIT-NAME RUPEE BUG (user-caught) — harness fixed, IS re-running
+
+NESTLEIND's +Rs63,490/trade exposed it: point nets sit on each day's UNADJUSTED strike scale but
+rupees used TODAY'S lot — a later split inflates pre-split rupee nets by the split ratio (NESTLEIND
+measured ~19x). Fix: rs_scale = adjusted_close/parity_spot converts points to today's scale before
+the lot (snapped to 1.0 inside ±25% so unsplit names untouched). ROM percentages were NEVER wrong
+(net and margin scaled together); rupee columns (Rs/trade, Rs/mo) were inflated for split names.
+OOS unaffected (drift guard rejects scale-mismatched entries). Both IS runs re-running
+(research/rerun_is_scale.log); on DONE-BOTH: update golden test, rebuild symbol_history, recompute
+book aggregates + P&L, update studies/UI/Telegram base numbers, push. Suspect list beyond NESTLEIND:
+EICHERMOT, BAJAJFINSV, DRREDDY, NAUKRI, AXISBANK (any pre-2025 split/bonus name).
