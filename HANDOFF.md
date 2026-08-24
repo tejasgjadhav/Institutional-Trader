@@ -3324,3 +3324,14 @@ at :1055-1064,:1083, PM ~2.2/mo, NIFTY money row mixes live-73-trade record with
 H5 STUDIES tab renders once at startup, never refreshes; H6 README still instructs a 2x stop; M:
 5.3s GUI block on locked DB, v0 log column mislabelled "T2", unguarded refresh chain :1981.
 Fixing UI now (viewer-only, no freeze constraint); engine/backtest fixes await their audits.
+
+## 24-Aug · BACKTEST AUDIT: C1 latent double-count armed (next OOS run emits admitted names into
+main rows while expansion rows still hold them; lotmap lacks all 11 new names -> lot=0 weightless
+rows); H1 rs_scale snap band wrong for real bonuses (ASTRAL 0.75, TRENT 0.667; ~150 rows 5%+ rupee
+error; headline moves <=0.5pp, per-name numbers wrong); H2 single-strike parity anchor misfires 86
+entries (AXISBANK 2020-04-03 geometry never existed); H3 OOS survivorship: drift guard silently
+censors contracts expiring before a later corporate action (TRENT 0 OOS trades until its bonus) —
+no counter, one-sided. M: 21 late-Sep-2024 IS trades force-settled early; test_harness pollutes
+legfails.jsonl. FIXING: robust 5-anchor parity median, segment-median rs_scale (no naive snap),
+OOS lot fallback to instrument master, symbol_history de-dup by (book,sym,day), expiry>pickle-end
+guard, legfails path var. IS re-run to follow; engine TG-number restart after 15:40.
