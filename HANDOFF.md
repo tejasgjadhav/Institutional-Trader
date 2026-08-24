@@ -3187,3 +3187,15 @@ is one favourable regime and counts are floors). vs current stock books ~Rs18.5k
 
 ### 24-Aug 06:2x · pass 3 at 45/103, 0 failures. Slowness is structural: each new leg is one
 throttled Upstox API call; pass 3 re-walks all 103 names but only refetches what passes 1-2 missed.
+
+## 2026-08-24 07:17 · UNIVERSE EXPANDED 113 -> 122, DEPLOYED
+
+Nine names live in config.UNIVERSE (user approval in chat): PAGEIND, MCX, TVSMOTOR, SHREECEM
+(both-windows positive) + LTM, TIINDIA, SOLARINDS, BDL, AMBER (IS-blind, OOS+forward only, labelled
+in the config comment). Assert updated 113 -> 122. PRIORITY_STOCKS untouched — first edit wrongly
+appended to it; the 113-assert caught it and it was reverted before deploy. All nine resolve
+122-186 contracts in the instrument master. Engine restarted 07:17 (outside both freeze windows),
+clean. First scan with the new names: TODAY 15:36. Their trades tag normally into
+forward_record.db; the IS-blind five are judged by the forward record per the study.
+Verdict basis: stabilised 204-trade OOS table (passes 2 and 3 identical); clean-pass loop still
+refining the 354 vendor-gap drops with the classifier — cosmetic to the verdicts.

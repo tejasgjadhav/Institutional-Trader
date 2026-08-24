@@ -56,8 +56,17 @@ UNIVERSE = [
     # studies/UNIVERSE_EXPANSION.md. The c/w + live liquidity gates still decide each trade. ===
     "COLPAL.NS", "ASTRAL.NS", "INDIAMART.NS", "ALKEM.NS", "DALBHARAT.NS", "UBL.NS",
     "NAVINFLUOR.NS", "MRF.NS", "ATUL.NS", "CUMMINSIND.NS", "DEEPAKNTR.NS", "HAL.NS", "BOSCHLTD.NS",
+    # === UNIVERSE EXPANSION 2 (24-Aug-2026, user-approved) — 9 names measured name-by-name on the
+    # HARNESS OF RECORD in both windows (studies/UNIVERSE_EXPANSION_2.md; admission rule fixed
+    # BEFORE the OOS landed). First four: positive in BOTH windows. Last five entered F&O after
+    # Sep-2024 — no in-sample history EXISTS for them, so they are admitted on OOS + forward
+    # evidence ONLY and the forward record decides whether they stay. Re-checked and kept OUT:
+    # IEX/CONCOR/RBLBANK (zero OOS trades on a clean pass — genuinely silent, not fetch-starved),
+    # HDFCAMC (demonstrated OOS failure, -Rs14,679), SRF (flat OOS). ===
+    "PAGEIND.NS", "MCX.NS", "TVSMOTOR.NS", "SHREECEM.NS",
+    "LTM.NS", "TIINDIA.NS", "SOLARINDS.NS", "BDL.NS", "AMBER.NS",   # IS-blind: OOS+forward only
 ]
-assert len(UNIVERSE) == 113, "Universe should have 113 stocks (100 base + 13 Tier-5 expansion)"
+assert len(UNIVERSE) == 122, "Universe: 100 base + 13 Tier-5 + 9 Expansion-2 (24-Aug-2026)"
 
 # PRIORITY stocks — the only names whose high gates-1-5 win rate PERSISTED out-of-sample.
 # Found by a 365-day per-stock backtest split into train (older 60%) / held-out test (newer
