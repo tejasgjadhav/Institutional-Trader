@@ -73,3 +73,34 @@ Caveats that matter more than the point estimate:
 - Not investment advice — this is the paper system's own modeled aggregate, framed gross-of-fill-
   risk. Source figures: `LIVE_STRATEGIES.md`, `STOCK_FADE_TP50_UPGRADE.md`,
   `INTRADAY_85PCT_0DTE_CE_SPREAD.md`, `FLIP_SIDE_CREDIT_FADE.md`.
+
+---
+
+## 24-Aug-2026 — the universe moved 113 → 122, so the P&L moves
+
+Nine names were admitted (`studies/UNIVERSE_EXPANSION_2.md`): PAGEIND, MCX, TVSMOTOR, SHREECEM on
+both-windows evidence, plus LTM, TIINDIA, SOLARINDS, BDL, AMBER — F&O entrants after Sep-2024 with
+no in-sample history, admitted on OOS + forward evidence only.
+
+**The measured base (21-Aug re-run, median cohort, 1 lot):**
+v2 ₹8,450/mo + v1 ₹8,359/mo + v0 ₹1,674/mo = **₹18,483/mo stock books**.
+Index books: 0DTE SENSEX ₹3,153 + 0DTE NIFTY ₹1,771 = ₹4,924. Monthly futures ₹0 (regime-off).
+
+**The expansion increment, by the expectancy model (win% × avg win − loss% × avg loss):**
+- IS window: 84.9% × ₹6,513 − 15.1% × ₹10,806 = +₹3,903/trade × 1.1 sig/mo = **+₹4,317/mo**
+- OOS window (floors): 86.5% × ₹4,867 − 13.5% × ₹7,585 = +₹3,184/trade × 3.3 sig/mo = **+₹10,473/mo**
+- The gap is signal frequency: five of the nine did not exist in the IS window. Planning figure:
+  **+₹6,000–8,000/mo**.
+
+**New totals at 1 lot:**
+| | conservative (IS) | planning | optimistic (OOS floor) |
+|---|---|---|---|
+| stock books | ₹22,800 | **₹25,500** | ₹29,000 |
+| + index books | ₹27,700 | **₹30,400** | ₹33,900 |
+| plan on 80% | ₹22,200 | **₹24,300** | ₹27,100 |
+
+**Read this as an estimate until the forward record confirms it.** The increment is backtest
+expectancy; the live spread gate takes its cut first, the OOS window is one favourable regime for
+the defence/manufacturing entrants, and the IS-blind five are on probation by construction. The
+forward-record DB tags their trades from day one; the 30-trade rule is unchanged and the expansion
+does not reset its counter.

@@ -3199,3 +3199,14 @@ clean. First scan with the new names: TODAY 15:36. Their trades tag normally int
 forward_record.db; the IS-blind five are judged by the forward record per the study.
 Verdict basis: stabilised 204-trade OOS table (passes 2 and 3 identical); clean-pass loop still
 refining the 354 vendor-gap drops with the classifier — cosmetic to the verdicts.
+
+## 2026-08-24 · IN FLIGHT: purge of retired-system remnants from the live engine (user request)
+
+After PRIORITY_STOCKS caused a wrong-list deploy mistake, the user asked to remove everything stale
+from retired systems in the live engine. Inventory below as it lands.
+
+### 24-Aug · purge verdict + P&L recalc
+Purge: all four retired systems verified GATED at entry (3-Family/ORB runner:1137, swing scan:432,
+monthly_call:484); swing resolver intentionally alive for legacy positions (0 open). No live-path
+deletions needed; the editable-structure hazard (PRIORITY_STOCKS) is gone. P&L: CONSOLIDATED_PNL.md
+updated for 122 names — stock ₹18,483 + expansion est ₹6–8k → plan-on-80% ≈ ₹24,300/mo. UI row added.
