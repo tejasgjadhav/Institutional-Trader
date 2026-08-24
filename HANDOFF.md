@@ -3306,3 +3306,8 @@ ICICIGI qualified on bear calls (8/8, +35,834 both windows), PIIND on bull puts 
 weak-side trades of ICICIGI/PIIND are LOGGED but tagged advisory=True at entry; headline P&L,
 portfolio summary and the 30-counter exclude them; a separate "Advisory (weak side)" line shows
 them so the probation stays measurable. Never dropped — tagged.
+
+### 24-Aug 13:5x · STALE SWEEP COMPLETE — every UI tab + TG evidence on the 116-name corrected
+basis: money table (measured OOS avg win/loss + expectancy per book, TOTAL 526 measured ~24/mo
+₹35,916, plan-80% ₹28,733), strategy table, work table, PM cards, FULL STUDIES lines, v2-match
+note rewritten (+22.0 IS vs +27.0 OOS — no coincidence story). CONSOLIDATED_PNL carries the basis.

@@ -143,3 +143,8 @@ cohort, deployed universe:
 sits between the two windows; it stands. Earlier rupee figures (v2 ₹5,798/trade etc.) were inflated
 by split names carrying today's lot on yesterday's points; ROM percentages were never affected in
 ratio, only in pooled weighting.
+
+**116-name basis (post ICICIGI/PIIND, the deployed universe):** IS 1,269 · OOS 428 trades. Median
+cohort — v2 IS 78.6%/+22.0% → OOS 83.5%/+27.0% (₹11,472/mo); v1 80.9%/+13.1% → 83.3%/+16.6%
+(₹15,228/mo); v0 84.7%/+15.2% → 81.8%/+7.2% (₹4,292/mo). Stock OOS ₹30,992/mo; +index ₹35,916;
+plan-on-80% ₹28,733. Every future admission shifts these — the UI reads this basis.
