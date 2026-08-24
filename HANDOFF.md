@@ -3290,3 +3290,9 @@ strategy line w/ actual per-trade · side split · bold side tail. Engine restar
 Independent agent re-derives per-name IS/OOS, BC/BP and v0/v1/v2 cells from the RAW row files with
 its OWN code (no reuse of build_symbol_history.py), fresh breakout-direction derivation, cell-by-cell
 diff vs data/symbol_history.json. Report -> research/audit_namewise.md.
+
+### 24-Aug · NAME-WISE AUDIT VERDICT: CLEAN on every populated number (~2,000 cells recomputed
+independently, ZERO disagreements; 0 unmapped side rows of 1,958; 0 boundary violations; 0 duplicate
+rows). One coverage omission: the 48 non-universe expansion names carry no side keys (builder's side
+loop iterates UNIVERSE only) — harmless, they can never fire a signal. Report:
+research/audit_namewise.md.
