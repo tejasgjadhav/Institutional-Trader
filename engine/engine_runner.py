@@ -380,9 +380,11 @@ class EngineRunner:
                 ds = h.get(f"{bk_key}_{_sd}") if _sd else None
                 tail = (f" — of which this side: <b>{ds['n']}</b> tr · <b>{ds['win']:.0f}%</b> · "
                         f"₹{ds['net']:+,.0f}" if ds and ds.get("n") else "")
-                book_line = (f"\n• In this book ({bk_key[5:]}): <b>{d['n']}</b> trade"
+                _pt = d["net"] / d["n"] if d.get("n") else 0
+                book_line = (f"\n• As per the strategy {bk_key[5:]}: <b>{d['n']}</b> trade"
                              f"{'s' if d['n'] != 1 else ''} · <b>{d['win']:.0f}%</b> win · "
-                             f"net ₹{d['net']:+,.0f} (both windows pooled)" + tail)
+                             f"net ₹{d['net']:+,.0f} = <b>₹{_pt:+,.0f} actual profit per trade</b>"
+                             f" (both windows pooled)" + tail)
                 # BUCKET ROUTING NOTE (user-approved 24-Aug-2026, option 2): v1 and v2 are one
                 # rich-credit bucket in two geometries, so when the OTHER geometry's record for
                 # THIS name is materially better on a usable sample, say so - informational only,
