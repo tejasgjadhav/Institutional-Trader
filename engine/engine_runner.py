@@ -383,6 +383,19 @@ class EngineRunner:
                 book_line = (f"\n• In this book ({bk_key[5:]}): <b>{d['n']}</b> trade"
                              f"{'s' if d['n'] != 1 else ''} · <b>{d['win']:.0f}%</b> win · "
                              f"net ₹{d['net']:+,.0f} (both windows pooled)" + tail)
+                # BUCKET ROUTING NOTE (user-approved 24-Aug-2026, option 2): v1 and v2 are one
+                # rich-credit bucket in two geometries, so when the OTHER geometry's record for
+                # THIS name is materially better on a usable sample, say so - informational only,
+                # the reader picks the strikes. v0 is a separate band and never suggested.
+                if bk_key in ("book_v2", "book_v1"):
+                    ok_ = "book_v1" if bk_key == "book_v2" else "book_v2"
+                    od = h.get(ok_)
+                    if (od and od.get("n", 0) >= 8 and d and
+                            od["win"] >= d["win"] + 10 and od["net"] > d["net"]):
+                        book_line += (f"\n• Note: this name's record is stronger under "
+                                      f"<b>{ok_[5:]}</b> ({od['n']} tr · {od['win']:.0f}% · "
+                                      f"₹{od['net']:+,.0f}) than {bk_key[5:]} "
+                                      f"({d['n']} tr · {d['win']:.0f}% · ₹{d['net']:+,.0f})")
             return ("📜 <b>" + sym + " — this stock's own backtest record</b>\n"
                     + scanned
                     + line("In-sample 2019→Sep-24", h.get("is")) + "\n"

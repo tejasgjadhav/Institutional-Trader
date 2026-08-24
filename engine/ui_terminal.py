@@ -844,9 +844,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         POST = lambda r: r[1] >= "2026-08-06"
         blocks = [
-            ("<b>Stock books v2+v1</b> (post 6-Aug, counts toward the 30)",
+            ("<b>RICH-CREDIT BUCKET — v2+v1, one strategy in two geometries</b> (post 6-Aug, counts toward the 30)",
              stat(lambda r: r[0] in ("v2", "v1") and POST(r))),
-            ("Stock v0 (post 6-Aug, excluded from the lot decision)",
+            ("v0 BAND 0.35–0.40 — a separate strategy, priced one band lower (excluded from the lot decision)",
              stat(lambda r: r[0] == "v0" and POST(r))),
             ("Intraday NIFTY (0DTE)", stat(lambda r: r[0] == "0DTE-NIFTY")),
             ("Intraday SENSEX (0DTE)", stat(lambda r: r[0] == "0DTE-SENSEX")),
