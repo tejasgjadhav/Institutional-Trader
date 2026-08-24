@@ -3184,3 +3184,6 @@ By his formula (win% x avg win - loss% x avg loss, x signals/mo):
   **+Rs10,473/mo**
 Honest range: +Rs4,000-10,500/mo; the truth likely between (IS lacks the new entrants entirely; OOS
 is one favourable regime and counts are floors). vs current stock books ~Rs18.5k/mo = a 25-55% lift.
+
+### 24-Aug 06:2x · pass 3 at 45/103, 0 failures. Slowness is structural: each new leg is one
+throttled Upstox API call; pass 3 re-walks all 103 names but only refetches what passes 1-2 missed.
