@@ -3276,3 +3276,8 @@ on the next restart; file itself is live (lazy load).
 (a) informational message note when the OTHER book's record for the name is stronger, (b) a
 pre-registered routing backtest (route chosen on IS only, judged on OOS) before any hierarchy
 change. Awaiting his pick. 09:46 scheduled engine restart pending (book-x-side message line).
+
+### 24-Aug 09:20 · engine restarted EARLY at user instruction — Monday, no index expiry, so the
+09:16-09:45 freeze protects nothing today (the 0DTE books cannot fire). All of today's message
+features (book x side, routing note, bucket labels) now LIVE in-process, ahead of the 09:46 job
+(which will harmlessly re-kick or find the process already current). First live signal: 15:36.
