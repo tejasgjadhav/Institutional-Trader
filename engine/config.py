@@ -32,11 +32,11 @@ PAPER_TRADING_MIN_PF = 1.0
 UNIVERSE = [
     # Reverted to the proven 94 (beat mcap-100 head-to-head 67% vs 61% on same window),
     # + 5 persistent-winner priority names not already in it + ETERNAL (ex-ZOMATO).
-    "TCS.NS", "INFY.NS", "WIPRO.NS", "HCLTECH.NS", "TECHM.NS", "MPHASIS.NS",
+    "TCS.NS", "INFY.NS", "WIPRO.NS", "TECHM.NS", "MPHASIS.NS",
     "COFORGE.NS", "PERSISTENT.NS", "OFSS.NS", "HDFCBANK.NS", "ICICIBANK.NS", "KOTAKBANK.NS",
     "SBIN.NS", "AXISBANK.NS", "INDUSINDBK.NS", "FEDERALBNK.NS", "IDFCFIRSTB.NS", "BANDHANBNK.NS",
     "BANKBARODA.NS", "PNB.NS", "UNIONBANK.NS", "BAJFINANCE.NS", "BAJAJFINSV.NS", "HDFCLIFE.NS",
-    "SBILIFE.NS", "CHOLAFIN.NS", "MUTHOOTFIN.NS", "SHRIRAMFIN.NS", "RECLTD.NS", "PFC.NS",
+    "CHOLAFIN.NS", "MUTHOOTFIN.NS", "SHRIRAMFIN.NS", "RECLTD.NS", "PFC.NS",
     "IRFC.NS", "RELIANCE.NS", "ONGC.NS", "BPCL.NS", "IOC.NS", "COALINDIA.NS",
     "POWERGRID.NS", "NTPC.NS", "TATAPOWER.NS", "ADANIGREEN.NS", "LT.NS", "ADANIENT.NS",
     "ADANIPORTS.NS", "SIEMENS.NS", "ABB.NS", "BHEL.NS", "HAVELLS.NS", "POLYCAB.NS",
@@ -66,7 +66,10 @@ UNIVERSE = [
     "PAGEIND.NS", "MCX.NS", "TVSMOTOR.NS", "SHREECEM.NS",
     "LTM.NS", "TIINDIA.NS", "SOLARINDS.NS", "BDL.NS", "AMBER.NS",   # IS-blind: OOS+forward only
 ]
-assert len(UNIVERSE) == 122, "Universe: 100 base + 13 Tier-5 + 9 Expansion-2 (24-Aug-2026)"
+# HCLTECH and SBILIFE REMOVED 24-Aug-2026 (user): the only two names negative in BOTH windows
+# (HCLTECH IS -14,583/OOS -4,571 on 7 trades; SBILIFE -9,597/-3,720 on 8). Thin samples, but the
+# user does not want names with an all-negative record; the gates rarely admitted them anyway.
+assert len(UNIVERSE) == 120, "Universe: 100 base + 13 Tier-5 + 9 Expansion-2 - 2 removed (24-Aug-2026)"
 
 # PRIORITY_STOCKS REMOVED (24-Aug-2026, user): it belonged to the retired 3-Family gates system
 # (SCAN_3FAMILY_ENABLED = False) and only star-flagged names in the read-only UI. The stock credit
