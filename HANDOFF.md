@@ -3161,3 +3161,14 @@ Monday's live windows still armed. Separation verified: 0 (sym,day) overlap IS v
 
 ### 23-Aug 22:56 · pass 1 at 35/103, 48 network failures crept in — will not be clean; loop will
 run pass 2+ overnight on a fattening cache. Deliver the qualifier table only from a zero-failure pass.
+
+## 2026-08-24 06:00 · expansion2 OOS results (pass 2, all 103 symbols visited, 462 leg drops = floor)
+
+Loop converged: 1288 -> 462 drops; pass 3 running toward clean. Pooled outsiders OOS: 204 trades,
+78.4% win, +14.6% ROM-Rs, +Rs354,419. Zero IS/OOS overlap.
+
+THE SIX JUDGEABLE (IS n>=10): PAGEIND 6tr/67%/+11,989 · SHREECEM 3/67%/+2,797 · SRF 9/78%/-398 ·
+MCX 6/83%/+7,773 · HDFCAMC 8/62%/-14,679 (FAILS both-windows) · ICICIGI 1/100%/+4,505 (thin).
+None decisively confirms; PAGEIND + MCX best aligned. TVSMOTOR jumped: IS 9/89% + OOS 16/94%/+39,212.
+IS-BLIND new entrants strong: LTIM(9/100%/+59k... symbol printed LTM), TIINDIA, SOLARINDS, AMBER, BDL.
+Next: pass 3 clean -> refresh study + byname files, verdicts per the fixed rule. Nothing in config.
