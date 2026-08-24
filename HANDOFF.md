@@ -3342,3 +3342,12 @@ Anchors agree on clean chains (median 0.00%, p90 0.78%), so the swing is unexpla
 SHIP. Reverted to tightest-strike anchor + 2% dispersion REJECTION guard (misfires dropped, clean
 trades bit-identical). Re-run v2 in flight (research/rerun_is_audit2.log). NOTHING on UI/studies/TG
 updated from the bad run. If v2 lands close to this morning's basis -> cascade; else HOLD and say so.
+
+## 24-Aug 14:5x · V3 SHIPPED — the audit-fix cascade complete
+Run v3 RECONCILED (point-ROMs within 0.6pp of the morning basis; -95 rows = the audited misfire
+class + beyond-data guard; all books 6/6 yrs). Golden v3: v2 189/22.5, v1 328/12.3, v0 205/15.7
+(suite green). 116-basis: IS v2 213/77.9/+21.2 · v1 349/80.5/+12.9 · v0 217/85.7/+14.4; OOS
+unchanged (79/83.5/+27.0 · 186/83.3/+16.6 · 99/81.8/+7.2). Totals IS 1,177 · OOS 420. history
+rebuilt w/ de-dup; 133-name table regenerated; money/strategy tables + 6 TG strings on v3; engine
++ viewer restarted 14:5x (before the freeze). Fix-constant lesson recorded: two bad constants
+caught by predict-then-verify before anything shipped.

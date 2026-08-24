@@ -263,18 +263,18 @@ class EngineRunner:
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
             "• Donchian-union breakout fade · credit/width ≥ 0.40 · nearest expiry at least 10 days out\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 224 trades · <b>78.6%</b> win rate · +22.0% on margin · ₹2,624 net per trade · positive every year\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 213 trades · <b>77.9%</b> win rate · +21.2% on margin · ₹2,436 net per trade · positive every year\n"
             "• Out-of-sample (1-Oct-2024 → {TODAY}): 79 trades · <b>83.5%</b> win rate · +27.0% on margin · ₹3,267 net per trade · positive in both full years (2024 is a 3-month stub)\n"
             "• The backtest cannot model the live bid-ask gate, which rejects most candidates, so read this as a ceiling",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower\n"
             "• The weakest evidence of the three stock books · forward paper-test at 1 lot\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 229 trades · <b>84.7%</b> win rate · +15.2% on margin · ₹1,807 net per trade · positive 5 of 6 years\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 217 trades · <b>85.7%</b> win rate · +14.4% on margin · ₹1,731 net per trade · positive 5 of 6 years\n"
             "• Out-of-sample (1-Oct-2024 → {TODAY}): 99 trades · <b>81.8%</b> win rate · only +7.2% on margin and positive just <b>1 of 2 full years</b>\n"
             "• It wins about four trades in five and still clears the least of the three books per trade",
         "STOCK CREDIT v1":
             "• Same fade, short 1-OTM · width 3 · book at 40% of credit · Donchian-10 · nearest expiry at least 10 days out\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 356 trades · <b>80.9%</b> win rate · +13.1% on margin · ₹1,127 net per trade · positive every year\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 349 trades · <b>80.5%</b> win rate · +12.9% on margin · ₹1,109 net per trade · positive every year\n"
             "• Out-of-sample (1-Oct-2024 → {TODAY}): 186 trades · <b>83.3%</b> win rate · +16.6% on margin · ₹1,842 net per trade · positive in both full years (2024 is a 3-month stub)\n"
             "• Fires about twice as often as v2 and rests on the larger measured sample",
         "0DTE NIFTY":

@@ -24,7 +24,8 @@ _spec = importlib.util.spec_from_file_location(
     "dbt", os.environ.get("HARNESS_PATH",
                           os.path.join(os.path.dirname(__file__), "deployed_backtest.py")))
 H = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(H)                  # the __main__ guard makes this safe
+_spec.loader.exec_module(H)
+H.LEGFAIL_PATH = "/tmp/legfails_test.jsonl"   # never pollute the real diagnostics                  # the __main__ guard makes this safe
 
 FAILED = []
 def check(name, got, want):
@@ -103,7 +104,9 @@ print("=== GOLDEN FILE: in-sample answer is locked ===")
 # the split-name rupee-scale fix (points now converted at each day's own price scale), the
 # universe prune to 114 (the eight removed names' trades left the basis), and rupee reweighting
 # that follows from both. Counts moved 217->200 etc. because the pruned names are gone.
-GOLD = {"v2": (200, 23.2), "v1": (335, 12.5), "v0": (217, 15.7)}   # median cohort, 24-Aug-2026
+# GOLD updated again 24-Aug (audit-fix run v3): parity misfires REJECTED at the audit's 10%
+# threshold (-95 rows incl. the beyond-data class), segment-median rupee scale on bonus names.
+GOLD = {"v2": (189, 22.5), "v1": (328, 12.3), "v0": (205, 15.7)}   # median cohort, 24-Aug-2026 v3
 try:
     rows = json.load(open("research/deployed_bt_is_rows.json"))
     for bk, (n_want, rom_want) in GOLD.items():
