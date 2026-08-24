@@ -3351,3 +3351,7 @@ unchanged (79/83.5/+27.0 · 186/83.3/+16.6 · 99/81.8/+7.2). Totals IS 1,177 · 
 rebuilt w/ de-dup; 133-name table regenerated; money/strategy tables + 6 TG strings on v3; engine
 + viewer restarted 14:5x (before the freeze). Fix-constant lesson recorded: two bad constants
 caught by predict-then-verify before anything shipped.
+
+### 24-Aug · naming clarification for the record: "v3" in today's notes means the THIRD RE-RUN of
+the in-sample backtest (fix-attempt 3), NOT a new book. The books remain v2/v1/v0 only. Avoid
+"vN" for run attempts in future notes — use "run 3".
