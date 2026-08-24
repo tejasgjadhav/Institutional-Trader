@@ -307,6 +307,15 @@ def scan_signals() -> list:
                 "pnl_pts": 0.0, "status": "OPEN",
                 "closed_date": None, "exit_cost": None,
             }
+            # ADVISORY TAG (24-Aug-2026): a side-qualified name trading its WEAK side is still
+            # logged - never dropped - but flagged so headline P&L and the 30-counter skip it.
+            try:
+                from engine.config import SIDE_QUALIFIED
+                _q = SIDE_QUALIFIED.get(sym)
+                if _q and pos.get("side") != _q:
+                    pos["advisory"] = True
+            except Exception:
+                pass
             book.append(pos); new.append(pos)
             try:
                 from engine import forward_record as _fr

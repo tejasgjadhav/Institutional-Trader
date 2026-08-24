@@ -38,7 +38,7 @@ if tot:
     print("  fillable under the live gates. It converts a backtested ROM into money you can collect.")
 
 n = c.execute("""SELECT COUNT(*) FROM fills WHERE book IN ('v2','v1')
-                 AND entry_date>='2026-08-06' AND status='CLOSED'""").fetchone()[0]
+                 AND entry_date>='2026-08-06' AND status='CLOSED' AND advisory=0""").fetchone()[0]
 print(f"\n>>> 30-TRADE COUNTER: {n}/30 closed  (v2+v1, post 6-Aug)")
 print("    Criteria fixed in studies/FORWARD_RECORD_DECISION_RULE.md before any data existed.")
 if n >= 30:

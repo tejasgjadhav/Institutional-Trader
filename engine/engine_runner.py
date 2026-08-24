@@ -1096,6 +1096,7 @@ class EngineRunner:
         # so max loss overstates the typical loss by two to three times on these books.
         buck = {"i": dict(w=0, l=0, pl=0.0, wv=[], lv=[]),
                 "m": dict(w=0, l=0, pl=0.0, wv=[], lv=[])}
+        adv = dict(n=0, pl=0.0)
         openn = 0; open_pl = 0.0; opens = []; start = None
         for _label, fname in self._OUTCOME_BOOKS:
             path = os.path.join(DATA_DIR, fname)
@@ -1115,6 +1116,12 @@ class EngineRunner:
                 qty = p.get("qty") or p.get("lot") or 0
                 pp = p.get("pnl_pts")
                 rs = pp * qty if isinstance(pp, (int, float)) and qty else 0.0
+                if p.get("advisory"):
+                    # weak side of a side-qualified name: logged, shown separately, excluded
+                    # from the headline record (user, 24-Aug-2026)
+                    if st in ("WIN", "LOSS"):
+                        adv["n"] += 1; adv["pl"] += rs
+                    continue
                 if st == "WIN":
                     b["w"] += 1; b["pl"] += rs; b["wv"].append(rs)
                 elif st == "LOSS":
@@ -1170,6 +1177,9 @@ class EngineRunner:
             "",
         ]
         if openn:
+            if adv["n"]:
+                lines.append(f"📎 Advisory (weak side of a side-qualified name, excluded from the "
+                             f"headline): <b>{adv['n']}</b> closed · ₹{adv['pl']:+,.0f}")
             lines.append(f"⏳ Open: <b>{openn} trade{'s' if openn != 1 else ''}</b> · "
                          f"MTM <b>₹{open_pl:+,.0f}</b> — settle by date:")
             groups = {}
@@ -1181,6 +1191,9 @@ class EngineRunner:
                 names = ", ".join(f"{o['sym']} ({o['tag']})" for o in items)
                 lines.append(f"   • {self._fmt_d(exp)}: <b>{n} trade{'s' if n != 1 else ''}</b> — {names}")
         else:
+            if adv["n"]:
+                lines.append(f"📎 Advisory (weak side of a side-qualified name, excluded from the "
+                             f"headline): <b>{adv['n']}</b> closed · ₹{adv['pl']:+,.0f}")
             lines.append("⏳ Open: <b>0 trades</b>")
         return "\n".join(lines)
 

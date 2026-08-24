@@ -47,7 +47,8 @@ CREATE TABLE IF NOT EXISTS fills (
     -- EXIT
     exit_ts       TEXT, exit_date TEXT, exit_reason TEXT,
     exit_cost     REAL, pnl_rs REAL, margin_rs REAL,
-    status        TEXT NOT NULL DEFAULT 'OPEN'
+    status        TEXT NOT NULL DEFAULT 'OPEN',
+    advisory      INTEGER NOT NULL DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS rejections (
     ts        TEXT NOT NULL,
@@ -137,7 +138,8 @@ def summary():
                 out["closed" if st == "CLOSED" else "open"] = n
             r = c.execute("""SELECT COUNT(*), SUM(pnl_rs), SUM(margin_rs),
                                     SUM(CASE WHEN pnl_rs>0 THEN 1 ELSE 0 END)
-                             FROM fills WHERE status='CLOSED' AND pnl_rs IS NOT NULL""").fetchone()
+                             FROM fills WHERE status='CLOSED' AND pnl_rs IS NOT NULL
+                               AND advisory=0""").fetchone()
             n, pnl, mgn, wins = r[0] or 0, r[1] or 0.0, r[2] or 0.0, r[3] or 0
             out.update(n=n, pnl_rs=pnl, win_pct=(100.0*wins/n if n else None),
                        rom_pct=(100.0*pnl/mgn if mgn else None))
@@ -194,14 +196,15 @@ def sync():
                         credit = p.get("credit")
                         c.execute("""INSERT INTO fills
                             (id, book, symbol, side, entry_ts, entry_date, expiry, short_strike,
-                             long_strike, width, lot, num_lots, qty, credit, cw, margin_rs, status)
-                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+                             long_strike, width, lot, num_lots, qty, credit, cw, margin_rs, status,
+                             advisory)
+                            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
                             (pid, book, p.get("symbol"), p.get("side"),
                              p.get("entry_date"), p.get("entry_date"), p.get("expiry"),
                              p.get("short_strike"), p.get("long_strike"), width, p.get("lot"),
                              p.get("num_lots"), qty, credit, p.get("credit_width"),
                              ((width - (credit or 0)) * qty) if width else None,
-                             "CLOSED" if closed else "OPEN"))
+                             "CLOSED" if closed else "OPEN", 1 if p.get("advisory") else 0))
                         n_new += 1
                         have[pid] = "CLOSED" if closed else "OPEN"
                     if closed and have.get(pid) != "CLOSED":

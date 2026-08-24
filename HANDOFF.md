@@ -3301,3 +3301,8 @@ research/audit_namewise.md.
 side-blocking mechanism — his decision: scanner open, the Telegram side data informs the trade.
 ICICIGI qualified on bear calls (8/8, +35,834 both windows), PIIND on bull puts (8 tr, 88%,
 +23,549 both windows); the other side of each is weak and VISIBLE in every message.
+
+## 24-Aug 13:3x · IN FLIGHT: advisory tagging for side-qualified names (user question). Design:
+weak-side trades of ICICIGI/PIIND are LOGGED but tagged advisory=True at entry; headline P&L,
+portfolio summary and the 30-counter exclude them; a separate "Advisory (weak side)" line shows
+them so the probation stays measurable. Never dropped — tagged.

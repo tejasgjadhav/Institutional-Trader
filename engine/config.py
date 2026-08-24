@@ -72,6 +72,11 @@ UNIVERSE = [
     # user takes the call at trade time. n=8 cells — thin, probationary, forward record decides.
     "ICICIGI.NS", "PIIND.NS",
 ]
+# Side-qualified names: the OTHER side's paper trades are still taken and logged, but tagged
+# advisory=True and EXCLUDED from headline P&L and the 30-trade counter (user, 24-Aug-2026:
+# "dont add that in trade log, has this increased my pnl" -> resolved as tag-not-drop, so the
+# weak side stays measured and the probation can be judged; a dropped trade teaches nothing).
+SIDE_QUALIFIED = {"ICICIGI": "BEAR_CALL", "PIIND": "BULL_PUT"}
 # HCLTECH and SBILIFE REMOVED 24-Aug-2026 (user): the only two names negative in BOTH windows
 # (HCLTECH IS -14,583/OOS -4,571 on 7 trades; SBILIFE -9,597/-3,720 on 8). Thin samples, but the
 # user does not want names with an all-negative record; the gates rarely admitted them anyway.
