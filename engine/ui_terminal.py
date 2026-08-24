@@ -811,10 +811,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             with sqlite3.connect(DB, timeout=5) as c:
                 rows = list(c.execute(
                     """SELECT book, entry_date, status, pnl_rs FROM fills
-                       WHERE status='CLOSED' AND pnl_rs IS NOT NULL"""))
+                       WHERE status='CLOSED' AND pnl_rs IS NOT NULL AND advisory=0"""))
+                adv = c.execute("""SELECT COUNT(*), COALESCE(SUM(pnl_rs),0) FROM fills
+                                   WHERE status='CLOSED' AND advisory=1""").fetchone()
                 n_open = c.execute("SELECT COUNT(*) FROM fills WHERE status='OPEN'").fetchone()[0]
                 counter = c.execute("""SELECT COUNT(*) FROM fills WHERE book IN ('v2','v1')
-                                       AND entry_date>='2026-08-06' AND status='CLOSED'""").fetchone()[0]
+                                       AND entry_date>='2026-08-06' AND status='CLOSED'
+                                       AND advisory=0""").fetchone()[0]
                 rej = c.execute("SELECT COUNT(*) FROM rejections").fetchone()[0]
         except Exception:
             return self._d("Forward record unavailable (data/forward_record.db not readable).")
@@ -853,12 +856,21 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             ("<span style=\"color:%s;\">Before 6-Aug - T-1 signals, NOT this strategy</span>" % TEXT_DIM,
              stat(lambda r: r[0] in ("v2", "v1", "v0") and not POST(r))),
         ]
+        adv_row = ""
+        if adv and adv[0]:
+            c_ = GREEN if adv[1] > 0 else (RED if adv[1] < 0 else TEXT_DIM)
+            sign = "+" if adv[1] >= 0 else "-"
+            adv_row = (f'<tr><td>Advisory — weak side of a side-qualified name '
+                       f'(own running total, never merged into the headline)</td>'
+                       f'<td>{adv[0]}</td><td></td>'
+                       f'<td><span style="color:{c_};">{sign}Rs{abs(adv[1]):,.0f}</span></td>'
+                       f'<td></td><td></td></tr>')
         head = (f'<p style="color:{GREEN};font-size:17px;font-weight:bold;margin-top:4px;">'
                 f'THE FORWARD PAPER RECORD - what has actually happened</p>')
         tbl = (f'<table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">'
                f'<tr style="color:{CYAN};font-weight:bold;"><td>Record</td><td>Closed</td><td>Won</td>'
                f'<td>Net</td><td>Avg win</td><td>Avg loss (REALISED)</td></tr>'
-               + "".join(line(l, st) for l, st in blocks) + "</table>")
+               + "".join(line(l, st) for l, st in blocks) + adv_row + "</table>")
         return (head
                 + self._d("Read from the forward-record database on every refresh. This is the ONLY "
                           "genuinely out-of-sample instrument here; everything below it is a backtest.")
