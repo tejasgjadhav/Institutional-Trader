@@ -19,9 +19,9 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 78.8% IS / 83.6% OOS | ₹8,450 (2.4/mo × ₹3,457) | IS **+27.2%** ROM [+18.4, +34.7], 6/6 yrs (n=217); OOS **+27.2%** [+16.4, +37.2], **2/2 full yrs** (n=55, 2024 is a 1-trade stub). Agree to 0.04pp — luck, not precision: the intervals are ~18pp wide |
-| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 79.1% IS / 79.3% OOS | ₹8,359 (8.0/mo × ₹1,051) | IS **+10.3%** [+2.9, +17.1], 6/6 yrs (n=359); OOS **+9.5%** [+2.5, +15.9], **2/2 full yrs** (n=179, 2024 is a 6-trade stub). Both intervals EXCLUDE zero — the best-measured stock book |
-| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 83.1% IS / 79.6% OOS | ₹1,674 (4.1/mo × ₹405) | IS +14.4% [+5.9, +21.9], 5/6 yrs (n=237); OOS **+3.0%** [−6.2, +11.5], **1/2 full yrs** (n=93). Interval spans zero. Kept live as a paper forward-test, user 2026-08-15 |
+| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 77.9% IS / 83.5% OOS | ₹11,472/mo OOS-measured | IS **+21.2%** [n=213, 6/6 yrs] · OOS **+27.0%** [n=79, 2/2 full yrs] — run-3 audited harness |
+| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 80.5% IS / 83.3% OOS | ₹15,228/mo OOS-measured | IS **+12.9%** [n=349, 6/6] · OOS **+16.6%** [n=186, 2/2 full] — the biggest earner |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 85.7% IS / 81.8% OOS | ₹4,292/mo | IS +14.4% [n=217, 6/6] · OOS **+7.2%** [n=99, **1/2 full yrs**] — the watch book |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | **REMOVED 2026-08-20** | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 · book deleted from `engine/dte_multi.py`, never opened a position |

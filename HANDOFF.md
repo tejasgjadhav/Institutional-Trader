@@ -3355,3 +3355,7 @@ caught by predict-then-verify before anything shipped.
 ### 24-Aug · naming clarification for the record: "v3" in today's notes means the THIRD RE-RUN of
 the in-sample backtest (fix-attempt 3), NOT a new book. The books remain v2/v1/v0 only. Avoid
 "vN" for run attempts in future notes — use "run 3".
+
+### 24-Aug 15:0x · new-audit (run-3) figures propagated to the LAST stale spots: PM cards, res
+line, work table, CONSOLIDATED_PNL final basis, CLAUDE.md book table. TG strings were already
+run-3 (engine restarted 14:48). All surfaces now one basis.

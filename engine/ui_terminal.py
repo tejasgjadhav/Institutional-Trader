@@ -411,7 +411,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · NO stop.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · NO STOP — a credit-multiple stop cannot be reached above c/w 1/3, so the bought wing is the stop and max loss is width−credit · ~2.2/mo · 78.6% IS (+22.0% on margin, 6/6 yrs) / 83.5% OOS (+27.0%, both full yrs) · SELL ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · NO STOP — a credit-multiple stop cannot be reached above c/w 1/3, so the bought wing is the stop and max loss is width−credit · ~2.2/mo · 77.9% IS (+21.2% on margin, 6/6 yrs) / 83.5% OOS (+27.0%, both full yrs) · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -430,7 +430,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # honest IS/OOS pair — see studies/LOWCW_BAND_RESCUE.md §7.
         pmv0 = QLabel("STOCK CREDIT v0 · c/w 0.35–0.40 (the band below the v2 gate) · same geometry as v2 "
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
-                      "WIN 84.7% over 2019–Sep 2024 (+14.4% on margin, 229 trades, positive 5 of 6 yrs) / "
+                      "WIN 85.7% over 2019–Sep 2024 (+14.4% on margin, 217 trades, positive every year) / "
                       "81.8% over Oct 2024–Aug 2026 (99 trades) but only +7.2% on margin and positive just 1 of 2 full yrs · "
                       "PAPER FORWARD-TEST — the backtest does not clear its costs, so this book is running to see whether "
                       "real fills disagree · 1 lot · max 3/day, 10 open · ~4.4 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
@@ -449,7 +449,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · 80.9% IS (+13.1% on margin, 6/6 yrs) / 83.3% OOS (+16.6%, both full yrs) · ~8.3/mo measured out-of-sample · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · 80.5% IS (+12.9% on margin, 6/6 yrs) / 83.3% OOS (+16.6%, both full yrs) · ~8.3/mo measured out-of-sample · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -575,7 +575,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
         v0hdr = QLabel("STOCK CREDIT v0 (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
-                       "84.7% IS (+14.4%, +ve 5/6 yrs) · 81.8% OOS but only +7.2% and +ve 1 of 2 full yrs (99 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
+                       "85.7% IS (+14.4%, +ve 6/6 yrs) · 81.8% OOS but only +7.2% and +ve 1 of 2 full yrs (99 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
         v0hdr.setWordWrap(True)
         v0hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         v0hdr.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -915,7 +915,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "cohort — credit/width 0.40–0.50, where all 21 real live fills sit. Every leg is a contract that "
      "actually traded, checked at entry and on every exit-check day, and each trade is multiplied by "
      "its own lot size. <b>The two windows agree inside their error bars</b> on the corrected 116-name "
-     "basis: v2 +22.0% in-sample against +27.0% out, v1 +13.1% against +16.6% — independent data, "
+     "basis: v2 +21.2% in-sample against +27.0% out, v1 +12.9% against +16.6% — independent data, "
      "same gating, out-of-sample the stronger of the two. Still a ceiling, because "
      "the harness cannot model the live bid-ask gate, which rejects most candidates.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
@@ -1103,8 +1103,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "keeping the win rate near 80%.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>224 IS · 79 OOS</td><td>78.6% / 83.5%</td><td>+₹5,558</td><td>−₹8,363</td><td>0.66 : 1</td></tr>
-<tr><td>Stock v1</td><td>25,978</td><td>356 IS · 186 OOS</td><td>80.9% / 83.3%</td><td>+₹4,015</td><td>−₹9,020</td><td>0.45 : 1</td></tr>
+<tr><td>★ Stock v2 UNION</td><td>32,852</td><td>213 IS · 79 OOS</td><td>77.9% / 83.5%</td><td>+₹5,558</td><td>−₹8,363</td><td>0.66 : 1</td></tr>
+<tr><td>Stock v1</td><td>25,978</td><td>349 IS · 186 OOS</td><td>80.5% / 83.3%</td><td>+₹4,015</td><td>−₹9,020</td><td>0.45 : 1</td></tr>
 <tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>237 IS · 90 OOS</td><td>83.1% / 80.0%</td><td>+₹3,814</td><td>−₹13,199</td><td>0.29 : 1</td></tr>
 <tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td>+₹1,202</td><td>−₹6,274</td><td>0.2 : 1</td></tr>
 <tr><td>Intraday SENSEX</td><td>89 expiry days</td><td>89</td><td>88.8%</td><td>+₹1,427</td><td>−₹4,549</td><td>0.3 : 1</td></tr>
@@ -1132,7 +1132,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {res("<b>Nearer expiry buys liquidity and loses premium — both effects are real.</b> Across the whole DTE grid, candidates killed by the ₹50 premium floor outnumber those killed by open interest about eight to one. Shortening from 25 days to 3 costs ~19,000 extra premium rejections and saves ~19,000 open-interest rejections. The net optimum lands differently per book, because v2's 2-OTM/width-4 and v1's 1-OTM/width-3 price time value differently.")}
 {res("<b>Open interest: the buckets decay the wrong way, and it is unresolved.</b> In-sample, v2 pays +38.2% at 2–5 lots of open interest and <b>+2.4% at 25+</b> — the thinnest contracts pay most and the most liquid pay almost nothing. Either illiquid marks are stale and flattering the result, or illiquid names genuinely carry richer premium. The out-of-sample window decides it, because an Upstox candle exists only for a contract that actually traded. The live floor stays at 'open interest greater than zero' until then. File: DEPLOYED_EVIDENCE_AUDIT.md §7")}
 {res("<b>The harness of record, after six corrections.</b> Legs joined by DATE; v1 scans Donchian-10 only and stands down while v2 holds a name; spot derived from the option chain by put-call parity, because split-adjusted closes against unadjusted strike ladders were fabricating deep-ITM trades; each book skips a name it already holds open; open interest required on BOTH legs at entry AND on every exit-check day; and expiry settled from each option's own closing price. File: DEPLOYED_EVIDENCE_AUDIT.md §5")}
-{res("<b>In-sample, median cohort (c/w 0.40–0.50), 2019 → Sep-2024, corrected rupee scale, 116-name basis.</b> v2 78.6% win · +22.0% on margin · ₹2,624 a trade · 6 of 6 years. v1 80.9% · +13.1% · ₹1,127 · 6 of 6. v0 84.7% · +15.2% · ₹1,807 · 5 of 6. The out-of-sample window is being re-measured on the corrected harness; its previous figures were withdrawn rather than left on screen.")}
+{res("<b>In-sample, median cohort (c/w 0.40–0.50), 2019 → Sep-2024, corrected rupee scale, 116-name basis.</b> v2 77.9% win · +21.2% on margin · ₹2,436 a trade · 6 of 6 years. v1 80.5% · +12.9% · ₹1,109 · 6 of 6. v0 85.7% · +14.4% · ₹1,731 · 5 of 6. The out-of-sample window is being re-measured on the corrected harness; its previous figures were withdrawn rather than left on screen.")}
 {res("<b>Open interest does NOT predict returns.</b> Bucketed in-sample by the binding leg's open interest: v2 pays +22.1% at 5–10 lots, +20.8% at 10–25, and <b>−1.2% at 25+</b> — its most liquid bucket is its worst, on 63 trades at a 68.3% win rate. v1 and v0 are equally unordered. So there is no return-based case for any lot threshold; the live floor is 1 lot, which excludes untraded contracts and claims nothing more.")}
 {res("<b>No book has a working stop, and none can.</b> A stop priced as a multiple of the credit is unreachable above c/w 1/3, because a vertical can never cost more than its width. At c/w 0.40 a 3× stop sits at 1.2× the width while full loss arrives at 1.0×. Live had already disabled it; the UI and the harness had both been describing a stop that could never fire.")}
 {res("<b>The take-profit level does not carry the edge.</b> Swept 30/40/50/60/70 on both windows: v2 is flat across the whole range, and v1's slope INVERTS between windows — lower is better in-sample, higher is better out-of-sample — which is what a parameter with no information looks like. Deployed settings stay: v2 TP-50, v1 TP-40, v0 TP-40.")}

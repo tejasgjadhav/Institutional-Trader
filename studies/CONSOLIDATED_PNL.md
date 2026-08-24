@@ -148,3 +148,14 @@ ratio, only in pooled weighting.
 cohort — v2 IS 78.6%/+22.0% → OOS 83.5%/+27.0% (₹11,472/mo); v1 80.9%/+13.1% → 83.3%/+16.6%
 (₹15,228/mo); v0 84.7%/+15.2% → 81.8%/+7.2% (₹4,292/mo). Stock OOS ₹30,992/mo; +index ₹35,916;
 plan-on-80% ₹28,733. Every future admission shifts these — the UI reads this basis.
+
+**FINAL 24-Aug basis (run 3 of the audit-fixed harness — parity misfires rejected at the audit's
+10% definition, segment-median rupee scale, pooled de-dup):**
+Totals IS 1,177 · OOS 420 (116 names). Median cohort:
+| | IS | OOS |
+|---|---|---|
+| v2 | 213 tr · 77.9% · +21.2% · ₹2,436/tr | 79 tr · 83.5% · +27.0% · ₹3,267/tr (₹11,472/mo) |
+| v1 | 349 tr · 80.5% · +12.9% · ₹1,109/tr | 186 tr · 83.3% · +16.6% · ₹1,842/tr (₹15,228/mo) |
+| v0 | 217 tr · 85.7% · +14.4% · ₹1,731/tr | 99 tr · 81.8% · +7.2% · ₹975/tr (₹4,292/mo) |
+Stock OOS ₹30,992/mo · +index ₹36,798 · plan-on-80% ₹29,438. Every earlier table in this file is
+superseded history. OOS untouched by the run-3 fixes (its path has none of them).
