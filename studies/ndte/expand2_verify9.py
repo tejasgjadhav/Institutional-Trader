@@ -7,7 +7,7 @@ per name. This is the audit the user asked for before any config change.
 """
 import json, random, collections, sys
 random.seed(17)
-NINE = ["PAGEIND","MCX","TVSMOTOR","TIINDIA","SOLARINDS","LTIM","BDL","SHREECEM","AMBER"]
+NINE = ["PAGEIND","MCX","TVSMOTOR","TIINDIA","SOLARINDS","LTM","BDL","SHREECEM","AMBER"]
 THIN = ["IEX","CONCOR","RBLBANK"]
 iss=json.load(open("research/expansion2/is_rows.json"))
 oos=json.load(open("research/expansion2/oos_rows.json"))

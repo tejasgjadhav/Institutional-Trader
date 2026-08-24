@@ -3172,3 +3172,15 @@ MCX 6/83%/+7,773 · HDFCAMC 8/62%/-14,679 (FAILS both-windows) · ICICIGI 1/100%
 None decisively confirms; PAGEIND + MCX best aligned. TVSMOTOR jumped: IS 9/89% + OOS 16/94%/+39,212.
 IS-BLIND new entrants strong: LTIM(9/100%/+59k... symbol printed LTM), TIINDIA, SOLARINDS, AMBER, BDL.
 Next: pass 3 clean -> refresh study + byname files, verdicts per the fixed rule. Nothing in config.
+
+### 24-Aug · profit estimate for the 9 admissions (expectancy model, 1 lot)
+
+Symbol correction: the ninth name is **LTM** (as listed by NSE/Upstox; I had written LTIM) — its 9
+trades/+59,240 are real. verify9 script corrected.
+
+By his formula (win% x avg win - loss% x avg loss, x signals/mo):
+- IS window (66 mo, 73 trades): 84.9% x 6,513 - 15.1% x 10,806 = +3,903/trade x 1.1/mo = **+Rs4,317/mo**
+- OOS window (22.5 mo, 74 trades, FLOORS): 86.5% x 4,867 - 13.5% x 7,585 = +3,184/trade x 3.3/mo =
+  **+Rs10,473/mo**
+Honest range: +Rs4,000-10,500/mo; the truth likely between (IS lacks the new entrants entirely; OOS
+is one favourable regime and counts are floors). vs current stock books ~Rs18.5k/mo = a 25-55% lift.
