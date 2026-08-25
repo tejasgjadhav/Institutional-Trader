@@ -3359,3 +3359,11 @@ the in-sample backtest (fix-attempt 3), NOT a new book. The books remain v2/v1/v
 ### 24-Aug 15:0x · new-audit (run-3) figures propagated to the LAST stale spots: PM cards, res
 line, work table, CONSOLIDATED_PNL final basis, CLAUDE.md book table. TG strings were already
 run-3 (engine restarted 14:48). All surfaces now one basis.
+
+## expand2 verify9 output (2026-08-24 15:10)
+
+### 24-Aug post-scan · user asks: no signal at 15:36 despite Monday — and will we get 8-10 swing
+trades this month? Investigating the scan trace now.
+
+### 24-Aug 16:4x · user reports the 15:36 no-signal Telegram NEVER ARRIVED, though the log printed
+"no-signal notice sent" (i.e. the API returned 200). Investigating delivery vs receipt.

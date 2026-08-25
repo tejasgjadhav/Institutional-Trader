@@ -57,6 +57,14 @@ def send_telegram(text: str) -> bool:
                 "chat_id": cid, "text": text, "parse_mode": "HTML"
             }, timeout=10)
             if r.status_code == 200:
+                # PROVABLE DELIVERY (24-Aug-2026): the user reported a message the API accepted as
+                # never arriving. Log the message_id and chat so "sent" always means "this exact
+                # post, findable in this exact chat".
+                try:
+                    _mid = r.json().get("result", {}).get("message_id")
+                    logger.info("telegram delivered: chat %s message_id %s", cid, _mid)
+                except Exception:
+                    pass
                 any_ok = True; continue
             # SAFETY NET (2026-07-21): a 400 is almost always an HTML parse failure — an unescaped
             # '&' (e.g. the symbol "M&M"), '<' or '>' in an interpolated field. Rather than lose the
