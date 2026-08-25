@@ -736,8 +736,22 @@ class EngineRunner:
                 except Exception as e:
                     logger.warning(f"stock_credit_v0 resolve: {e}")
         h, m = map(int, config.STOCK_CREDIT_SCAN_AFTER.split(":"))
-        after_cutoff = (now.hour * 60 + now.minute) >= (h * 60 + m)
-        if (self.agent.is_market_open() and after_cutoff and self._stockcr_scan_day != now.date()):
+        mins_now = now.hour * 60 + now.minute
+        after_cutoff = mins_now >= (h * 60 + m)
+        # LATE-SCAN CATCH-UP (25-Aug-2026 — the audit's finding #7 fired live today). The engine is
+        # single-threaded; on 25-Aug a network stall pushed the cycle from 15:32 straight to 15:48,
+        # is_market_open() was False by then, and the day's ONLY stock scan silently never ran - no
+        # signals, no no-signal notice, nothing in the record. The scan runs on official CLOSES, so
+        # its ANSWER is still computable after the bell: until 16:30 a missed scan now runs anyway,
+        # clearly labelled LATE (signals arriving after 15:40 cannot be placed, but the record and
+        # the notice must exist either way).
+        late_ok = (not self.agent.is_market_open()) and after_cutoff and mins_now <= (16 * 60 + 30)
+        if ((self.agent.is_market_open() or late_ok) and after_cutoff
+                and self._stockcr_scan_day != now.date()):
+            if late_ok:
+                logger.warning("stock scan running LATE at %s - the 15:36 window was missed "
+                               "(cycle stalled); signals below are RECORD-ONLY, not placeable",
+                               now.strftime("%H:%M"))
             self._stockcr_scan_day = now.date()
             _fired = 0        # counts signals across all three books, for the no-signal notice
             # v2 (the leader) scans FIRST so v1 can defer to it — one position per stock across

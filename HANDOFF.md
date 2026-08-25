@@ -3367,3 +3367,14 @@ trades this month? Investigating the scan trace now.
 
 ### 24-Aug 16:4x · user reports the 15:36 no-signal Telegram NEVER ARRIVED, though the log printed
 "no-signal notice sent" (i.e. the API returned 200). Investigating delivery vs receipt.
+
+## 25-Aug 22:0x · THE MISSING 15:37 MESSAGE, SOLVED — audit finding #7 fired live
+Today's 15:36 scan NEVER RAN: a 15:31 network stall (connection resets) blocked the single-threaded
+cycle from 15:32:36 straight to 15:48:17; is_market_open() was then False and both the scan and the
+no-signal notice were silently skipped. (My first answer wrongly cited YESTERDAY's "sent" log line.)
+FIXED: late-scan catch-up — a missed 15:36 scan now runs until 16:30, clearly labelled LATE/record-
+only, so the day's answer and notice always exist. Engine restarted 22:0x with it.
+SANDBOXED RE-SCAN of today (sends stubbed, books scratched): v2/v1/v0 ALL "no signal" — nothing was
+missed; the stall cost us the MESSAGE, not a trade. Also today: NIFTY 0DTE settled its FIRST LOSS
+(-75.1 pts); BAJAJ-AUTO + GRASIM settled at expiry (the 15:48 results he received).
+Delivery logging (message ids) went live with tonight's restart — every future send is provable.
