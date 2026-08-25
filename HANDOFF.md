@@ -3378,3 +3378,11 @@ SANDBOXED RE-SCAN of today (sends stubbed, books scratched): v2/v1/v0 ALL "no si
 missed; the stall cost us the MESSAGE, not a trade. Also today: NIFTY 0DTE settled its FIRST LOSS
 (-75.1 pts); BAJAJ-AUTO + GRASIM settled at expiry (the 15:48 results he received).
 Delivery logging (message ids) went live with tonight's restart — every future send is provable.
+
+## 25-Aug 22:00 · SCAN SENTINEL DEPLOYED (user: signals max by 15:37; no second engine needed)
+A daemon thread inside the same engine: idle all day; from 15:36:20-15:44 it checks every 5s whether
+the day's scan fired, and if the main loop is stalled it runs _stock_credit ITSELF. The once-a-day
+marker swap is atomic under _scan_lock (race-tested: 8 threads -> exactly 1 claimant). Combined with
+yesterday's late-scan catch-up: main loop healthy -> scan at 15:36 sharp; main loop wedged ->
+sentinel fires by ~15:36:25, signal on Telegram by 15:37, placeable; both dead somehow -> late
+catch-up until 16:30, record-only. Engine restarted 22:00, 0 errors. First live test: tomorrow 15:36.

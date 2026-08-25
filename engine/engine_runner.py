@@ -18,6 +18,7 @@ import time
 import html
 import logging
 import subprocess
+import threading
 from datetime import datetime
 
 os.chdir(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -64,6 +65,15 @@ class EngineRunner:
         self._last_stockcr_resolve = 0.0
         self._csv_day = None
         self._stockcr_scan_day = None
+        # SCAN SENTINEL (25-Aug-2026, user: "i want signals max by 15:37"). The main loop is
+        # single-threaded and today it stalled on network retries straight through the
+        # 15:36-15:40 window, so the day's scan never ran. This daemon thread does nothing all
+        # day; from 15:36:20 it checks every 5s whether the scan has fired, and if the main loop
+        # has not done it, it calls the SAME method itself. The once-a-day marker swap is atomic
+        # under _scan_lock, so the two paths can never both scan. The signal therefore goes out
+        # by ~15:37 even when the main loop is wedged inside a dead HTTP call.
+        self._scan_lock = threading.Lock()
+        threading.Thread(target=self._scan_sentinel, daemon=True).start()
         self._watchlist_tg_day = None
         self._watchlist_build_day = None
         self._last_monthly_resolve = 0.0
@@ -659,6 +669,32 @@ class EngineRunner:
                 continue
         return False
 
+    def _scan_sentinel(self):
+        """Deadline insurance for the 15:36 scan (25-Aug-2026). Runs in a daemon thread. If the
+        main loop has not fired the day's stock scan by 15:36:20 - today it sat blocked in
+        network retries until 15:48 and the scan silently never happened - this thread calls
+        _stock_credit itself. The atomic marker swap inside makes double-running impossible."""
+        while True:
+            try:
+                time.sleep(5)
+                now = datetime.now(IST)
+                if now.weekday() >= 5:
+                    continue
+                mins = now.hour * 60 + now.minute
+                if not (15 * 60 + 36 <= mins <= 15 * 60 + 44):
+                    continue
+                if mins == 15 * 60 + 36 and now.second < 20:
+                    continue                       # the main loop gets until 15:36:20
+                if self._stockcr_scan_day == now.date():
+                    continue
+                logger.warning("SCAN SENTINEL firing at %s — the main loop has not scanned "
+                               "(likely stalled); scanning from the sentinel thread",
+                               now.strftime("%H:%M:%S"))
+                self._stock_credit(now)
+            except Exception as e:
+                logger.warning("scan sentinel: %s", e)
+                time.sleep(30)
+
     def _stock_credit(self, now):
         """STOCK CREDIT SPREADS (the 4th strategy) — high-frequency fade on the stock universe.
         Once/day scan after the cutoff + periodic mark-to-market, same pattern as _swing."""
@@ -748,11 +784,16 @@ class EngineRunner:
         late_ok = (not self.agent.is_market_open()) and after_cutoff and mins_now <= (16 * 60 + 30)
         if ((self.agent.is_market_open() or late_ok) and after_cutoff
                 and self._stockcr_scan_day != now.date()):
+            # the marker swap is atomic: whichever of the main loop and the sentinel gets here
+            # first claims the day; the loser sees the marker set and returns
+            with self._scan_lock:
+                if self._stockcr_scan_day == now.date():
+                    return
+                self._stockcr_scan_day = now.date()
             if late_ok:
                 logger.warning("stock scan running LATE at %s - the 15:36 window was missed "
                                "(cycle stalled); signals below are RECORD-ONLY, not placeable",
                                now.strftime("%H:%M"))
-            self._stockcr_scan_day = now.date()
             _fired = 0        # counts signals across all three books, for the no-signal notice
             # v2 (the leader) scans FIRST so v1 can defer to it — one position per stock across
             # both books (no doubling-down on the same name). User request 2026-07-08.
