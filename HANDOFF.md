@@ -3391,3 +3391,10 @@ catch-up until 16:30, record-only. Engine restarted 22:00, 0 errors. First live 
 ULTRACEMCO passed gates by 15:31-35 but the digest's near-miss/premium filter hid it, so he was not
 ready to place at 15:36. New format: entire union watchlist, DON'T-TRADE-YET framing, qualifying
 names marked "POTENTIAL SIGNAL - wait for the 15:36 call". Show sample BEFORE deploying.
+
+## 26-Aug ~16:0x · SPURIOUS NO-SIGNAL after the real ULTRACEMCO EXECUTE — my 15:50 restart reset the
+in-memory scan marker; the late-catch-up re-ran the done scan, found nothing new (name already held)
+and sent "no signal". FIXED at the root: once-a-day markers now PERSIST to data/day_markers.json
+(load at start, save on set) — restarts can no longer re-run daily scans, which also retires the
+main hazard behind the freeze rule. Today's markers seeded before restarting. CORRECTION sent to the
+channel (ULTRACEMCO signal stands). Note: ULTRACEMCO = first forward-record trade of the new era.

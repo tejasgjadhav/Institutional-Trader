@@ -74,6 +74,12 @@ class EngineRunner:
         # by ~15:37 even when the main loop is wedged inside a dead HTTP call.
         self._scan_lock = threading.Lock()
         threading.Thread(target=self._scan_sentinel, daemon=True).start()
+        # PERSISTED ONCE-A-DAY MARKERS (26-Aug-2026). The markers were in-memory only, so ANY
+        # restart reset them — the freeze-rule mechanism. Today it bit again in a new way: a 15:50
+        # restart cleared the scan marker, the late-catch-up re-ran an already-done scan, found
+        # nothing new (ULTRACEMCO was already held) and sent a spurious no-signal notice AFTER the
+        # real EXECUTE message. Markers now load from disk at start and save on set.
+        self._load_day_markers()
         self._watchlist_tg_day = None
         self._watchlist_build_day = None
         self._last_monthly_resolve = 0.0
@@ -669,6 +675,32 @@ class EngineRunner:
                 continue
         return False
 
+    _MARKER_PATH = os.path.join(DATA_DIR, "day_markers.json")
+    _MARKER_ATTRS = ("_stockcr_scan_day", "_watchlist_tg_day", "_zdte_scan_day",
+                     "_watchlist_build_day", "_swing_scan_day", "_monthly_scan_day")
+
+    def _load_day_markers(self):
+        try:
+            from datetime import date as _date
+            d = json.load(open(self._MARKER_PATH))
+            for k in self._MARKER_ATTRS:
+                v = d.get(k)
+                if v:
+                    setattr(self, k, _date.fromisoformat(v))
+        except Exception:
+            pass
+
+    def _save_day_markers(self):
+        try:
+            out = {}
+            for k in self._MARKER_ATTRS:
+                v = getattr(self, k, None)
+                if v:
+                    out[k] = v.isoformat()
+            json.dump(out, open(self._MARKER_PATH, "w"))
+        except Exception as e:
+            logger.warning("day markers save: %s", e)
+
     def _scan_sentinel(self):
         """Deadline insurance for the 15:36 scan (25-Aug-2026). Runs in a daemon thread. If the
         main loop has not fired the day's stock scan by 15:36:20 - today it sat blocked in
@@ -738,6 +770,7 @@ class EngineRunner:
         if (self.agent.is_market_open() and _mins >= _digest_mins()
                 and self._watchlist_tg_day != now.date()):
             self._watchlist_tg_day = now.date()
+            self._save_day_markers()
             try:
                 w2 = stock_credit_v2.build_watchlist()   # fresh, post-auction strikes
                 nc = stock_credit_v2.notify_nearmiss(rebuild=False)
@@ -790,6 +823,7 @@ class EngineRunner:
                 if self._stockcr_scan_day == now.date():
                     return
                 self._stockcr_scan_day = now.date()
+                self._save_day_markers()
             if late_ok:
                 logger.warning("stock scan running LATE at %s - the 15:36 window was missed "
                                "(cycle stalled); signals below are RECORD-ONLY, not placeable",
@@ -955,6 +989,7 @@ class EngineRunner:
         in_window = (h1 * 60 + m1) <= mins <= (h2 * 60 + m2)
         if (self.agent.is_market_open() and in_window and self._zdte_scan_day != now.date()):
             self._zdte_scan_day = now.date()
+            self._save_day_markers()
             try:
                 new = zero_dte.scan_signal()
                 if new:
