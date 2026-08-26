@@ -8,6 +8,10 @@ keyword model. Results are cached to data/event_scores.json.
 Schedule (driven by the agent): a full scrape at ~9 AM, then refreshed every
 hour from 9 AM to 1 PM, so the EVENT z-score updates through the morning
 without slowing the 5-min signal scan.
+
+Study code published with The Algo Trading Bible. Not investment advice. Test anything you
+build on your own data before you risk money on it, and understand that you do so at your own risk.
+See DISCLAIMER.md.
 """
 import os
 import re

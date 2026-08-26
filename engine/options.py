@@ -4,6 +4,10 @@ and fetch its historical 5-min premium from Upstox.
 
 Used by the option-aware backtest so CALL/PUT signals are evaluated on the
 OPTION PREMIUM (what a trader actually exits on), not the underlying stock.
+
+Study code published with The Algo Trading Bible. Not investment advice. Test anything you
+build on your own data before you risk money on it, and understand that you do so at your own risk.
+See DISCLAIMER.md.
 """
 import os
 import json

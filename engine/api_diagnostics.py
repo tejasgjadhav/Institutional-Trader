@@ -1,6 +1,10 @@
 """
 API Diagnostics — Test all data sources
 Upstox FNO, 5-min candles, NSE API, Yahoo, VIX
+
+Study code published with The Algo Trading Bible. Not investment advice. Test anything you
+build on your own data before you risk money on it, and understand that you do so at your own risk.
+See DISCLAIMER.md.
 """
 import logging
 from datetime import datetime

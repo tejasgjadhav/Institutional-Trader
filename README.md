@@ -30,6 +30,9 @@ underlying, t = −2.69. It loses, and the note says so and shows the working.
 Three more rules ship beside it in `engine/example_daily_rules.py`, each measured over eight years
 with costs charged. See [studies/THREE_SIMPLE_RULES_TESTED.md](studies/THREE_SIMPLE_RULES_TESTED.md).
 
+**Does this not match the screenshots in the book?** It does not, and
+[WHY_THIS_DIFFERS_FROM_THE_BOOK.md](WHY_THIS_DIFFERS_FROM_THE_BOOK.md) explains exactly why.
+
 ## What you get
 
 | | |
@@ -77,5 +80,9 @@ Then test it. `studies/` says how, and the book says it at length. Do not skip t
 
 It is not investment advice, not a recommendation and not a signal service. It is not a proven
 money-maker, and the book says so at length. Treat it as a study system.
+
+**Before you trade anything from here: run your own backtest, on data you pulled yourself, with
+full costs charged. Then paper-trade it. Then decide for yourself and own the decision.** Anything
+you run from this repository, you run at your own risk.
 
 Read [DISCLAIMER.md](DISCLAIMER.md) in full before you run anything.

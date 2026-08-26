@@ -4,6 +4,10 @@ The Upstox API needs instrument keys like 'NSE_EQ|INE467B01029', not 'NSE_EQ|TCS
 
 The instrument master is downloaded once and cached locally. Refresh weekly
 (ISINs are stable, but new listings/changes happen).
+
+Study code published with The Algo Trading Bible. Not investment advice. Test anything you
+build on your own data before you risk money on it, and understand that you do so at your own risk.
+See DISCLAIMER.md.
 """
 import os
 import json

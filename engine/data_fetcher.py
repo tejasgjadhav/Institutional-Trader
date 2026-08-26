@@ -13,6 +13,10 @@ Upstox endpoints (versions live in QUOTE_API / CANDLE_API below):
 
 All instrument keys are ISIN-based (NSE_EQ|INE467B01029), resolved via
 engine.instruments.
+
+Study code published with The Algo Trading Bible. Not investment advice. Test anything you
+build on your own data before you risk money on it, and understand that you do so at your own risk.
+See DISCLAIMER.md.
 """
 import pandas as pd
 import numpy as np

@@ -1,6 +1,10 @@
 """
 Data Utilities — Index closes (Nifty/BankNifty/VIX), API health check.
 All via the Upstox market-data API, with Yahoo only as a fallback.
+
+Study code published with The Algo Trading Bible. Not investment advice. Test anything you
+build on your own data before you risk money on it, and understand that you do so at your own risk.
+See DISCLAIMER.md.
 """
 import os
 import logging
