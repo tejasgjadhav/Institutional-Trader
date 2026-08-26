@@ -297,15 +297,41 @@ def notify_nearmiss(rebuild: bool = True) -> int:
             d = build_watchlist()
         else:
             d = json.load(open(WATCHLIST_PATH)) if os.path.exists(WATCHLIST_PATH) else {}
-        cand = [r for r in d.get("rows", []) if r.get("prem_ok") and r.get("liq_ok") and not r.get("cw_ok")]
+        rows_all = d.get("rows", [])
+        # FULL WATCHLIST (user, 25-Aug-2026). The digest used to show ONLY near-misses
+        # (prem+liq ok, c/w failing) — which meant a name passing EVERY gate was invisible at
+        # 15:31, and the user was not ready when ULTRACEMCO fired at 15:36. Now: every breakout
+        # name, with the FULL-PASSERS on top marked as potential signals to get ready for.
+        qual = [r for r in rows_all if r.get("prem_ok") and r.get("liq_ok") and r.get("cw_ok")]
+        cand = [r for r in rows_all if r.get("prem_ok") and r.get("liq_ok") and not r.get("cw_ok")]
+        rest = [r for r in rows_all if r not in qual and r not in cand]
         ts = d.get("ts", "")[:16].replace("T", " ")
-        if not cand:
-            send_telegram(f"📋 <b>WATCHLIST</b> — {ts}\nNo near-miss candidates today "
-                          f"(nothing cleared premium + liquidity). Nothing to place.")
+        if not rows_all:
+            send_telegram(f"📋 <b>WATCHLIST</b> — {ts}\nNo breakouts on the watchlist today. "
+                          f"Nothing to place.")
             return 0
-        lines = [f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE</b> ({ts})",
-                 "These pass premium + liquidity but FAIL the credit/width gate, so they are NOT "
-                 "signals. Watch only — the engine will not fire them:", ""]
+        lines = [f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE YET</b> ({ts})",
+                 f"All {len(rows_all)} breakout names today. Nothing here is an order — the engine "
+                 f"decides at <b>15:36</b> on the official close.", ""]
+        import html as _h
+        if qual:
+            lines.append(f"⭐ <b>POTENTIAL SIGNAL{'S' if len(qual) != 1 else ''} — get ready, "
+                         f"wait for the 15:36 call:</b>")
+            for r in qual:
+                verb = "CE" if r["side"] == "BEAR_CALL" else "PE"
+                ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
+                ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
+                lines.append(f"⭐ <b>{_h.escape(str(r['sym']))}</b> · c/w {r.get('cw')} ✅ · "
+                             f"prem ✅ · liquidity ✅")
+                lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
+                mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
+                if mp is not None and ml is not None:
+                    lines.append(f"   lot {lot} · max profit ₹{mp:,} · max loss ₹{ml:,}")
+                lines.append(f"   <b>Passes every gate at 15:31 — IF it still passes on the close, "
+                             f"the EXECUTE message follows at 15:36.</b>")
+            lines.append("")
+        if cand:
+            lines.append("Near the gate but NOT signals (c/w below 0.40):")
         SIDE_TXT = {"BEAR_CALL": "Bear Call Strategy — we expect the stock to stay lower and capitalise on option premium",
                     "BULL_PUT": "Bull Put Strategy — we expect the stock to stay higher and capitalise on option premium"}
         for r in cand:
@@ -327,11 +353,16 @@ def notify_nearmiss(rebuild: bool = True) -> int:
             mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
             if mp is not None and ml is not None:
                 lines.append(f"   lot {lot} · max profit ₹{mp:,} · max loss ₹{ml:,}")
+        if rest:
+            lines.append("")
+            lines.append("Rest of the watchlist (failed premium or liquidity — furthest from firing):")
+            lines.append("   " + " · ".join(
+                f"{_h.escape(str(r.get('sym','?')))} ({r.get('cw','—')})" for r in rest[:20]))
         lines.append("")
         lines.append("🔥 = c/w ≥ 0.35, within 0.05 of firing (the closest — worth watching next day).")
         lines.append("⛔ <b>DO NOT TRADE</b> — credit/width below 0.40 means no edge; the engine skips them.")
         send_telegram("\n".join(lines))
-        return len(cand)
+        return len(qual) + len(cand)
     except Exception as e:
         logger.warning(f"notify_nearmiss: {e}")
         return 0

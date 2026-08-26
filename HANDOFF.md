@@ -3386,3 +3386,8 @@ marker swap is atomic under _scan_lock (race-tested: 8 threads -> exactly 1 clai
 yesterday's late-scan catch-up: main loop healthy -> scan at 15:36 sharp; main loop wedged ->
 sentinel fires by ~15:36:25, signal on Telegram by 15:37, placeable; both dead somehow -> late
 catch-up until 16:30, record-only. Engine restarted 22:00, 0 errors. First live test: tomorrow 15:36.
+
+## 25-Aug 22:0x · IN FLIGHT (user request): 15:31 digest -> FULL WATCHLIST message. Today
+ULTRACEMCO passed gates by 15:31-35 but the digest's near-miss/premium filter hid it, so he was not
+ready to place at 15:36. New format: entire union watchlist, DON'T-TRADE-YET framing, qualifying
+names marked "POTENTIAL SIGNAL - wait for the 15:36 call". Show sample BEFORE deploying.
