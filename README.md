@@ -64,6 +64,11 @@ The token is read-only market data. It cannot place an order.
 
 Open the dashboard with `.venv/bin/python main.py`.
 
+On Windows run `setup.bat`, then `run_engine.bat` and `run_viewer.bat`.
+
+The two scripts in `studies/` that start with `reproduce_` are the code that produced the
+published numbers. Run them and check the tables yourself.
+
 ## Writing your own strategy
 
 Copy `engine/example_vwap.py` to a new file and change the rule. Keep the four functions the

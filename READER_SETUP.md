@@ -50,19 +50,17 @@ Open the dashboard in a second terminal:
 
 ## Windows
 
-There is no installer script. Do it by hand:
-
 ```
-python -m venv .venv
-.venv\Scripts\pip install -r requirements.txt
-copy .env.example .env
+setup.bat
 ```
 
-Put your token in `.env`, then run the engine with
-`.venv\Scripts\python -m engine.engine_runner` and the dashboard with
-`.venv\Scripts\python main.py`.
+It creates the virtual environment, installs the requirements, writes a `.env` from the template
+and makes the `data` and `logs` folders. Open `.env` and put your own token in it.
 
-To start the engine at login, make a shortcut to that command and put it in your Startup folder.
+Then start the engine with `run_engine.bat` and leave that window open, and open the dashboard
+with `run_viewer.bat`.
+
+To start the engine at login, put a shortcut to `run_engine.bat` in your Startup folder.
 
 ## Keeping it running
 

@@ -67,5 +67,26 @@ in the notes. Neither is recommended and the author trades neither.
 | [THREE_SIMPLE_RULES_TESTED.md](THREE_SIMPLE_RULES_TESTED.md) | A crossover, a dip buy and a gap fill, over eight years with costs. One convincing mean, one coin, one that wins often and pays nothing. |
 | [THE_THREE_FAMILY_SYSTEM.md](THE_THREE_FAMILY_SYSTEM.md) | The system the book describes. 19,454 signals, +0.107% per signal on direction, positive every year since 2019, and −1.0% once you buy the option. A real edge that costs more to trade than it earns. |
 
+## Reproducing the published numbers
+
+| Script | Produces |
+|---|---|
+| `reproduce_vwap_result.py` | the table in [VWAP_EXAMPLE_STRATEGY.md](VWAP_EXAMPLE_STRATEGY.md) |
+| `reproduce_daily_rules_result.py` | the table in [THREE_SIMPLE_RULES_TESTED.md](THREE_SIMPLE_RULES_TESTED.md) |
+
+Run them from the repository root with your own market-data token. You should land close to the
+published figures. If you do not, one of us has a bug.
+
+## The six newest notes
+
+| File | The question it answers |
+|---|---|
+| [LOOK_AHEAD_BIAS.md](LOOK_AHEAD_BIAS.md) | Did your rule use information it would not have had? |
+| [AUDIT_YOUR_OWN_BACKTEST.md](AUDIT_YOUR_OWN_BACKTEST.md) | How do you check a result you want to be true? |
+| [SAMPLE_SIZE.md](SAMPLE_SIZE.md) | How many trades settle the question? |
+| [MULTIPLE_TESTING.md](MULTIPLE_TESTING.md) | What does trying three thousand things cost you? |
+| [THE_SPREAD_YOU_ACTUALLY_GET.md](THE_SPREAD_YOU_ACTUALLY_GET.md) | Can your backtest know what was quotable? |
+| [WHEN_THE_MARKET_CHANGES.md](WHEN_THE_MARKET_CHANGES.md) | What if the exchange changed, not your rule? |
+
 Study notes. Not investment advice. If you trade on anything here you do so at your own risk,
 and Tejas Jadhav accepts no responsibility for your trades. See [DISCLAIMER.md](../DISCLAIMER.md).
