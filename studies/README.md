@@ -67,6 +67,20 @@ in the notes. Neither is recommended and the author trades neither.
 | [THREE_SIMPLE_RULES_TESTED.md](THREE_SIMPLE_RULES_TESTED.md) | A crossover, a dip buy and a gap fill, over eight years with costs. One convincing mean, one coin, one that wins often and pays nothing. |
 | [THE_THREE_FAMILY_SYSTEM.md](THE_THREE_FAMILY_SYSTEM.md) | The system the book describes. 19,454 signals, +0.107% per signal on direction, positive every year since 2019, and −1.0% once you buy the option. A real edge that costs more to trade than it earns. |
 
+## Other ground, and what is not settled on it
+
+| File | The question it answers |
+|---|---|
+| [MOMENTUM_ROTATION.md](MOMENTUM_ROTATION.md) | Cross-sectional momentum, and what to check before believing your own result |
+| [PAIRS_AND_MEAN_REVERSION.md](PAIRS_AND_MEAN_REVERSION.md) | Why the hard part of pairs trading is not the statistics |
+| [SEASONALITY_AND_DATA_MINING.md](SEASONALITY_AND_DATA_MINING.md) | Day-of-week effects and other things you will find if you look |
+| [EVENT_DRIFT.md](EVENT_DRIFT.md) | Trading around a date that is known in advance |
+| [WHAT_THE_ORDER_BOOK_CAN_TELL_YOU.md](WHAT_THE_ORDER_BOOK_CAN_TELL_YOU.md) | Depth data, and the question this trail has not answered |
+
+Those five carry no result. They set out the question, the traps and the checks, and say plainly
+that nothing is published here. A note that records an open question is worth keeping; a note that
+invents an answer is not.
+
 ## Reproducing the published numbers
 
 | Script | Produces |
