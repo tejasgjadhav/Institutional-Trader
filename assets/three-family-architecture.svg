@@ -1,0 +1,116 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 620" width="900" height="620" font-family="Menlo, Monaco, 'Courier New', monospace">
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#5a6472"/>
+    </marker>
+    <style>
+      .bg{fill:#ffffff}
+      .box{fill:#f7f8fa;stroke:#c8cfd8;stroke-width:1.5;rx:6}
+      .fam{fill:#eef4fb;stroke:#8fb3d9;stroke-width:1.5;rx:6}
+      .gate{fill:#fdf4ec;stroke:#e0a673;stroke-width:1.5;rx:6}
+      .kill{fill:#fdeeee;stroke:#d98f8f;stroke-width:1.5;rx:6}
+      .t{font-size:13px;fill:#1d2531}
+      .b{font-size:13px;fill:#1d2531;font-weight:bold}
+      .s{font-size:11px;fill:#5a6472}
+      .w{font-size:11px;fill:#2f6fb5;font-weight:bold}
+      .ln{stroke:#5a6472;stroke-width:1.4;fill:none;marker-end:url(#a)}
+      .hd{font-size:15px;fill:#1d2531;font-weight:bold}
+      .note{font-size:11px;fill:#7a8494}
+    </style>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="900" height="620"/>
+  <text class="hd" x="28" y="34">The three-family signal system</text>
+  <text class="s" x="28" y="54">engine/three_family.py — retired. See studies/THE_THREE_FAMILY_SYSTEM.md</text>
+
+  <!-- inputs -->
+  <rect class="box" x="28" y="78" width="180" height="56"/>
+  <text class="b" x="40" y="100">Price history</text>
+  <text class="s" x="40" y="118">5-minute bars + daily bars</text>
+
+  <rect class="box" x="28" y="146" width="180" height="56"/>
+  <text class="b" x="40" y="168">Option chain</text>
+  <text class="s" x="40" y="186">put-call ratio, index, VIX</text>
+
+  <rect class="box" x="28" y="214" width="180" height="56"/>
+  <text class="b" x="40" y="236">Exchange filings</text>
+  <text class="s" x="40" y="254">news sentiment, events</text>
+
+  <!-- families -->
+  <rect class="fam" x="268" y="78" width="200" height="56"/>
+  <text class="b" x="280" y="100">TREND</text>
+  <text class="w" x="430" y="100" text-anchor="end">0.72</text>
+  <text class="s" x="280" y="118">momentum · quality · micro</text>
+
+  <rect class="fam" x="268" y="146" width="200" height="56"/>
+  <text class="b" x="280" y="168">FLOW</text>
+  <text class="w" x="430" y="168" text-anchor="end">0.18</text>
+  <text class="s" x="280" y="186">put-call ratio · regime</text>
+
+  <rect class="fam" x="268" y="214" width="200" height="56"/>
+  <text class="b" x="280" y="236">EVENT</text>
+  <text class="w" x="430" y="236" text-anchor="end">0.10</text>
+  <text class="s" x="280" y="254">sentiment · filings</text>
+
+  <path class="ln" d="M208,106 L264,106"/>
+  <path class="ln" d="M208,174 L264,174"/>
+  <path class="ln" d="M208,242 L264,242"/>
+
+  <!-- alpha-z -->
+  <rect class="gate" x="528" y="146" width="190" height="60"/>
+  <text class="b" x="540" y="170">alpha-z</text>
+  <text class="s" x="540" y="190">weighted sum of the three</text>
+
+  <path class="ln" d="M468,106 L524,160"/>
+  <path class="ln" d="M468,174 L524,176"/>
+  <path class="ln" d="M468,242 L524,192"/>
+
+  <!-- gates -->
+  <rect class="gate" x="528" y="232" width="190" height="56"/>
+  <text class="b" x="540" y="254">|alpha-z| &gt; 0.55</text>
+  <text class="s" x="540" y="272">and 2 of 3 families agree</text>
+  <path class="ln" d="M623,206 L623,228"/>
+
+  <rect class="gate" x="528" y="314" width="190" height="66"/>
+  <text class="b" x="540" y="336">Opening-range break</text>
+  <text class="s" x="540" y="354">first 6 bars · clear by 0.01%</text>
+  <text class="s" x="540" y="370">on 1.2x recent volume</text>
+  <path class="ln" d="M623,288 L623,310"/>
+
+  <rect class="gate" x="528" y="406" width="190" height="56"/>
+  <text class="b" x="540" y="428">Market alignment</text>
+  <text class="s" x="540" y="446">long only if the index is up</text>
+  <path class="ln" d="M623,380 L623,402"/>
+
+  <!-- expression -->
+  <rect class="box" x="528" y="488" width="190" height="72"/>
+  <text class="b" x="540" y="510">Buy one strike OTM</text>
+  <text class="s" x="540" y="528">book at +10% on premium</text>
+  <text class="s" x="540" y="544">cut at −15%</text>
+  <path class="ln" d="M623,462 L623,484"/>
+
+  <!-- verdict -->
+  <rect class="kill" x="752" y="78" width="120" height="482"/>
+  <text class="b" x="764" y="102">Result</text>
+  <text class="s" x="764" y="126">19,454 signals</text>
+  <text class="s" x="764" y="146">50.6% hit rate</text>
+  <text class="s" x="764" y="172">Direction:</text>
+  <text class="b" x="764" y="192">+0.107%</text>
+  <text class="s" x="764" y="210">per signal</text>
+  <text class="s" x="764" y="236">Positive every</text>
+  <text class="s" x="764" y="254">year since 2019</text>
+  <text class="s" x="764" y="286">Gates removed:</text>
+  <text class="s" x="764" y="304">48%, a coin</text>
+  <text class="s" x="764" y="344">Bought as an</text>
+  <text class="s" x="764" y="362">option, one year</text>
+  <text class="s" x="764" y="380">on real premiums:</text>
+  <text class="b" x="764" y="404">−1.0%</text>
+  <text class="s" x="764" y="440">The edge is real.</text>
+  <text class="s" x="764" y="458">It is smaller than</text>
+  <text class="s" x="764" y="476">the cost of the</text>
+  <text class="s" x="764" y="494">instrument used</text>
+  <text class="s" x="764" y="512">to express it.</text>
+  <text class="b" x="764" y="544">RETIRED</text>
+
+  <text class="note" x="28" y="590">Study material published with The Algo Trading Bible. Not investment advice. This system has been measured and it loses money.</text>
+</svg>

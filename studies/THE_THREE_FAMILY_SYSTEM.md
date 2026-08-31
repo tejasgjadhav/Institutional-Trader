@@ -4,6 +4,8 @@ This is the system the book describes in full. It is in
 [engine/three_family.py](../engine/three_family.py) and every weight and threshold is in
 [engine/config.py](../engine/config.py). It is retired, and this note says why.
 
+![The three-family architecture](../assets/three-family-architecture.svg)
+
 ## How it works
 
 Three families vote on each stock.

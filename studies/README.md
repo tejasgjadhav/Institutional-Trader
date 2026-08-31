@@ -65,6 +65,7 @@ in the notes. Neither is recommended and the author trades neither.
 |---|---|
 | [VWAP_EXAMPLE_STRATEGY.md](VWAP_EXAMPLE_STRATEGY.md) | The worked VWAP example. 2,362 signals over 4,860 sessions: mean −0.047% per trade on the underlying, t = −2.69. It loses. |
 | [THREE_SIMPLE_RULES_TESTED.md](THREE_SIMPLE_RULES_TESTED.md) | A crossover, a dip buy and a gap fill, over eight years with costs. One convincing mean, one coin, one that wins often and pays nothing. |
+| [THREE_MORE_RULES_TESTED.md](THREE_MORE_RULES_TESTED.md) | Bollinger reversion, the 52-week high and the oversold bounce. Two win seven times in ten and both have a worst trade near −47%. |
 | [THE_THREE_FAMILY_SYSTEM.md](THE_THREE_FAMILY_SYSTEM.md) | The system the book describes. 19,454 signals, +0.107% per signal on direction, positive every year since 2019, and −1.0% once you buy the option. A real edge that costs more to trade than it earns. |
 
 ## Other ground, and what is not settled on it
@@ -87,6 +88,7 @@ invents an answer is not.
 |---|---|
 | `reproduce_vwap_result.py` | the table in [VWAP_EXAMPLE_STRATEGY.md](VWAP_EXAMPLE_STRATEGY.md) |
 | `reproduce_daily_rules_result.py` | the table in [THREE_SIMPLE_RULES_TESTED.md](THREE_SIMPLE_RULES_TESTED.md) |
+| `reproduce_three_more_rules.py` | the table in [THREE_MORE_RULES_TESTED.md](THREE_MORE_RULES_TESTED.md) |
 
 Run them from the repository root with your own market-data token. You should land close to the
 published figures. If you do not, one of us has a bug.
