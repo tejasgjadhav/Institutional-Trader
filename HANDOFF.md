@@ -3438,3 +3438,10 @@ the morning freeze on SENSEX expiry - a breach, but the persisted day-markers he
 cells) + _vlc_history() in engine_runner - vlc signals show ONLY this bucket's IS/OOS/live record,
 side-locked; live line accrues from stock_credit_vlc_positions.json settled fills. Core-book block
 untouched for v2/v1/v0. Samples rendered (HEROMOTOCO BC, HAL BP), engine restarted ~09:5x.
+
+## 3-Sep · vlc: quantify monthly signals/PnL, add to UI README+STUDIES tables, verify no new bugs.
+
+## 3-Sep · vlc in UI+GITHUB: STUDIES money row (76 OOS tr, 93.4%, +Rs4,471/-Rs10,494, Rs12,044/mo
+ceiling vs Rs3,592/mo IS plan, NOT in TOTAL), strategy row, new 21-cell table, README-tab sources
+line, CLAUDE.md book row. Viewer restarted, offscreen render test passed all probes. Engine clean
+since 09:48, markers held, vlc loaded. Volume answer: ~3.5 sig/mo, plan +Rs3.6k/mo, ceiling 12k.

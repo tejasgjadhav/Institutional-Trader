@@ -923,6 +923,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>★ Stock v2 UNION</td><td>79</td><td>~3.5</td><td>83.5%</td><td style="color:{GREEN};">+₹5,558</td><td style="color:{RED};">−₹8,363</td><td>83.5% × ₹5,558 − 16.5% × ₹8,363 = <b style="color:{GREEN};">+₹3,261</b></td><td><b>₹11,472</b></td></tr>
 <tr><td>Stock v1</td><td>186</td><td>~8.3</td><td>83.3%</td><td style="color:{GREEN};">+₹4,015</td><td style="color:{RED};">−₹9,020</td><td>83.3% × ₹4,015 − 16.7% × ₹9,020 = <b style="color:{GREEN};">+₹1,838</b></td><td><b>₹15,228</b></td></tr>
 <tr><td>Stock v0 (0.35–0.40)</td><td>99</td><td>~4.4</td><td>81.8%</td><td style="color:{GREEN};">+₹3,810</td><td style="color:{RED};">−₹11,781</td><td>81.8% × ₹3,810 − 18.2% × ₹11,781 = <b style="color:{AMBER};">+₹972</b></td><td><b>₹4,292</b></td></tr>
+<tr style="color:{TEXT_DIM};"><td>Sidewise low credit (0.30–0.40)</td><td>76</td><td>~3.5</td><td>93.4%</td><td style="color:{GREEN};">+₹4,471</td><td style="color:{RED};">−₹10,494</td><td style="color:{GREEN};">+₹12,044</td><td>NOT in TOTAL — cells were picked ON this OOS window, so ₹12k/mo is a selection-inflated ceiling; the in-sample rate ₹3,592/mo is the planning number. Live record decides at 30 fills.</td></tr>
 <tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
 <tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>526</b></td><td><b>~24/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹36,798</b></td></tr>
@@ -951,11 +952,46 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>77.9% · +21.2% on margin · positive every year <span style="color:{TEXT_DIM};">(213 trades)</span></td><td>83.5% · +27.0% <span style="color:{TEXT_DIM};">(79 trades)</span></td><td><b>~3.5</b></td></tr>
 <tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>80.5% · +12.9% on margin · positive every year <span style="color:{TEXT_DIM};">(349 trades)</span></td><td>83.3% · +16.6% <span style="color:{TEXT_DIM};">(186 trades)</span></td><td><b>~8.3</b></td></tr>
 <tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>85.7% · +14.4% on margin · positive every year <span style="color:{TEXT_DIM};">(217 trades)</span></td><td style="color:{AMBER};">81.8% · +7.2% · <b>watch</b> <span style="color:{TEXT_DIM};">(99 trades)</span></td><td><b>~4.4</b></td></tr>
+<tr style="color:{TEXT_DIM};"><td>Sidewise low credit <span style="color:{TEXT_DIM};">(c/w 0.30–0.40 · 12 BC + 9 BP names, side-locked, TP-40, no stop)</span></td><td>90.7% on its 21 cells (n=108) · band pooled 82.4%/+10.0%</td><td>93.4% (n=76) — but the cells were CHOSEN on this window</td><td>~3.5/mo</td></tr>
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
 <tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~24/mo</b></td></tr>
 </table>
+
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">SIDEWISE LOW CREDIT — the 21 deployed cells (c/w 0.30–0.40)</p>
+{dim("Deployed 3-Sep-2026 (studies/BAND_030_040_NAMEWISE.md). Each name trades ONLY its listed side, in the "
+     "0.30–0.40 band at v0 geometry, TP-40, no stop. These are the cells that cleared win ≥ 80% AND net &gt; +5% "
+     "in BOTH windows — out of 232 screened, so treat the OOS column as the reason they were picked, not as a "
+     "forecast. The pooled screen of all IS qualifiers measured −3.5% OOS; this book exists to settle it with a "
+     "LIVE record, reviewed at 30 fills, 1 lot only.")}
+<div style="max-height:360px;overflow-y:auto;"><table cellpadding="4" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:12px;">
+<tr style="color:{CYAN};font-weight:bold;"><td>name</td><td>side</td><td>IS n</td><td>IS win</td><td>IS ROM</td><td>OOS n</td><td>OOS win</td><td>OOS ROM</td></tr>
+<tr><td><b>ASIANPAINT</b></td><td>BC</td><td>15</td><td>93%</td><td style="color:{GREEN};">+15.7%</td><td>4</td><td>100%</td><td style="color:{GREEN};">+20.0%</td></tr>
+<tr><td><b>HEROMOTOCO</b></td><td>BC</td><td>10</td><td>80%</td><td style="color:{GREEN};">+5.9%</td><td>7</td><td>100%</td><td style="color:{GREEN};">+25.7%</td></tr>
+<tr><td><b>LT</b></td><td>BC</td><td>8</td><td>88%</td><td style="color:{GREEN};">+17.8%</td><td>9</td><td>89%</td><td style="color:{GREEN};">+13.9%</td></tr>
+<tr><td><b>APOLLOHOSP</b></td><td>BP</td><td>10</td><td>80%</td><td style="color:{GREEN};">+6.7%</td><td>2</td><td>100%</td><td style="color:{GREEN};">+32.9%</td></tr>
+<tr><td><b>EICHERMOT</b></td><td>BP</td><td>8</td><td>100%</td><td style="color:{GREEN};">+22.6%</td><td>4</td><td>100%</td><td style="color:{GREEN};">+36.8%</td></tr>
+<tr><td><b>COFORGE</b></td><td>BP</td><td>5</td><td>100%</td><td style="color:{GREEN};">+21.6%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+21.5%</td></tr>
+<tr><td><b>ALKEM</b></td><td>BC</td><td>2</td><td>100%</td><td style="color:{GREEN};">+35.1%</td><td>7</td><td>86%</td><td style="color:{GREEN};">+7.6%</td></tr>
+<tr><td><b>BRITANNIA</b></td><td>BC</td><td>5</td><td>80%</td><td style="color:{GREEN};">+11.7%</td><td>4</td><td>100%</td><td style="color:{GREEN};">+23.6%</td></tr>
+<tr><td><b>COFORGE</b></td><td>BC</td><td>8</td><td>88%</td><td style="color:{GREEN};">+17.2%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+18.9%</td></tr>
+<tr><td><b>CUMMINSIND</b></td><td>BC</td><td>4</td><td>100%</td><td style="color:{GREEN};">+42.0%</td><td>5</td><td>80%</td><td style="color:{GREEN};">+9.4%</td></tr>
+<tr><td><b>M&amp;M</b></td><td>BC</td><td>5</td><td>80%</td><td style="color:{GREEN};">+6.0%</td><td>4</td><td>100%</td><td style="color:{GREEN};">+28.1%</td></tr>
+<tr><td><b>MUTHOOTFIN</b></td><td>BC</td><td>3</td><td>100%</td><td style="color:{GREEN};">+23.9%</td><td>6</td><td>83%</td><td style="color:{GREEN};">+18.2%</td></tr>
+<tr><td><b>HAL</b></td><td>BP</td><td>5</td><td>100%</td><td style="color:{GREEN};">+28.3%</td><td>3</td><td>100%</td><td style="color:{GREEN};">+23.7%</td></tr>
+<tr><td><b>HINDUNILVR</b></td><td>BC</td><td>4</td><td>100%</td><td style="color:{GREEN};">+22.0%</td><td>3</td><td>100%</td><td style="color:{GREEN};">+23.9%</td></tr>
+<tr><td><b>INDIAMART</b></td><td>BC</td><td>5</td><td>80%</td><td style="color:{GREEN};">+22.3%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+23.9%</td></tr>
+<tr><td><b>ABB</b></td><td>BP</td><td>1</td><td>100%</td><td style="color:{GREEN};">+18.8%</td><td>4</td><td>100%</td><td style="color:{GREEN};">+32.6%</td></tr>
+<tr><td><b>ACC</b></td><td>BP</td><td>4</td><td>100%</td><td style="color:{GREEN};">+30.6%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+15.6%</td></tr>
+<tr><td><b>TORNTPHARM</b></td><td>BP</td><td>2</td><td>100%</td><td style="color:{GREEN};">+26.6%</td><td>2</td><td>100%</td><td style="color:{GREEN};">+17.4%</td></tr>
+<tr><td><b>VOLTAS</b></td><td>BC</td><td>2</td><td>100%</td><td style="color:{GREEN};">+27.1%</td><td>2</td><td>100%</td><td style="color:{GREEN};">+19.3%</td></tr>
+<tr><td><b>CUMMINSIND</b></td><td>BP</td><td>1</td><td>100%</td><td style="color:{GREEN};">+25.0%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+18.3%</td></tr>
+<tr><td><b>PERSISTENT</b></td><td>BP</td><td>1</td><td>100%</td><td style="color:{GREEN};">+17.0%</td><td>1</td><td>100%</td><td style="color:{GREEN};">+32.8%</td></tr>
+</table></div>
+{dim("IS = 2018→Sep-24 bhavcopy · OOS = Oct-24→Aug-26 Upstox. Volume ~3.5 signals/mo across the book; money "
+     "planning number ₹3,592/mo (the in-sample rate), ceiling ₹12,044/mo (the selection window). COFORGE and "
+     "CUMMINSIND qualified on BOTH sides; every other name is one-sided by design.")}
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">NAME-WISE RECORD — all 131 traded names (universe + tested outsiders), by window, side and strategy</p>
 {dim("Seven win-rate views per name plus per-trade P&amp;L by side, from the corrected harness rows — the same data every Telegram signal quotes. Cells under 8 trades are noise, not signal. This table informs SIZING at trade time; it never blocks the scanner.")}
@@ -1106,6 +1142,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>★ Stock v2 UNION</td><td>32,852</td><td>213 IS · 79 OOS</td><td>77.9% / 83.5%</td><td>+₹5,558</td><td>−₹8,363</td><td>0.66 : 1</td></tr>
 <tr><td>Stock v1</td><td>25,978</td><td>349 IS · 186 OOS</td><td>80.5% / 83.3%</td><td>+₹4,015</td><td>−₹9,020</td><td>0.45 : 1</td></tr>
 <tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>237 IS · 90 OOS</td><td>83.1% / 80.0%</td><td>+₹3,814</td><td>−₹13,199</td><td>0.29 : 1</td></tr>
+<tr style="color:{TEXT_DIM};"><td>Sidewise low credit (0.30–0.40, 21 name×side cells)</td><td>~6,700</td><td>108 IS · 76 OOS</td><td>90.7% / 93.4%</td><td>+₹4,471</td><td>−₹10,494</td><td>0.4 : 1</td></tr>
 <tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448</td><td>88% / 90%</td><td>+₹1,202</td><td>−₹6,274</td><td>0.2 : 1</td></tr>
 <tr><td>Intraday SENSEX</td><td>89 expiry days</td><td>89</td><td>88.8%</td><td>+₹1,427</td><td>−₹4,549</td><td>0.3 : 1</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Classic strategies (all rejected)</td><td>227,000 trades · 7 families</td><td>0 kept</td><td>up to 83.6%</td><td colspan="3">every one negative after costs — Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays, NR7. The 83.6% is the illusion demo: a high win rate with negative expectancy.</td></tr>
@@ -1230,8 +1267,8 @@ Paper forward-test only. For educational use. Not financial advice.
      "and how they were validated, see the STUDIES tab. Mode: PAPER, signals-only — the headless engine "
      "fires signals and records them daily; YOU place every order manually in Upstox. It never auto-trades.")}
 {p("<b>TELEGRAM ALERTS — LIVE (2026-07-13):</b> every book's new signal is pushed to the Telegram channel the "
-   "moment the engine opens the position — all 8 sources wired (3-Family, Stock Credit v1 + v2 UNION, "
-   "Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX 0DTE). One post per signal, "
+   "moment the engine opens the position — all sources wired (3-Family, Stock Credit v1 + v2 UNION + v0, "
+   "Sidewise low credit 0.30–0.40, Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX 0DTE). One post per signal, "
    "no repeats; place the order manually in Upstox as usual. A quiet channel = nothing cleared the gates "
    "that day. Config in .env (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID; a channel id fans out to all joiners).")}
 
