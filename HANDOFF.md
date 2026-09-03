@@ -3413,3 +3413,8 @@ must be stated (116 names x 2 sides = 232 cells). Prior session died on a VIX ch
 77.1% win, 227 trades). All large-n IS stars failed/vanished; 5 tiny survivors = luck at 232-cell
 screening intensity. NOT deployed. Study: studies/BAND_030_040_NAMEWISE.md. Open defect: MRF/
 NESTLEIND/BOSCHLTD rows print impossible ROM (>67% cap) - big-strike scale family, needs root cause.
+
+## 28-Aug · band study CORRECTED: my analysis had averaged net POINTS as %, harness was never wrong.
+Corrected: pooled OOS all cells +0.2%, IS-qualifier cells -3.5% (n=156) - screen still fails; IS
+name records are anti-informative (big IS losers won OOS). 6 confirmed cells = luck-level. Not
+deployed. Study appended, cells2 jsons in research/.

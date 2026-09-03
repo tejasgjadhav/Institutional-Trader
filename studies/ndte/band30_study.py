@@ -10,11 +10,11 @@ H.OUT = "research/band30_is_rows.json"
 # OOS restricted to the IS qualifiers' names only (36 unique) - full-universe OOS would burn
 # hours of throttled Upstox for names already disqualified in sample.
 if len(sys.argv) > 1 and sys.argv[1] == "OOS":
-    qs = {q["sym"] for q in json.load(open("research/band30_is_qualifiers.json"))}
+    qs = {"HEROMOTOCO", "M&M", "RELIANCE", "TITAN"}  # OOS top-up: corrected-ROM qualifiers missed by run 1
     H.UNIVERSE = [tk for tk in H.UNIVERSE if tk.replace(".NS", "") in qs]
     print(f"OOS restricted to {len(H.UNIVERSE)} qualifier names")
 if __name__ == "__main__":
     rows = H.run_is() if (len(sys.argv) > 1 and sys.argv[1] == "IS") else H.run_oos()
-    H.OUT = "research/band30_is_rows.json" if sys.argv[1] == "IS" else "research/band30_oos_rows.json"
+    H.OUT = "research/band30_is_rows.json" if sys.argv[1] == "IS" else "research/band30_oos_topup_rows.json"
     json.dump(rows, open(H.OUT, "w"))
     print(f"saved {len(rows)} rows -> {H.OUT}")

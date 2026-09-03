@@ -32,3 +32,24 @@ a watch-only list in the forward record if wanted; nothing enters config.
 
 Files: research/band30_is_rows.json, band30_oos_rows.json, band30_is_cells.json,
 band30_oos_cells.json, band30_confirmed.json, driver studies/ndte/band30_study.py.
+
+
+# Band 0.30-0.40 name-wise screen — CORRECTED (28-Aug-2026)
+
+Correction: the first analysis averaged the rows' `net` (POINTS) as if it were a percentage,
+inflating big-strike names (MRF, NESTLEIND, BOSCHLTD printed impossible ROM). The harness of
+record was never wrong; cell ROM is now sum(net)/sum(margin). Full corrected table below
+(IS 2018->Sep-2024 · OOS Oct-2024->Aug-2026, incl. the HEROMOTOCO/M&M/RELIANCE/TITAN top-up).
+
+## Verdict (unchanged in direction, cleaner in detail)
+- Pooled OOS over ALL band cells: n=263 · 78.3% win · +0.2% ROM — the band as a whole is dead net.
+- Pooled OOS over IS-QUALIFIER cells: n=156 · 77.6% win · **-3.5% ROM** — the mined selection still fails.
+- IS results do not persist at name grain IN EITHER DIRECTION: IS losers EICHERMOT BC (-19.2 -> +8.3),
+  ADANIENT BC (-12.0 -> +14.5), PERSISTENT BC (-39.9 -> +30.4), GRASIM BC (-36.4 -> +5.0) all WON OOS.
+  Selection on IS name records is anti-informative here.
+- 6 cells confirm both windows: HEROMOTOCO BC, LT BC, COFORGE BP, CUMMINSIND BC, MUTHOOTFIN BC,
+  ALKEM BC — 9-17 trades each across BOTH windows; at 232-cell screening intensity this survivor
+  count is consistent with luck. NOT deployed as trading names.
+- RELIANCE BP (best IS sample: 20/85.0%/+7.1%) had ZERO OOS trades - the survivorship censoring.
+
+See research/band30_*_cells2.json and band30_confirmed2.json for machine-readable cells.
