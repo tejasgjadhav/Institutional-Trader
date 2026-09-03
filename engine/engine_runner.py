@@ -311,6 +311,56 @@ class EngineRunner:
                       "Educational signals · invest at your own risk · consult a SEBI-registered advisor.")
     _TG_SIDE = {"BEAR_CALL": "BEAR CALL SPREAD", "BULL_PUT": "BULL PUT SPREAD", "BUY_FUT": "BUY FUTURES"}
 
+    def _vlc_history(self, sym, side):
+        """The SIDEWISE LOW CREDIT bucket's OWN record for one name x side (user, 3-Sep-2026:
+        'we want to create an own record and mention only what happens in this bucket'). Reads
+        data/vlc_symbol_history.json (the 0.30-0.40 band study cells) plus this book's live fills
+        from the forward record. Never the core-book numbers — different band, different claim."""
+        try:
+            import html as _html
+            d = json.load(open(os.path.join(DATA_DIR, "vlc_symbol_history.json")))
+            h = (d.get(sym) or d.get(_html.unescape(str(sym))) or {}).get(side)
+            if not h:
+                return ""
+            sname = _html.escape(str(sym))
+            stxt = "BEAR CALL" if side == "BEAR_CALL" else "BULL PUT"
+            lines = [f"📜 <b>{sname} — this bucket's own record (c/w 0.30–0.40 · {stxt} only)</b>"]
+            for key, lbl in (("is_", "In-sample 2018→Sep-24"), ("oos", "Out-of-sample Oct-24→date")):
+                w = h.get(key)
+                if w:
+                    lines.append(f"• {lbl}: <b>{w['n']}</b> trades · <b>{w['win']:.0f}%</b> win · "
+                                 f"<b>{w['rom']:+.1f}%</b> net ROM · ₹{w['avg_rs']:+,} per lot per trade")
+            # live record: this bucket's own fills since 3-Sep-2026
+            ln = lw = 0; lrs = 0.0
+            try:
+                for p in json.load(open(os.path.join(DATA_DIR, "stock_credit_vlc_positions.json"))) or []:
+                    if (p.get("symbol") == sym and p.get("side") == side
+                            and p.get("status") not in (None, "OPEN")):
+                        pnl = p.get("pnl_rs")
+                        if pnl is None:
+                            continue
+                        ln += 1; lw += 1 if pnl > 0 else 0; lrs += pnl
+            except Exception:
+                pass
+            if ln:
+                lines.append(f"• Live in this bucket since 3-Sep-26: <b>{ln}</b> trades · "
+                             f"<b>{100*lw/ln:.0f}%</b> win · ₹{lrs:+,.0f} actual")
+            else:
+                lines.append("• Live in this bucket since 3-Sep-26: no settled trades yet — "
+                             "this book builds its own record from here")
+            tot = (h.get("is_") or {}).get("n", 0) + (h.get("oos") or {}).get("n", 0)
+            totrs = ((h.get("is_") or {}).get("avg_rs", 0) * (h.get("is_") or {}).get("n", 0)
+                     + (h.get("oos") or {}).get("avg_rs", 0) * (h.get("oos") or {}).get("n", 0)) + lrs
+            totn = tot + ln
+            if totn:
+                lines.append(f"• <b>This signal is a {stxt} for which {sname} has given {totn} trades "
+                             f"in this bucket · actual profit ₹{totrs:+,.0f} till date = "
+                             f"₹{totrs/totn:+,.0f} per lot per trade</b>")
+            return "\n".join(lines)
+        except Exception as e:
+            logger.debug(f"_vlc_history {sym}: {e}")
+            return ""
+
     def _sym_history(self, sym, side="", book=""):
         """Per-name backtest history line for the signal message (user request, 24-Aug-2026):
         when the 15:36 scan names a stock, say how THAT stock has traded historically in both
@@ -531,8 +581,12 @@ class EngineRunner:
                 # Donchian/IS/OOS bullets are dropped from the message and the header leads
                 # straight into the stock. Books with no per-name record (the index books) keep
                 # the original analysis block unchanged. Gated until the user approves the sample.
-                sh = (self._sym_history(sym, side=str(s.get("side") or ""), book=book)
-                      if getattr(config, "TG_SYMBOL_HISTORY_ENABLED", False) else "")
+                if book.startswith("SIDEWISE LOW CREDIT"):
+                    # vlc carries ONLY its own bucket's record (user, 3-Sep-2026)
+                    sh = self._vlc_history(sym, str(s.get("side") or ""))
+                else:
+                    sh = (self._sym_history(sym, side=str(s.get("side") or ""), book=book)
+                          if getattr(config, "TG_SYMBOL_HISTORY_ENABLED", False) else "")
                 if sh:
                     lines.append("——————————————")
                     lines.append("📚 <b>Why this signal</b> — Tejas Jadhav, CFA has performed extensive "

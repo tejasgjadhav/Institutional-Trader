@@ -3429,3 +3429,12 @@ it, scans AFTER v2/v1/v0 so they win clashes. Telegram: "SIDEWISE LOW CREDIT (c/
 Evidence THIN (pooled qualifier OOS -3.5%); review at 30 fills. NOTE: restart hit 09:41, inside
 the morning freeze on SENSEX expiry - a breach, but the persisted day-markers held (0DTE marker
 2026-09-03 on disk, no re-scan, single SENSEX position intact). Freeze rule still stands.
+
+## 3-Sep · showing vlc sample Telegram signal (user request).
+
+## 3-Sep · vlc messages to carry ONLY the bucket's own record (user spec) - building vlc_symbol_history + message block.
+
+## 3-Sep · vlc bucket-only evidence DEPLOYED: data/vlc_symbol_history.json (19 names, band-study
+cells) + _vlc_history() in engine_runner - vlc signals show ONLY this bucket's IS/OOS/live record,
+side-locked; live line accrues from stock_credit_vlc_positions.json settled fills. Core-book block
+untouched for v2/v1/v0. Samples rendered (HEROMOTOCO BC, HAL BP), engine restarted ~09:5x.
