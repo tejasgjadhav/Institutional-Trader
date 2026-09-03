@@ -666,7 +666,7 @@ class EngineRunner:
         """
         today = datetime.now(IST).date().isoformat()
         for fn in ("stock_credit_v2_positions.json", "stock_credit_positions.json",
-                   "stock_credit_v0_positions.json"):
+                   "stock_credit_v0_positions.json", "stock_credit_vlc_positions.json"):
             try:
                 for p in json.load(open(os.path.join(DATA_DIR, fn))) or []:
                     if p.get("status") == "OPEN" and (p.get("expiry") or "9999-99-99") <= today:
@@ -740,6 +740,10 @@ class EngineRunner:
                 from engine import stock_credit_v0
             except Exception:
                 stock_credit_v0 = None
+            try:
+                from engine import stock_credit_vlc
+            except Exception:
+                stock_credit_vlc = None
         except Exception as e:
             logger.warning(f"stock_credit import: {e}")
             return
@@ -797,6 +801,13 @@ class EngineRunner:
                     logger.info(f"stock_credit_v2: resolved/closed {n2} position(s)")
             except Exception as e:
                 logger.warning(f"stock_credit_v2 resolve: {e}")
+            if stock_credit_vlc is not None and getattr(config, "STOCK_CREDIT_VLC_ENABLED", False):
+                try:
+                    n4 = stock_credit_vlc.resolve_positions()
+                    if n4:
+                        logger.info(f"stock_credit_vlc: resolved/closed {n4} position(s)")
+                except Exception as e:
+                    logger.warning(f"stock_credit_vlc resolve: {e}")
             if stock_credit_v0 is not None and getattr(config, "STOCK_CREDIT_V0_ENABLED", False):
                 try:
                     n3 = stock_credit_v0.resolve_positions()
@@ -860,6 +871,15 @@ class EngineRunner:
                         self._tg("STOCK CREDIT v0 (c/w 0.35-0.40)", new3)
                 except Exception as e:
                     logger.warning(f"stock_credit_v0 scan: {e}")
+            if stock_credit_vlc is not None and getattr(config, "STOCK_CREDIT_VLC_ENABLED", False):
+                try:
+                    new4 = stock_credit_vlc.scan_signals()
+                    if new4:
+                        logger.info(f"stock_credit_vlc: opened {len(new4)} new spread(s)")
+                        _fired += len(new4)
+                        self._tg("SIDEWISE LOW CREDIT (c/w 0.30-0.40)", new4)
+                except Exception as e:
+                    logger.warning(f"stock_credit_vlc scan: {e}")
             if _fired == 0:
                 self._tg_no_signal(now)
 

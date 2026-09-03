@@ -3418,3 +3418,14 @@ NESTLEIND/BOSCHLTD rows print impossible ROM (>67% cap) - big-strike scale famil
 Corrected: pooled OOS all cells +0.2%, IS-qualifier cells -3.5% (n=156) - screen still fails; IS
 name records are anti-informative (big IS losers won OOS). 6 confirmed cells = luck-level. Not
 deployed. Study appended, cells2 jsons in research/.
+
+## 28-Aug · band study follow-up: qualifier counts by side (IS/OOS/both) requested.
+
+## 3-Sep 09:41 · SIDEWISE LOW CREDIT ("vlc") DEPLOYED, user-ordered. Band 0.30-0.40, v0 geometry
+(2-OTM w4 TP-40 no stop), 12 BC + 9 BP whitelist from BAND_030_040_NAMEWISE (both-window cells),
+name trades ONLY its side. New module engine/stock_credit_vlc.py (v0-style rebind of v2 with new
+SIDE_WHITELIST hook), own positions file, forward-record book "vlc", cross-book 3-day gap includes
+it, scans AFTER v2/v1/v0 so they win clashes. Telegram: "SIDEWISE LOW CREDIT (c/w 0.30-0.40)".
+Evidence THIN (pooled qualifier OOS -3.5%); review at 30 fills. NOTE: restart hit 09:41, inside
+the morning freeze on SENSEX expiry - a breach, but the persisted day-markers held (0DTE marker
+2026-09-03 on disk, no re-scan, single SENSEX position intact). Freeze rule still stands.

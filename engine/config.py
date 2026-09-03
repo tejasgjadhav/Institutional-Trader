@@ -638,3 +638,22 @@ APP_LOG_PATH = f"{LOG_DIR}/app.log"
 # Create directories if missing
 for d in [DATA_DIR, LOG_DIR]:
     os.makedirs(d, exist_ok=True)
+
+# ── SIDEWISE LOW CREDIT strategy ("vlc", user-ordered 2026-08-28) ──────────────────────────
+# Band 0.30-0.40 at v0 geometry, restricted to the name x side cells that cleared win>=80% AND
+# net ROM > +5% in BOTH windows of studies/BAND_030_040_NAMEWISE.md (IS 2018->Sep-24 bhavcopy,
+# OOS Oct-24->Aug-26 Upstox). EVIDENCE IS THIN and the pooled qualifier screen was -3.5% OOS;
+# the user chose to forward-test these 21 cells live. 12 BC + 9 BP. Review at 30 fills.
+STOCK_CREDIT_VLC_ENABLED = True
+STOCK_CREDIT_VLC_MIN_CW = 0.30
+STOCK_CREDIT_VLC_MAX_CW = 0.40          # exclusive; >= 0.40 belongs to v2/v1
+STOCK_CREDIT_VLC_TAKE_PROFIT = 0.40     # v0's exit for the low band
+STOCK_CREDIT_VLC_MAX_NEW_PER_DAY = 3
+STOCK_CREDIT_VLC_MAX_OPEN = 10
+STOCK_CREDIT_VLC_LOTS = 1
+STOCK_CREDIT_VLC_WHITELIST = {
+    "BEAR_CALL": {"ALKEM", "ASIANPAINT", "BRITANNIA", "COFORGE", "CUMMINSIND", "HEROMOTOCO",
+                  "HINDUNILVR", "INDIAMART", "LT", "M&M", "MUTHOOTFIN", "VOLTAS"},
+    "BULL_PUT":  {"ABB", "ACC", "APOLLOHOSP", "COFORGE", "CUMMINSIND", "EICHERMOT", "HAL",
+                  "PERSISTENT", "TORNTPHARM"},
+}

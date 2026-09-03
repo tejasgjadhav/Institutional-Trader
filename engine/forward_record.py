@@ -161,6 +161,7 @@ def summary():
 BOOK_FILES = {"v2": "stock_credit_v2_positions.json",
               "v1": "stock_credit_positions.json",
               "v0": "stock_credit_v0_positions.json",
+              "vlc": "stock_credit_vlc_positions.json",
               "0DTE-NIFTY": "zero_dte_positions.json",
               "0DTE-SENSEX": "sensex_dte_positions.json"}
 

@@ -206,7 +206,7 @@ def recent_entry_symbols(gap_days: int = None) -> frozenset:
     today = _date.today()
     syms = set()
     for fname in ("stock_credit_positions.json", "stock_credit_v2_positions.json",
-                  "stock_credit_v0_positions.json"):
+                  "stock_credit_v0_positions.json", "stock_credit_vlc_positions.json"):
         try:
             import json as _json
             with open(os.path.join(DATA_DIR, fname)) as f:

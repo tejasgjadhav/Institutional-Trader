@@ -47,7 +47,9 @@ STOCK_CREDIT_TAKE_PROFIT  = 0.50
 # this module and rebinds these). Both are no-ops for v2 itself: v2 has no c/w ceiling and
 # excludes nothing. Do not set them here. ──
 STOCK_CREDIT_MAX_CW = None     # exclusive upper bound on credit/width, or None for no ceiling
-EXCLUDE_SYMBOLS     = frozenset()   # symbols another book already holds open — skip them
+SIDE_WHITELIST      = None     # vlc only: {"BEAR_CALL": {names}, "BULL_PUT": {names}} — a name
+                               # may only trade its qualified side. None (v2/v1/v0) = no restriction.
+EXCLUDE_SYMBOLS     = frozenset()   # symbols another book already holds open — skipthem
 
 
 # ── persistence ──────────────────────────────────────────────────────────────
@@ -413,6 +415,10 @@ def scan_signals() -> list:
             if not spot:
                 continue
             opt_type = "CE" if bdir == "LONG" else "PE"   # FADE
+            if SIDE_WHITELIST is not None:
+                _side = "BEAR_CALL" if opt_type == "CE" else "BULL_PUT"
+                if sym not in SIDE_WHITELIST.get(_side, ()):
+                    continue                    # vlc trades a name ONLY on its qualified side
             legs = _pick_legs(ticker, spot, opt_type)
             if not legs:
                 continue
