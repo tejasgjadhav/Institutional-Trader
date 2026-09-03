@@ -3398,3 +3398,18 @@ and sent "no signal". FIXED at the root: once-a-day markers now PERSIST to data/
 (load at start, save on set) — restarts can no longer re-run daily scans, which also retires the
 main hazard behind the freeze rule. Today's markers seeded before restarting. CORRECTION sent to the
 channel (ULTRACEMCO signal stands). Note: ULTRACEMCO = first forward-record trade of the new era.
+
+## 26-Aug · IN FLIGHT: harness hardening for the audit's remaining open items — measure the OOS
+survivorship censoring (drift-guard rejection counter per name), print the parity/beyond-data
+rejection counters, fix FETCHFAIL wording (evaluations != signals), extract the segment-scale pass
+into a testable function + unit fixtures.
+
+## 27-Aug · IN FLIGHT (user): band study 0.30-0.40 — which NAMES give >=80% win AND net ROM > 5%
+per side (BC/BP) since 2018, for possible stock-wise deployment (more calls). Pooled 0.30-0.35 is
+dead; this asks whether name-level exceptions exist. IS first, then OOS on qualifiers; mining risk
+must be stated (116 names x 2 sides = 232 cells). Prior session died on a VIX check - superseded.
+
+## 27-Aug · band 0.30-0.40 name-wise screen DONE: FAILS OOS (pooled qualifier cells -1.2% net,
+77.1% win, 227 trades). All large-n IS stars failed/vanished; 5 tiny survivors = luck at 232-cell
+screening intensity. NOT deployed. Study: studies/BAND_030_040_NAMEWISE.md. Open defect: MRF/
+NESTLEIND/BOSCHLTD rows print impossible ROM (>67% cap) - big-strike scale family, needs root cause.
