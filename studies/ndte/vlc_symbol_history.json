@@ -1,0 +1,334 @@
+{
+"M&M": {
+"BEAR_CALL": {
+"is_": {
+"n": 5,
+"win": 80.0,
+"rom": 6.0,
+"avg_rs": 673
+},
+"oos": {
+"n": 4,
+"win": 100.0,
+"rom": 28.1,
+"avg_rs": 2272
+}
+}
+},
+"CUMMINSIND": {
+"BEAR_CALL": {
+"is_": {
+"n": 4,
+"win": 100.0,
+"rom": 42.0,
+"avg_rs": 4286
+},
+"oos": {
+"n": 5,
+"win": 80.0,
+"rom": 9.4,
+"avg_rs": 2574
+}
+},
+"BULL_PUT": {
+"is_": {
+"n": 1,
+"win": 100.0,
+"rom": 25.0,
+"avg_rs": 2512
+},
+"oos": {
+"n": 1,
+"win": 100.0,
+"rom": 18.3,
+"avg_rs": 6400
+}
+}
+},
+"INDIAMART": {
+"BEAR_CALL": {
+"is_": {
+"n": 5,
+"win": 80.0,
+"rom": 22.3,
+"avg_rs": 2975
+},
+"oos": {
+"n": 1,
+"win": 100.0,
+"rom": 23.9,
+"avg_rs": 3783
+}
+}
+},
+"HINDUNILVR": {
+"BEAR_CALL": {
+"is_": {
+"n": 4,
+"win": 100.0,
+"rom": 22.0,
+"avg_rs": 3376
+},
+"oos": {
+"n": 3,
+"win": 100.0,
+"rom": 23.9,
+"avg_rs": 3747
+}
+}
+},
+"MUTHOOTFIN": {
+"BEAR_CALL": {
+"is_": {
+"n": 3,
+"win": 100.0,
+"rom": 23.9,
+"avg_rs": 3590
+},
+"oos": {
+"n": 6,
+"win": 83.3,
+"rom": 18.2,
+"avg_rs": 3878
+}
+}
+},
+"LT": {
+"BEAR_CALL": {
+"is_": {
+"n": 8,
+"win": 87.5,
+"rom": 17.8,
+"avg_rs": 1692
+},
+"oos": {
+"n": 9,
+"win": 88.9,
+"rom": 13.9,
+"avg_rs": 1269
+}
+}
+},
+"COFORGE": {
+"BEAR_CALL": {
+"is_": {
+"n": 8,
+"win": 87.5,
+"rom": 17.2,
+"avg_rs": 3154
+},
+"oos": {
+"n": 1,
+"win": 100.0,
+"rom": 18.9,
+"avg_rs": 4581
+}
+},
+"BULL_PUT": {
+"is_": {
+"n": 5,
+"win": 100.0,
+"rom": 21.6,
+"avg_rs": 3933
+},
+"oos": {
+"n": 5,
+"win": 80.0,
+"rom": 21.5,
+"avg_rs": 5412
+}
+}
+},
+"HEROMOTOCO": {
+"BEAR_CALL": {
+"is_": {
+"n": 10,
+"win": 80.0,
+"rom": 5.9,
+"avg_rs": 580
+},
+"oos": {
+"n": 7,
+"win": 100.0,
+"rom": 25.7,
+"avg_rs": 5156
+}
+}
+},
+"VOLTAS": {
+"BEAR_CALL": {
+"is_": {
+"n": 2,
+"win": 100.0,
+"rom": 27.1,
+"avg_rs": 4100
+},
+"oos": {
+"n": 2,
+"win": 100.0,
+"rom": 19.3,
+"avg_rs": 4007
+}
+}
+},
+"BRITANNIA": {
+"BEAR_CALL": {
+"is_": {
+"n": 5,
+"win": 80.0,
+"rom": 11.7,
+"avg_rs": 1711
+},
+"oos": {
+"n": 4,
+"win": 100.0,
+"rom": 23.6,
+"avg_rs": 4000
+}
+}
+},
+"ALKEM": {
+"BEAR_CALL": {
+"is_": {
+"n": 2,
+"win": 100.0,
+"rom": 35.1,
+"avg_rs": 5715
+},
+"oos": {
+"n": 7,
+"win": 85.7,
+"rom": 7.6,
+"avg_rs": 1263
+}
+}
+},
+"ASIANPAINT": {
+"BEAR_CALL": {
+"is_": {
+"n": 15,
+"win": 93.3,
+"rom": 15.7,
+"avg_rs": 2032
+},
+"oos": {
+"n": 4,
+"win": 100.0,
+"rom": 20.0,
+"avg_rs": 2655
+}
+}
+},
+"PERSISTENT": {
+"BULL_PUT": {
+"is_": {
+"n": 1,
+"win": 100.0,
+"rom": 17.0,
+"avg_rs": 1465
+},
+"oos": {
+"n": 1,
+"win": 100.0,
+"rom": 32.8,
+"avg_rs": 5066
+}
+}
+},
+"TORNTPHARM": {
+"BULL_PUT": {
+"is_": {
+"n": 2,
+"win": 100.0,
+"rom": 26.6,
+"avg_rs": 2107
+},
+"oos": {
+"n": 2,
+"win": 100.0,
+"rom": 17.4,
+"avg_rs": 1165
+}
+}
+},
+"ACC": {
+"BULL_PUT": {
+"is_": {
+"n": 4,
+"win": 100.0,
+"rom": 30.6,
+"avg_rs": 4868
+},
+"oos": {
+"n": 1,
+"win": 100.0,
+"rom": 15.6,
+"avg_rs": 2598
+}
+}
+},
+"ABB": {
+"BULL_PUT": {
+"is_": {
+"n": 1,
+"win": 100.0,
+"rom": 18.8,
+"avg_rs": 6569
+},
+"oos": {
+"n": 4,
+"win": 100.0,
+"rom": 32.6,
+"avg_rs": 5274
+}
+}
+},
+"EICHERMOT": {
+"BULL_PUT": {
+"is_": {
+"n": 8,
+"win": 100.0,
+"rom": 22.6,
+"avg_rs": 1818
+},
+"oos": {
+"n": 4,
+"win": 100.0,
+"rom": 36.8,
+"avg_rs": 4886
+}
+}
+},
+"HAL": {
+"BULL_PUT": {
+"is_": {
+"n": 5,
+"win": 100.0,
+"rom": 28.3,
+"avg_rs": 1254
+},
+"oos": {
+"n": 3,
+"win": 100.0,
+"rom": 23.7,
+"avg_rs": 4707
+}
+}
+},
+"APOLLOHOSP": {
+"BULL_PUT": {
+"is_": {
+"n": 10,
+"win": 80.0,
+"rom": 6.7,
+"avg_rs": 1024
+},
+"oos": {
+"n": 2,
+"win": 100.0,
+"rom": 32.9,
+"avg_rs": 5465
+}
+}
+}
+}
