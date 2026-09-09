@@ -566,3 +566,40 @@ def get_last_5_trading_days() -> list:
             dates.append(day.date())
         day -= timedelta(days=1)
     return sorted(dates)
+
+
+def exit_executable(short_q, long_q, target_cost, min_oi=1):
+    """Can a credit spread actually be CLOSED at or below `target_cost` right now?
+
+    Added 2026-09-09 after the user reported the failure directly: he books a TP-40/TP-50 target,
+    goes to close, and finds nobody bidding for the LONG leg he has to sell. The position then
+    stays on and bleeds theta while the spread widens against him.
+
+    The resolvers price a spread on MIDS, which is the settled accounting basis and does not
+    change. But closing is not a mid-price event. Buying the short leg back costs its ASK, and
+    selling the long wing earns only its BID, so the real exit is `short_ask - long_bid` and on an
+    illiquid wing that is far worse than the mid. The old check only asked whether a bid existed
+    at all, so a nominal 0.05 bid against a 6.00 ask passed it and booked a profit that could not
+    be taken.
+
+    short_q / long_q are the (mid, bid, ask, oi) tuples the books' own quote helpers return.
+    Returns (ok, exec_cost, reason). `ok` is True only when both legs quote a genuine two-sided
+    market, the wing has open interest to sell into, and the executable cost still meets the
+    target. Never used to compute P&L — only to decide whether booking is allowed.
+    """
+    sm, sb, sa, soi = short_q
+    lm, lb, la, loi = long_q
+    if sm is None or lm is None:
+        return False, None, "no quote on one or both legs"
+    if not (sb > 0 and sa > 0):
+        return False, None, "short leg has no two-sided market"
+    if not (lb > 0 and la > 0):
+        return False, None, "long leg has no two-sided market (nobody is bidding for the wing)"
+    if loi < min_oi:
+        return False, None, "long leg has no open interest to sell into"
+    exec_cost = sa - lb
+    if exec_cost > target_cost:
+        return False, exec_cost, (f"exit costs {exec_cost:.2f} at executable prices "
+                                  f"(buy short at {sa:.2f}, sell wing at {lb:.2f}) "
+                                  f"vs target {target_cost:.2f}")
+    return True, exec_cost, "executable"

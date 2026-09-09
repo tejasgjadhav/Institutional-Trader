@@ -550,6 +550,7 @@ def resolve_positions() -> int:
     Overnight carry. Returns # newly closed."""
     if not STOCK_CREDIT_ENABLED:
         return 0
+    from engine.data_utils import exit_executable
     book = _load_book()
     today = date.today()
     closed = 0
@@ -572,10 +573,22 @@ def resolve_positions() -> int:
             # fabricated 0DTE wins. Entry already demands a two-sided market (the MPHASIS fix);
             # resolve did not. MTM still updates on a fallback quote; only the DECISION is gated.
             bookable = False
+            # EXIT LIQUIDITY (user, 9-Sep-2026): "most of the time put or call bought there is no
+            # seller and then i face huge theta decay". `bookable` only asks whether a bid exists,
+            # so a token 0.05 bid on the wing passed it and a TP was booked at a mid price he could
+            # not trade out of. exit_executable() prices the REAL close — pay the short leg's ask,
+            # receive the long leg's bid — and refuses the booking when that misses the target.
+            exit_ok, exit_cost, exit_why = False, None, "no quote this cycle"
             if not expired:
-                sm, sb, sa, _u1 = _quote(p["short_key"]); lm, lb, la, _u2 = _quote(p["long_key"])
+                sq = _quote(p["short_key"]); lq = _quote(p["long_key"])
+                sm, sb, sa, soi = sq
+                lm, lb, la, loi = lq
                 bookable = bool(sm is not None and lm is not None
                                 and sb > 0 and sa > 0 and lb > 0 and la > 0)
+                _tp = STOCK_CREDIT_TAKE_PROFIT
+                if _tp and _tp > 0:
+                    exit_ok, exit_cost, exit_why = exit_executable(
+                        sq, lq, p["credit"] * (1 - _tp), min_oi=STOCK_CREDIT_MIN_OI)
                 if sm is not None and lm is not None:
                     p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
                     p["current_cost"] = round(sm - lm, 2); changed = True
@@ -629,10 +642,30 @@ def resolve_positions() -> int:
             if cost is None:
                 continue
             if not bookable:
-                continue   # stale/one-sided quote: mark to market, but never book a target or stop
+                # stale/one-sided quote: mark to market, but never book a target or stop.
+                # SAY SO when the target is met on mids, otherwise this reads as a silent hold and
+                # he has no way to tell a dead quote from a position that simply has not got there.
+                _tp = STOCK_CREDIT_TAKE_PROFIT
+                if _tp and _tp > 0 and cost <= p["credit"] * (1 - _tp):
+                    p["tp_blocked"] = exit_why
+                    p["tp_blocked_at"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
+                    changed = True
+                    logger.warning("%s %s: TP %.0f%% reached on mids but NOT executable — %s. "
+                                   "Holding the position.", p["symbol"], p["side"], _tp * 100, exit_why)
+                continue
             p["pnl_pts"] = round(p["credit"] - cost, 2)
             tp = STOCK_CREDIT_TAKE_PROFIT
             if tp and tp > 0 and cost <= p["credit"] * (1 - tp):
+                if not exit_ok:
+                    # The target is met on mids and NOT on the prices he would actually get. Hold
+                    # the position and say why, rather than logging a profit he cannot take.
+                    p["tp_blocked"] = exit_why
+                    p["tp_blocked_at"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
+                    changed = True
+                    logger.warning("%s %s: TP %.0f%% reached on mids but NOT executable — %s. "
+                                   "Holding the position.", p["symbol"], p["side"], tp * 100, exit_why)
+                    continue
+                p.pop("tp_blocked", None); p.pop("tp_blocked_at", None)
                 # captured >= tp of max profit -> BOOK the win early (de-risk the mid-cap tail)
                 p["exit_cost"] = round(cost, 2)
                 p["pnl_pts"] = round(p["credit"] - cost, 2)

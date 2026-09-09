@@ -2069,16 +2069,23 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             else:
                 und_s = f"entry {p.get('entry_spot'):,.0f}" if p.get("entry_spot") else "—"
             rS, rB = 2 * i, 2 * i + 1
+            # EXIT-LIQUIDITY HOLD (user, 9-Sep-2026). The resolver now refuses to book a target it
+            # cannot actually trade out of, so the reason must be VISIBLE on the position — a
+            # silent hold is the failure mode this repo keeps repeating.
+            st_txt = status
+            if status == "OPEN" and p.get("tp_blocked"):
+                st_txt = "OPEN · TP HELD (illiquid)"
             # ACTION carries the option TYPE (CE/PE) so it's never truncated by a long stock name.
             # Row 1 — SELL the near leg (collect premium)
             self._set_row(table, rS,
                           [f"SELL {verb}", f"{name} {p.get('short_strike','—')}", und_s, lot_str, sp_s, exp,
-                           f"credit Rs {credit*qty:,.0f}", status], fg=QColor(RED))
+                           f"credit Rs {credit*qty:,.0f}", st_txt], fg=QColor(RED))
             # Row 2 — BUY the far leg (the hedge) — AMOUNT here = total MARGIN required (= max loss)
             self._set_row(table, rB,
                           [f"BUY {verb}", f"{name} {p.get('long_strike','—')}  (hedge)", "", lot_str, lp_s, exp,
                            f"margin Rs {cap:,.0f}", pnl], fg=QColor(GREEN))
-            self._color_cell(table, rS, 7, self._status_color(status))     # STATUS on the SELL row
+            self._color_cell(table, rS, 7, QColor(AMBER) if st_txt != status
+                             else self._status_color(status))              # STATUS on the SELL row
             if isinstance(_sig, (int, float)) and isinstance(_liv, (int, float)) and _sig:
                 _g = abs((_liv - _sig) / _sig * 100)
                 self._color_cell(table, rS, 2, QColor(RED) if _g >= 1.0 else

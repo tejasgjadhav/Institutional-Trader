@@ -3445,3 +3445,21 @@ untouched for v2/v1/v0. Samples rendered (HEROMOTOCO BC, HAL BP), engine restart
 ceiling vs Rs3,592/mo IS plan, NOT in TOTAL), strategy row, new 21-cell table, README-tab sources
 line, CLAUDE.md book row. Viewer restarted, offscreen render test passed all probes. Engine clean
 since 09:48, markers held, vlc loaded. Volume answer: ~3.5 sig/mo, plan +Rs3.6k/mo, ceiling 12k.
+
+## 3-Sep · user took a MANUAL POLYCAB bull put (short ~2 widths below spot) - checking alignment vs system.
+
+## 9-Sep · IN FLIGHT (user): EXIT LIQUIDITY GATE. He books TP-40/TP-50 and finds the long (bought)
+leg has no buyer - no bid - so the modelled exit is not tradeable, he eats theta and the spread
+collapses. Entry gates both legs on a live two-sided market; the RESOLVER does not. Fix: no TP
+booking / no Telegram profit signal unless BOTH legs quote a real two-sided market at the exit.
+Applies to v2/v1/v0/vlc (one shared resolver) and swing_credit.
+
+## 9-Sep 13:45 · EXIT LIQUIDITY GATE DEPLOYED. exit_executable() in data_utils prices the REAL
+close (pay short ask, receive wing bid) and both resolvers refuse a TP booking that misses target
+at those prices, or where either leg lacks a two-sided market / the wing has no OI. P&L accounting
+stays on MIDS (unchanged). Blocked positions carry tp_blocked + tp_blocked_at, log a WARNING, and
+show "OPEN · TP HELD (illiquid)" in amber in the viewer. Swing also gained a real _quote() (its
+_mid hid the depth and could book off a stale LTP). Stops/expiry settlement untouched - never hide
+a loss. Zero extra API calls (reuses the quotes already fetched). Live sample: 13/13 wings quote
+two-sided in-hours, so the bite is mostly wide spreads (PAGEIND 80.5/114.45), not absent bids.
+Engine+viewer restarted 13:39-13:45, 0 errors, markers held.

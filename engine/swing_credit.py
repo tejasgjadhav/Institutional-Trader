@@ -82,20 +82,31 @@ def _spot(index: str):
     return lt.get("price") if lt.get("success") and lt.get("price") else None
 
 
-def _mid(key: str):
-    """Live mid of an option leg (bid/ask midpoint; LTP fallback). None if no quote."""
+def _quote(key: str):
+    """(mid, bid, ask, oi) for an option leg, or (None, 0, 0, 0) — matches stock_credit_v2._quote.
+
+    The book used to read a bare mid and throw the depth away, so the resolver could not tell a
+    real two-sided market from a stale last-traded print. The exit-liquidity gate needs the bid
+    and the ask, so the quote is kept whole here and _mid() reads the first field off it.
+    """
     try:
         q = fetch_upstox_quote(key)
         if q:
             bid, ask = q.get("bid", 0.0) or 0.0, q.get("ask", 0.0) or 0.0
+            oi = q.get("oi", 0) or 0
             if bid > 0 and ask > 0:
-                return (bid + ask) / 2.0
+                return (bid + ask) / 2.0, bid, ask, oi
         lt = fetch_upstox_ltp(key)
         if lt.get("success") and lt.get("price"):
-            return float(lt["price"])
+            return float(lt["price"]), 0.0, 0.0, 0
     except Exception as e:
-        logger.debug(f"swing _mid {key}: {e}")
-    return None
+        logger.debug(f"swing _quote {key}: {e}")
+    return None, 0.0, 0.0, 0
+
+
+def _mid(key: str):
+    """Live mid of an option leg (bid/ask midpoint; LTP fallback). None if no quote."""
+    return _quote(key)[0]
 
 
 def _todays_breakout(index: str):
@@ -287,8 +298,9 @@ def scan_swing_signals() -> list:
 def resolve_swing_positions() -> int:
     """Mark-to-market every OPEN position; close on hard stop (cost >= stop_cost) or at expiry
     (settle at intrinsic). Overnight carry — never force-closed at 15:30. Returns # newly closed."""
+    from engine.data_utils import exit_executable
     book = _load_book()
-    # The flag gates NEW entries, not bookkeeping: positions opened before a disable must still
+    # The flag gates NEW entries, not bookkeeping: positions opened before a disable muststill
     # be marked and settled (2026-07-24 disable left an OPEN NIFTY spread stale in the UI).
     if not SWING_CREDIT_ENABLED and not any(p.get("status") == "OPEN" for p in book):
         return 0
@@ -310,8 +322,16 @@ def resolve_swing_positions() -> int:
             # ── MARK-TO-MARKET the current LEG values for every non-expired position (OPEN or
             # already closed) so the UI shows a LIVE 'current' that keeps running even after a
             # WIN/LOSS is booked. The realized P&L (set at close) is preserved below. ──
+            exit_ok, exit_cost, exit_why = False, None, "no quote this cycle"
             if not expired:
-                sm, lm = _mid(p["short_key"]), _mid(p["long_key"])
+                sq, lq = _quote(p["short_key"]), _quote(p["long_key"])
+                sm, lm = sq[0], lq[0]
+                # EXIT LIQUIDITY (user, 9-Sep-2026) — the same gate the stock books now carry.
+                # _mid() hides whether a market exists at all, so this book could book a target off
+                # a stale last-traded print with nobody bidding for the wing.
+                if SWING_TAKE_PROFIT and SWING_TAKE_PROFIT > 0:
+                    exit_ok, exit_cost, exit_why = exit_executable(
+                        sq, lq, p["credit"] * (1 - SWING_TAKE_PROFIT))
                 if sm is not None and lm is not None:
                     p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
                     p["current_cost"] = round(sm - lm, 2); changed = True
@@ -358,6 +378,13 @@ def resolve_swing_positions() -> int:
             p["pnl_pts"] = round(p["credit"] - cost, 2)
             tp = SWING_TAKE_PROFIT
             if tp and tp > 0 and cost <= p["credit"] * (1 - tp):
+                if not exit_ok:
+                    p["tp_blocked"] = exit_why
+                    changed = True
+                    logger.warning("swing %s %s: TP %.0f%% reached on mids but NOT executable — %s. "
+                                   "Holding the position.", p["index"], p["side"], tp * 100, exit_why)
+                    continue
+                p.pop("tp_blocked", None)
                 # captured >= tp of max profit -> BOOK the win early (de-risk)
                 p["exit_cost"] = round(cost, 2)
                 p["pnl_pts"] = round(p["credit"] - cost, 2)
