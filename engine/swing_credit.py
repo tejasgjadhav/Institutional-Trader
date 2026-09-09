@@ -330,8 +330,13 @@ def resolve_swing_positions() -> int:
                 # _mid() hides whether a market exists at all, so this book could book a target off
                 # a stale last-traded print with nobody bidding for the wing.
                 if SWING_TAKE_PROFIT and SWING_TAKE_PROFIT > 0:
+                    # min_oi=0 on purpose: the Upstox quote publishes NO open interest for INDEX
+                    # options (measured 9-Sep-2026 — a live NIFTY leg returns oi 0 while a stock
+                    # leg returns 541,000 at the same moment). Defaulting to 1 here would have
+                    # blocked every swing take-profit for ever. The two-sided-market and
+                    # executable-cost checks still apply, and they are the ones that bite.
                     exit_ok, exit_cost, exit_why = exit_executable(
-                        sq, lq, p["credit"] * (1 - SWING_TAKE_PROFIT))
+                        sq, lq, p["credit"] * (1 - SWING_TAKE_PROFIT), min_oi=0)
                 if sm is not None and lm is not None:
                     p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
                     p["current_cost"] = round(sm - lm, 2); changed = True
@@ -377,6 +382,8 @@ def resolve_swing_positions() -> int:
                 continue                        # no quote this cycle — try again next
             p["pnl_pts"] = round(p["credit"] - cost, 2)
             tp = SWING_TAKE_PROFIT
+            if not (tp and tp > 0 and cost <= p["credit"] * (1 - tp)) and p.get("tp_blocked"):
+                p.pop("tp_blocked", None); changed = True   # drifted off target — stale notice
             if tp and tp > 0 and cost <= p["credit"] * (1 - tp):
                 if not exit_ok:
                     p["tp_blocked"] = exit_why

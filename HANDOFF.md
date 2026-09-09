@@ -3463,3 +3463,20 @@ _mid hid the depth and could book off a stale LTP). Stops/expiry settlement unto
 a loss. Zero extra API calls (reuses the quotes already fetched). Live sample: 13/13 wings quote
 two-sided in-hours, so the bite is mostly wide spreads (PAGEIND 80.5/114.45), not absent bids.
 Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
+
+## 9-Sep · IN FLIGHT: adversarial audit of today's exit-liquidity change (4 layers).
+
+## 10-Sep 00:0x · AUDIT OF YESTERDAY'S EXIT GATE — 3 bugs found and fixed, 2 of them mine:
+ 1. SWING TP BLOCKED FOR EVER (mine, critical for that book): the Upstox quote publishes NO open
+    interest for INDEX options (live NIFTY leg oi=0 while a stock leg reads 541,000 at the same
+    moment), and the swing gate defaulted to min_oi=1. Fixed with min_oi=0 for swing only; stocks
+    keep the OI check because their feed carries real OI.
+ 2. STALE "TP HELD (illiquid)" FLAG (mine): the flag was cleared only when a booking succeeded, so
+    a position that drifted back off its target kept showing the hold notice. Now cleared whenever
+    the target is not met on mids.
+ 3. SENTINEL/RESOLVER BOOK RACE (pre-existing, latent data loss): _save_book overwrote the whole
+    file, so a scan-sentinel thread appending a position while a STALLED resolve held an older copy
+    lost that trade AFTER its EXECUTE message had gone to Telegram - and a stalled main loop is the
+    exact condition the sentinel fires on. _save_book now merges by id and logs what it kept.
+ Verified: 6/6 stock regression cases pass after the restructure, race reproduced then fixed,
+ swing TP proven reachable again. Engine restarted 00:02, books intact (20/3/1), no new errors.

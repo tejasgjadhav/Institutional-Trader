@@ -64,6 +64,27 @@ def _load_book() -> list:
 def _save_book(book: list) -> None:
     try:
         os.makedirs(DATA_DIR, exist_ok=True)
+        # MERGE-ON-WRITE (audit 10-Sep-2026). The scan sentinel runs on its own thread, so a scan
+        # can append a position while a STALLED resolve still holds an older copy of this book in
+        # memory — and a stalled main loop is the exact condition the sentinel fires on. A plain
+        # overwrite then dropped the new trade AFTER its EXECUTE message had already gone to
+        # Telegram, leaving a signal with no position behind it. Keep any id on disk that this
+        # writer never saw. Nothing removes a position by omission, so a merge can never resurrect
+        # a deleted one.
+        try:
+            with open(BOOK_PATH) as _f:
+                on_disk = json.load(_f) or []
+            seen = {str(p.get("id")) for p in book}
+            unseen = [d for d in on_disk if str(d.get("id")) not in seen]
+            if unseen:
+                logger.warning("book merge: keeping %d position(s) another thread wrote while this "
+                               "cycle held a stale copy (%s)", len(unseen),
+                               ", ".join(str(d.get("id")) for d in unseen))
+                book = list(book) + unseen
+        except FileNotFoundError:
+            pass
+        except Exception as e:
+            logger.warning(f"stock_credit book merge-on-write: {e}")
         tmp = BOOK_PATH + ".tmp"
         with open(tmp, "w") as f:
             json.dump(book, f, default=str, indent=2)
@@ -641,12 +662,18 @@ def resolve_positions() -> int:
             cost = p.get("current_cost")
             if cost is None:
                 continue
+            _tp = STOCK_CREDIT_TAKE_PROFIT
+            target_met = bool(_tp and _tp > 0 and cost <= p["credit"] * (1 - _tp))
+            if not target_met and p.get("tp_blocked"):
+                # The position has drifted back off its target, so the hold notice is stale and
+                # must go. Without this the UI kept showing "TP HELD (illiquid)" on a position that
+                # was no longer anywhere near its target.
+                p.pop("tp_blocked", None); p.pop("tp_blocked_at", None); changed = True
             if not bookable:
                 # stale/one-sided quote: mark to market, but never book a target or stop.
                 # SAY SO when the target is met on mids, otherwise this reads as a silent hold and
                 # he has no way to tell a dead quote from a position that simply has not got there.
-                _tp = STOCK_CREDIT_TAKE_PROFIT
-                if _tp and _tp > 0 and cost <= p["credit"] * (1 - _tp):
+                if target_met:
                     p["tp_blocked"] = exit_why
                     p["tp_blocked_at"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
                     changed = True
