@@ -79,7 +79,6 @@ class EngineRunner:
         # restart cleared the scan marker, the late-catch-up re-ran an already-done scan, found
         # nothing new (ULTRACEMCO was already held) and sent a spurious no-signal notice AFTER the
         # real EXECUTE message. Markers now load from disk at start and save on set.
-        self._load_day_markers()
         self._watchlist_tg_day = None
         self._watchlist_build_day = None
         self._last_monthly_resolve = 0.0
@@ -88,6 +87,14 @@ class EngineRunner:
         self._monthly_call_scan_day = None
         self._last_zdte_resolve = 0.0
         self._zdte_scan_day = None
+        # LOAD LAST (fixed 10-Sep-2026). This call sat ABOVE the four assignments below, so it
+        # loaded each marker off disk and the next line immediately set it back to None. Only the
+        # two markers assigned earlier — swing and the stock scan — actually survived a restart,
+        # which is why data/day_markers.json kept SHEDDING keys: every save wrote out only what was
+        # still truthy. The 0DTE marker was one of the clobbered ones, so a restart in the morning
+        # window would have re-run the 0DTE scan and opened a SECOND position on the day. The
+        # persistence must therefore be the last word in __init__, after every default.
+        self._load_day_markers()
 
     # ── persistence helpers ──────────────────────────────────────────────────
     @staticmethod
@@ -754,6 +761,27 @@ class EngineRunner:
             json.dump(out, open(self._MARKER_PATH, "w"))
         except Exception as e:
             logger.warning("day markers save: %s", e)
+
+    def _idle_sleep(self, cap=300):
+        """Seconds to idle while the market is shut — but never sleep past the next open.
+
+        THE DEFECT THIS EXISTS FOR (live, 10-Sep-2026). The loop slept a flat 300 s whenever
+        is_market_open() was False. It went to sleep at 09:14:46, fourteen seconds before the
+        09:15 open, and did not wake until 09:19:47. The 0DTE books exist to enter at 09:16, so
+        SENSEX went on at 09:19:47 on a price that had already moved, and the user asked at 09:18
+        why nothing had come. Waking at the open costs one extra cycle and removes the whole
+        class of "the engine was asleep when the market opened".
+        """
+        try:
+            from engine.config import MARKET_OPEN
+            now = datetime.now(IST)
+            h, m = map(int, MARKET_OPEN.split(":"))
+            opens = now.replace(hour=h, minute=m, second=2, microsecond=0)
+            if opens > now:
+                return max(1.0, min(float(cap), (opens - now).total_seconds()))
+        except Exception as e:
+            logger.warning("idle sleep: %s", e)
+        return float(cap)
 
     def _scan_sentinel(self):
         """Deadline insurance for the 15:36 scan (25-Aug-2026). Runs in a daemon thread. If the
@@ -1467,7 +1495,8 @@ class EngineRunner:
                 logger.error(f"cycle failed: {e}", exc_info=True)
             # tight loop during market hours; idle slowly when closed (still writes a
             # market snapshot every cycle and catches the 15:31-15:55 EOD window).
-            time.sleep(TICK if (self.agent.is_market_open() or self._in_settle_grace()) else 300)
+            time.sleep(TICK if (self.agent.is_market_open() or self._in_settle_grace())
+                       else self._idle_sleep())
 
 
 if __name__ == "__main__":

@@ -3480,3 +3480,18 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
     exact condition the sentinel fires on. _save_book now merges by id and logs what it kept.
  Verified: 6/6 stock regression cases pass after the restructure, race reproduced then fixed,
  swing TP proven reachable again. Engine restarted 00:02, books intact (20/3/1), no new errors.
+
+## 10-Sep 09:18 · INVESTIGATING: no SENSEX 0DTE signal or skip notice at 09:16 (Thu = SENSEX expiry).
+
+## 10-Sep 09:2x · WHY THE 09:16 SENSEX SIGNAL WAS LATE — two bugs, both fixed (restart deferred to
+09:45, after ZERO_DTE_ENTRY_CUTOFF, because a restart inside the window could double the position):
+ 1. IDLE SLEEP CROSSED THE OPEN (pre-existing): the loop slept a flat 300s whenever the market was
+    shut. It slept at 09:14:46, 14s before the 09:15 open, and woke at 09:19:47 - so the 0DTE scan,
+    designed for 09:16, ran at 09:19:47 and SENSEX went on at a drifted price (BEAR_CALL
+    75200/75800, credit 57.05, msg 199). New _idle_sleep() never sleeps past the next open.
+ 2. MARKER PERSISTENCE WAS HALF-BROKEN (mine, 26-Aug): _load_day_markers() sat ABOVE four of the
+    six default assignments, so watchlist/watchlist-build/monthly/0DTE markers were loaded and then
+    set straight back to None. Only swing + stock scan survived a restart, which is why
+    day_markers.json kept SHEDDING keys. My 26-Aug claim that persistence retired the freeze-rule
+    hazard was WRONG - it covered the stock scan only, and a morning restart would have re-run the
+    0DTE scan. Load now happens last in __init__; 6/6 markers restore and no keys are shed.
