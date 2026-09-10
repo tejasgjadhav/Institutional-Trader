@@ -3495,3 +3495,12 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
     day_markers.json kept SHEDDING keys. My 26-Aug claim that persistence retired the freeze-rule
     hazard was WRONG - it covered the stock scan only, and a morning restart would have re-run the
     0DTE scan. Load now happens last in __init__; 6/6 markers restore and no keys are shed.
+
+## 10-Sep 09:43 · user cleared the freeze (signal already received) - deploying the two fixes now.
+   DEPLOYED 09:43 with the freeze lifted by the user. PROOF IN PRODUCTION: the restart happened at
+   09:43, INSIDE the old danger window, and _zdte_scan_day stayed 2026-09-10 across it - SENSEX
+   positions today 1 before / 1 after, no duplicate. That is the exact scenario that was unsafe
+   until this morning. The wake-at-open fix cannot be proven until tomorrow's 09:15 open; it is
+   proven offline against a frozen clock (09:14:46 -> sleeps 16s, not 300s). NOTE: day_markers.json
+   currently holds only 2 keys because the others were already shed before the fix; they repopulate
+   as today's events fire (watchlist 15:31, stock scan 15:36).
