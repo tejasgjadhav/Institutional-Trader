@@ -303,6 +303,20 @@ def build_watchlist() -> dict:
         with open(tmp, "w") as f:
             json.dump(out, f)
         os.replace(tmp, WATCHLIST_PATH)   # atomic — the UI never reads a half-written file
+        # KEEP A DATED COPY (11-Sep-2026). union_watchlist.json is overwritten on every build, so
+        # the evidence for WHY a day produced no signal survives only until the next build. Asked
+        # to audit three quiet days, only the most recent could be explained from stored data; the
+        # c/w values behind the other two were already gone. The c/w and premium gates still record
+        # no per-name rejection, so this archive is the only durable record of what was measured.
+        try:
+            arch_dir = os.path.join(DATA_DIR, "watchlist_archive")
+            os.makedirs(arch_dir, exist_ok=True)
+            arch = os.path.join(arch_dir, f"{date.today().isoformat()}.json")
+            with open(arch + ".tmp", "w") as f:
+                json.dump(out, f)
+            os.replace(arch + ".tmp", arch)   # last build of the day wins — the 15:31 one
+        except Exception as e:
+            logger.warning(f"watchlist archive: {e}")
         return out
     except Exception as e:
         logger.warning(f"build_watchlist: {e}")

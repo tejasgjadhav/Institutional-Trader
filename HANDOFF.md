@@ -3504,3 +3504,13 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    proven offline against a frozen clock (09:14:46 -> sleeps 16s, not 300s). NOTE: day_markers.json
    currently holds only 2 keys because the others were already shed before the fix; they repopulate
    as today's events fire (watchlist 15:31, stock scan 15:36).
+
+## 11-Sep · AUDIT REQUESTED: no stock-credit signals for 3-4 business days. Checking scan ran /
+## notice sent / watchlist built / rejections, on real logs.
+   AUDIT RESULT (11-Sep): NO BUG, NO HALLUCINATION. Scan ran 15:36-15:37 on 4/7/8/9/10-Sep; digest
+   + notice delivered (telegram ids 195-202); last fill LTM 7-Sep. Cause is measurable: India VIX
+   10.6-11.9 -> thin premium -> best c/w on 10-Sep 0.27 vs the 0.40 gate (0.30 even for vlc);
+   19 breakouts, 16 with computed c/w, cw_ok=0; arithmetic hand-checked (NESTLEIND 1370/1330 PE,
+   10.75/40 = 0.269 = stored 0.27). Base rate: 6 entry days since 1-Aug in ~28 sessions, incl. an
+   8-session gap 26-Aug -> 7-Sep. GAP CLOSED: builds now archived to data/watchlist_archive/.
+   Still open: c/w and premium gates record no per-name rejection.
