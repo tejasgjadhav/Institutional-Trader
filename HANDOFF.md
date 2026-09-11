@@ -3514,3 +3514,14 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    10.75/40 = 0.269 = stored 0.27). Base rate: 6 entry days since 1-Aug in ~28 sessions, incl. an
    8-session gap 26-Aug -> 7-Sep. GAP CLOSED: builds now archived to data/watchlist_archive/.
    Still open: c/w and premium gates record no per-name rejection.
+
+## 11-Sep · QUESTION: does the system keep running when the MacBook sleeps? Auditing wakelock +
+## real pmset sleep/wake history during market hours.
+   ANSWER: NO - a sleeping Mac stops everything (the sentinel is a thread in the same frozen
+   process). Defences found: `pmset repeat wakepoweron 8:55AM weekdays` ALREADY exists and worked
+   on every expiry morning checked (1/3/8/10-Sep: zero sleep events 09:00-09:29, 0DTE fired). THE
+   GAP: the engine took its caffeinate assertion only once the market was ALREADY open, so nothing
+   held the Mac up between the 08:55 wake and the 09:15 open. On BATTERY today it slept at 08:55:45,
+   09:11 and 09:14:42 and woke only when the lid opened at 09:29:54 - straight past the 09:16 scan.
+   Friday = no expiry, nothing lost. FIXED: wakelock now held from 08:50 (_PREOPEN_HOLD_FROM).
+   Cannot be fixed in software: closing the lid always sleeps. User actions: AC power + lid open.

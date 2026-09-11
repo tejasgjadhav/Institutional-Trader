@@ -1123,6 +1123,9 @@ class EngineRunner:
             except Exception as e:
                 logger.warning(f"intraday skip notice: {e}")
 
+    _PREOPEN_HOLD_FROM = 8 * 60 + 50   # 08:50 — before the 08:55 scheduled wakepoweron
+    _PREOPEN_HOLD_TO   = 9 * 60 + 16   # until the market-open check itself takes over
+
     def _manage_wakelock(self):
         """Hold a power assertion (`caffeinate -i`) WHILE THE MARKET IS OPEN, so an unattended
         laptop can't idle-sleep mid-session and suspend the engine (the system sleep timer is
@@ -1132,12 +1135,25 @@ class EngineRunner:
         NOTE: prevents IDLE sleep only. Closing the lid (clamshell) still sleeps; for fully
         unattended trading keep the lid open and on AC power.
         """
-        open_now = self.agent.is_market_open()
+        # HOLD FROM BEFORE THE OPEN, NOT FROM THE OPEN (11-Sep-2026). The assertion used to start
+        # only once the market was ALREADY open — but the Mac has to be awake for the engine to
+        # notice that it opened, so nothing kept it up in the gap between the 08:55 scheduled wake
+        # and the 09:15 open. On battery that gap is fatal: this morning the Mac woke at 08:55,
+        # fell back to sleep at 08:55:45, 09:11 and 09:14:42, and did not wake again until the lid
+        # was opened at 09:29:54 — straight through the open and past the 09:16 0DTE scan. Friday
+        # carries no index expiry so nothing was lost, but a Tuesday or Thursday would have been.
+        # Holding from PREOPEN_HOLD closes the gap the scheduled wake leaves behind.
+        now_m = datetime.now(IST).hour * 60 + datetime.now(IST).minute
+        preopen = (datetime.now(IST).weekday() < 5
+                   and (self._PREOPEN_HOLD_FROM <= now_m < self._PREOPEN_HOLD_TO))
+        open_now = self.agent.is_market_open() or preopen
         alive = self._caffeinate is not None and self._caffeinate.poll() is None
         try:
             if open_now and not alive:
                 self._caffeinate = subprocess.Popen(["caffeinate", "-i", "-w", str(os.getpid())])
-                logger.info("wakelock: caffeinate -i held (market open)")
+                logger.info("wakelock: caffeinate -i held (%s)",
+                            "pre-open hold" if preopen and not self.agent.is_market_open()
+                            else "market open")
             elif not open_now and alive:
                 self._caffeinate.terminate()
                 self._caffeinate = None
