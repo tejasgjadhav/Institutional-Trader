@@ -963,7 +963,7 @@ class EngineRunner:
                 except Exception as e:
                     logger.warning(f"stock_credit_vlc scan: {e}")
             if _fired == 0:
-                self._tg_no_signal(now)
+                self._tg_no_signal(now, late=late_ok)
 
 
     def _tg_intraday_skip(self, now, reasons):
@@ -1005,7 +1005,7 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"_tg_intraday_skip: {e}")
 
-    def _tg_no_signal(self, now):
+    def _tg_no_signal(self, now, late=False):
         """Tell him the scan ran and found nothing (user request, 18-Aug-2026).
 
         Silence used to be ambiguous — a quiet 15:36 could mean no breakout qualified, or it could
@@ -1024,6 +1024,17 @@ class EngineRunner:
                 pass
             lines = [
                 "⚪ <b>NO SIGNAL TODAY — SCAN COMPLETE</b>",
+            ] + ([
+                # LATE-SCAN WARNING (11-Sep-2026). On a normal day this list is empty and the
+                # message is byte-identical to every earlier one, so the trade log keeps its shape.
+                # Today the Mac slept from 15:08 and the scan only ran at 15:41, after the 15:40
+                # derivatives close — and the message still read SCAN COMPLETE, which told him the
+                # session had been scanned properly when it had not. A record-only scan must say so.
+                f"⚠️ <b>This scan ran LATE, at {now.strftime('%H:%M')}</b> — the 15:36 window was "
+                f"missed because the engine was not running then (the Mac was asleep, or the cycle "
+                f"stalled). It is a RECORD-ONLY scan: anything it found could not have been placed "
+                f"before the 15:40 close.",
+            ] if late else []) + [
                 f"{now.strftime('%A, %d %b %Y')} · scanned at {now.strftime('%H:%M')} on the official close",
                 "",
                 "Thank you for waiting. The scan has run and the system has no trade for you today.",

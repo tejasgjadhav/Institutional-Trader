@@ -3525,3 +3525,14 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    09:11 and 09:14:42 and woke only when the lid opened at 09:29:54 - straight past the 09:16 scan.
    Friday = no expiry, nothing lost. FIXED: wakelock now held from 08:50 (_PREOPEN_HOLD_FROM).
    Cannot be fixed in software: closing the lid always sleeps. User actions: AC power + lid open.
+
+## 11-Sep · user asks: no watchlist today? checking the 15:31 build/digest.
+   ANSWER (no watchlist 11-Sep): correct, no 15:31 digest went out. The MAC WAS ASLEEP from 15:08
+   to 16:21, waking only in ~2-second Power Nap bursts (15:25, 15:41, 15:56, 16:07). So 15:31 never
+   happened. At the 15:41 burst the SENTINEL FIRED FOR THE FIRST TIME IN PRODUCTION and ran the
+   scan, correctly labelling it LATE/record-only; the "15:17" watchlist finally completed at 16:07
+   (29 breakouts, archived). Nothing was lost - no name qualified. NOTE the sentinel said "likely
+   stalled"; the true cause was machine sleep, so caffeinate -i did NOT protect the afternoon
+   window: lid-close/battery sleep overrides it, exactly as flagged this morning. FIXED: the
+   no-signal Telegram now carries a LATE/RECORD-ONLY warning line in the late case only - the
+   normal-day message is byte-identical (verified line-by-line), so the trade log keeps its shape.
