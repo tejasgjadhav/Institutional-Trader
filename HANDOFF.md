@@ -3536,3 +3536,14 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    window: lid-close/battery sleep overrides it, exactly as flagged this morning. FIXED: the
    no-signal Telegram now carries a LATE/RECORD-ONLY warning line in the late case only - the
    normal-day message is byte-identical (verified line-by-line), so the trade log keeps its shape.
+
+## 12-Sep · user asks: how many signals were analysed to reach today's system. Counting from real
+## row files / symbol_history / studies, not from memory.
+   COUNTED (all from disk, 12-Sep): 69,313 breakout evaluations behind the deployed stock books
+   (IS 51,086 + OOS 18,227 across 162 names, symbol_history scanned_is/oos); of those 1,459
+   distinct (symbol, day) signals survived the gates and were measured as trades in the harness of
+   record (IS 1,085 + OOS 374); 12,754 trade evaluations across ALL row files, but that re-measures
+   the same signals under sweeps (DTE, prefix, band 0.30-0.40) so it is NOT a distinct-signal count;
+   wider programme adds 19,454 3-Family signals, 2,303 ORB+VWAP, 448 0DTE expiries, 718 bhavcopy
+   index-fade trades, 453 real-option trend-ride trades; 67 studies, 164 scripts; live forward
+   record holds 41 fills since 6-Aug-2026.
