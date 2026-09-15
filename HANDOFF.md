@@ -3547,3 +3547,15 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    wider programme adds 19,454 3-Family signals, 2,303 ORB+VWAP, 448 0DTE expiries, 718 bhavcopy
    index-fade trades, 453 real-option trend-ride trades; 67 studies, 164 scripts; live forward
    record holds 41 fills since 6-Aug-2026.
+
+## 15-Sep · user: price in the stock-credit (swing) trade log looks wrong; where is the LTM trade?
+   ROOT CAUSE (price wrong): NOT a maths bug. LTM fell to 4275 Friday, gapped +6.6% to 4555 today;
+   the day's first mark was taken 09:15:00 on PRE-OPEN option quotes so it still carried Friday's
+   prices, and the MTM only refreshed every 900s. Log read -Rs4,998 while the position was +Rs3,135.
+   Self-corrected at the 09:30 refresh. FIXED: interval 900 -> 300, every mark stamped mtm_ts +
+   mtm_stale.
+   MY EARLIER ERROR, NOW CORRECTED: on 9-Sep I said the exit-liquidity gate covered "v2/v1/v0/vlc
+   (one shared resolver)". WRONG - v1 is an INDEPENDENT 485-line module with its own resolver and
+   never got the gate. v2/v0/vlc exec stock_credit_v2.py; v1 does not. v1 (the biggest earner,
+   holding LTM) ran unprotected 9-Sep -> 15-Sep. Gate + mtm_ts now applied to stock_credit.py and
+   its own 6/6 regression passes. LESSON: verify which modules a shared fix actually reaches.

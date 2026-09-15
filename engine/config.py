@@ -401,7 +401,13 @@ STOCK_CREDIT_MAX_NEW_PER_DAY = 5    # cap new entries/day (breakouts cluster -> 
 STOCK_CREDIT_MAX_OPEN     = 20      # cap total concurrent positions (margin + correlated-gap risk)
 STOCK_CREDIT_LOTS         = 1       # paper sizing — KEEP AT 1 to forward-test
 STOCK_CREDIT_SCAN_AFTER     = "15:36" # once/day after this (a daily breakout needs ~the close)
-STOCK_CREDIT_RESOLVE_INTERVAL = 900 # mark-to-market every 15 min (overnight carry)
+STOCK_CREDIT_RESOLVE_INTERVAL = 300 # mark-to-market every 5 min (was 900). The 15-minute
+                                    # cadence put a badly wrong price in front of him on
+                                    # 15-Sep-2026: the day's first mark was taken at 09:15:00
+                                    # on pre-open option quotes, so LTM still carried Friday's
+                                    # close while the stock gapped +6.6%. The log read -Rs4,998
+                                    # when the position was really +Rs3,135, and it would have
+                                    # stayed wrong until 09:30. Five minutes bounds the error.
 
 # ── STOCK CREDIT v0 (0.35-0.40 c/w) — forward paper-test, user-approved 2026-07-31 ──
 # The v2 gate takes c/w >= 0.40. This runs the SAME geometry (short 2-OTM, width 4) on the band

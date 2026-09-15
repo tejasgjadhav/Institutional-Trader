@@ -194,6 +194,7 @@ def scan_signals() -> list:
             return []
     except Exception:
         pass
+    from engine.data_utils import exit_executable
     book = _load_book()
     today = date.today()
     open_now = [p for p in book if p["status"] == "OPEN"]
@@ -356,6 +357,7 @@ def resolve_positions() -> int:
     Overnight carry. Returns # newly closed."""
     if not STOCK_CREDIT_ENABLED:
         return 0
+    from engine.data_utils import exit_executable
     book = _load_book()
     today = date.today()
     closed = 0
@@ -378,13 +380,26 @@ def resolve_positions() -> int:
             # fabricated 0DTE wins. Entry already demands a two-sided market (the MPHASIS fix);
             # resolve did not. MTM still updates on a fallback quote; only the DECISION is gated.
             bookable = False
+            # EXIT LIQUIDITY — v1's OWN COPY (15-Sep-2026). The gate added on 9-Sep went into
+            # stock_credit_v2.py, which v2, v0 and vlc all exec. v1 is a SEPARATE module with its
+            # own resolver, so it never received the fix, and v1 is the biggest earner and held the
+            # only open position. Reported as covering all four books; it did not. Same gate here.
+            exit_ok, exit_cost, exit_why = False, None, "no quote this cycle"
             if not expired:
-                sm, sb, sa, _u1 = _quote(p["short_key"]); lm, lb, la, _u2 = _quote(p["long_key"])
+                sq = _quote(p["short_key"]); lq = _quote(p["long_key"])
+                sm, sb, sa, soi = sq
+                lm, lb, la, loi = lq
                 bookable = bool(sm is not None and lm is not None
                                 and sb > 0 and sa > 0 and lb > 0 and la > 0)
+                _tp = STOCK_CREDIT_TAKE_PROFIT
+                if _tp and _tp > 0:
+                    exit_ok, exit_cost, exit_why = exit_executable(
+                        sq, lq, p["credit"] * (1 - _tp), min_oi=STOCK_CREDIT_MIN_OI)
                 if sm is not None and lm is not None:
                     p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
                     p["current_cost"] = round(sm - lm, 2); changed = True
+                    p["mtm_ts"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
+                    p["mtm_stale"] = not bookable
             if p.get("status") != "OPEN":
                 continue
             if expired:
@@ -434,11 +449,30 @@ def resolve_positions() -> int:
             cost = p.get("current_cost")
             if cost is None:
                 continue
+            _tp = STOCK_CREDIT_TAKE_PROFIT
+            target_met = bool(_tp and _tp > 0 and cost <= p["credit"] * (1 - _tp))
+            if not target_met and p.get("tp_blocked"):
+                p.pop("tp_blocked", None); p.pop("tp_blocked_at", None); changed = True
             if not bookable:
-                continue   # stale/one-sided quote: mark to market, but never book a target or stop
+                # stale/one-sided quote: mark to market, but never book a target or stop
+                if target_met:
+                    p["tp_blocked"] = exit_why
+                    p["tp_blocked_at"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
+                    changed = True
+                    logger.warning("%s %s: TP %.0f%% reached on mids but NOT executable — %s. "
+                                   "Holding the position.", p["symbol"], p["side"], _tp * 100, exit_why)
+                continue
             p["pnl_pts"] = round(p["credit"] - cost, 2)
             tp = STOCK_CREDIT_TAKE_PROFIT
             if tp and tp > 0 and cost <= p["credit"] * (1 - tp):
+                if not exit_ok:
+                    p["tp_blocked"] = exit_why
+                    p["tp_blocked_at"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
+                    changed = True
+                    logger.warning("%s %s: TP %.0f%% reached on mids but NOT executable — %s. "
+                                   "Holding the position.", p["symbol"], p["side"], tp * 100, exit_why)
+                    continue
+                p.pop("tp_blocked", None); p.pop("tp_blocked_at", None)
                 # captured >= tp of max profit -> BOOK the win early (de-risk the mid-cap tail)
                 p["exit_cost"] = round(cost, 2)
                 p["pnl_pts"] = round(p["credit"] - cost, 2)

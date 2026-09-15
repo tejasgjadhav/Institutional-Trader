@@ -627,6 +627,11 @@ def resolve_positions() -> int:
                 if sm is not None and lm is not None:
                     p["short_cur"] = round(sm, 2); p["long_cur"] = round(lm, 2)
                     p["current_cost"] = round(sm - lm, 2); changed = True
+                    # STAMP THE MARK (15-Sep-2026). A price with no time on it cannot be told
+                    # apart from a current one, which is exactly how a 09:15 pre-open mark passed
+                    # for a live P&L through a 6.6% gap.
+                    p["mtm_ts"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M")
+                    p["mtm_stale"] = not bookable
             if p.get("status") != "OPEN":
                 continue
             if expired:
