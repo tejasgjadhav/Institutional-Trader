@@ -1005,6 +1005,36 @@ class EngineRunner:
         except Exception as e:
             logger.warning(f"_tg_intraday_skip: {e}")
 
+    def _scan_integrity(self):
+        """(universe, [names the feed could not answer for]) across every stock book this scan.
+
+        Added 16-Sep-2026. A name whose current-day close will not load is SKIPPED, which is the
+        right call — never scan a stale bar — but the 15:36 message still told him the FULL
+        universe had been scanned. On 16-Sep the Mac slept 31 times in market hours and every wake
+        threw a burst of DNS failures, so that claim could have been a false all-clear on a heavily
+        degraded scan. Report what was actually reached.
+        """
+        names, uni = set(), 0
+        mods = []
+        try:
+            from engine import stock_credit_v2 as _m2, stock_credit as _m1
+            mods += [_m2, _m1]
+        except Exception:
+            pass
+        for _name in ("stock_credit_v0", "stock_credit_vlc"):
+            try:
+                _mod = __import__("engine." + _name, fromlist=["_impl"])
+                if getattr(_mod, "_impl", None) is not None:
+                    mods.append(_mod._impl)
+            except Exception:
+                pass
+        for m in mods:
+            si = getattr(m, "SCAN_INTEGRITY", None)
+            if isinstance(si, dict):
+                uni = max(uni, int(si.get("universe") or 0))
+                names.update(si.get("names") or [])
+        return uni, sorted(names)
+
     def _tg_no_signal(self, now, late=False):
         """Tell him the scan ran and found nothing (user request, 18-Aug-2026).
 
@@ -1022,6 +1052,8 @@ class EngineRunner:
                 n_wl = len(_raw if isinstance(_raw, list) else (_raw.get("rows") or []))
             except Exception:
                 pass
+            _uni, _unreached = self._scan_integrity()
+            _uni = _uni or len(config.UNIVERSE)
             lines = [
                 "⚪ <b>NO SIGNAL TODAY — SCAN COMPLETE</b>",
             ] + ([
@@ -1039,7 +1071,14 @@ class EngineRunner:
                 "",
                 "Thank you for waiting. The scan has run and the system has no trade for you today.",
                 "",
-                f"• The full {len(config.UNIVERSE)}-stock universe was scanned on the closing-auction price",
+                (f"• The full {len(config.UNIVERSE)}-stock universe was scanned on the closing-auction price"
+                 if not _unreached else
+                 f"• <b>{_uni - len(_unreached)} of {_uni} names were actually read</b> on the "
+                 f"closing-auction price. {len(_unreached)} could NOT be read and were skipped "
+                 f"rather than scanned on a stale bar: {', '.join(_unreached[:8])}"
+                 + (" …" if len(_unreached) > 8 else "")
+                 + ". A name that was not read cannot produce a signal, so treat this scan as "
+                   "incomplete."),
                 f"• {n_wl} name(s) reached the watchlist, and none cleared every gate" if n_wl
                 else "• No stock closed outside its Donchian band, so nothing reached the watchlist",
                 "• A trade needs all four: a breakout, credit ÷ width ≥ 0.40, premium ≥ ₹50, "

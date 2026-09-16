@@ -3559,3 +3559,12 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    never got the gate. v2/v0/vlc exec stock_credit_v2.py; v1 does not. v1 (the biggest earner,
    holding LTM) ran unprotected 9-Sep -> 15-Sep. Gate + mtm_ts now applied to stock_credit.py and
    its own 6/6 regression passes. LESSON: verify which modules a shared fix actually reaches.
+
+## 16-Sep · health check requested.
+   FETCH INTEGRITY BUILT (16-Sep): SCAN_INTEGRITY counter in stock_credit_v2.py (used by v2/v0/vlc)
+   and stock_credit.py (v1); scan_signals resets it, the stale-bar skip site increments it, and
+   _scan_integrity() in the runner unions the names across all four books. The 15:36 message now
+   says "N of 116 names were actually read" and lists what it could not read, ONLY when something
+   was missed - a clean scan is byte-identical to every earlier one (verified). Cause today: 31
+   sleep events in market hours, every wake throwing a DNS burst (420 NameResolution failures in
+   the 14:00 hour alone) while the battery sat at 4%. Restart deferred to 15:41 per the user.

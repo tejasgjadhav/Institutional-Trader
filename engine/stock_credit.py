@@ -29,6 +29,13 @@ from engine.instruments import to_instrument_key
 
 logger = logging.getLogger(__name__)
 
+# FETCH INTEGRITY (16-Sep-2026). A name the feed could not answer for is SKIPPED, which is
+# correct - never scan a stale bar - but the 15:36 message still claimed the full universe
+# had been scanned. On a bad DNS day that is a false all-clear. scan_signals() resets this
+# and the runner reports it, so a degraded scan says so.
+SCAN_INTEGRITY = {"universe": 0, "unreachable": 0, "names": []}
+
+
 # {ticker: (signal_price, source)} from the most recent breakout check — read by the UI so the
 # price a signal was computed on is visible next to the live price (GRASIM lesson, 2026-08-05).
 _LAST_SIGNAL_PX = {}
@@ -113,6 +120,10 @@ def _todays_breakout(ticker: str):
     if c is None:
         logger.warning(f"stock_credit: no CURRENT-day close for {ticker} — skipped, not scanned "
                        f"on a stale bar")
+        SCAN_INTEGRITY["unreachable"] += 1
+        _nm = str(ticker).replace(".NS", "")
+        if _nm not in SCAN_INTEGRITY["names"]:
+            SCAN_INTEGRITY["names"].append(_nm)
         return None
     _today = date.today()
     prior = df[[ix.date() < _today for ix in df.index]]
@@ -184,6 +195,7 @@ def scan_signals() -> list:
     (credit/width, premium, liquidity), respecting per-day and total-open caps. Returns new ones."""
     if not STOCK_CREDIT_ENABLED:
         return []
+    SCAN_INTEGRITY.update(universe=len(UNIVERSE), unreachable=0, names=[])
     # SAFETY: only ever create signals on a real trading day (a daily breakout needs today's
     # session). Without this, calling scan_signals() on a weekend/holiday — or in testing — would
     # re-fire the previous session's breakout and pollute the book. The engine also gates by
