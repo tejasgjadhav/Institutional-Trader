@@ -39,3 +39,21 @@ does not rescue width-3 — the 58% overlap with v1/v0 and the negative residual
 before/after showed it removing winners; the ratio distribution showed a long tail; only the
 ladders showed WHY. A guard that changes the answer needs the evidence that it changes it for the
 right reason.
+
+## Run-4 OOS (17-Sep-2026) — now the OOS file of record
+
+First single-run out-of-sample on the actual 116-name universe with every fetch failure counted:
+439 rows, **197 network drops** (run 3: 293; the counts remain a FLOOR), 8 contract/candle fetch
+failures. `research/deployed_bt_oos_rows.json` is now this run; the 21-Aug 113-name file is kept as
+`deployed_bt_oos_rows_21aug_113names.json`. Rows that "vanished" vs the 21-Aug file are the pruned
+bleeders (TCS, HCLTECH, TECHM, OFSS) — universe change, not harness.
+
+| book | basis | published run 3 | run 4 | +yrs |
+|---|---|---|---|---|
+| v2 | median cohort 0.40–0.50 | 79 · 83.5% · +27.0% | **81 · 84.0% · +25.9%** | 3/3 |
+| v1 | median cohort 0.40–0.50 | 186 · 83.3% · +16.6% | **194 · 83.0% · +15.2%** | 3/3 |
+| v0 | own band 0.35–0.40 | 99 · 81.8% · +7.2% | **106 · 83.0% · +2.4%** | 2/3 |
+
+v2 and v1 are inside network noise of the published numbers; v0's ROM is the one material move
+(thin watch book, ~100 trades — a handful of trades swing it). Rupees/month at 1 lot on the
+published basis: v2 +12,150 · v1 +15,382 · v0 +5,617 = **+33,149** (published 30,992).

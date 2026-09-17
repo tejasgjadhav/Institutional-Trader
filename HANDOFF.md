@@ -3712,3 +3712,15 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    13:2x · RUN-4e IS = run 3 BIT-IDENTICAL (1,085/1,085 rows). Harness observability changes are
    result-neutral; wing-guard rejection disabled with the ladder evidence. Study written:
    studies/RUN4_WING_GUARD.md. Committing the harness; launching run-4 OOS (full failure counting).
+   13:4x · RUN-4 OOS DONE: 439 rows, 197 network drops (vs 293 in run 3), 8 _get_json fails.
+   The "removed" rows vs deployed_bt_oos_rows.json are ALL pruned names (TCS/HCLTECH/TECHM/OFSS)
+   - that file is the 21-Aug 113-name run, NOT the published 116-basis run 3 (which was
+   assembled, no single rows file exists). Run 4 is the FIRST single-run OOS on the real 116
+   universe with full failure accounting. Comparing to the PUBLISHED numbers on their basis.
+   run-4 OOS adopted as the OOS file of record (21-Aug file archived). v2/v1 within noise of the
+   published run-3; v0 ROM +7.2 -> +2.4 (material, thin book). Updating CLAUDE.md v0 row + UI money
+   table v0 row + TOTAL/plan cells (compute exactly - the TOTAL was wrong twice before).
+
+   13:5x · UI money table + strategy cells + CLAUDE.md table on run 4 (render-verified TOTAL).
+   Viewer restarted; engine untouched. Telegram evidence blocks + name-wise table NOT rebuilt
+   (append-only / larger job - flagged).
