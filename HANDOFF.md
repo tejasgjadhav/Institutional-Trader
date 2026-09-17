@@ -3760,3 +3760,18 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
 ## the weekly-era evidence (76.8% win, 2/6 yrs negative); direction explains ~2/3 of P&L; latent
 ## settle bug (BNF spot_key=None -> never settles off-expiry-day); no blackout; no ladder check.
 ## ACTION: DISABLE before its first eve (23-Sep). Code kept, off.
+
+## 17-Sep · user asks: engine fine? what was deployed? Verifying live state.
+
+## 17-Sep · user keeps engine as is; asks whether any CANDLESTICK strategy was found. Answering from studies.
+
+## 17-Sep · USER GOAL 2: test the UNTESTED (candle conjunctions / order flow / candle-timed entries)
+## for a NON-SPREAD directional strategy: more signals, >75% win, positive net. Building on the
+## WR70 sweep machinery (same IS 2022-24 / OOS 2025-26 split) so results are comparable.
+
+   fetch_m1.py rebuilding 30 symbols x 57 months of 1-min bars into research/m1cache (persistent),
+   3 workers. Candle-conjunction build+scan chained after it (studies/candle_conj_search.py).
+
+   CANDLE-CONJUNCTION SEARCH DONE 21:22: 760,594 entries, 138 gates, 6,900 tests. 0 IS candidates,
+   0 OOS survivors. IS->OOS r=+0.34 with only 4.0% cells net-positive OOS => consistently LOSING,
+   not noise. Study: studies/CANDLE_CONJUNCTION_SEARCH.md. Order flow untestable yet (3 wks data).
