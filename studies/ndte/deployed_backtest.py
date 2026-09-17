@@ -134,6 +134,12 @@ def parity_spot(ce_px, pe_px):
     return spot
 
 SETTLE_FALLBACKS = collections.Counter()
+RUN_ID = datetime.now().strftime("%Y%m%d-%H%M%S")
+WING_INVERSION_TOL = None   # run-4d ladders: "inversions" are stale prints on illiquid INTERMEDIATE
+                            # strikes, not bad legs; a monotonic guard deleted legitimate spreads on
+                            # the liquid round strikes. None = never reject; the ladder log stays as
+                            # an audit aid. Leg validity is gated by "traded on entry day" instead.
+WING_RATIOS = []              # every evaluated spread's worst inversion ratio, for calibration   # stamped into legfails.jsonl (audit 17-Sep-2026)
 FETCHFAIL = collections.Counter()   # signals dropped because Upstox would not answer
 _CNT_LK = threading.Lock()          # run_oos increments these from four worker threads
 
@@ -148,7 +154,46 @@ def settle(cb, exp, ks, si, li, typ, width, fallback_spot):
     iL = max(0.0, es - ks[li]) if typ == "CE" else max(0.0, ks[li] - es)
     return min(max(iS - iL, 0.0), width)
 
-def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, rows, open_until, rs_scale=1.0):
+WING_LADDER_PATH = "research/run4_wing_ladders.jsonl"   # evidence for every notable inversion
+
+def _wings_monotonic(px_one, ks, si, li, typ, sym="", day=""):
+    """True when entry-day prices are monotonic in strike from the short leg through one strike
+    beyond the wing: non-increasing outward for calls, for puts likewise as strikes fall. A
+    missing intermediate price is not a break (thin chains skip strikes); only an out-of-order
+    price is."""
+    step = 1 if li > si else -1
+    idxs = list(range(si, li + step, step))
+    beyond = li + step
+    if 0 <= beyond < len(ks): idxs.append(beyond)
+    prev = None; worst = 1.0; ladder = []
+    for i in idxs:
+        try: v = px_one(i)
+        except Exception: v = None
+        ladder.append((float(ks[i]), None if v is None else round(v, 2)))
+        if v is None: continue
+        if prev is not None and prev > 0 and v > prev:
+            worst = max(worst, v / prev)
+        prev = v
+    WING_RATIOS.append(worst)
+    if worst > 1.10:
+        try:
+            with open(WING_LADDER_PATH, "a") as _fh:
+                _fh.write(json.dumps({"run": RUN_ID, "sym": sym, "day": day, "typ": typ,
+                                      "short": float(ks[si]), "long": float(ks[li]),
+                                      "ladder": ladder, "worst": round(worst, 3),
+                                      "rejected": (WING_INVERSION_TOL is not None and worst > WING_INVERSION_TOL)}) + "\n")
+        except Exception:
+            pass
+    # TOLERANCE (run 4c). A bhavcopy close is the LAST trade, struck at a different minute for each
+    # strike, so adjacent traded strikes invert by a few percent as a matter of course on thin
+    # chains; a strict check rejected 1,790 spreads and mostly winners. The artefacts the audit
+    # found were gross (a wing at 2.3x its inner neighbour). Only an inversion beyond
+    # WING_INVERSION_TOL is treated as a bad print.
+    return True if WING_INVERSION_TOL is None else worst <= WING_INVERSION_TOL
+
+
+def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, rows, open_until, rs_scale=1.0,
+               px_one=None):
     """walk yields (walk_day, se, le) after entry, same-day pairs only. Applies the live hierarchy:
     v2 first; v1 only on a D10 breakout and only if v2 neither fires today nor holds the name; v0
     only if v1 did not fire. `open_until` is {book: exit_day} for THIS symbol - a book holding an
@@ -171,6 +216,15 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         if oi is not None and (oi[0] < _floor or oi[1] < _floor): continue
         credit = se - le; width = abs(ks[si] - ks[li])
         if credit <= 0 or credit >= width: continue
+        # INVERTED-WING GUARD (run 4, 17-Sep-2026). The width-3 audit found 15 of 83 "extra" trades
+        # existed only because a wing print was out of order - a FARTHER strike priced above a
+        # nearer one (CUMMINSIND 30-Jan-26: width-4 wing 49.5 vs width-3 wing 21.5). On a clean
+        # chain option prices are monotonic in strike; a break between the short leg and one
+        # strike beyond the wing is a stale or bad print, and a spread built on it is not a
+        # signal. Rejected and counted, never repaired.
+        if px_one is not None and not _wings_monotonic(px_one, ks, si, li, typ, sym=sym, day=day):
+            with _CNT_LK: SETTLE_FALLBACKS["inverted_wing_rejected"] += 1
+            continue
         cw = credit / width
         if not (cfg["band"][0] <= cw < cfg["band"][1]): continue
         fired[bk] = (si, li, se, le, credit, width, cw, walk, oi)
@@ -272,7 +326,8 @@ def run_is():
         try:
             u = fetch_upstox_historical(tk, unit="days", interval=1,
                                         from_date="2018-11-01", to_date="2024-10-01")
-        except Exception: continue
+        except Exception:
+            FETCHFAIL["underlying_symbol"] += 1; continue     # a whole name lost, not a signal
         if u is None or u.empty or len(u) < 30: continue
         u = u.sort_index()
         cb = {str(i)[:10]: float(u["Close"].loc[i]) for i in u.index}
@@ -334,8 +389,14 @@ def run_is():
             # rs_scale. The old +/-25% snap misclassified real bonuses at 0.75 (ASTRAL 1:3) and
             # mixed snapped and raw rows within one name (audit 24-Aug-2026).
             _len0 = len(rows)
+            def px_one(i, P=P, di=di):
+                # a strike that did not trade carries a stale/theoretical bhavcopy close - it is
+                # NOT evidence about the chain's shape. Compare traded strikes only (run 4b).
+                v, o = P["C"][di, i], P["O"][di, i]
+                if not (np.isfinite(v) and np.isfinite(o) and o >= MIN_OI): return None
+                return float(v)
             ok, ex = eval_books(d, sym, typ, ks, atm, px, cb_t, exp, spot_t, d10_hit, rows, open_until,
-                                rs_scale=1.0)
+                                rs_scale=1.0, px_one=px_one)
             if len(rows) > _len0:
                 _pending_ratio.append((list(range(_len0, len(rows))), _r))
             if ok:
@@ -428,7 +489,7 @@ def leg(key, d0, to):
         try:
             with LK:
                 with open(LEGFAIL_PATH, "a") as _fh:
-                    _fh.write(json.dumps({"key": key, "d0": d0, "to": to,
+                    _fh.write(json.dumps({"run": RUN_ID, "key": key, "d0": d0, "to": to,
                                           "body": (str(j)[:200] if j else "EMPTY/network")}) + "\n")
         except Exception:
             pass
@@ -481,10 +542,12 @@ def run_oos():
                 exp = exps[0]
                 chain = sorted([x for x in get_contracts(sym, exp) if x["instrument_type"] == typ],
                                key=lambda x: float(x["strike_price"]))
-            except Exception: continue
+            except Exception:
+                with LK: FETCHFAIL["contract_list"] += 1        # audit 17-Sep: 113 of these were invisible
+                continue
             if len(chain) < 12: continue
             ks = [float(x["strike_price"]) for x in chain]
-            to = min(datetime.fromisoformat(exp).date(), dd + timedelta(days=45)).isoformat()
+            to = datetime.fromisoformat(exp).date().isoformat()   # run 4: walk to EXPIRY (the d+45 cap hid late exits on longer-dated tests)
             # No parity here (see the note at the top): guards instead of a chain-derived spot.
             atm = min(range(len(ks)), key=lambda j: abs(ks[j] - c))
             if abs(ks[atm] - c) / c > ATM_MAX_DRIFT: continue
@@ -504,7 +567,12 @@ def run_oos():
                 walk = [(x, sp[x][0], lp[x][0]) for x in both
                         if x > d and sp[x][1] >= _f and lp[x][1] >= _f]
                 return sp[d][0], lp[d][0], walk, (sp[d][1], lp[d][1])
-            ok, ex = eval_books(d, sym, typ, ks, atm, px, cb, exp, spot_t, d10_hit, mine, open_until)
+            def px_one(i, chain=chain, d=d, to=to):
+                q = leg(chain[i]["instrument_key"], d, to)
+                if not (q and d in q) or q[d][1] < MIN_OI: return None   # untraded: no evidence
+                return q[d][0]
+            ok, ex = eval_books(d, sym, typ, ks, atm, px, cb, exp, spot_t, d10_hit, mine, open_until,
+                                px_one=px_one)
             if ok:
                 last_entry = dd
                 for _b, _x in ex.items():
@@ -566,6 +634,18 @@ if __name__ == "__main__":
         print()
     # A run that silently lost signals to the network must not read as a clean run. State it either
     # way, so "0" is positive evidence rather than the absence of a warning.
+    print_integrity()
+    print_oi_buckets(rows)
+
+
+def print_integrity():
+    """The run's integrity line. Callable from drivers, which bypass __main__ (audit 17-Sep-2026)."""
+    for k in ("contract_list", "underlying_symbol"):
+        if FETCHFAIL[k]:
+            print(f"FETCH INTEGRITY: {FETCHFAIL[k]} {k.replace('_',' ')} fetch(es) failed and were skipped.")
+    if SETTLE_FALLBACKS["inverted_wing_rejected"]:
+        print(f"WING GUARD: {SETTLE_FALLBACKS['inverted_wing_rejected']} spread(s) rejected for an "
+              f"out-of-order wing print (run 4).")
     if WINDOW == "OOS":
         _fd = FETCHFAIL["dropped"]
         print(f"\nFETCH INTEGRITY: {_fd} signal(s) dropped because Upstox would not answer after six "
@@ -576,6 +656,10 @@ if __name__ == "__main__":
         print(f"NOTE: underlying-derived settlement used on {SETTLE_FALLBACKS['used']} legs "
               f"(contract stopped trading before expiry); every other held trade settled on its own "
               f"expiry-day option prices.")
+
+
+def print_oi_buckets(rows):
+    """The OI-bucket table; needs the run's rows, so it is separate from print_integrity()."""
     # ---- OI BUCKETS: does open interest actually predict outcome, or only exclude the untradeable? ----
     BUCKETS = [(0, 0.999, "0 lots"), (1, 2, "1-2"), (2, 5, "2-5"), (5, 10, "5-10"),
                (10, 25, "10-25"), (25, 1e9, "25+")]

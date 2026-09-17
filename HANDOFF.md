@@ -3568,3 +3568,147 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    was missed - a clean scan is byte-identical to every earlier one (verified). Cause today: 31
    sleep events in market hours, every wake throwing a DNS burst (420 NameResolution failures in
    the 14:00 hour alone) while the battery sat at 4%. Restart deferred to 15:41 per the user.
+
+## 16-Sep · asked 'did you fix the issue' - verifying what is actually deployed vs still open.
+
+## 16-Sep · asked what the Saavi system would be worth if sold. Grounding in real asset counts.
+
+## 16-Sep · GOAL: more signals without compromising net/win. Checking studies first (standing rule).
+
+## 17-Sep · user approved the OOS run for far-expiry (v1). Width-3 IS finished overnight.
+
+## 17-Sep · WIDTH-3 IS: v2 379/79.4%/ROM54.2 -> width-3 482/82.8%/53.5; union 673 (+78%) 81.1%/56.1%.
+## Caveat: c/w 0.40 at width 3 = LESS absolute premium richness than at width 4 (a loosening in
+## disguise) - OOS must decide. v1 far-expiry OOS running; width-3 OOS chained to start after it.
+   00:15 · FAR-EXPIRY OOS run #1 DIED SILENTLY at 20/116 (no traceback, no sleep event; the Mac
+   sits at ~4.7 GB in the memory compressor on 8 GB - likely a memory kill). Also my chained
+   waiter used `pgrep -f farexp_v1_oos`, which matches the waiter's OWN cmdline, so it would never
+   have started the width-3 OOS. Both fixed: relaunched with "PROCESS EXIT CODE" captured to the
+   log, chain now matches "python.*farexp_v1_oos" only. Leg cache is warm so the rerun is faster.
+   00:17 CORRECTION: run #1 (pid 5571) did NOT die - pgrep missed it; it went quiet at 20/116
+   (retry/backoff on a slow name, or hung). I had launched a DUPLICATE at 00:12 that competed for
+   the throttled feed and the shared leg cache; duplicate killed, 5571 kept and being watched for
+   CPU progress. Lesson: check ps -ef, not pgrep -f, before declaring a process dead.
+   00:19 · run 5571 was HUNG, not slow: 109 ESTABLISHED sockets, leg cache frozen since 00:05,
+   CPU ~0.3s/min. The harness's thread pool stalled on unanswered HTTP reads - the 25-Aug engine
+   failure mode, in the harness. Killed. Relaunch only once the expired-instrument endpoint
+   answers; rows are written at the end so nothing partial is lost, and the 61,040-entry leg
+   cache is intact.
+
+## 17-Sep 00:20 · feed answers (0.1s); the hang was the harness thread pool on reads with no
+## timeout. Relaunching with socket.setdefaulttimeout(30) in the DRIVERS (harness untouched) so a
+## stuck read raises into the harness's own retry path instead of blocking for ever.
+   00:29 · relaunch is ALIVE and ADVANCING (5/116, leg cache written 00:26:40, CPU creeping) but
+   glacial: ~5 names per 7 min -> 2.5-3 h+ for 116, and it may seize again. The "109 sockets" were
+   mostly fds INHERITED from the parent shell (nohup children inherit), not a harness leak - a red
+   herring I chased. Foreground 2-name diagnostic lost its output to grep block-buffering (use
+   --line-buffered). No more diagnostics - they compete for the throttled feed. Watcher bryi4f3yu
+   reports completion + exit code; width-3 OOS chains after with the anchored pattern.
+
+## 17-Sep 02:04 · far-expiry v1 OOS FINISHED: 237 rows, exit 0, but _get_json failures present -
+## integrity being counted before any verdict. Width-3 OOS now running (chain worked).
+   FAR-EXPIRY v1 OOS VERDICT (02:10): deployed 212/81.6%/ROM17.8 -> union 320 (+51%) /81.6%/21.1,
+   Rs+412k -> +593k (+44%); added 108 @ 81.5%/28.6. Positive all 3 OOS years. BUT median cohort
+   (0.40-0.50) union 257/77.8%/3.5% vs deployed 179/79.3%/5.4% - the added trades are WEAKER on the
+   cohort where live fills sit; the ROM lift comes from rich-c/w far trades. Integrity: 126
+   _get_json failures (113 contract-list) -> union is a FLOOR on count; quality bias unmeasured.
+   Adversarial audit launched. Width-3 OOS running.
+   02:12 · KEY FINDING: on the MEDIAN COHORT (0.40-0.50, where every live fill sits) the far-expiry
+   ADDED trades are 78 / 74.4% / ROM -1.9% vs deployed 179 / 79.3% / +5.4%. The headline ROM lift
+   (17.8 -> 21.1) comes entirely from 30 rich-c/w far trades (0.50+, 100% win). Read the repo's way,
+   the lever FAILS OOS. Also: the legfail ledger got 0 entries tonight - the 113 contract-list
+   failures sit ABOVE the stage it watches (the integrity-counter blind spot again). Adversarial
+   agent launched -> research/audit_farexp_v1.md. Width-3 OOS running.
+   02:25 · ADVERSARIAL AUDIT (research/audit_farexp_v1.md) OVERTURNED MY HEADLINE, HARDENED THE
+   VERDICT. My union was not "near first, else far": floor-25 picks the SAME contract as floor-10
+   on ~half of signal days (proved: 127/127 calendar-predicted "same" rows are bit-identical).
+   Only 55 of the 108 "added" rows hold a genuine next-month contract; the rest are run-to-run
+   artefacts (18 names admitted 24-Aug after the 21-Aug deployed run, 14 v2/v0 deferrals my
+   v1-only driver skipped, 11 inside the cross-book gap, 5 post-18-Jul, 5 fetch noise).
+   Like-for-like: +29% trades, union ROM 21.1% vs 21.8% deployed - NO lift. The GENUINE far
+   cohort (0.40-0.50): 36-39 trades, 61-64% win, ROM -26 to -31%, P(ROM<=0)=0.97, negative in
+   2025 AND 2026, no single-loser artefact; in-sample the same set was 84.6%/+26.4% -> a full
+   IS->OOS inversion like DTE-5. FAR-EXPIRY REJECTED. Harness defects exposed: walk truncated at
+   d+45 (far trades DTE<=57 lose visibility of late TPs), contract-list failures swallowed by a
+   bare except that counts nothing, legfails.jsonl has no run stamp, my drivers bypass __main__
+   so no FETCH INTEGRITY line. Fix after width-3 finishes (do not edit a harness mid-run).
+   Width-3 design is SAME-RUN v2 vs v2w3, so deferral/universe artefacts cancel - still gets the
+   median-cohort read + a refutation pass.
+
+## 17-Sep · width-3 OOS finished; reading same-run v2 vs v2w3 + median cohort before any verdict.
+   WIDTH-3 v2 OOS (same-run control, 4 fetch failures = clean): v2 98/83.7%/ROM23.9 -> width-3
+   126/83.3%/32.8; width-3-ONLY added 83 @ 85.5%/31.5% Rs+239k; union 181 (+85%)/84.5%/27.1%
+   Rs+345k -> +584k. MEDIAN COHORT: deployed 82/82.9%/22.0 · added 60/80.0%/+16.3 · union
+   142/81.7%/19.7 - the added trades are POSITIVE on the cohort (unlike far-expiry). Both full
+   OOS years positive for the union. IS->OOS: added win 83.3 -> 85.5 held; ROM 58.5 -> 31.5
+   halved but strong. HOLDS. Refutation agent launched -> research/audit_v2w3.md. Not deployed.
+   CROSS-BOOK CUT: 29 of the 83 added width-3 signals coincide with v1/v0 entries within 3d (the
+   live gap would block them) - those were the strong ones (93.1%/46.8%). The 54 genuinely-new
+   survivors: 81.5%/24.8% overall but 40 / 75.0% / +5.4% on the median cohort -> v0-class, thin;
+   ~2.5 signals/month realistic. Caveat: overlap mixes two run dates (the artefact class the
+   far-expiry audit flagged) - agent asked to redo it. Harness fixes (d+45 walk, swallowed
+   contract failures, run stamp, driver __main__ bypass) queued until the agent finishes reading.
+   WIDTH-3 AUDIT (research/audit_v2w3.md) REFUTED IT TOO. 15/83 "added" rows are WING ARTEFACTS
+   (width-4 wing inverted or untraded that day, e.g. CUMMINSIND 30-Jan-26 wing 49.5 vs 21.5;
+   DIVISLAB 19-Mar-25 no trade) - 100% win, +88.9% ROM, 39% of the added rupees, none in the
+   cohort. 58% of comparable added days are v1/v0 entries within 2d (29 same-day) - width-3 at
+   0.40 mostly RE-LABELS v0's 0.35-0.40 band. Clean unconflicted residual: 15 rows 73.3%/-6.8%
+   (cohort -13.2%); net-new ~0.7-1.4/month, measurable part negative. Narrowing LOWERED c/w on
+   11/42 shared days - the "mechanically raises c/w" premise is false. BOTH LEVERS REJECTED.
+   Confirmed signal gain from tonight: ZERO. Harness defects to fix (all from the two audits):
+   accept inverted/untraded wings; contract-list failures swallowed uncounted; legfails.jsonl
+   unstamped; drivers bypass __main__ integrity print; d+45 walk cap; AND the harness of record
+   carries an UNCOMMITTED 24-Aug IS-only diff - check git diff before anything else.
+   03:1x · COMMITTED the run-3 harness (10% guard) - on disk since 24-Aug, never in git; suite
+   20/20 green on it; pushed both remotes. OPEN (need a re-run + user decision because they move
+   published numbers): reject inverted/untraded wings; count contract-list failures; run-stamp
+   legfails.jsonl; walk to expiry not d+45; drivers should print the integrity summary. Both
+   "more signals" levers REJECTED; confirmed monthly gain = 0.
+
+## 17-Sep 03:2x · user: 'do what u think is right' -> RUN-4 harness hardening (wing rejection,
+## count contract failures, run-stamp legfails, walk to expiry, integrity summary callable), then
+## IS + OOS re-measure of v2/v1/v0 with before/after. Engine untouched.
+
+   run-4 edits applied to the harness (wing guard, counted failures, run stamp, walk-to-expiry,
+   print_integrity()); IS px_one accessor pending; then suite -> IS -> OOS with before/after.
+   12:5x · RUN-4 IS: my wing guard is OVER-BROAD - it removed 270/373 v2, 270/506 v1, 118/206 v0
+   rows, and the removed rows are the BEST ones (v2 removed @ 81.9%/62.1% ROM). Diagnosis: the
+   guard compares bhavcopy CLOSES of strikes that never traded (stale/theoretical prints beyond a
+   deep-OTM wing), so a valid spread dies on a neighbour's stale print. Fix: compare only strikes
+   with OI >= MIN_OI (IS: P["O"]; OOS: leg()[d][1]). Also print_integrity() NameError on `rows`
+   (my refactor swallowed the OI-bucket section). OOS killed before it burned the feed on a wrong
+   guard. IS rows saved (research/run4_is_rows.json) - to be REDONE after the fix.
+
+   run-4b: guard compares traded strikes only; print_integrity/print_oi_buckets split; IS
+   relaunched, OOS deliberately not chained until the IS delta is reviewed.
+   12:55 · RUN-4b IS still removes 170/373 v2, 147/506 v1, 56/206 v0 (1,790 rejections), and the
+   removed rows are still the best. Diagnosis: bhavcopy CLOSE = last-traded price at DIFFERENT
+   times of day per strike, so adjacent traded strikes invert by a few % routinely on illiquid
+   chains - a STRICT monotonic check rejects normal noise. The audit's real cases were gross
+   (49.5 vs 21.5 = +130%). Fix: tolerance - reject only when a farther strike exceeds a nearer
+   one by > WING_INVERSION_TOL (provisional 25%), and record every ratio so the threshold is set
+   from the distribution, not by hand. Rerunning IS (run-4c).
+   12:58 · RUN-4c (tol 1.25): 10,204 spreads evaluated; worst-inversion ratio median 1.000, p90
+   1.155, p95 1.459, p99 2.581; >1.10: 1,198 · >1.25: 792 · >1.50: 464 · >2.0: 201. Removes 81 v2
+   / 65 v1 / 25 v0 rows - STILL the best rows (v2 removed 85.2%/74.6%). Hypothesis: these are
+   PHANTOM winners - a stale-LOW wing print inflates the entry credit, so the recorded trade is
+   better than any fill could be; the width-3 audit's artefacts had the same 100%-win signature.
+   If true, run-3's published numbers are overstated. Need EVIDENCE not inference: logging the
+   full price ladder (strikes/closes/OI) for every spread with worst>1.10, rerunning IS.
+   13:05 · LADDER EVIDENCE OVERTURNS MY HYPOTHESIS. The "inversions" are ZIGZAGS on illiquid
+   INTERMEDIATE strikes (MPHASIS PE 2600:83.8 -> 2550:26.0 -> 2500:49.25 -> 2450:19.0 -> 2400:30.0):
+   round strikes trade and carry live prints, half-steps carry STALE last-trade closes (OI>0 does
+   not mean traded today). The spreads themselves sit on the liquid round strikes and are FINE.
+   So the monotonic guard - strict or tolerant - measures intermediate-strike staleness, not leg
+   validity, and it was deleting legitimate winners on the IT names. NOT phantom winners; run-3
+   numbers are NOT overstated by this. Guard rejection DISABLED (ladder logging kept as an audit
+   aid). The right fidelity rule is the one OOS already has: both LEGS must have TRADED on entry
+   day (Upstox candles exist only if traded). Checking whether the IS pickle carries a
+   contracts/volume column to apply the same rule in-sample.
+   13:07 · IS pickle has NO volume column (CLOSE/EXPIRY/STRIKE/SYMBOL/TYP/OPEN_INT only), so
+   "traded today" cannot be applied in-sample; OI>=1 stays the best IS proxy (the known bhavcopy
+   friction). Run-4e = harness with the guard OFF: IS must reproduce run 3 EXACTLY (proves the
+   observability changes are result-neutral); then a run-4 OOS with full failure counting.
+   13:2x · RUN-4e IS = run 3 BIT-IDENTICAL (1,085/1,085 rows). Harness observability changes are
+   result-neutral; wing-guard rejection disabled with the ladder evidence. Study written:
+   studies/RUN4_WING_GUARD.md. Committing the harness; launching run-4 OOS (full failure counting).
