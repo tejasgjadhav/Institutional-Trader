@@ -3733,3 +3733,22 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    render-verified), strategy cells and CLAUDE.md on it; viewer restarted. NOT done: name-wise
    table + symbol_history rebuild on run-4 rows (Telegram blocks stay as-is by rule); the 21-Aug
    commit of the harness was the first time the run-3 guard reached git.
+
+## 17-Sep · user asks plainly whether signal count increased vs the current system. Answer: NO.
+
+## 17-Sep · user: what next to increase signals. Checking studies for the one untested candidate
+## (1-DTE index entries, the day before the NIFTY/SENSEX weekly expiry) before proposing it.
+
+## 17-Sep · USER GOAL SET: increase signals, risk allowed, higher net, win > 75%. 'do what u think is
+## correct'. Deploying the expiry-eve close entry (studies/T1_CLOSE_ENTRY.md, validated 2019->2026)
+## as an ADVISORY paper book first; refutation audit in parallel. Daily book #6 deferred.
+
+   t1_eve.py built + wired (runner marker _t1eve_scan_day persisted, resolve on 0DTE cadence, entry
+   15:33-15:39 on eve days, one TG message per index, RESULT messages via _OUTCOME_BOOKS, forward
+   record book t1eve advisory=1). Dry run on live chains OK. Refutation audit launched.
+   20:2x · T-1 EVE BOOK DEPLOYED (advisory). engine/t1_eve.py, config T1_EVE_*, runner wired
+   (marker _t1eve_scan_day persisted; resolve on the 0DTE cadence; entry 15:33-15:39 on eve days;
+   one TG message per index with its OWN evidence block + ADVISORY line; RESULT via _OUTCOME_BOOKS;
+   forward record book t1eve advisory=1). Existing 0DTE SENSEX message proven byte-identical to
+   HEAD. CLAUDE.md + UI strategy row added. First eves: SENSEX Wed 23-Sep, BANKNIFTY Mon 28-Sep.
+   Refutation audit of T1_CLOSE_ENTRY launched -> research/audit_t1_eve.md.

@@ -663,3 +663,17 @@ STOCK_CREDIT_VLC_WHITELIST = {
     "BULL_PUT":  {"ABB", "ACC", "APOLLOHOSP", "COFORGE", "CUMMINSIND", "EICHERMOT", "HAL",
                   "PERSISTENT", "TORNTPHARM"},
 }
+
+# ── T-1 EVE book (user-ordered 17-Sep-2026: "increase signals, take risk, >75% win, higher net") ──
+# studies/T1_CLOSE_ENTRY.md: sell a BEAR CALL 0.5% OTM, 6 strikes wide, at the close of the
+# session BEFORE the index expiry, hold to settlement. 1,405 trades 2019->2026, true IS/OOS.
+# SENSEX weekly (Wed eve) 85.7% / Rs27k-yr on 22 months; BANKNIFTY monthly eve +Rs801/trade over
+# 293 IS trades, positive 5 of 6 years. NIFTY EXCLUDED: 71.5% full-period, -Rs39k in 2020.
+# It is a DIRECTIONAL (short-delta) bet, not a premium edge - the study says so - which is why it
+# runs ADVISORY: signals + its own record, never the headline P&L, until 30 fills judge it.
+T1_EVE_ENABLED = True
+T1_EVE_BOOKS = ("SENSEX", "BANKNIFTY")
+T1_EVE_OTM = 0.005            # short strike ~0.5% above spot
+T1_EVE_WING_STEPS = 6         # long = short + 6 strike steps (the study's "width 6")
+T1_EVE_ENTRY_AT = "15:33"     # ahead of the 15:36 stock scan; index options trade to 15:40
+T1_EVE_ENTRY_CUTOFF = "15:39"

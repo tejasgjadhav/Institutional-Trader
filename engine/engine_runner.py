@@ -87,6 +87,7 @@ class EngineRunner:
         self._monthly_call_scan_day = None
         self._last_zdte_resolve = 0.0
         self._zdte_scan_day = None
+        self._t1eve_scan_day = None
         # LOAD LAST (fixed 10-Sep-2026). This call sat ABOVE the four assignments below, so it
         # loaded each marker off disk and the next line immediately set it back to None. Only the
         # two markers assigned earlier — swing and the stock scan — actually survived a restart,
@@ -269,6 +270,9 @@ class EngineRunner:
         """(target, stop) for a book — tolerant of the SENSEX label variants passed to _tg()."""
         if book in self._TG_TGT_STOP:
             return self._TG_TGT_STOP[book]
+        if book.startswith("T-1 EVE"):
+            return ("hold to settlement at 15:40 on expiry day (the NEXT session)",
+                    "none — bought wing caps the loss at width − credit")
         if book.startswith("SENSEX") or "SENSEX" in book:
             return self._TG_TGT_STOP["0DTE SENSEX"]
         if "NIFTY" in book and ("0DTE" in book or "INTRADAY" in book) and "BANKNIFTY" not in book:
@@ -486,7 +490,23 @@ class EngineRunner:
             logger.debug(f"_sym_history {sym}: {e}")
             return ""
 
+    _T1_EVE_ANALYSIS = {
+        "SENSEX": ("• 91 expiry-eve trades analysed (Oct-2024 → Aug-2026, real Upstox premiums)\n"
+                   "• In-sample: CANNOT be captured — SENSEX weekly options only exist from Oct-2024\n"
+                   "• Out-of-sample: <b>85.7%</b> win · avg loss ₹6,681 · worst ₹10,530 · ~₹27k/yr at 1 lot\n"
+                   "• <b>Directional, not a premium edge</b>: bear-call only; the put side lost. A rising "
+                   "week is the risk, and 2020 cost the NIFTY version ₹39k. studies/T1_CLOSE_ENTRY.md"),
+        "BANKNIFTY": ("• 318 expiry-eve trades analysed: 293 in-sample (2019 → Sep-2024, NSE bhavcopy) "
+                      "+ 25 out-of-sample (Oct-2024 → Aug-2026)\n"
+                      "• In-sample: <b>+₹801/trade</b>, positive 5 of 6 years (2020 the exception)\n"
+                      "• Out-of-sample: <b>92%</b> win on 25 trades — treat as unproven at that n\n"
+                      "• <b>Directional, not a premium edge</b>: bear-call only; the put side lost. "
+                      "Monthly expiry now, so ~1 signal a month. studies/T1_CLOSE_ENTRY.md"),
+    }
+
     def _analysis(self, book, sym=""):
+        if book.startswith("T-1 EVE"):
+            return self._T1_EVE_ANALYSIS.get(sym) or self._T1_EVE_ANALYSIS.get(book.replace("T-1 EVE ", ""))
         a = self._TG_ANALYSIS.get(book)
         if a is None and ("SENSEX" in book or sym == "SENSEX"):
             a = self._TG_ANALYSIS["0DTE SENSEX"]
@@ -576,6 +596,8 @@ class EngineRunner:
                         tgt_stop = self._tgt_stop(book)
                         if tgt_stop:
                             lines.append(f"🎯 Target: {tgt_stop[0]} · 🛑 Stop: {tgt_stop[1]}")
+                            if s.get("advisory"):
+                                lines.append("📎 <b>ADVISORY BOOK</b> — builds its own record; not in the headline totals")
                     if have_nums:
                         lines.append(f"Max profit/lot ₹{credit*lot:,.0f} · Max loss/lot ₹{(w-credit)*lot:,.0f}")
                 elif s.get("order_label"):
@@ -737,7 +759,7 @@ class EngineRunner:
         return False
 
     _MARKER_PATH = os.path.join(DATA_DIR, "day_markers.json")
-    _MARKER_ATTRS = ("_stockcr_scan_day", "_watchlist_tg_day", "_zdte_scan_day",
+    _MARKER_ATTRS = ("_stockcr_scan_day", "_watchlist_tg_day", "_zdte_scan_day", "_t1eve_scan_day",
                      "_watchlist_build_day", "_swing_scan_day", "_monthly_scan_day")
 
     def _load_day_markers(self):
@@ -1135,6 +1157,28 @@ class EngineRunner:
                     logger.info(f"dte_multi: settled {n} position(s)")
         except Exception as e:
             logger.warning(f"dte_multi resolve: {e}")
+        # T-1 EVE book (engine/t1_eve.py, user-ordered 17-Sep-2026): resolves on the 0DTE cadence,
+        # enters once per eve day inside its own late-afternoon window. ADVISORY positions.
+        try:
+            from engine import t1_eve
+            if getattr(config, "T1_EVE_ENABLED", False):
+                if (time.time() - getattr(self, "_t1eve_resolve", 0)) >= config.ZERO_DTE_RESOLVE_INTERVAL:
+                    self._t1eve_resolve = time.time()
+                    n = t1_eve.resolve_positions(past_settle)
+                    if n:
+                        logger.info(f"t1_eve: settled {n} position(s)")
+                ta, tb = (config.T1_EVE_ENTRY_AT, config.T1_EVE_ENTRY_CUTOFF)
+                _m = now.hour * 60 + now.minute
+                _in = (int(ta[:2]) * 60 + int(ta[3:])) <= _m <= (int(tb[:2]) * 60 + int(tb[3:]))
+                if self.agent.is_market_open() and _in and self._t1eve_scan_day != now.date():
+                    self._t1eve_scan_day = now.date()
+                    self._save_day_markers()
+                    new = t1_eve.scan_signals()
+                    for p_ in new:
+                        logger.info(f"t1_eve: opened {p_['order_label']}")
+                        self._tg(f"T-1 EVE {p_['symbol']}", [p_])   # one message per index, never combined
+        except Exception as e:
+            logger.warning(f"t1_eve: {e}")
         h1, m1 = map(int, config.ZERO_DTE_SCAN_AFTER.split(":"))
         h2, m2 = map(int, config.ZERO_DTE_ENTRY_CUTOFF.split(":"))
         mins = now.hour * 60 + now.minute
@@ -1213,6 +1257,7 @@ class EngineRunner:
 
     # Books watched for WIN/LOSS outcome Telegram messages (label -> positions file).
     _OUTCOME_BOOKS = [
+        ("T-1 EVE", "t1_eve_positions.json"),
         ("STOCK CREDIT v2 UNION", "stock_credit_v2_positions.json"),
         ("STOCK CREDIT v1", "stock_credit_positions.json"),
         ("STOCK CREDIT v0 (c/w 0.35-0.40)", "stock_credit_v0_positions.json"),
