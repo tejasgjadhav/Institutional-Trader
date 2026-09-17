@@ -3724,3 +3724,12 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    13:5x · UI money table + strategy cells + CLAUDE.md table on run 4 (render-verified TOTAL).
    Viewer restarted; engine untouched. Telegram evidence blocks + name-wise table NOT rebuilt
    (append-only / larger job - flagged).
+   14:0x · DAY CLOSED. Final state: engine untouched since 16-Sep 15:41 (config unchanged, no new
+   books); both "more signals" levers REJECTED on audited OOS (far-expiry: genuine far cohort
+   61-64%/-26 to -31%; width-3: 58% overlap with v1/v0, residual negative, wing "artefacts" partly
+   thin-market trades); harness hardened (counted failures, run stamp, walk-to-expiry,
+   print_integrity) and proven result-neutral IS (1,085/1,085); wing guard withdrawn with ladder
+   evidence; run-4 OOS adopted as record, UI money table (TOTAL 543 / Rs38,955 / plan Rs31,164,
+   render-verified), strategy cells and CLAUDE.md on it; viewer restarted. NOT done: name-wise
+   table + symbol_history rebuild on run-4 rows (Telegram blocks stay as-is by rule); the 21-Aug
+   commit of the harness was the first time the run-3 guard reached git.

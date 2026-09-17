@@ -29,7 +29,10 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 | Index swing fade | `SWING_CREDIT_ENABLED` | 54% | ~₹0 | regime-dep · failed OOS |
 | Monthly futures | `MONTHLY_FUT_ENABLED` | 75.7% | ₹0 now | REGIME-OFF · needs ~₹15L |
 
-**THE NUMBERS ABOVE ARE THE 21-AUG-2026 RE-RUN** of `studies/ndte/deployed_backtest.py`, after a
+**THE NUMBERS ABOVE ARE RUN 4 (17-Sep-2026)** of `studies/ndte/deployed_backtest.py` — the first
+single-run out-of-sample on the real 116-name universe with every fetch failure counted (439 rows,
+197 network drops; see `studies/RUN4_WING_GUARD.md`). In-sample is bit-identical to run 3. Run 3
+itself was the 21-Aug-2026 re-run, after a
 six-defect audit of the harness itself (a fetch failure that looked like an untraded contract, open
 interest leaking between books, no `__main__` guard, a non-atomic cache, a dropped final bar, an
 unlocked counter — see `studies/ndte/test_harness.py`, which now locks the answer). **The audit did
