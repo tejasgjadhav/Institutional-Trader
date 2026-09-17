@@ -125,7 +125,10 @@ def parity_spot(ce_px, pe_px):
     if len(cand) >= 3:
         imps = sorted(x + ce_px[x] - pe_px[x] for x in cand)
         med = imps[len(imps) // 2]
-        if med > 0 and abs(spot - med) / med > 0.02:
+        # threshold = the AUDIT's misfire definition (>10% disagreement, 86 of 1,180 entries).
+        # 2% was my constant, not the audit's, and it culled 288 trades - a quarter of the book -
+        # because sparse far-month chains legitimately disagree a few percent (caught 24-Aug 14:42).
+        if med > 0 and abs(spot - med) / med > 0.10:
             SETTLE_FALLBACKS["parity_disagreement_rejected"] += 1
             return None
     return spot
