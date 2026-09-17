@@ -23,7 +23,7 @@ BOOK_PATH = os.path.join(DATA_DIR, "t1_eve_positions.json")
 
 BOOKS = [
     dict(name="SENSEX", src="BSE", spot_key="BSE_INDEX|SENSEX"),
-    dict(name="BANKNIFTY", src="NSE", spot_key=None),
+    dict(name="BANKNIFTY", src="NSE", spot_key="NSE_INDEX|Nifty Bank"),   # audit: None never settled
 ]
 BOOKS = [b for b in BOOKS if b["name"] in getattr(config, "T1_EVE_BOOKS", ())]
 

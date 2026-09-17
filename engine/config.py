@@ -671,7 +671,10 @@ STOCK_CREDIT_VLC_WHITELIST = {
 # 293 IS trades, positive 5 of 6 years. NIFTY EXCLUDED: 71.5% full-period, -Rs39k in 2020.
 # It is a DIRECTIONAL (short-delta) bet, not a premium edge - the study says so - which is why it
 # runs ADVISORY: signals + its own record, never the headline P&L, until 30 fills judge it.
-T1_EVE_ENABLED = True
+T1_EVE_ENABLED = False   # DISABLED 17-Sep-2026 20:5x, same day, before its first eve: the refutation
+                         # audit (research/audit_t1_eve.md) found the study's OWN final verdict had
+                         # rejected this book, SENSEX expectancy unproven (P<=0 6.4%, DD Rs38k), and
+                         # BNF monthly resting on weekly-era evidence. Re-enable only on a NEW study.
 T1_EVE_BOOKS = ("SENSEX", "BANKNIFTY")
 T1_EVE_OTM = 0.005            # short strike ~0.5% above spot
 T1_EVE_WING_STEPS = 6         # long = short + 6 strike steps (the study's "width 6")

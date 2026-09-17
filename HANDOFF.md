@@ -3752,3 +3752,11 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    forward record book t1eve advisory=1). Existing 0DTE SENSEX message proven byte-identical to
    HEAD. CLAUDE.md + UI strategy row added. First eves: SENSEX Wed 23-Sep, BANKNIFTY Mon 28-Sep.
    Refutation audit of T1_CLOSE_ENTRY launched -> research/audit_t1_eve.md.
+
+## 17-Sep 20:5x · AUDIT (research/audit_t1_eve.md) REFUTES THE T-1 EVE DEPLOYMENT. Worst finding is
+## mine: the study's OWN FINAL VERDICT (commit 78db9c7) had REJECTED this book; I deployed on its
+## earlier 'strongest candidate' paragraph. Also: SENSEX expectancy unproven (CI95 [-171,+1,200],
+## P<=0 6.4%, breakeven win 79.2% vs 85.7% on 91, z=1.77; DD Rs38k vs Rs27k/yr); BNF monthly is NOT
+## the weekly-era evidence (76.8% win, 2/6 yrs negative); direction explains ~2/3 of P&L; latent
+## settle bug (BNF spot_key=None -> never settles off-expiry-day); no blackout; no ladder check.
+## ACTION: DISABLE before its first eve (23-Sep). Code kept, off.
