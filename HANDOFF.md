@@ -3775,3 +3775,37 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    CANDLE-CONJUNCTION SEARCH DONE 21:22: 760,594 entries, 138 gates, 6,900 tests. 0 IS candidates,
    0 OOS survivors. IS->OOS r=+0.34 with only 4.0% cells net-positive OOS => consistently LOSING,
    not noise. Study: studies/CANDLE_CONJUNCTION_SEARCH.md. Order flow untestable yet (3 wks data).
+
+## 18-Sep · user asks: SENSEX weekly, sell 0.5% OTM DAILY at 09:16, close same day, ITM hedge
+## rotated weekly, 1 lot, since SENSEX weeklies began -> monthly gain? Checking studies + data first.
+
+   sensex_daily_short.py running: 102 weekly expiries Oct-24 -> Sep-26, daily 09:16 sell 0.5% OTM
+   CE/PE, close 15:29, ITM hedge rotated weekly, 1 lot, Rs100 RT cost, win = P&L>0.
+
+   report script studies/sensex_daily_report.py ready; watcher will run it when the fetch ends.
+
+   user clarified: PLAIN daily bear call spread, both legs 09:16->15:30, non-expiry days only
+   (expiry day = existing 0DTE book). Report re-pointed at that row, split DTE>=1 vs DTE 0.
+   09:5x · BACKTEST KILLED: every expired-instrument call was HTTP 429 (rate-limited) and the
+   script shares the LIVE token with the engine during market hours - a heavy backtest at 09:39
+   competes with the 09:16 index entries and the 15:36 stock scan. RULE: API-heavy backtests run
+   after 15:40 only. Fetcher now paced (4 req/s, 60s backoff on 429, aborts rather than producing a
+   run with holes). Relaunch queued for 15:45; report runs on completion.
+
+   old watcher fired on the killed run (no rows) - partial report removed; new watcher waits for
+   the 15:45 relaunch and runs the report on its EXIT.
+
+## 18-Sep 10:0x · user: run a 2-MONTH sample first. Running 2026-07-17 -> 2026-09-17 now at 1 req/s
+## with abort-on-throttle (Friday, no expiry, engine window hours away); full run stays queued 15:45.
+
+## 18-Sep · status check on the 2-month SENSEX daily bear-call sample.
+
+## 18-Sep 10:1x · user: loop as per the rate limit (never abort; pace to Upstox's 2,000/30-min bucket).
+
+## 18-Sep · user: record ALL fetched market data in a database, retrievable on demand. Building
+## data/market_history.db (SQLite) + engine/histdb.py fetch-through accessor; studies read it.
+   engine/histdb.py + data/market_history.db LIVE: idx_1m (importing research/m1cache, 12M rows,
+   background), contracts, opt_1m (+opt_days incl. empty days), fetch-through at 1 req/s with 429
+   loop. sensex_daily_short.py now goes through it (the 15:45 full run populates the DB). CLI:
+   python -m engine.histdb stats|opt KEY DAY|idx SYM DAY. The 2-month run in progress still uses
+   its JSON cache; its closes will be imported after it finishes.
