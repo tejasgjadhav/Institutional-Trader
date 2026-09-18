@@ -3809,3 +3809,12 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    loop. sensex_daily_short.py now goes through it (the 15:45 full run populates the DB). CLI:
    python -m engine.histdb stats|opt KEY DAY|idx SYM DAY. The 2-month run in progress still uses
    its JSON cache; its closes will be imported after it finishes.
+
+## 18-Sep · user ran histdb stats from ~/files (wrong dir) - gave absolute-path commands.
+
+## 18-Sep · 2-month SENSEX daily bear-call sample finished; reading the report.
+   2-MONTH SAMPLE (47 days): non-expiry days 46.2% win, net -Rs4,980 (-Rs1,660/mo), gross only
+   +Rs72/day; Wed(1-DTE) 70%/+1,716, Tue 70%/-8, Mon 22%/-2,320, Fri 11%/-4,527. Expiry day
+   87.5%/+2,941 (= 0DTE book). Study: studies/SENSEX_DAILY_BEAR_CALL.md. Bug fixed: week window
+   started at history start for the first expiry (6,800 wasted empty calls). Full run 15:45 via
+   histdb decides. JSON closes NOT imported into the DB (would block the full-OHLCV fetch).

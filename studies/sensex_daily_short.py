@@ -37,7 +37,7 @@ if __name__ == "__main__":
     if START: exps = [e for e in exps if e >= date.fromisoformat(START)]
     if END: exps = [e for e in exps if e <= date.fromisoformat(END)]
     OUT_ROWS = os.path.join(OUT, "daily_rows.csv" if not (START or END) else f"daily_rows_{START}_{END}.csv")
-    rows = []; prev = None; n_call = 0
+    rows = []; prev = (exps[0] - timedelta(days=7)) if exps else None; n_call = 0   # first week = the 7 days before the first expiry, not all of history
     for E in exps:
         week = [d for d in days_all if (prev is None or d > prev) and d <= E]; prev = E
         if not week: continue
