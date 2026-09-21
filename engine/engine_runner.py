@@ -929,7 +929,11 @@ class EngineRunner:
         # its ANSWER is still computable after the bell: until 16:30 a missed scan now runs anyway,
         # clearly labelled LATE (signals arriving after 15:40 cannot be placed, but the record and
         # the notice must exist either way).
-        late_ok = (not self.agent.is_market_open()) and after_cutoff and mins_now <= (16 * 60 + 30)
+        # Weekday guard (21-Sep-2026): is_market_open() is False all weekend, so this catch-up
+        # fired on Sat 19-Sep and Sun 20-Sep and sent two record-only no-signal notices. The
+        # sentinel thread already skips weekends; the main loop must too.
+        late_ok = (now.weekday() < 5 and (not self.agent.is_market_open()) and after_cutoff
+                   and mins_now <= (16 * 60 + 30))
         if ((self.agent.is_market_open() or late_ok) and after_cutoff
                 and self._stockcr_scan_day != now.date()):
             # the marker swap is atomic: whichever of the main loop and the sentinel gets here

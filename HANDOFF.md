@@ -3818,3 +3818,16 @@ Engine+viewer restarted 13:39-13:45, 0 errors, markers held.
    87.5%/+2,941 (= 0DTE book). Study: studies/SENSEX_DAILY_BEAR_CALL.md. Bug fixed: week window
    started at history start for the first expiry (6,800 wasted empty calls). Full run 15:45 via
    histdb decides. JSON closes NOT imported into the DB (would block the full-OHLCV fetch).
+
+## 18-Sep · user: 'doesnt make sense. stop all runs' - cancelling the queued 15:45 full run and every
+## study watcher. Engine untouched.
+
+## 21-Sep (Mon) · weekend late-scan bug, fix scheduled for after 16:00 at the user's instruction
+Sat 19-Sep 15:36 and Sun 20-Sep 15:38 the main loop ran the stock scan as "LATE" record-only and
+sent two no-signal notices. Cause: engine_runner.py line ~932 `late_ok` has no weekday check
+(is_market_open() is False all weekend, so after 15:36 the catch-up path fires). The sentinel
+thread already skips weekends; the main loop does not. Fix = add `now.weekday() < 5` to late_ok,
+then `launchctl kickstart -k gui/$UID/com.sayali.institutionaltrader.engine`. NOT applied yet:
+engine untouched during market hours, user is at the office, patch goes in after 16:00.
+16:01 · APPLIED: weekday guard on `late_ok` in engine_runner.py; engine restarted via launchctl
+kickstart (pid 71684), markers intact, no duplicate scan. Today's 09:16 / 15:31 / 15:37 all delivered.
