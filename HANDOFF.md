@@ -3831,3 +3831,8 @@ then `launchctl kickstart -k gui/$UID/com.sayali.institutionaltrader.engine`. NO
 engine untouched during market hours, user is at the office, patch goes in after 16:00.
 16:01 · APPLIED: weekday guard on `late_ok` in engine_runner.py; engine restarted via launchctl
 kickstart (pid 71684), markers intact, no duplicate scan. Today's 09:16 / 15:31 / 15:37 all delivered.
+
+## 23-Sep 04:50 · Tue 22-Sep scan was MISSED (Mac asleep on battery all day) - replayed, no signal lost
+See research/replay_2026-09-22.md. 20 breakouts, max c/w 0.37, nothing would have fired. Battery was
+at 10% / "Early warning" at 04:40 on 23-Sep and still discharging - the Mac dies before the open
+unless plugged in. The weekday fix from 21-Sep is unrelated to this.
