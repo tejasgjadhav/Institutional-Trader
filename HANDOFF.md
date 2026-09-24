@@ -3851,3 +3851,12 @@ shows stale NIFTY values (5-min lag, snapshot on disk correct). User reports swi
 this month (wants 6-8/mo, getting near-zero). Yesterday (23-Sep) null signals from swing. Needs:
 (1) UI restart, (2) swing-credit logic audit vs VIX/liquidity regime.
 Rules: no deploys 15:15–15:40, .env never committed, always push both remotes.
+
+## 24-Sep 08:00 · swing-trade drought diagnosed as REGIME, not logic
+Stock fills: Jun 5, Jul 13, Aug 5, Sep 1 (LTM bull put 7-Sep, c/w 0.40). Scan ran every trading
+day in Sep (1-Sep and 23-Sep via the sentinel, 11-Sep and 14-Sep late after network outages,
+22-Sep missed - Mac asleep). Watchlist archive: pass=0 and cw_ok=0 on EVERY archived Sep day;
+max c/w 0.20-0.39; premium/liquidity gates are not binding. VIX Jun 14.5 / Jul 12.8 / Aug 11.5 /
+Sep 11.6, 10.3 on 23-Sep. Run-4 harness on the same 2026 data models Aug=3 and Sep=0 signals, so
+the backtest agrees with the live book. OOS months with VIX<12.5 average 10 modelled signals vs 23
+when VIX>=12.5. UI restarted twice (pid 11510 now), no error visible on screen or in launchd.err.log.
