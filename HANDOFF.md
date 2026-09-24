@@ -3836,3 +3836,18 @@ kickstart (pid 71684), markers intact, no duplicate scan. Today's 09:16 / 15:31 
 See research/replay_2026-09-22.md. 20 breakouts, max c/w 0.37, nothing would have fired. Battery was
 at 10% / "Early warning" at 04:40 on 23-Sep and still discharging - the Mac dies before the open
 unless plugged in. The weekday fix from 21-Sep is unrelated to this.
+
+## 23-Sep · HANDOFF (context ~186k, hook-triggered)
+State: engine pid 71684 (since 21-Sep 16:01) with the weekday guard on late_ok (commit 6c873b4).
+All study runs stopped 18-Sep at the user's request; SENSEX daily bear-call study parked (2-mo
+sample negative on non-expiry days). Tue 22-Sep scan missed because the Mac slept on battery;
+replay showed no signal lost (research/replay_2026-09-22.md, local only - research/ is gitignored).
+Open now: user reports WRONG NIFTY index values in the Saavi UI "suddenly" - investigating.
+Rules unchanged: no engine changes 09:16-09:45 / 15:15-15:40, .env never committed, push both remotes.
+
+## 24-Sep 00:33 · HANDOFF (context ~157k, hook-triggered)
+Engine: pid 71684 (since 21-Sep 16:01) running cleanly. Saavi UI (pid 64367, started 11:10 23-Sep)
+shows stale NIFTY values (5-min lag, snapshot on disk correct). User reports swing trades very low
+this month (wants 6-8/mo, getting near-zero). Yesterday (23-Sep) null signals from swing. Needs:
+(1) UI restart, (2) swing-credit logic audit vs VIX/liquidity regime.
+Rules: no deploys 15:15–15:40, .env never committed, always push both remotes.
