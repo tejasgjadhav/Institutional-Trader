@@ -3893,3 +3893,10 @@ rebuild (task b4omsj8hm). User asks: make sure EVERY earlier stock-wise IS/OOS a
 25-Sep 16:xx · band25 OOS over ALL 116 names finished and data/name_history.json rebuilt (task
 b4omsj8hm). Digest v3 live since 10:49 (pid 22030, commit 1e507d6); only stock_credit_v2.py digest
 functions changed today, scan/gate functions byte-identical (verified).
+25-Sep 17:25 · BATTERY DIED: last engine line 10:49:39, Mac hibernated on battery (Charge 1% at
+wake), woke 17:17 on charger. 15:31 digest and 15:36 scan NEVER RAN today (markers still 24-Sep);
+the digest v3 has NOT had its first live send. The 15:45 OOS ALL run executed at 17:17 with the
+network still down -> 0 rows (band25_oos_rows_all.json is EMPTY, re-run needed). Replaying 25-Sep
+offline via scratchpad replay_day.py (intraday endpoint for today's bar).
+25-Sep 18:xx · OOS ALL re-run landed and data/name_history.json rebuilt (see counts in chat).
+Monday 15:31 = first live send of digest v3. Engine pid 22030 untouched.
