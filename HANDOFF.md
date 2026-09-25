@@ -3900,3 +3900,8 @@ network still down -> 0 rows (band25_oos_rows_all.json is EMPTY, re-run needed).
 offline via scratchpad replay_day.py (intraday endpoint for today's bar).
 25-Sep 18:xx · OOS ALL re-run landed and data/name_history.json rebuilt (see counts in chat).
 Monday 15:31 = first live send of digest v3. Engine pid 22030 untouched.
+
+## 26-Sep (Sat) · HANDOFF (context ~420k)
+User confirms the laptop was off Fri 25-Sep. Replay of 25-Sep (done 17:30 Fri, scratchpad
+replay_day.py): 12 breakouts, no signal in any book. Digest v3 first live send = Mon 28-Sep 15:31.
+name_history.json complete (b25/b3035 IS+OOS for all names). Engine pid 22030 untouched.
