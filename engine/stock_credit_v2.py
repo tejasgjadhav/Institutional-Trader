@@ -345,6 +345,32 @@ DIGEST_BACKTEST = {
 }
 
 
+NAME_HISTORY_PATH = os.path.join(DATA_DIR, "name_history.json")
+
+
+def _digest_history(sym: str, side: str, cw: float) -> str:
+    """One line: this name+side's own backtest at the deployed gate (c/w >= 0.35, IS and OOS) and
+    in the sub-band it sits in today. From data/name_history.json (studies/ndte/build_name_history.py).
+    Format per window: n/win%/ROM%. '—' = no trades on record."""
+    try:
+        h = json.load(open(NAME_HISTORY_PATH)).get(sym, {}).get(side, {})
+    except Exception:
+        h = {}
+    def f(c):
+        return f"{c['n']}/{c['win']:.0f}%/{c['rom']:+.0f}%" if c else "—"
+    band = "gate" if cw >= 0.35 else ("b3035" if cw >= 0.30 else "b25")
+    label = {"gate": "", "b3035": "0.30–0.35", "b25": "0.25–0.30"}[band]
+    parts = [f"≥0.35 IS {f(h.get('gate_is'))} · OOS {f(h.get('gate_oos'))}"]
+    if band != "gate":
+        bi, bo = h.get(f"{band}_is"), h.get(f"{band}_oos")
+        if band == "b3035" and not bi and h.get("b30_is"):   # fall back to the 0.30–0.40 cells
+            bi, label = h.get("b30_is"), "0.30–0.40"
+        if band == "b3035" and not bo and h.get("b30_oos"):
+            bo = h.get("b30_oos")
+        parts.append(f"{label} IS {f(bi)} · OOS {f(bo)}")
+    return "   hist " + " · ".join(parts)
+
+
 def _digest_book(r) -> "str | None":
     """Which LIVE book takes this c/w on this name/side: v2 >= 0.40, v0 0.35-0.40, vlc 0.30-0.40 on
     a whitelisted side. None = no strategy fires on it, whatever the other gates say."""
@@ -368,8 +394,13 @@ def _digest_open_in(sym: str) -> list:
         try:
             for p in json.load(open(os.path.join(DATA_DIR, f))):
                 if p.get("symbol") == sym and p.get("status") == "OPEN":
+                    _ed = str(p.get("entry_date", ""))
+                    try:
+                        _ed = datetime.strptime(_ed, "%Y-%m-%d").strftime("%d-%b")
+                    except Exception:
+                        pass
                     out.append(f"{lbl} {'PE' if p.get('side') == 'BULL_PUT' else 'CE'} "
-                               f"{p.get('short_strike'):g}/{p.get('long_strike'):g} since {p.get('entry_date')}")
+                               f"{p.get('short_strike'):g}/{p.get('long_strike'):g} since {_ed}")
         except Exception:
             pass
     return out
@@ -420,13 +451,8 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         except Exception:
             pass
         held = _digest_open_in(str(r.get("sym")))
-        _key = "v2" if (book or "").startswith("STOCK CREDIT v2") else "v0" if (book or "").startswith("STOCK CREDIT v0") else "vlc" if book else None
-        _rate = ""
-        if _key:
-            _bt = DIGEST_BACKTEST[_key]
-            _rate = " · backtest " + _bt.split(" — ")[0].replace(" win", "").replace(" ROM", "")
         l1 = (f"{'⭐ ' if star else ''}<b>{i}. {_h.escape(str(r.get('sym')))}</b> · {side} · c/w <b>{r.get('cw')}</b> · "
-              f"{book or 'no strategy'}{_rate}" + (f" · open: {' · '.join(held)}" if held else ""))
+              f"{book or 'no strategy'}" + (f" · open: {' · '.join(held)}" if held else ""))
         mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
         l2 = (f"   SELL {ss} {verb} / BUY {ls} {verb} · {exp} · credit ₹{credit} on {('%g' % w) if isinstance(w, (int, float)) else '?'}"
               + (f" · lot {lot} · +₹{mp:,} / −₹{ml:,}" if mp is not None and ml is not None else "")
@@ -434,7 +460,8 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         l3 = (f"   c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} {'✅' if prem_ok else '❌'} · "
               f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}"
               + (" — <b>READY</b>" if star else ""))   # no issue text: the ❌ says which gate failed (user, 25-Sep)
-        blocks.append(f"{l1}\n{l2}\n{l3}\n")
+        l4 = _digest_history(str(r.get("sym")), str(r.get("side")), float(r.get("cw") or 0))
+        blocks.append(f"{l1}\n{l2}\n{l3}\n{l4}\n")
     if starred:
         tail = (f"\n⭐ <b>BE READY FOR SIGNALS: {', '.join(_h.escape(x) for x in starred)}</b> — all ticks at 15:31. "
                 f"If they still pass on the close, the EXECUTE message follows at 15:36.\n")
@@ -442,12 +469,8 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         tail = "\nNo name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.\n"
     tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 the engine only fires v0 (0.35–0.40) "
              "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.\n"
-             "\n<b>Backtest by strategy</b> (run 4, IS = bhavcopy 2019–Sep 2024 · OOS = Oct 2024–now):\n"
-             f"• v2 c/w ≥0.40: {DIGEST_BACKTEST['v2']}\n"
-             f"• v1 c/w ≥0.40: {DIGEST_BACKTEST['v1']}\n"
-             f"• v0 0.35–0.40: {DIGEST_BACKTEST['v0']}\n"
-             f"• vlc 0.30–0.40 whitelisted: {DIGEST_BACKTEST['vlc']}\n"
-             f"• below: {DIGEST_BACKTEST['below']}")
+             "\nhist = this name's own backtest on this side, n/win/ROM · IS 2019–Sep 2024 · OOS Oct 2024–now · "
+             "≥0.35 = the live books · then the band the name sits in today.")
     # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut
     keep = len(blocks)
     while keep > 0:

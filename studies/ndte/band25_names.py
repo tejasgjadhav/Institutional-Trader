@@ -6,10 +6,10 @@ import sys, json, collections
 sys.path.insert(0, "."); sys.path.insert(0, "studies/ndte")
 import deployed_backtest as H
 import os
-NAMES = os.environ["BAND25_NAMES"].split(",") if os.environ.get("BAND25_NAMES") else ["TATAELXSI", "IDFCFIRSTB", "MARUTI", "MCX", "RELIANCE", "ICICIGI", "INDUSINDBK",
+NAMES = (None if os.environ.get("BAND25_NAMES") == "ALL" else os.environ["BAND25_NAMES"].split(",")) if os.environ.get("BAND25_NAMES") else ["TATAELXSI", "IDFCFIRSTB", "MARUTI", "MCX", "RELIANCE", "ICICIGI", "INDUSINDBK",
          "HDFCLIFE", "ZYDUSLIFE", "INDIANB"]
 H.BOOKS = {"b25": dict(S=2, W=4, tp=0.40, stop=None, band=(0.25, 0.35))}
-H.UNIVERSE = [tk for tk in H.UNIVERSE if tk.replace(".NS", "") in NAMES]
+H.UNIVERSE = [tk for tk in H.UNIVERSE if NAMES is None or tk.replace(".NS", "") in NAMES]
 _orig = H.eval_books
 def _eb(day, sym, typ, ks, atm, px, cb, exp, spot, d10, rows, open_until, *a, **kw):
     n = len(rows); r = _orig(day, sym, typ, ks, atm, px, cb, exp, spot, d10, rows, open_until, *a, **kw)
