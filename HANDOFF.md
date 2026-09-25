@@ -3890,3 +3890,6 @@ first, 4 lines per name incl. `hist` = that name+side's own IS/OOS record from d
 band25 IS over all 116 names (research/band25_is_all.log); queued 15:45: band25 OOS ALL + name_history
 rebuild (task b4omsj8hm). User asks: make sure EVERY earlier stock-wise IS/OOS analysis is folded in
 (INDIANB shows no details).
+25-Sep 16:xx · band25 OOS over ALL 116 names finished and data/name_history.json rebuilt (task
+b4omsj8hm). Digest v3 live since 10:49 (pid 22030, commit 1e507d6); only stock_credit_v2.py digest
+functions changed today, scan/gate functions byte-identical (verified).
