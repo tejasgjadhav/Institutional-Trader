@@ -3860,3 +3860,22 @@ max c/w 0.20-0.39; premium/liquidity gates are not binding. VIX Jun 14.5 / Jul 1
 Sep 11.6, 10.3 on 23-Sep. Run-4 harness on the same 2026 data models Aug=3 and Sep=0 signals, so
 the backtest agrees with the live book. OOS months with VIX<12.5 average 10 modelled signals vs 23
 when VIX>=12.5. UI restarted twice (pid 11510 now), no error visible on screen or in launchd.err.log.
+
+## 25-Sep · HANDOFF (context ~264k, hook-triggered)
+24-Sep: App Error popup was the Desktop launcher's crash reporter reacting to my SIGTERM restart
+(exit 143), closed by killing osascript pid 10340; UI pid 11510 relaunched via launchd. BAJFINANCE
+0.30 c/w on 23-Sep failed premium (Rs 20 < 50) and is not vlc-whitelisted; series selection follows
+MIN_DTE=10 (Sept series used through 18-Sep, October from 21-Sep). User now asks: laptop was OFF,
+check the 09:30 signal recheck for yesterday's call and trigger the LTM message if it did not go.
+25-Sep 09:45 · recheck self-ran at 09:37 (msg 235, LTM v0 still valid); 09:16 0DTE missed (Mac
+hibernated 08:50-09:34). User now asks which OTHER calls were on yesterday's list and whether they
+pass now - re-quoting the 24-Sep archive legs live.
+25-Sep 10:30 · 0.25-0.35 name-wise study for the 24-Sep watchlist names: studies/ndte/band25_names.py
+(BAND25_NAMES env restricts names). IS: MARUTI BP 0.25-0.30 13 tr 92%/+10.2%; six names have no IS
+history. OOS MARUTI-only run: BP 0.25-0.30 7 tr 85.7%/+1.5%, Rs 1,557 net, one -15k loss - NOT a
+pick. Full 10-name OOS queued 15:45 (task b232qz9fw -> research/band25_oos.log). User now asks for
+the TATAELXSI signal from the 24-Sep list (BULL_PUT 3100/2900, c/w 0.28 then, 0.27 at 09:47).
+25-Sep 10:57 · 15:31 WATCHLIST digest rewritten to the user-approved format (build_digest in
+stock_credit_v2.py: every breakout at c/w>=0.25 best first, strategy that takes it, trade, position,
+gates with ticks, issue line, BE READY FOR SIGNALS footer, split into <=3900-char parts). Engine
+restarted; first live send is today's 15:31.

@@ -333,11 +333,125 @@ def build_watchlist() -> dict:
         return {}
 
 
+def _digest_book(r) -> "str | None":
+    """Which LIVE book takes this c/w on this name/side: v2 >= 0.40, v0 0.35-0.40, vlc 0.30-0.40 on
+    a whitelisted side. None = no strategy fires on it, whatever the other gates say."""
+    cw = r.get("cw") or 0
+    if cw >= 0.40:
+        return "STOCK CREDIT v2 (c/w ≥ 0.40)"
+    if cw >= 0.35:
+        return "STOCK CREDIT v0 (band 0.35–0.40)"
+    from engine import config as _c
+    if cw >= 0.30 and r.get("sym") in getattr(_c, "STOCK_CREDIT_VLC_WHITELIST", {}).get(r.get("side"), ()):
+        return "Sidewise low credit vlc (0.30–0.40, whitelisted side)"
+    return None
+
+
+def _digest_open_in(sym: str) -> list:
+    """'v1 PE 4400/4250 since 2026-09-07' for every book holding sym OPEN — so a second entry in
+    the same name is visible in the digest before it happens."""
+    out = []
+    for lbl, f in (("v2", "stock_credit_v2_positions.json"), ("v1", "stock_credit_positions.json"),
+                   ("v0", "stock_credit_v0_positions.json"), ("vlc", "stock_credit_vlc_positions.json")):
+        try:
+            for p in json.load(open(os.path.join(DATA_DIR, f))):
+                if p.get("symbol") == sym and p.get("status") == "OPEN":
+                    out.append(f"{lbl} {'PE' if p.get('side') == 'BULL_PUT' else 'CE'} "
+                               f"{p.get('short_strike'):g}/{p.get('long_strike'):g} since {p.get('entry_date')}")
+        except Exception:
+            pass
+    return out
+
+
+def build_digest(d: dict, min_cw: float = 0.25) -> tuple:
+    """(messages, starred): the 15:31 WATCHLIST digest in the format the user approved on
+    25-Sep-2026 — every breakout at c/w >= min_cw, best first, each with the strategy that would
+    take it, the trade, the position size and every failing parameter in words. Names below
+    min_cw are not listed (user: not required). Returns a LIST of messages because the digest can
+    exceed Telegram's 4096-char limit; parts split between names, never inside one.
+    HTML-safe: '<' and '>' are escaped (a literal '<' makes Telegram's parser return 400)."""
+    import html as _h
+    from engine import config as _c
+    max_spr = float(getattr(_c, "STOCK_CREDIT_MAX_SPREAD_PCT", 6.0))
+    min_oi = float(getattr(_c, "STOCK_CREDIT_MIN_OI", 1))
+    rows = [r for r in d.get("rows", []) if (r.get("cw") or 0) >= min_cw]
+    rows.sort(key=lambda r: -(r.get("cw") or 0))
+    ts = d.get("ts", "")[:16].replace("T", " ")
+    head = [f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE YET</b> ({ts})",
+            f"{d.get('breakouts', len(d.get('rows', [])))} breakouts today · {len(rows)} at c/w ≥ {min_cw:.2f}, "
+            f"best first. The engine decides at <b>15:36</b> on the official close.", ""]
+    blocks, starred = [], []
+    for i, r in enumerate(rows, 1):
+        verb = "CE" if r.get("side") == "BEAR_CALL" else "PE"
+        side = "Bear Call" if r.get("side") == "BEAR_CALL" else "Bull Put"
+        book = _digest_book(r)
+        cw_ok, prem_ok = book is not None, bool(r.get("prem_ok"))
+        spr_ok = (r.get("spread") if r.get("spread") is not None else 999) <= max_spr
+        oi_ok = (r.get("oi") or 0) >= min_oi
+        issues = []
+        if not cw_ok:
+            issues.append(f"c/w {r.get('cw')} — no strategy takes it (v2 ≥0.40 · v0 ≥0.35 · vlc ≥0.30 whitelisted)")
+        if not prem_ok:
+            issues.append(f"premium ₹{r.get('prem')} &lt; ₹50")
+        if not spr_ok:
+            issues.append(f"spread {r.get('spread')}% &gt; {max_spr:g}%")
+        if not oi_ok:
+            issues.append("no OI on short leg")
+        star = not issues
+        if star:
+            starred.append(str(r.get("sym")))
+        ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
+        ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
+        w = r.get("width_pts"); credit = r.get("credit")
+        B = [f"{'⭐ ' if star else ''}<b>{i}. {_h.escape(str(r.get('sym')))}</b> · {side} · c/w <b>{r.get('cw')}</b> · "
+             f"DC-{r.get('dc')} breakout at {r.get('signal_px')}",
+             f"   Strategy: {book or 'none'}"]
+        held = _digest_open_in(str(r.get("sym")))
+        if held:
+            B.append(f"   Already open: {' · '.join(held)}")
+        B.append(f"   Trade: SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry', '')} · "
+                 f"credit ₹{credit} on {('%g' % w) if isinstance(w, (int, float)) else '?'} width")
+        mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
+        if mp is not None and ml is not None:
+            B.append(f"   Position: lot {lot} · max profit ₹{mp:,} · max loss ₹{ml:,}"
+                     + (f" · TP-40 buyback ₹{round(credit * 0.6, 2)}" if isinstance(credit, (int, float)) else ""))
+        B.append(f"   Gates: c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} {'✅' if prem_ok else '❌'} · "
+                 f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}")
+        B.append("   <b>Passes every gate at 15:31 — IF it still passes on the close, the EXECUTE message "
+                 "follows at 15:36.</b>" if star else f"   Issue: {' · '.join(issues)}")
+        B.append("")
+        blocks.append("\n".join(B))
+    tail = []
+    if starred:
+        tail.append(f"⭐ <b>BE READY FOR SIGNALS: {', '.join(_h.escape(x) for x in starred)}</b> — all ticks at "
+                    f"15:31. If they still pass on the close, the EXECUTE message follows at 15:36.")
+    else:
+        tail.append("No name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.")
+    tail.append("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 the engine only fires v0 (0.35–0.40) "
+                "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.")
+    # pack into <= 3900-char messages, splitting only between names
+    msgs, cur = [], "\n".join(head)
+    for blk in blocks:
+        if len(cur) + 1 + len(blk) > 3900:
+            msgs.append(cur); cur = blk
+        else:
+            cur = cur + "\n" + blk
+    tail_txt = "\n".join(tail)
+    if len(cur) + 1 + len(tail_txt) > 3900:
+        msgs.append(cur); cur = tail_txt
+    else:
+        cur = cur + "\n" + tail_txt
+    msgs.append(cur)
+    if len(msgs) > 1:
+        msgs = [f"{m}\n<i>(part {k}/{len(msgs)})</i>" for k, m in enumerate(msgs, 1)]
+    return msgs, starred
+
+
 def notify_nearmiss(rebuild: bool = True) -> int:
-    """Push the near-miss watchlist to Telegram (DO NOT TRADE) — breakouts that pass premium +
-    liquidity but FAIL credit/width. rebuild=True runs the ~100-stock sweep first (slow under
-    throttle); rebuild=False sends INSTANTLY from the already-built union_watchlist.json so the
-    15:05 message never drifts late. Guarded."""
+    """Push the 15:31 WATCHLIST digest to Telegram (DO NOT TRADE). rebuild=True runs the
+    ~100-stock sweep first; rebuild=False sends from the already-built union_watchlist.json so the
+    message never drifts late. Format per build_digest (user-approved 25-Sep-2026). Guarded.
+    Returns the number of all-tick names (the ones to be ready for)."""
     try:
         from engine.notifications import send_telegram
         if rebuild:
@@ -345,71 +459,15 @@ def notify_nearmiss(rebuild: bool = True) -> int:
         else:
             d = json.load(open(WATCHLIST_PATH)) if os.path.exists(WATCHLIST_PATH) else {}
         rows_all = d.get("rows", [])
-        # FULL WATCHLIST (user, 25-Aug-2026). The digest used to show ONLY near-misses
-        # (prem+liq ok, c/w failing) — which meant a name passing EVERY gate was invisible at
-        # 15:31, and the user was not ready when ULTRACEMCO fired at 15:36. Now: every breakout
-        # name, with the FULL-PASSERS on top marked as potential signals to get ready for.
-        qual = [r for r in rows_all if r.get("prem_ok") and r.get("liq_ok") and r.get("cw_ok")]
-        cand = [r for r in rows_all if r.get("prem_ok") and r.get("liq_ok") and not r.get("cw_ok")]
-        rest = [r for r in rows_all if r not in qual and r not in cand]
         ts = d.get("ts", "")[:16].replace("T", " ")
         if not rows_all:
             send_telegram(f"📋 <b>WATCHLIST</b> — {ts}\nNo breakouts on the watchlist today. "
                           f"Nothing to place.")
             return 0
-        lines = [f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE YET</b> ({ts})",
-                 f"All {len(rows_all)} breakout names today. Nothing here is an order — the engine "
-                 f"decides at <b>15:36</b> on the official close.", ""]
-        import html as _h
-        if qual:
-            lines.append(f"⭐ <b>POTENTIAL SIGNAL{'S' if len(qual) != 1 else ''} — get ready, "
-                         f"wait for the 15:36 call:</b>")
-            for r in qual:
-                verb = "CE" if r["side"] == "BEAR_CALL" else "PE"
-                ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
-                ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
-                lines.append(f"⭐ <b>{_h.escape(str(r['sym']))}</b> · c/w {r.get('cw')} ✅ · "
-                             f"prem ✅ · liquidity ✅")
-                lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
-                mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
-                if mp is not None and ml is not None:
-                    lines.append(f"   lot {lot} · max profit ₹{mp:,} · max loss ₹{ml:,}")
-                lines.append(f"   <b>Passes every gate at 15:31 — IF it still passes on the close, "
-                             f"the EXECUTE message follows at 15:36.</b>")
-            lines.append("")
-        if cand:
-            lines.append("Near the gate but NOT signals (c/w below 0.40):")
-        SIDE_TXT = {"BEAR_CALL": "Bear Call Strategy — we expect the stock to stay lower and capitalise on option premium",
-                    "BULL_PUT": "Bull Put Strategy — we expect the stock to stay higher and capitalise on option premium"}
-        for r in cand:
-            verb = "CE" if r["side"] == "BEAR_CALL" else "PE"
-            ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
-            ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
-            cw = r.get("cw") or 0
-            close = "🔥 " if cw >= 0.35 else ""   # within 0.05 of the 0.40 gate
-            # backtested win prob by c/w bucket (production harness 15-Aug-2026, date-aligned OOS):
-            # ≥0.40=87% (the signal) · 0.35–0.40=82% · 0.30–0.35=76% · <0.30 = breakeven/lower
-            # NB "&lt;" not "<": a literal '<' makes Telegram's HTML parser return 400, which sent
-            # the ENTIRE digest through the plain-text fallback with every <b> tag visible
-            # (user-reported 2026-08-03). Any new text here must be HTML-safe.
-            prob = "~76% (no net edge)" if cw >= 0.35 else ("~77% (no net edge)" if cw >= 0.30 else "&lt;77%")
-            import html as _h
-            lines.append(f"{close}<b>{_h.escape(str(r['sym']))}</b> · c/w {r['cw']} (need 0.40) · prem ₹{r['prem']} · backtest win {prob}")
-            lines.append(f"   {SIDE_TXT.get(r['side'], r['side'])}")
-            lines.append(f"   SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry','')}")
-            mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
-            if mp is not None and ml is not None:
-                lines.append(f"   lot {lot} · max profit ₹{mp:,} · max loss ₹{ml:,}")
-        if rest:
-            lines.append("")
-            lines.append("Rest of the watchlist (failed premium or liquidity — furthest from firing):")
-            lines.append("   " + " · ".join(
-                f"{_h.escape(str(r.get('sym','?')))} ({r.get('cw','—')})" for r in rest[:20]))
-        lines.append("")
-        lines.append("🔥 = c/w ≥ 0.35, within 0.05 of firing (the closest — worth watching next day).")
-        lines.append("⛔ <b>DO NOT TRADE</b> — credit/width below 0.40 means no edge; the engine skips them.")
-        send_telegram("\n".join(lines))
-        return len(qual) + len(cand)
+        msgs, starred = build_digest(d)
+        for m in msgs:
+            send_telegram(m)
+        return len(starred)
     except Exception as e:
         logger.warning(f"notify_nearmiss: {e}")
         return 0
