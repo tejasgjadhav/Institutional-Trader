@@ -356,11 +356,13 @@ def _digest_history(sym: str, side: str, cw: float) -> str:
         h = json.load(open(NAME_HISTORY_PATH)).get(sym, {}).get(side, {})
     except Exception:
         h = {}
-    def f(c):
-        return f"{c['n']}/{c['win']:.0f}%/{c['rom']:+.0f}%" if c else "—"
+    def f(c, scanned=None):
+        if c:
+            return f"{c['n']}/{c['win']:.0f}%/{c['rom']:+.0f}%"
+        return f"0 of {scanned}" if scanned else "—"
     band = "gate" if cw >= 0.35 else ("b3035" if cw >= 0.30 else "b25")
     label = {"gate": "", "b3035": "0.30–0.35", "b25": "0.25–0.30"}[band]
-    parts = [f"≥0.35 IS {f(h.get('gate_is'))} · OOS {f(h.get('gate_oos'))}"]
+    parts = [f"≥0.35 IS {f(h.get('gate_is'), h.get('scanned_is'))} · OOS {f(h.get('gate_oos'), h.get('scanned_oos'))}"]
     if band != "gate":
         bi, bo = h.get(f"{band}_is"), h.get(f"{band}_oos")
         if band == "b3035" and not bi and h.get("b30_is"):   # fall back to the 0.30–0.40 cells
@@ -470,7 +472,7 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
     tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 the engine only fires v0 (0.35–0.40) "
              "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.\n"
              "\nhist = this name's own backtest on this side, n/win/ROM · IS 2019–Sep 2024 · OOS Oct 2024–now · "
-             "≥0.35 = the live books · then the band the name sits in today.")
+             "≥0.35 = the live books · then the band the name sits in today · '0 of N' = N breakouts scanned, none cleared the gates.")
     # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut
     keep = len(blocks)
     while keep > 0:

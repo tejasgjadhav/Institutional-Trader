@@ -40,6 +40,10 @@ for i, sym in enumerate(names):
     except Exception: u = None
     if u is None or u.empty or len(u) < 30: continue
     daymap = {d: typ for d, c, typ, d10 in H.breakout_days(u.sort_index())}
+    # scanned breakouts per side x window: a dash in the digest must mean "0 of N", never "unknown"
+    for d, typ in daymap.items():
+        side = "BEAR_CALL" if typ == "CE" else "BULL_PUT"; win = "is" if d <= "2024-09-30" else "oos"
+        out[sym][side][f"scanned_{win}"] = out[sym][side].get(f"scanned_{win}", 0) + 1
     buck = collections.defaultdict(list)
     for x in by_sym.get(sym, []):
         t = daymap.get(x["day"])

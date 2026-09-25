@@ -3882,3 +3882,11 @@ restarted; first live send is today's 15:31.
 25-Sep 10:40 · user wants the digest as ONE message (not parts): compacting each name to 3 lines,
 overflow handled by dropping the lowest-c/w names with a count. Engine pid 19154 has the 2-part
 version until this lands.
+
+## 25-Sep 10:50 · HANDOFF (context ~388k)
+Digest v3 DEPLOYED (engine pid 20888, commit 7d8c044): one message, every breakout c/w>=0.25 best
+first, 4 lines per name incl. `hist` = that name+side's own IS/OOS record from data/name_history.json
+(built by studies/ndte/build_name_history.py from run-4 rows + band30 cells + band25 rows). Running:
+band25 IS over all 116 names (research/band25_is_all.log); queued 15:45: band25 OOS ALL + name_history
+rebuild (task b4omsj8hm). User asks: make sure EVERY earlier stock-wise IS/OOS analysis is folded in
+(INDIANB shows no details).
