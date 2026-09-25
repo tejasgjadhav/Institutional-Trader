@@ -363,13 +363,12 @@ def _digest_open_in(sym: str) -> list:
     return out
 
 
-def build_digest(d: dict, min_cw: float = 0.25) -> tuple:
-    """(messages, starred): the 15:31 WATCHLIST digest in the format the user approved on
-    25-Sep-2026 — every breakout at c/w >= min_cw, best first, each with the strategy that would
-    take it, the trade, the position size and every failing parameter in words. Names below
-    min_cw are not listed (user: not required). Returns a LIST of messages because the digest can
-    exceed Telegram's 4096-char limit; parts split between names, never inside one.
-    HTML-safe: '<' and '>' are escaped (a literal '<' makes Telegram's parser return 400)."""
+def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
+    """(message, starred): the 15:31 WATCHLIST digest in the format the user approved on
+    25-Sep-2026 — ONE message: every breakout at c/w >= min_cw, best first, three lines each
+    (name/strategy, trade/position, gates + issue). Names below min_cw are not listed. Telegram
+    caps a message at 4096 chars, so if the list does not fit the LOWEST-c/w names are dropped and
+    counted in one line — the best names are never cut. HTML-safe ('<' escaped)."""
     import html as _h
     from engine import config as _c
     max_spr = float(getattr(_c, "STOCK_CREDIT_MAX_SPREAD_PCT", 6.0))
@@ -377,9 +376,9 @@ def build_digest(d: dict, min_cw: float = 0.25) -> tuple:
     rows = [r for r in d.get("rows", []) if (r.get("cw") or 0) >= min_cw]
     rows.sort(key=lambda r: -(r.get("cw") or 0))
     ts = d.get("ts", "")[:16].replace("T", " ")
-    head = [f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE YET</b> ({ts})",
-            f"{d.get('breakouts', len(d.get('rows', [])))} breakouts today · {len(rows)} at c/w ≥ {min_cw:.2f}, "
-            f"best first. The engine decides at <b>15:36</b> on the official close.", ""]
+    head = (f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE YET</b> ({ts})\n"
+            f"{d.get('breakouts', len(d.get('rows', [])))} breakouts · {len(rows)} at c/w ≥ {min_cw:.2f}, best first. "
+            f"The engine decides at <b>15:36</b> on the official close.\n")
     blocks, starred = [], []
     for i, r in enumerate(rows, 1):
         verb = "CE" if r.get("side") == "BEAR_CALL" else "PE"
@@ -390,61 +389,53 @@ def build_digest(d: dict, min_cw: float = 0.25) -> tuple:
         oi_ok = (r.get("oi") or 0) >= min_oi
         issues = []
         if not cw_ok:
-            issues.append(f"c/w {r.get('cw')} — no strategy takes it (v2 ≥0.40 · v0 ≥0.35 · vlc ≥0.30 whitelisted)")
+            issues.append("c/w below every strategy band")
         if not prem_ok:
-            issues.append(f"premium ₹{r.get('prem')} &lt; ₹50")
+            issues.append(f"prem &lt; ₹50")
         if not spr_ok:
-            issues.append(f"spread {r.get('spread')}% &gt; {max_spr:g}%")
+            issues.append(f"spread &gt; {max_spr:g}%")
         if not oi_ok:
-            issues.append("no OI on short leg")
+            issues.append("no OI")
         star = not issues
         if star:
             starred.append(str(r.get("sym")))
         ss = ("%g" % r["short_strike"]) if isinstance(r.get("short_strike"), (int, float)) else "?"
         ls = ("%g" % r["long_strike"]) if isinstance(r.get("long_strike"), (int, float)) else "?"
         w = r.get("width_pts"); credit = r.get("credit")
-        B = [f"{'⭐ ' if star else ''}<b>{i}. {_h.escape(str(r.get('sym')))}</b> · {side} · c/w <b>{r.get('cw')}</b> · "
-             f"DC-{r.get('dc')} breakout at {r.get('signal_px')}",
-             f"   Strategy: {book or 'none'}"]
+        exp = str(r.get("expiry", ""))
+        try:
+            exp = datetime.strptime(exp, "%Y-%m-%d").strftime("%d-%b")
+        except Exception:
+            pass
         held = _digest_open_in(str(r.get("sym")))
-        if held:
-            B.append(f"   Already open: {' · '.join(held)}")
-        B.append(f"   Trade: SELL {ss} {verb} / BUY {ls} {verb} · exp {r.get('expiry', '')} · "
-                 f"credit ₹{credit} on {('%g' % w) if isinstance(w, (int, float)) else '?'} width")
+        l1 = (f"{'⭐ ' if star else ''}<b>{i}. {_h.escape(str(r.get('sym')))}</b> · {side} · c/w <b>{r.get('cw')}</b> · "
+              f"{book or 'no strategy'}" + (f" · open: {' · '.join(held)}" if held else ""))
         mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
-        if mp is not None and ml is not None:
-            B.append(f"   Position: lot {lot} · max profit ₹{mp:,} · max loss ₹{ml:,}"
-                     + (f" · TP-40 buyback ₹{round(credit * 0.6, 2)}" if isinstance(credit, (int, float)) else ""))
-        B.append(f"   Gates: c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} {'✅' if prem_ok else '❌'} · "
-                 f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}")
-        B.append("   <b>Passes every gate at 15:31 — IF it still passes on the close, the EXECUTE message "
-                 "follows at 15:36.</b>" if star else f"   Issue: {' · '.join(issues)}")
-        B.append("")
-        blocks.append("\n".join(B))
-    tail = []
+        l2 = (f"   SELL {ss} {verb} / BUY {ls} {verb} · {exp} · credit ₹{credit} on {('%g' % w) if isinstance(w, (int, float)) else '?'}"
+              + (f" · lot {lot} · +₹{mp:,} / −₹{ml:,}" if mp is not None and ml is not None else "")
+              + (f" · TP-40 ₹{round(credit * 0.6, 2)}" if isinstance(credit, (int, float)) else ""))
+        l3 = (f"   c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} {'✅' if prem_ok else '❌'} · "
+              f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}"
+              + (" — <b>READY</b>" if star else f" — issue: {' · '.join(issues)}"))
+        blocks.append(f"{l1}\n{l2}\n{l3}\n")
     if starred:
-        tail.append(f"⭐ <b>BE READY FOR SIGNALS: {', '.join(_h.escape(x) for x in starred)}</b> — all ticks at "
-                    f"15:31. If they still pass on the close, the EXECUTE message follows at 15:36.")
+        tail = (f"\n⭐ <b>BE READY FOR SIGNALS: {', '.join(_h.escape(x) for x in starred)}</b> — all ticks at 15:31. "
+                f"If they still pass on the close, the EXECUTE message follows at 15:36.\n")
     else:
-        tail.append("No name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.")
-    tail.append("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 the engine only fires v0 (0.35–0.40) "
-                "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.")
-    # pack into <= 3900-char messages, splitting only between names
-    msgs, cur = [], "\n".join(head)
-    for blk in blocks:
-        if len(cur) + 1 + len(blk) > 3900:
-            msgs.append(cur); cur = blk
-        else:
-            cur = cur + "\n" + blk
-    tail_txt = "\n".join(tail)
-    if len(cur) + 1 + len(tail_txt) > 3900:
-        msgs.append(cur); cur = tail_txt
-    else:
-        cur = cur + "\n" + tail_txt
-    msgs.append(cur)
-    if len(msgs) > 1:
-        msgs = [f"{m}\n<i>(part {k}/{len(msgs)})</i>" for k, m in enumerate(msgs, 1)]
-    return msgs, starred
+        tail = "\nNo name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.\n"
+    tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 the engine only fires v0 (0.35–0.40) "
+             "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.")
+    # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut
+    keep = len(blocks)
+    while keep > 0:
+        body = "\n".join(blocks[:keep])
+        cut = ("" if keep == len(blocks)
+               else f"\n(+{len(blocks) - keep} more at c/w {rows[keep]['cw']}–{rows[-1]['cw']} not shown — message limit)\n")
+        msg = head + "\n" + body + cut + tail
+        if len(msg) <= limit:
+            return msg, starred
+        keep -= 1
+    return (head + tail)[:limit], starred
 
 
 def notify_nearmiss(rebuild: bool = True) -> int:
@@ -464,9 +455,8 @@ def notify_nearmiss(rebuild: bool = True) -> int:
             send_telegram(f"📋 <b>WATCHLIST</b> — {ts}\nNo breakouts on the watchlist today. "
                           f"Nothing to place.")
             return 0
-        msgs, starred = build_digest(d)
-        for m in msgs:
-            send_telegram(m)
+        msg, starred = build_digest(d)
+        send_telegram(msg)
         return len(starred)
     except Exception as e:
         logger.warning(f"notify_nearmiss: {e}")

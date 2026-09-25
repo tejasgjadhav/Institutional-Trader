@@ -3879,3 +3879,6 @@ the TATAELXSI signal from the 24-Sep list (BULL_PUT 3100/2900, c/w 0.28 then, 0.
 stock_credit_v2.py: every breakout at c/w>=0.25 best first, strategy that takes it, trade, position,
 gates with ticks, issue line, BE READY FOR SIGNALS footer, split into <=3900-char parts). Engine
 restarted; first live send is today's 15:31.
+25-Sep 10:40 · user wants the digest as ONE message (not parts): compacting each name to 3 lines,
+overflow handled by dropping the lowest-c/w names with a count. Engine pid 19154 has the 2-part
+version until this lands.
