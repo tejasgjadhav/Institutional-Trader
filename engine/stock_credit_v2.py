@@ -333,6 +333,18 @@ def build_watchlist() -> dict:
         return {}
 
 
+# Backtest rates shown in the 15:31 digest (user, 25-Sep-2026). SOURCE OF TRUTH: the live-books
+# table in CLAUDE.md (run 4, 17-Sep-2026) and studies/CW_BAND_BY_BOOK.md for the sub-0.35 bands.
+# Update these strings whenever the harness is re-run and the table changes.
+DIGEST_BACKTEST = {
+    "v2":    "IS 77.9% win / +21.2% ROM (n=213, 6/6 yrs) · OOS 84.0% / +25.9% (n=81, 3/3 yrs)",
+    "v1":    "IS 80.5% / +12.9% (n=349, 6/6) · OOS 83.0% / +15.2% (n=194, 3/3) — 1-OTM/width-3 on DC-10 only",
+    "v0":    "IS 85.7% / +14.4% (n=217, 6/6) · OOS 83.0% / +2.4% (n=106, 2/3)",
+    "vlc":   "IS 90.7% · OOS 93.4% on its 21 name-side cells (cells chosen on OOS; live record decides at 30 fills)",
+    "below": "0.30–0.35: 79.0% / −1.2% · 0.25–0.30: 79.1% / −1.9% (OOS, v0 geometry) — no edge, the engine skips them",
+}
+
+
 def _digest_book(r) -> "str | None":
     """Which LIVE book takes this c/w on this name/side: v2 >= 0.40, v0 0.35-0.40, vlc 0.30-0.40 on
     a whitelisted side. None = no strategy fires on it, whatever the other gates say."""
@@ -408,15 +420,20 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         except Exception:
             pass
         held = _digest_open_in(str(r.get("sym")))
+        _key = "v2" if (book or "").startswith("STOCK CREDIT v2") else "v0" if (book or "").startswith("STOCK CREDIT v0") else "vlc" if book else None
+        _rate = ""
+        if _key:
+            _bt = DIGEST_BACKTEST[_key]
+            _rate = " · backtest " + _bt.split(" — ")[0].replace(" win", "").replace(" ROM", "")
         l1 = (f"{'⭐ ' if star else ''}<b>{i}. {_h.escape(str(r.get('sym')))}</b> · {side} · c/w <b>{r.get('cw')}</b> · "
-              f"{book or 'no strategy'}" + (f" · open: {' · '.join(held)}" if held else ""))
+              f"{book or 'no strategy'}{_rate}" + (f" · open: {' · '.join(held)}" if held else ""))
         mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
         l2 = (f"   SELL {ss} {verb} / BUY {ls} {verb} · {exp} · credit ₹{credit} on {('%g' % w) if isinstance(w, (int, float)) else '?'}"
               + (f" · lot {lot} · +₹{mp:,} / −₹{ml:,}" if mp is not None and ml is not None else "")
               + (f" · TP-40 ₹{round(credit * 0.6, 2)}" if isinstance(credit, (int, float)) else ""))
         l3 = (f"   c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} {'✅' if prem_ok else '❌'} · "
               f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}"
-              + (" — <b>READY</b>" if star else f" — issue: {' · '.join(issues)}"))
+              + (" — <b>READY</b>" if star else ""))   # no issue text: the ❌ says which gate failed (user, 25-Sep)
         blocks.append(f"{l1}\n{l2}\n{l3}\n")
     if starred:
         tail = (f"\n⭐ <b>BE READY FOR SIGNALS: {', '.join(_h.escape(x) for x in starred)}</b> — all ticks at 15:31. "
@@ -424,7 +441,13 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
     else:
         tail = "\nNo name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.\n"
     tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 the engine only fires v0 (0.35–0.40) "
-             "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.")
+             "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.\n"
+             "\n<b>Backtest by strategy</b> (run 4, IS = bhavcopy 2019–Sep 2024 · OOS = Oct 2024–now):\n"
+             f"• v2 c/w ≥0.40: {DIGEST_BACKTEST['v2']}\n"
+             f"• v1 c/w ≥0.40: {DIGEST_BACKTEST['v1']}\n"
+             f"• v0 0.35–0.40: {DIGEST_BACKTEST['v0']}\n"
+             f"• vlc 0.30–0.40 whitelisted: {DIGEST_BACKTEST['vlc']}\n"
+             f"• below: {DIGEST_BACKTEST['below']}")
     # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut
     keep = len(blocks)
     while keep > 0:
