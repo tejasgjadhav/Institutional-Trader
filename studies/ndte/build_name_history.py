@@ -34,12 +34,18 @@ by_sym = collections.defaultdict(list)
 for x in gate: by_sym[x["sym"]].append(x)
 out = collections.defaultdict(lambda: {"BEAR_CALL": {}, "BULL_PUT": {}})
 names = sorted(set(by_sym) | {t.replace(".NS", "") for t in UNIVERSE})
+try:
+    IS_SYMS = set(json.load(open("research/is_symbols.json")))   # names the IS bhavcopy pickle covers
+except Exception:
+    IS_SYMS = set()
 for i, sym in enumerate(names):
     try:
         u = fetch_upstox_historical(sym + ".NS", unit="days", interval=1, from_date="2018-11-01", to_date=None)
     except Exception: u = None
     if u is None or u.empty or len(u) < 30: continue
     daymap = {d: typ for d, c, typ, d10 in H.breakout_days(u.sort_index())}
+    for _sd in ("BEAR_CALL", "BULL_PUT"):
+        out[sym][_sd]["is_tested"] = (sym in IS_SYMS) if IS_SYMS else True
     # scanned breakouts per side x window: a dash in the digest must mean "0 of N", never "unknown"
     for d, typ in daymap.items():
         side = "BEAR_CALL" if typ == "CE" else "BULL_PUT"; win = "is" if d <= "2024-09-30" else "oos"

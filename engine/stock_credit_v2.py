@@ -359,17 +359,20 @@ def _digest_history(sym: str, side: str, cw: float) -> str:
     def f(c, scanned=None):
         if c:
             return f"{c['n']}/{c['win']:.0f}%/{c['rom']:+.0f}%"
-        return f"0 of {scanned}" if scanned else "—"
+        return f"0/{scanned}" if scanned else "—"
     band = "gate" if cw >= 0.35 else ("b3035" if cw >= 0.30 else "b25")
     label = {"gate": "", "b3035": "0.30–0.35", "b25": "0.25–0.30"}[band]
-    parts = [f"≥0.35 IS {f(h.get('gate_is'), h.get('scanned_is'))} · OOS {f(h.get('gate_oos'), h.get('scanned_oos'))}"]
+    _is = "n/a" if h.get("is_tested") is False else f(h.get("gate_is"), h.get("scanned_is"))
+    parts = [f"≥0.35 IS {_is} · OOS {f(h.get('gate_oos'), h.get('scanned_oos'))}"]
     if band != "gate":
         bi, bo = h.get(f"{band}_is"), h.get(f"{band}_oos")
+        if h.get("is_tested") is False:
+            bi = "n/a"
         if band == "b3035" and not bi and h.get("b30_is"):   # fall back to the 0.30–0.40 cells
             bi, label = h.get("b30_is"), "0.30–0.40"
         if band == "b3035" and not bo and h.get("b30_oos"):
             bo = h.get("b30_oos")
-        parts.append(f"{label} IS {f(bi)} · OOS {f(bo)}")
+        parts.append(f"{label} IS {bi if bi == 'n/a' else f(bi)} · OOS {f(bo)}")
     return "   hist " + " · ".join(parts)
 
 
@@ -469,10 +472,9 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
                 f"If they still pass on the close, the EXECUTE message follows at 15:36.\n")
     else:
         tail = "\nNo name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.\n"
-    tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 the engine only fires v0 (0.35–0.40) "
-             "and whitelisted vlc names (0.30–0.40); everything else has no edge out-of-sample.\n"
-             "\nhist = this name's own backtest on this side, n/win/ROM · IS 2019–Sep 2024 · OOS Oct 2024–now · "
-             "≥0.35 = the live books · then the band the name sits in today · '0 of N' = N breakouts scanned, none cleared the gates.")
+    tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 only v0 (0.35–0.40) and whitelisted vlc names (0.30–0.40) fire.\n"
+             "\nhist = this name's own record on this side, trades/win/ROM · IS 2019–Sep 2024 · OOS Oct 2024–now · "
+             "≥0.35 = live books, then today's band · 0/N = N breakouts, none cleared the gates · n/a = no in-sample data for this name.")
     # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut
     keep = len(blocks)
     while keep > 0:
