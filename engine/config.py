@@ -669,6 +669,14 @@ STOCK_CREDIT_VLC_WHITELIST = {
     "BULL_PUT":  {"ABB", "ACC", "APOLLOHOSP", "COFORGE", "CUMMINSIND", "EICHERMOT", "HAL",
                   "PERSISTENT", "TORNTPHARM"},
 }
+# vlc CELLS (user-approved 27-Sep-2026): side-locked cells with their own c/w band and floor. From
+# the 0.25-0.30 / Rs 30-50 screen (studies/PREMIUM_FLOOR_SWEEP.md): pass >= 80% win and ROM > +5% on
+# >= 3 trades in BOTH windows. Pooled OOS 16 trades, 100%, +17.5%. PROVISIONAL until the clean retry.
+STOCK_CREDIT_VLC_CELLS = {
+    ("ULTRACEMCO", "BEAR_CALL"): dict(min_cw=0.25, max_cw=0.30, min_prem=30.0),
+    ("HINDUNILVR", "BULL_PUT"):  dict(min_cw=0.25, max_cw=0.30, min_prem=30.0),
+    ("BAJAJFINSV", "BULL_PUT"):  dict(min_cw=0.25, max_cw=0.30, min_prem=30.0),
+}
 
 # ── T-1 EVE book (user-ordered 17-Sep-2026: "increase signals, take risk, >75% win, higher net") ──
 # studies/T1_CLOSE_ENTRY.md: sell a BEAR CALL 0.5% OTM, 6 strikes wide, at the close of the

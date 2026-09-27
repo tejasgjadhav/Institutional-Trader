@@ -46,6 +46,7 @@ _impl.STOCK_CREDIT_MAX_OPEN    = int(getattr(config, "STOCK_CREDIT_VLC_MAX_OPEN"
 _impl.STOCK_CREDIT_LOTS        = int(getattr(config, "STOCK_CREDIT_VLC_LOTS", 1))
 _impl.SIDE_WHITELIST = {k: frozenset(v) for k, v in
                         getattr(config, "STOCK_CREDIT_VLC_WHITELIST", {}).items()}
+_impl.CELL_BANDS = dict(getattr(config, "STOCK_CREDIT_VLC_CELLS", {}) or {})   # 0.25-0.30 cells, 27-Sep-2026
 
 # geometry and every other gate stay exactly as v2 has them (short 2-OTM, width 4, DTE >= 10,
 # premium >= Rs50, live spread/OI, exposure cap, cross-book re-entry gap).

@@ -3964,3 +3964,10 @@ CLEAN retry (currently ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP), as per-cell
 side-locked vlc book (TP-40, v2 geometry, floor 30, band 0.25-0.30). Not wired yet: current OOS lost
 195 legs and the change touches the scan shared by v2/v0/vlc. Do it when research/band_clean.flag
 appears, with a regression pass, then republish. Signal gain so far = per-book floor (deployed).
+27-Sep · USER: keep re-entry 3d; DEPLOY ALL (3 band cells into vlc + final numbers in every UI block: studies, P&L, live strategies).
+27-Sep 11:0x · DEPLOYED vlc CELLS (config STOCK_CREDIT_VLC_CELLS: ULTRACEMCO BC, HINDUNILVR BP,
+BAJAJFINSV BP, band 0.25-0.30, floor 30) via CELL_BANDS hook in the shared scan (v2/v0 path
+byte-identical, only reached when SIDE_WHITELIST is set). Scan-level test 15/15 + v1 4/4 on scratch
+books, live books untouched. Engine restarted. NEXT: when run5_oos_pass2 finishes clean, sweep final
+numbers into EVERY UI block (PM banners, Studies P&L, LIVE STRATEGIES, study entries, vlc section),
+_TG_ANALYSIS, CLAUDE.md, README; rebuild symbol_history + name_history.

@@ -49,6 +49,9 @@ STOCK_CREDIT_TAKE_PROFIT  = 0.50
 STOCK_CREDIT_MAX_CW = None     # exclusive upper bound on credit/width, or None for no ceiling
 SIDE_WHITELIST      = None     # vlc only: {"BEAR_CALL": {names}, "BULL_PUT": {names}} — a name
                                # may only trade its qualified side. None (v2/v1/v0) = no restriction.
+CELL_BANDS          = None     # vlc only (27-Sep-2026): {(name, side): {min_cw, max_cw, min_prem}} —
+                               # side-locked cells with their OWN c/w band and premium floor, for names
+                               # NOT on SIDE_WHITELIST for that side. None everywhere else = no-op.
 EXCLUDE_SYMBOLS     = frozenset()   # symbols another book already holds open — skip them
 
 # FETCH INTEGRITY (16-Sep-2026). A name the feed could not answer for is SKIPPED, which is
@@ -393,6 +396,9 @@ def prem_floor_for(sym: str, side: str, cw: float) -> float:
         return v0
     if cw >= 0.30 and sym in getattr(_c, "STOCK_CREDIT_VLC_WHITELIST", {}).get(side, ()):
         return base
+    _cell = (getattr(_c, "STOCK_CREDIT_VLC_CELLS", {}) or {}).get((sym, side))
+    if _cell and _cell["min_cw"] <= cw < _cell["max_cw"]:
+        return float(_cell["min_prem"])
     return min(v0, v1, base)
 
 
@@ -407,6 +413,9 @@ def _digest_book(r) -> "str | None":
     from engine import config as _c
     if cw >= 0.30 and r.get("sym") in getattr(_c, "STOCK_CREDIT_VLC_WHITELIST", {}).get(r.get("side"), ()):
         return "Sidewise low credit vlc (0.30–0.40, whitelisted side)"
+    _cell = (getattr(_c, "STOCK_CREDIT_VLC_CELLS", {}) or {}).get((r.get("sym"), r.get("side")))
+    if _cell and _cell["min_cw"] <= cw < _cell["max_cw"]:
+        return "Sidewise low credit vlc cell (0.25–0.30, ₹30 floor)"
     return None
 
 
@@ -582,10 +591,13 @@ def scan_signals() -> list:
             if not spot:
                 continue
             opt_type = "CE" if bdir == "LONG" else "PE"   # FADE
+            _cell = None
             if SIDE_WHITELIST is not None:
                 _side = "BEAR_CALL" if opt_type == "CE" else "BULL_PUT"
                 if sym not in SIDE_WHITELIST.get(_side, ()):
-                    continue                    # vlc trades a name ONLY on its qualified side
+                    _cell = (CELL_BANDS or {}).get((sym, _side))
+                    if _cell is None:
+                        continue                # vlc trades a name ONLY on its qualified side
             legs = _pick_legs(ticker, spot, opt_type)
             if not legs:
                 continue
@@ -605,12 +617,17 @@ def scan_signals() -> list:
             if credit <= 0 or width_pts <= 0:
                 continue
             # ── the gates ──
-            if credit / width_pts < STOCK_CREDIT_MIN_CW:           # the edge: rich credit vs risk
-                continue
-            if STOCK_CREDIT_MAX_CW is not None and credit / width_pts >= STOCK_CREDIT_MAX_CW:
-                continue                                            # v0 only: v2 owns >= its ceiling
-            if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
-                continue
+            if _cell is not None:
+                # vlc cell (27-Sep-2026): its own band and floor, studies/PREMIUM_FLOOR_SWEEP.md
+                if not (_cell["min_cw"] <= credit / width_pts < _cell["max_cw"]) or sm < _cell["min_prem"]:
+                    continue
+            else:
+                if credit / width_pts < STOCK_CREDIT_MIN_CW:           # the edge: rich credit vs risk
+                    continue
+                if STOCK_CREDIT_MAX_CW is not None and credit / width_pts >= STOCK_CREDIT_MAX_CW:
+                    continue                                            # v0 only: v2 owns >= its ceiling
+                if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
+                    continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
             # OI must EXIST — see config.STOCK_CREDIT_MIN_OI for why this is a floor, not a filter.
