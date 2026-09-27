@@ -3989,3 +3989,7 @@ ULTRACEMCO BC OOS and BAJAJFINSV BP IS). name_history now has {v2,v1,v0}_{is,oos
 studies/BOOK_SIDE_HISTORY.csv exported. Engine restarted.
 27-Sep · user: show Telegram message + Excel workbook with all results -> ~/Downloads/Saavi_Strategy_Research_27Sep2026.xlsx
 27-Sep · Excel delivered ~/Downloads/Saavi_Strategy_Research_27Sep2026.xlsx (7 sheets, built by studies/ndte/export_research_xlsx.py); digest footer names the 3 vlc cells; engine restarted.
+27-Sep 15:09 · user: engine live for tomorrow? more signals? was today better?
+27-Sep · user: count swing (non-intraday) signals per month Jun/Jul/Aug.
+27-Sep · user: last 3 months, counts at old 50 / new per-book / everything c/w>=0.25 prem>=30.
+27-Sep · user: add the last-3-months comparison to the Excel workbook.

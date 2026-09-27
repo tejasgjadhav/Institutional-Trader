@@ -142,6 +142,37 @@ rows = [["v2", "c/w ≥ 0.40", "₹50", "2-OTM / width 4", "50% of credit", "non
         ["vlc cells", "c/w 0.25–0.30, 3 name-sides", "₹30 to under ₹50", "2-OTM / width 4", "40% of credit", "none", "10 days", "3 days cross-book"]]
 sheet("Rules in force", "Gates per book, as deployed 27-Sep-2026", "Every book also needs a live two-sided quote on both legs, short-leg bid-ask ≤ 6% and open interest present. Profit is booked only when both legs are tradeable.",
       ["Book", "Credit/width gate", "Short-leg premium", "Strikes", "Take profit", "Stop", "Min days to expiry", "Re-entry gap"], rows, [10, 30, 22, 16, 14, 7, 16, 18])
+
+# ---- 8 Last 3 months ----
+KK = lambda r: (r["sym"], r["day"])
+hi25 = {KK(r) for r in load("research/band25_oos_rows_all.json") if r["cw"] < 0.30}
+cellrows = [r for r in load("research/premband25_oos_30_rows.json") if KK(r) not in hi25
+            and (r["sym"], "BEAR_CALL" if r["side"] == "BC" else "BULL_PUT") in config.STOCK_CREDIT_VLC_CELLS]
+every = {}
+for r in load("research/premband25_oos_30_rows.json") + load("research/prem30_oos_30_rows.json"): every.setdefault(KK(r), r)
+every = list(every.values())
+sets = [("Old rules — ₹50 short leg in every book", load("research/deployed_bt_oos_rows_run4.json")),
+        ("Today's rules — v2 ₹50, v1/v0 ₹30, + vlc cells", OOS + cellrows),
+        ("Everything c/w ≥ 0.25 with a short leg ≥ ₹30", every)]
+live = {"2026-06": 5, "2026-07": 16, "2026-08": 5}
+rows = []
+for lbl, rr in sets:
+    for m, ml in (("2026-06", "June"), ("2026-07", "July"), ("2026-08", "August 1–10")):
+        v = [r for r in rr if r["day"].startswith(m)]
+        rows.append([lbl, ml, len(v), (sum(r["win"] for r in v) / len(v)) if v else None, sum(r["net_rs"] for r in v), None])
+rows.append(["Live engine — swing signals actually sent", "June", live["2026-06"], None, None, "v1 5 (29–30 Jun, old T-1 scan)"])
+rows.append(["Live engine — swing signals actually sent", "July", live["2026-07"], None, None, "v1 12, v2 1, index swing 3 (swing removed 24-Jul)"])
+rows.append(["Live engine — swing signals actually sent", "August", live["2026-08"], None, None, "v1 2, v2 2, v0 1"])
+ev = [r for r in every if r["day"] >= "2026-06"]
+rows.append(["", "", None, None, None, None])
+for lo, hi_, lbl in ((0.25, 0.30, "0.25–0.30"), (0.30, 0.35, "0.30–0.35"), (0.35, 0.40, "0.35–0.40"), (0.40, 9, "0.40 and up")):
+    v = [r for r in ev if lo <= r["cw"] < hi_]
+    rows.append(["Everything ≥ 0.25, by c/w band (Jun–10 Aug)", lbl, len(v), sum(r["win"] for r in v) / len(v), sum(r["net_rs"] for r in v), None])
+sheet("Last 3 months", "June to August 2026 — old rules vs today's rules vs every name above c/w 0.25",
+      "Backtest (harness of record, OOS rows, 1 lot). The window ends at 10-Aug, the last entry whose trade had finished. 'Everything' uses v0 geometry, TP 40%, no stop. "
+      "Live counts are what the engine actually sent; they sit below the backtest because the 6% live spread gate, missed windows and the pre-6-Aug scan are not in the backtest.",
+      ["Rule set", "Month / band", "Trades", "Win", "Net ₹ (1 lot)", "Note"], rows, [46, 16, 9, 9, 15, 48], {4: PCT, 5: RS},
+      colour=lambda r: (GOOD if isinstance(r[4], (int, float)) and r[4] > 0 else BAD if isinstance(r[4], (int, float)) and r[4] < 0 else None))
 # ---- 7 Telegram sample ----
 ws = wb.create_sheet("Telegram 15-31 sample"); ws["A1"] = "15:31 WATCHLIST message — rendered on the 24-Sep-2026 watchlist with today's rules"
 ws["A1"].font = Font(name=F, bold=True, size=14, color="1F3864")
