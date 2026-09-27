@@ -215,6 +215,19 @@ if os.path.exists(SS):
           ["Stock", "Side", "Group", "Verdict", "IS trades", "IS win", "IS ROM", "OOS trades", "OOS win", "OOS ROM"], rows,
           [13, 6, 11, 15, 9, 8, 9, 10, 9, 9], {6: PCT, 7: PCT, 9: PCT, 10: PCT},
           colour=lambda r: GOOD if r[3] == "PASSES BOTH" else None)
+
+# ---- 10 Take-profit sweep ----
+TPR = "research/tpsweep/report.json"
+if os.path.exists(TPR):
+    rep = load(TPR); rows = []
+    for x in rep:
+        a, b = x["is_"], x["oos"]
+        rows.append([x["setting"], x["scope"], a["pm"], a["win"], a["rom"], a["rs_mo"], b["pm"], b["win"], b["rom"], b["rs_mo"], f"{b['neg_yrs']}/{b['yrs']}"])
+    sheet("Take-profit sweep", "Take profit at 20/30/40/50/60% of credit or hold to expiry — all 208 names, both sides",
+          "Harness of record (run 5, per-book floor) with every book's take-profit set to the level shown. Baseline = today's v2 50% / v1, v0 40%. "
+          "All trades (full band), 1 lot. IS 2019→Sep-2024 (69 months), OOS Oct-2024→Aug-2026 (23 months).",
+          ["Setting", "Scope", "IS signals/mo", "IS win", "IS ROM", "IS ₹/month", "OOS signals/mo", "OOS win", "OOS ROM", "OOS ₹/month", "OOS negative yrs"], rows,
+          [28, 10, 12, 9, 9, 12, 13, 9, 9, 12, 12], {3: "0.0", 4: PCT, 5: PCT, 6: RS, 7: "0.0", 8: PCT, 9: PCT, 10: RS})
 # ---- 7 Telegram sample ----
 ws = wb.create_sheet("Telegram 15-31 sample"); ws["A1"] = "15:31 WATCHLIST message — rendered on the 24-Sep-2026 watchlist with today's rules"
 ws["A1"].font = Font(name=F, bold=True, size=14, color="1F3864")

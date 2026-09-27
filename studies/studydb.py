@@ -55,6 +55,8 @@ TRADE_SOURCES = [  # source, run, window, file
     *[(f"prem30_band30_{w}_{p}", "prem30", w.upper(), f"research/prem30_{w}_{p}_rows.json") for w in ("is", "oos") for p in (30, 50)],
     *[(f"band25_{w}_floor50", "band25", w.upper(), f"research/band25_{w}_rows_all.json") for w in ("is", "oos")],
     *[(f"band25_{w}_floor30", "premband25", w.upper(), f"research/premband25_{w}_30_rows.json") for w in ("is", "oos")],
+    *[(f"tpsweep_tp{tp}_{st}_{w}", "tpsweep", w.upper(), f"research/tpsweep/tp{tp}_{st}_{w}.json")
+      for tp in (20, 30, 40, 50, 60, 99) for st in ("main", "outs", "p8") for w in ("is", "oos")],
 ]
 def build():
     c = conn()
@@ -67,7 +69,8 @@ def build():
     for slug, name, path in (("PREMIUM_FLOOR_SWEEP", "run5_publish", "research/run5_publish.json"),
                              ("PREMIUM_FLOOR_SWEEP", "run5_is_published", "research/run5_is_published.json"),
                              ("PREMIUM_FLOOR_SWEEP", "band25_qualifiers", "research/premband25_qualifiers.json"),
-                             ("SIDE_SCREEN_208", "side_screen", "research/side_screen_208.json")):
+                             ("SIDE_SCREEN_208", "side_screen", "research/side_screen_208.json"),
+                             ("TP_SWEEP_208", "tp_sweep", "research/tpsweep/report.json")):
         p = os.path.join(ROOT, path)
         if os.path.exists(p):
             d = json.load(open(p)); rows = d if isinstance(d, list) else [{"key": k, **(v if isinstance(v, dict) else {"value": v})} for k, v in d.items()]

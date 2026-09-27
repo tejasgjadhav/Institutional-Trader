@@ -4017,3 +4017,11 @@ LAST_3_MONTHS_JUN_AUG_2026.md; README index updated. DB auto-rebuilds after the 
 27-Sep 19:10 · user: DONE? — status check.
 27-Sep 19:1x · side screen FINAL (0 failed fetches): verdict unchanged — 0 outsider/pruned sides pass;
 all-208 raises signals to 35.9/mo but lowers ₹/mo (48,951 vs 52,396). Study, workbook, DB updated.
+27-Sep 19:14 · user: what do you suggest to optimise returns + signals? Answered: uptime, shadow books (spread gate, c/w>=0.50 tail), lot size on the 30-fill rule; no more backtest mining.
+27-Sep 19:3x · user: all 208 names both sides (~36 calls/mo) — sweep take-profit 20/30/40/50/60/expiry
+for better win rate + net. Driver research/tp_sweep_driver.py TP SET WINDOW (SET main|outs|p8),
+rows -> research/tpsweep/, chain research/tp_sweep_chain.sh, flag research/tpsweep/done.flag.
+27-Sep 20:1x · TP sweep IS done: baseline mix (v2 50/v1,v0 40) best ₹/mo in-sample (53,995); TP20 win
+89.6% but ₹44,597/mo; hold-to-expiry worst. OOS running (~23:00). On done.flag: report ->
+research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWEEP_208 (auto).
+08:40 Mon guard kills any leftover job.

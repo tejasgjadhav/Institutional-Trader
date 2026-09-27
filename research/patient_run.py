@@ -17,6 +17,6 @@ def patient(url, params=None, attempts=6):
             time.sleep(5)
     return {}
 eo._get_json = patient
-script, arg = sys.argv[1], sys.argv[2]
-sys.argv = [script, arg]
+script = sys.argv[1]
+sys.argv = [script] + sys.argv[2:]   # pass every remaining argument through (27-Sep-2026)
 runpy.run_path(script, run_name="__main__")
