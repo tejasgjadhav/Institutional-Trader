@@ -929,7 +929,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "cohort — credit/width 0.40–0.50, where all 21 real live fills sit. Every leg is a contract that "
      "actually traded, checked at entry and on every exit-check day, and each trade is multiplied by "
      "its own lot size. <b>The two windows agree inside their error bars</b> on the corrected 116-name "
-     "basis: v2 +21.2% in-sample against +27.0% out, v1 +12.9% against +16.6% — independent data, "
+     "basis: v2 +21.2% in-sample against +25.9% out, v1 +6.4% against +14.1% (run-5 in-sample; same-basis run 4 was +5.9%) — independent data, "
      "same gating, out-of-sample the stronger of the two. Still a ceiling, because "
      "the harness cannot model the live bid-ask gate, which rejects most candidates.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
