@@ -3939,3 +3939,10 @@ Queued: prem_band25.py (0.25-0.30, Rs 30-50, per side) IS then OOS after run5_do
 publish interim numbers now = run-5 IS + OOS interim (run-4 OOS rows + premfloor_oos_30 v1/v0 rows
 not in run 4) -> research/deployed_bt_oos_rows_interim.json; replace when run 5 OOS lands
 (research/run5_done.flag). ALERT: v1 LTM 4400/4250 PE exp 29-Sep is ₹317 through the short strike.
+27-Sep 09:00 · INTERIM numbers published everywhere (UI banners, Studies P&L + new premium-floor
+study, Telegram signal text, digest strings, CLAUDE.md, README) — commits 3f1f007, 78a87df; UI pid
+15568, engine pid 15457, verified on screen. run 5 OOS running (slow, ~15/116 at 08:50); on finish:
+run studies/ndte/run5_publish.py (no arg) and replace the INTERIM v1/v0 OOS figures, rebuild
+symbol_history + name_history. 0.25-0.30 Rs 30-50 study: IS done (647 tr, BC -3.3%, BP +9.4%,
+28 IS cells in research/premband25_is_qualifiers.json); OOS leg auto-runs after run5_done.flag,
+then screen both windows.
