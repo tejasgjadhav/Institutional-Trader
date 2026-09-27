@@ -200,8 +200,7 @@ if os.path.exists(SS):
         rows.append([lbl, len(sel), a[0], a[1], a[3], b[0], b[1], b[3], b[4][0] if b[4] else None, b[4][1] if b[4] else None])
     ws9 = sheet("Side screen 208", "Per-side (bear call / bull put) screen across all 208 NSE F&O names — deployed gates, run-5 harness",
           "Rule: ≥3 trades, ≥80% win and ROM > +5% in BOTH windows. Honest test: choose sides on in-sample only, then read their out-of-sample. "
-          "All trades (full band), 1 lot — compare rows with each other, not with the published median-cohort ₹/month. PROVISIONAL until the 103 outsiders' "
-          "out-of-sample re-run on today's harness finishes (Upstox rate limit); they are on their August rows.",
+          "All trades (full band), 1 lot — compare rows with each other, not with the published median-cohort ₹/month. FINAL: all 208 names on today's harness in both windows, 0 failed fetches (27-Sep-2026 18:25).",
           ["Selection", "Name-sides", "IS trades", "IS win", "IS net ₹", "OOS trades", "OOS win", "OOS net ₹", "OOS trades/month", "OOS ₹/month"], rows,
           [52, 11, 10, 9, 14, 11, 9, 14, 14, 13], {4: PCT, 5: RS, 7: PCT, 8: RS, 9: "0.0", 10: RS},
           colour=lambda r: (GOOD if isinstance(r[7], (int, float)) and r[7] > 0 and "passing" in r[0] else BAD if isinstance(r[7], (int, float)) and r[7] < 0 else None))

@@ -4012,3 +4012,8 @@ research/side_screen_208_final.txt after the outsider OOS leg (rate-limited, pat
 17,681 trade rows from 23 sources, result tables. New studies SIDE_SCREEN_208.md,
 LAST_3_MONTHS_JUN_AUG_2026.md; README index updated. DB auto-rebuilds after the final side screen.
 52k vs 41k: full band (all trades, stock only) vs median cohort + 0DTE; gap = 69 trades at c/w>=0.50.
+27-Sep 17:28 · user: engine live tomorrow? today better than yesterday?
+27-Sep 17:3x · guard armed: kills backtest jobs at Mon 08:40 (shared token). Charger was UNPLUGGED at 17:28 (100%, discharging).
+27-Sep 19:10 · user: DONE? — status check.
+27-Sep 19:1x · side screen FINAL (0 failed fetches): verdict unchanged — 0 outsider/pruned sides pass;
+all-208 raises signals to 35.9/mo but lowers ₹/mo (48,951 vs 52,396). Study, workbook, DB updated.
