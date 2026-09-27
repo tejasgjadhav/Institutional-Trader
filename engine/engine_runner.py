@@ -296,12 +296,12 @@ class EngineRunner:
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower · short leg ≥ ₹30\n"
             "• The weakest evidence of the three stock books · forward paper-test at 1 lot\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 297 trades · <b>86.2%</b> win rate · +14.7% on margin · ₹1,772 net per trade · positive every year\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 311 trades · <b>86.2%</b> win rate · +15.2% on margin · ₹1,784 net per trade · positive every year\n"
             "• Out-of-sample (1-Oct-2024 → {TODAY}): 146 trades · <b>82.2%</b> win rate · only +2.6% on margin · ₹1,209 net per trade\n"
             "• It wins about four trades in five and still clears the least of the three books per trade",
         "STOCK CREDIT v1":
             "• Same fade, short 1-OTM · width 3 · book at 40% of credit · Donchian-10 · short leg ≥ ₹30 · nearest expiry at least 10 days out\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 459 trades · <b>80.4%</b> win rate · +6.4% on margin · ₹936 net per trade · positive every year\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 485 trades · <b>80.6%</b> win rate · +11.6% on margin · ₹987 net per trade · positive every year\n"
             "• Out-of-sample (1-Oct-2024 → {TODAY}): 282 trades · <b>81.6%</b> win rate · +14.1% on margin · ₹1,333 net per trade · positive every year\n"
             "• Fires about twice as often as v2 and rests on the larger measured sample",
         "0DTE NIFTY":

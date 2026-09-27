@@ -71,3 +71,21 @@ Published basis (median cohort; v0 own band; ROM points; ₹/mo over the window'
 Out-of-sample stock books go from ₹31,709 to ₹35,641 a month at 1 lot, and from ~16 to ~22 signals
 a month, as a ceiling (the live 6% bid-ask gate is not modelled). The interim OOS column is replaced
 by run 5 OOS when it finishes (`research/run5_oos.log`).
+
+## Correction, 27-Sep-2026 11:45 — in-sample basis
+The published in-sample figures use the current 116-name universe drawn from the main bhavcopy
+file plus the expansion file, median cohort, return on RUPEE margin. The table above quoted the main
+file only, with return in POINTS. On the published basis, run 5 in-sample is:
+v2 209 · 78.0% · +20.8% (config unchanged; published 213 · 77.9% · +21.2% kept — the 4-trade gap is
+fetch noise) · **v1 485 · 80.6% · +11.6% · ₹987/trade · 6/6** · **v0 311 · 86.2% · +15.2% · ₹1,784/trade · 6/6**.
+
+## vlc cells deployed 27-Sep-2026
+`STOCK_CREDIT_VLC_CELLS`: ULTRACEMCO bear call, HINDUNILVR bull put, BAJAJFINSV bull put at c/w
+0.25–0.30 with a ₹30 floor, TP-40, v2 geometry. From the 0.25–0.30 / ₹30–50 screen (≥80% win,
+ROM > +5%, ≥3 trades, both windows). Pooled OOS 16 trades, 100%, +17.5%. Provisional: that OOS leg
+lost 195 option-price fetches to Upstox rate limiting and is being re-run.
+
+## Run 5 OOS status
+Pass 1 dropped 242 signals to HTTP 429 (UDAPI10005). Retries run through `research/patient_run.py`
+(60 s wait per 429, 30 s socket timeout). Until a pass completes with zero drops, the v1/v0 OOS
+figures on screen stay INTERIM (run 4 + sweep-measured ₹30–50 trades).

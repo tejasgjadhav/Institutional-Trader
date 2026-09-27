@@ -3971,3 +3971,6 @@ byte-identical, only reached when SIDE_WHITELIST is set). Scan-level test 15/15 
 books, live books untouched. Engine restarted. NEXT: when run5_oos_pass2 finishes clean, sweep final
 numbers into EVERY UI block (PM banners, Studies P&L, LIVE STRATEGIES, study entries, vlc section),
 _TG_ANALYSIS, CLAUDE.md, README; rebuild symbol_history + name_history.
+27-Sep 10:55 · pass 2 HUNG on dangling sockets at 45/116; retry script also mis-flagged killed passes as clean — fixed (requires DONE-OOS), 30s socket timeout added, retries relaunched from pass 2.
+27-Sep 11:30 · Upstox 429 rate-limit (UDAPI10005) was the cause of both the drops and the 'hangs'. Retries relaunched via research/patient_run.py (60s wait on 429, 30s socket timeout). run5 retry then band retry chained. Do NOT run these during market hours (shared token).
+27-Sep 11:40 · published IS basis = UNIVERSE-filtered (main IS + expansion2 IS), median cohort, ROM on RUPEE margin; OOS = median cohort ROM in POINTS. Interim IS text for v1/v0 was on the wrong basis (main only, pts) — correcting. expansion2 IS re-run at per-book floor (backup is_rows_run4.json).

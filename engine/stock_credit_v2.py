@@ -342,8 +342,8 @@ def build_watchlist() -> dict:
 # Update these strings whenever the harness is re-run and the table changes.
 DIGEST_BACKTEST = {
     "v2":    "IS 77.9% win / +21.2% ROM (n=213, 6/6 yrs) · OOS 84.0% / +25.9% (n=81, 3/3 yrs) — short leg ≥ ₹50",
-    "v1":    "IS 80.4% / +6.4% (n=459, 6/6) · OOS 81.6% / +14.1% (n=282, 3/3) — 1-OTM/width-3 on DC-10 only, short leg ≥ ₹30",
-    "v0":    "IS 86.2% / +14.7% (n=297, 6/6) · OOS 82.2% / +2.6% (n=146) — short leg ≥ ₹30",
+    "v1":    "IS 80.6% / +11.6% (n=485, 6/6) · OOS 81.6% / +14.1% (n=282, 3/3) — 1-OTM/width-3 on DC-10 only, short leg ≥ ₹30",
+    "v0":    "IS 86.2% / +15.2% (n=311, 6/6) · OOS 82.2% / +2.6% (n=146) — short leg ≥ ₹30",
     "vlc":   "IS 90.7% · OOS 93.4% on its 21 name-side cells (cells chosen on OOS; live record decides at 30 fills)",
     "below": "0.30–0.35: 79.0% / −1.2% · 0.25–0.30: 79.1% / −1.9% (OOS, v0 geometry) — no edge, the engine skips them",
 }
