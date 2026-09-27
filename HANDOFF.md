@@ -4005,3 +4005,10 @@ mo vs unpicked 77.4%/+11.4%/20.6 per mo (still +₹23.5k/mo). Final screen auto-
 research/side_screen_208_final.txt after the outsider OOS leg (rate-limited, patient).
 27-Sep · user: add the 208-name side screen to the Excel workbook (provisional; refresh when final lands).
 27-Sep · workbook now has 'Side screen 208' + 'Side screen detail' (provisional). Auto-rebuild armed after research/side_screen_208_final.txt.
+27-Sep · user: is side-wise better than the engine on signals and ₹/mo? Answer: no (25.3/mo ₹52.4k vs 7.2/mo ₹24.4k; IS-picked 12.2/mo ₹28k).
+27-Sep · user: update studies on GitHub + keep studies in a database (data/studies.db via studies/studydb.py).
+27-Sep · user: why ₹52k (side screen) vs ₹41k (studies)? explaining full band vs median cohort.
+27-Sep · Study DB: data/studies.db via studies/studydb.py (build|list|show|tables|sql): 73 docs,
+17,681 trade rows from 23 sources, result tables. New studies SIDE_SCREEN_208.md,
+LAST_3_MONTHS_JUN_AUG_2026.md; README index updated. DB auto-rebuilds after the final side screen.
+52k vs 41k: full band (all trades, stock only) vs median cohort + 0DTE; gap = 69 trades at c/w>=0.50.
