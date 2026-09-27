@@ -173,6 +173,49 @@ sheet("Last 3 months", "June to August 2026 — old rules vs today's rules vs ev
       "Live counts are what the engine actually sent; they sit below the backtest because the 6% live spread gate, missed windows and the pre-6-Aug scan are not in the backtest.",
       ["Rule set", "Month / band", "Trades", "Win", "Net ₹ (1 lot)", "Note"], rows, [46, 16, 9, 9, 15, 48], {4: PCT, 5: RS},
       colour=lambda r: (GOOD if isinstance(r[4], (int, float)) and r[4] > 0 else BAD if isinstance(r[4], (int, float)) and r[4] < 0 else None))
+
+# ---- 9 Side screen, all 208 F&O names ----
+import os
+SS = "research/side_screen_208.json"
+if os.path.exists(SS):
+    res = load(SS); MO9 = 23
+    good9 = lambda c: c and c["n"] >= 3 and c["win"] >= 0.80 and c["rom"] > 0.05
+    def pool9(sel, w):
+        v = [x[w] for x in sel if x[w]]
+        if not v: return (None, None, None, None, None)
+        n = sum(c["n"] for c in v); net = sum(c["net"] for c in v)
+        win = sum(c["win"] * c["n"] for c in v) / n
+        return (n, win, None, net, (n / MO9, net / MO9) if w == "oos" else None)
+    groups = [("Today's universe, both sides", [x for x in res if x["group"] == "universe"]),
+              ("All 208 names, both sides", res),
+              ("YOUR RULE — sides passing both windows (all in the universe)", [x for x in res if x["both"]]),
+              ("Outsiders passing both windows", [x for x in res if x["both"] and x["group"] == "outsider"]),
+              ("Pruned-8 passing both windows", [x for x in res if x["both"] and x["group"] == "pruned-8"]),
+              ("HONEST TEST — sides picked on in-sample only", [x for x in res if x["is_only_pick"]]),
+              ("   of which NOT in the universe today", [x for x in res if x["is_only_pick"] and x["group"] != "universe"]),
+              ("HONEST TEST — sides NOT picked on in-sample", [x for x in res if not x["is_only_pick"]])]
+    rows = []
+    for lbl, sel in groups:
+        a = pool9(sel, "is"); b = pool9(sel, "oos")
+        rows.append([lbl, len(sel), a[0], a[1], a[3], b[0], b[1], b[3], b[4][0] if b[4] else None, b[4][1] if b[4] else None])
+    ws9 = sheet("Side screen 208", "Per-side (bear call / bull put) screen across all 208 NSE F&O names — deployed gates, run-5 harness",
+          "Rule: ≥3 trades, ≥80% win and ROM > +5% in BOTH windows. Honest test: choose sides on in-sample only, then read their out-of-sample. "
+          "All trades (full band), 1 lot — compare rows with each other, not with the published median-cohort ₹/month. PROVISIONAL until the 103 outsiders' "
+          "out-of-sample re-run on today's harness finishes (Upstox rate limit); they are on their August rows.",
+          ["Selection", "Name-sides", "IS trades", "IS win", "IS net ₹", "OOS trades", "OOS win", "OOS net ₹", "OOS trades/month", "OOS ₹/month"], rows,
+          [52, 11, 10, 9, 14, 11, 9, 14, 14, 13], {4: PCT, 5: RS, 7: PCT, 8: RS, 9: "0.0", 10: RS},
+          colour=lambda r: (GOOD if isinstance(r[7], (int, float)) and r[7] > 0 and "passing" in r[0] else BAD if isinstance(r[7], (int, float)) and r[7] < 0 else None))
+    rows = []
+    for x in sorted(res, key=lambda x: (not x["both"], x["group"], x["sym"], x["side"])):
+        a, b = x["is"], x["oos"]
+        rows.append([x["sym"], x["side"], x["group"], "PASSES BOTH" if x["both"] else ("in-sample pick" if x["is_only_pick"] else ""),
+                     a["n"] if a else None, a["win"] if a else None, a["rom"] if a else None,
+                     b["n"] if b else None, b["win"] if b else None, b["rom"] if b else None])
+    sheet("Side screen detail", "Every name × side across the 208 F&O names (deployed gates, run-5 harness)",
+          "Group = today's universe / outsider (tested, never admitted) / pruned-8 (removed 24-Aug on whole-name net). Filter the Verdict column.",
+          ["Stock", "Side", "Group", "Verdict", "IS trades", "IS win", "IS ROM", "OOS trades", "OOS win", "OOS ROM"], rows,
+          [13, 6, 11, 15, 9, 8, 9, 10, 9, 9], {6: PCT, 7: PCT, 9: PCT, 10: PCT},
+          colour=lambda r: GOOD if r[3] == "PASSES BOTH" else None)
 # ---- 7 Telegram sample ----
 ws = wb.create_sheet("Telegram 15-31 sample"); ws["A1"] = "15:31 WATCHLIST message — rendered on the 24-Sep-2026 watchlist with today's rules"
 ws["A1"].font = Font(name=F, bold=True, size=14, color="1F3864")

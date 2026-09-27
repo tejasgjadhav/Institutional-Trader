@@ -4003,3 +4003,5 @@ Monday 09:00 (shared token).
 windows, ALL already in the universe; 0 outsiders, 0 pruned. IS-picked sides OOS 85.1%/+18.4%/12.2 per
 mo vs unpicked 77.4%/+11.4%/20.6 per mo (still +₹23.5k/mo). Final screen auto-writes
 research/side_screen_208_final.txt after the outsider OOS leg (rate-limited, patient).
+27-Sep · user: add the 208-name side screen to the Excel workbook (provisional; refresh when final lands).
+27-Sep · workbook now has 'Side screen 208' + 'Side screen detail' (provisional). Auto-rebuild armed after research/side_screen_208_final.txt.
