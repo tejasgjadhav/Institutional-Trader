@@ -3946,3 +3946,4 @@ run studies/ndte/run5_publish.py (no arg) and replace the INTERIM v1/v0 OOS figu
 symbol_history + name_history. 0.25-0.30 Rs 30-50 study: IS done (647 tr, BC -3.3%, BP +9.4%,
 28 IS cells in research/premband25_is_qualifiers.json); OOS leg auto-runs after run5_done.flag,
 then screen both windows.
+27-Sep 09:05 · user: show LTM v1 trade; a 'live strategies' block still shows old ~24/mo — fixing.

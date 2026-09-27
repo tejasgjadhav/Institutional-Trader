@@ -433,7 +433,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                       "short leg ≥ ₹30 (per-book floor, 27-Sep) · WIN 86.2% over 2019–Sep 2024 (+14.7% on margin, 297 trades, positive every year) / "
                       "82.2% over Oct 2024–Aug 2026 (146 trades) but only +2.6% on margin · "
                       "PAPER FORWARD-TEST — the backtest does not clear its costs, so this book is running to see whether "
-                      "real fills disagree · 1 lot · max 3/day, 10 open · ~4.4 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
+                      "real fills disagree · 1 lot · max 3/day, 10 open · ~6.3 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
         pmv0.setWordWrap(True)
         pmv0.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         pmv0.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -964,15 +964,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "below, worked out from these signal counts, so there is only ONE money figure in this tab.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Strategy</td><td>Win · 1-Jan-2019 → 30-Sep-2024</td><td>Win · 1-Oct-2024 → 1-Aug-2026</td><td>Signals/mo</td></tr>
-<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>77.9% · +21.2% on margin · positive every year <span style="color:{TEXT_DIM};">(213 trades)</span></td><td>84.0% · +25.9% <span style="color:{TEXT_DIM};">(79 trades)</span></td><td><b>~3.5</b></td></tr>
-<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>80.5% · +12.9% on margin · positive every year <span style="color:{TEXT_DIM};">(349 trades)</span></td><td>83.0% · +15.2% <span style="color:{TEXT_DIM};">(186 trades)</span></td><td><b>~8.3</b></td></tr>
-<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>85.7% · +14.4% on margin · positive every year <span style="color:{TEXT_DIM};">(217 trades)</span></td><td style="color:{AMBER};">83.0% · +2.4% · <b>watch</b> <span style="color:{TEXT_DIM};">(99 trades)</span></td><td><b>~4.4</b></td></tr>
+<tr><td>★ Stock v2 UNION <span style="color:{TEXT_DIM};">(TP-50, no stop)</span></td><td>77.9% · +21.2% on margin · positive every year <span style="color:{TEXT_DIM};">(213 trades)</span></td><td>84.0% · +25.9% <span style="color:{TEXT_DIM};">(81 trades)</span></td><td><b>~3.5</b></td></tr>
+<tr><td>Stock v1 <span style="color:{TEXT_DIM};">(D-10 only, TP-40, no stop)</span></td><td>80.4% · +6.4% on margin · positive every year · short leg ≥ ₹30 <span style="color:{TEXT_DIM};">(459 trades)</span></td><td>81.6% · +14.1% · interim <span style="color:{TEXT_DIM};">(282 trades)</span></td><td><b>~12.3</b></td></tr>
+<tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>86.2% · +14.7% on margin · positive every year · short leg ≥ ₹30 <span style="color:{TEXT_DIM};">(297 trades)</span></td><td style="color:{AMBER};">82.2% · +2.6% · <b>watch</b> · interim <span style="color:{TEXT_DIM};">(146 trades)</span></td><td><b>~6.3</b></td></tr>
 <tr style="color:{TEXT_DIM};"><td>Sidewise low credit <span style="color:{TEXT_DIM};">(c/w 0.30–0.40 · 12 BC + 9 BP names, side-locked, TP-40, no stop)</span></td><td>90.7% on its 21 cells (n=108) · band pooled 82.4%/+10.0%</td><td>93.4% (n=76) — but the cells were CHOSEN on this window</td><td>~3.5/mo</td></tr>
 <tr style="color:{TEXT_DIM};"><td>T-1 EVE <span style="color:{TEXT_DIM};">(index bear call at the eve close)</span></td><td colspan="2" style="color:{RED};">DEPLOYED AND DISABLED 17-Sep-2026 — refutation audit: the study's own final verdict rejected it; SENSEX expectancy unproven; BNF monthly not the evidence measured</td><td>0</td></tr>
 <tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>90% · positive every year</td><td>~4</td></tr>
 <tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>88.8% · since Oct 2024 (~2 yrs)</td><td>~4</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~24/mo</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~30/mo</b></td></tr>
 </table>
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">SIDEWISE LOW CREDIT — the 21 deployed cells (c/w 0.30–0.40)</p>
