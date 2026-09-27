@@ -338,9 +338,9 @@ def build_watchlist() -> dict:
 # table in CLAUDE.md (run 4, 17-Sep-2026) and studies/CW_BAND_BY_BOOK.md for the sub-0.35 bands.
 # Update these strings whenever the harness is re-run and the table changes.
 DIGEST_BACKTEST = {
-    "v2":    "IS 77.9% win / +21.2% ROM (n=213, 6/6 yrs) · OOS 84.0% / +25.9% (n=81, 3/3 yrs)",
-    "v1":    "IS 80.5% / +12.9% (n=349, 6/6) · OOS 83.0% / +15.2% (n=194, 3/3) — 1-OTM/width-3 on DC-10 only",
-    "v0":    "IS 85.7% / +14.4% (n=217, 6/6) · OOS 83.0% / +2.4% (n=106, 2/3)",
+    "v2":    "IS 77.9% win / +21.2% ROM (n=213, 6/6 yrs) · OOS 84.0% / +25.9% (n=81, 3/3 yrs) — short leg ≥ ₹50",
+    "v1":    "IS 80.4% / +6.4% (n=459, 6/6) · OOS 81.6% / +14.1% (n=282, 3/3) — 1-OTM/width-3 on DC-10 only, short leg ≥ ₹30",
+    "v0":    "IS 86.2% / +14.7% (n=297, 6/6) · OOS 82.2% / +2.6% (n=146) — short leg ≥ ₹30",
     "vlc":   "IS 90.7% · OOS 93.4% on its 21 name-side cells (cells chosen on OOS; live record decides at 30 fills)",
     "below": "0.30–0.35: 79.0% / −1.2% · 0.25–0.30: 79.1% / −1.9% (OOS, v0 geometry) — no edge, the engine skips them",
 }

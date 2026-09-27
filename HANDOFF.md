@@ -3935,3 +3935,7 @@ run 5). NOT YET: engine/UI restart, UI Studies entry, UI/README/CLAUDE/_TG_ANALY
 run-5 OOS), symbol_history + name_history rebuild, bug test. Run-4 rows backed up *_run4.json.
 Harness bug: __main__ block sits above def print_integrity -> NameError after rows are saved.
 Queued: prem_band25.py (0.25-0.30, Rs 30-50, per side) IS then OOS after run5_done.flag.
+27-Sep 08:50 · DEPLOYED per-book floor (engine pid 14270, commit 2fe5f22, regression 20/20). User:
+publish interim numbers now = run-5 IS + OOS interim (run-4 OOS rows + premfloor_oos_30 v1/v0 rows
+not in run 4) -> research/deployed_bt_oos_rows_interim.json; replace when run 5 OOS lands
+(research/run5_done.flag). ALERT: v1 LTM 4400/4250 PE exp 29-Sep is ₹317 through the short strike.

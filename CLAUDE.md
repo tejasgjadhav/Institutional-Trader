@@ -19,9 +19,9 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50, NO stop) | `STOCK_CREDIT_ENABLED` | 77.9% IS / 84.0% OOS | ₹12,150/mo OOS-measured | IS **+21.2%** [n=213, 6/6 yrs] · OOS **+25.9%** [n=81, 3/3 yrs] — run-4 (17-Sep-2026), every fetch failure counted |
-| Stock credit v1 (TP-40/no-stop, D10 only) | `STOCK_CREDIT_ENABLED` | 80.5% IS / 83.0% OOS | ₹15,382/mo OOS-measured | IS **+12.9%** [n=349, 6/6] · OOS **+15.2%** [n=194, 3/3] — the biggest earner |
-| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash) | `STOCK_CREDIT_V0_ENABLED` | 85.7% IS / 83.0% OOS | ₹5,617/mo | IS +14.4% [n=217, 6/6] · OOS **+2.4%** [n=106, 2/3 yrs] — the watch book; run 4 moved its ROM from +7.2 (thin, ~100 trades) |
+| ★ Stock fade v2 UNION (TP-50, NO stop, short leg ≥ ₹50) | `STOCK_CREDIT_ENABLED` | 77.9% IS / 84.0% OOS | ₹11,622/mo on the 23-mo basis (₹12,150 on the old 22-mo basis, same 81 trades) | IS **+21.2%** [n=213, 6/6 yrs] · OOS **+25.9%** [n=81, 3/3 yrs] — run-4 (17-Sep-2026), every fetch failure counted |
+| Stock credit v1 (TP-40/no-stop, D10 only, **short leg ≥ ₹30** since 27-Sep) | `STOCK_CREDIT_ENABLED` · `STOCK_CREDIT_V1_MIN_PREM` | 80.4% IS / 81.6% OOS | ₹16,343/mo OOS-measured (23-mo basis, INTERIM) | IS **+6.4%** [n=459, 6/6] · OOS **+14.1%** [n=282, 3/3] — run-5 IS; OOS = run-4 + sweep-measured ₹30–50 trades until run-5 OOS lands. Same-basis run 4 was IS +5.9% [n=328] |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash, **short leg ≥ ₹30** since 27-Sep) | `STOCK_CREDIT_V0_ENABLED` · `STOCK_CREDIT_V0_MIN_PREM` | 86.2% IS / 82.2% OOS | ₹7,676/mo (23-mo basis, INTERIM) | IS +14.7% [n=297, 6/6] · OOS **+2.6%** [n=146] — the watch book; run 4 moved its ROM from +7.2 (thin, ~100 trades) |
 | Sidewise low credit ("vlc", c/w 0.30-0.40, 12 BC + 9 BP names side-locked) | `STOCK_CREDIT_VLC_ENABLED` | 90.7% IS / 93.4% OOS on its 21 cells | plan ₹3,592/mo (IS rate; OOS ₹12,044/mo is selection-inflated) | deployed 3-Sep-2026 from studies/BAND_030_040_NAMEWISE.md — cells CHOSEN on the OOS window, pooled qualifier screen was −3.5% OOS; live forward record decides at 30 fills |
 | ~~T-1 EVE~~ (SENSEX eve / BANKNIFTY monthly eve bear call) | `T1_EVE_ENABLED=False` | — | — | **DEPLOYED AND DISABLED THE SAME DAY (17-Sep-2026)**, before its first eve. The refutation audit (research/audit_t1_eve.md) found the study's own final verdict had REJECTED the book, SENSEX expectancy unproven (P≤0 6.4%, drawdown ₹38k vs ₹27k/yr claimed), BANKNIFTY monthly resting on weekly-era evidence, and direction explaining ~⅔ of the P&L. Code kept, off; re-enable only on a new study |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
@@ -153,7 +153,7 @@ The one validated edge — robust across 5 breakout defs (D10/15/20/30/prior-wee
 
 **Stock credit spread** (the 4th strategy, high-FREQUENCY ~16/mo) → same fade, on the full ~100-stock
 universe, but GATED: credit/width ≥ 0.40 (rich premium = elevated post-breakout IV — the edge) +
-short premium ≥ ₹50 + live liquidity gate (OI, bid-ask) + per-day/total-open caps. Backtest 65% win,
+short premium ≥ ₹50 for v2/vlc and ≥ ₹30 for v1/v0 (per-book floor, 27-Sep-2026, studies/PREMIUM_FLOOR_SWEEP.md) + live liquidity gate (OI, bid-ask) + per-day/total-open caps. Backtest 65% win,
 +16–25% net/trade, holdout p5 +6.8%, 76/100 stocks. The credit/width gate is essential — a *generic*
 stock spread LOSES (−4.7%, the 4-leg slippage wall). **REAL-DATA CONFIRMED (2026-07, NSE bhavcopy
 2019→Sep2024, 718 trades): gated = +5.3% of width (≈+9%/trade on margin), 54% win, positive 5 of 6

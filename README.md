@@ -271,7 +271,7 @@ flowchart LR
     subgraph ENGINE["HEADLESS ENGINE - engine_runner.py (launchd, always on)"]
         direction TB
         SCAN["scan<br/>Donchian breakout on today's close"]
-        GATE["gates<br/>c/w >= 0.40 · premium >= Rs50<br/>bid-ask <= 6% · open interest > 0"]
+        GATE["gates<br/>c/w >= 0.40 · premium >= Rs50 v2 / Rs30 v1,v0<br/>bid-ask <= 6% · open interest > 0"]
         BOOK["book the spread<br/>v2 / v1 / v0 - one book per name"]
         RES["resolve<br/>take-profit, expiry settlement"]
         SCAN --> GATE --> BOOK
@@ -338,7 +338,7 @@ Four books run in parallel, all reported on **PM DECISIONS** (leader first, gold
 all options-only, all manual-execution:
 
 - **★ STOCK CREDIT v2 — TP-50 (THE LEADER, SELL):** Donchian-10 stock breakout → sell a credit
-  spread AGAINST it (short 2-OTM, width 4), gate credit/width ≥ 0.40 + prem ≥ ₹50 + ₹40k exposure
+  spread AGAINST it (short 2-OTM, width 4), gate credit/width ≥ 0.40 + prem ≥ ₹50 (₹30 for v1/v0 since 27-Sep-2026) + ₹40k exposure
   cap; **take profit at 50% of the credit, stop 3×**. 86% win, ~4–6 signals/mo, positive every year
   2019→2026 (in-sample + OOS). `studies/STOCK_FADE_TP50_UPGRADE.md`
 - **Stock credit spread v1 (SELL):** same fade, original geometry (1-OTM, width 3, TP 75%) — the
@@ -645,7 +645,7 @@ fires **~16×/month** (vs the index's ~3). Shown in its own **STOCK CREDIT SPREA
 
 - **Signal:** a daily **Donchian-10 breakout** on any F&O stock → **FADE** it (sell a credit spread).
 - **The gate that makes it work:** only trade when **credit ≥ 40% of the strike width** *and* short
-  premium ≥ ₹50, *and* it passes a **live liquidity gate** (OI, bid-ask). A breakout spikes IV → rich
+  premium ≥ ₹50 (₹30 for v1 and v0 since 27-Sep-2026, studies/PREMIUM_FLOOR_SWEEP.md), *and* it passes a **live liquidity gate** (OI, bid-ask). A breakout spikes IV → rich
   premium; fading sells the inflated premium and rides the reversion + IV crush. (A *generic* stock
   credit spread loses −4.7% — the gate is the edge.)
 - **Construct:** short 1-OTM, long 3 strikes wide, nearest monthly ≥10 DTE, hold to expiry, 2× stop.

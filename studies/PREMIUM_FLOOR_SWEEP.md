@@ -55,3 +55,19 @@ on the OOS window) and PAGEIND (88% IS → 67% OOS). Not a deployable list.
 3. A name-wise whitelist at floor 30 yields 3 cells on 3–6 trades each. Too thin to deploy.
 4. Concentration is real (35% of OOS trades in 10 names) but the answer is the per-book floor,
    which brings 15–18 more names into play, not a per-name floor.
+
+## Deployed 27-Sep-2026 (user-approved) and re-measured
+Config: `STOCK_CREDIT_V1_MIN_PREM = 30`, `STOCK_CREDIT_V0_MIN_PREM = 30`; v2 and vlc stay at
+`STOCK_CREDIT_MIN_PREM = 50`. Harness BOOKS carry the same per-book floor (run 5).
+
+Published basis (median cohort; v0 own band; ROM points; ₹/mo over the window's months):
+
+| book | run 4 IS | run 5 IS | run 4 OOS | interim OOS (run 4 + ₹30–50 adds) |
+|---|---|---|---|---|
+| v2 | 189 · 78.8% · +29.0% | 188 · 79.3% · +29.2% | 81 · 84.0% · +25.9% · ₹11,622/mo | unchanged |
+| v1 | 328 · 80.2% · +5.9% | **459 · 80.4% · +6.4%** · ₹6,229/mo | 194 · 83.0% · +15.2% · ₹14,714/mo | **282 · 81.6% · +14.1% · ₹16,343/mo** |
+| v0 | 205 · 85.9% · +14.6% | **297 · 86.2% · +14.7%** · ₹7,626/mo | 106 · 83.0% · +2.4% · ₹5,373/mo | **146 · 82.2% · +2.6% · ₹7,676/mo** |
+
+Out-of-sample stock books go from ₹31,709 to ₹35,641 a month at 1 lot, and from ~16 to ~22 signals
+a month, as a ceiling (the live 6% bid-ask gate is not modelled). The interim OOS column is replaced
+by run 5 OOS when it finishes (`research/run5_oos.log`).

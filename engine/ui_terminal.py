@@ -411,7 +411,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT v2 (TP-50 upgrade) — replaces the retired ORB+VWAP section (thin/inconsistent
         # on real 2019→date data). Runs PARALLEL to v1: short 2-OTM · width 4 · TP 50% · NO stop.
-        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · NO STOP — a credit-multiple stop cannot be reached above c/w 1/3, so the bought wing is the stop and max loss is width−credit · ~2.2/mo · 77.9% IS (+21.2% on margin, 6/6 yrs) / 83.5% OOS (+27.0%, both full yrs) · SELL ★")
+        pmv2 = QLabel("★ STOCK CREDIT v2 UNION · sell 2-OTM / buy width-4 · TARGET book@50% credit · NO STOP — a credit-multiple stop cannot be reached above c/w 1/3, so the bought wing is the stop and max loss is width−credit · short leg ≥ ₹50 · ~3.5/mo · 77.9% IS (+21.2% on margin, 6/6 yrs) / 84.0% OOS (+25.9%, 81 trades, both full yrs) · SELL ★")
         pmv2.setWordWrap(True)
         pmv2.setFont(QFont("Menlo", 13, QFont.Weight.Bold))
         pmv2.setStyleSheet(f"color:#000000; background-color:{AMBER}; padding:8px; border:2px solid {AMBER}; border-radius:4px;")
@@ -430,8 +430,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         # honest IS/OOS pair — see studies/LOWCW_BAND_RESCUE.md §7.
         pmv0 = QLabel("STOCK CREDIT v0 · c/w 0.35–0.40 (the band below the v2 gate) · same geometry as v2 "
                       "(sell 2-OTM / buy width-4) · TARGET book@40% credit · NO STOP (wing caps loss) · "
-                      "WIN 85.7% over 2019–Sep 2024 (+14.4% on margin, 217 trades, positive every year) / "
-                      "81.8% over Oct 2024–Aug 2026 (99 trades) but only +7.2% on margin and positive just 1 of 2 full yrs · "
+                      "short leg ≥ ₹30 (per-book floor, 27-Sep) · WIN 86.2% over 2019–Sep 2024 (+14.7% on margin, 297 trades, positive every year) / "
+                      "82.2% over Oct 2024–Aug 2026 (146 trades) but only +2.6% on margin · "
                       "PAPER FORWARD-TEST — the backtest does not clear its costs, so this book is running to see whether "
                       "real fills disagree · 1 lot · max 3/day, 10 open · ~4.4 sig/mo · if v1 takes the SAME stock, v1 wins and v0 stands down (one signal only)")
         pmv0.setWordWrap(True)
@@ -449,7 +449,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 
         # STOCK CREDIT SPREADS — the 4th strategy (high-frequency fade on single stocks).
         v.addWidget(self._section_label(
-            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · 80.5% IS (+12.9% on margin, 6/6 yrs) / 83.3% OOS (+16.6%, both full yrs) · ~8.3/mo measured out-of-sample · SELL", GREEN))
+            "STOCK CREDIT SPREADS v1 · fade · sell 1-OTM / buy width-3 · TARGET book 40% of credit · NO STOP (wing caps loss) · short leg ≥ ₹30 (per-book floor, 27-Sep) · 80.4% IS (+6.4% on margin, 459 trades, 6/6 yrs) / 81.6% OOS (+14.1%, 282 trades, 3/3 yrs) · ~12.3/mo measured out-of-sample (a ceiling) · SELL", GREEN))
         self.pm_stockcr = QTableWidget(); self.pm_stockcr.setColumnCount(len(self.PM_CREDIT_COLS))
         self.pm_stockcr.setHorizontalHeaderLabels(self.PM_CREDIT_COLS)
         self._credit_cols(self.pm_stockcr)
@@ -571,11 +571,11 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         v.addWidget(self._section_label("INDEX SWING — NIFTY/FINNIFTY · fade the breakout · hold to expiry (fwd-test only) · ~3/mo", CYAN))
         self.sw_idx_stats = self._stats_label(); v.addWidget(self.sw_idx_stats)
         self.sw_idx = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sw_idx)
-        v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~8.3/mo · SELL", GREEN))
+        v.addWidget(self._section_label("STOCK CREDIT SPREADS v1 · fade the breakout · ~12.3/mo · SELL", GREEN))
         self.sw_stk_stats = self._stats_label(); v.addWidget(self.sw_stk_stats)
         self.sw_stk = self._make_log_table(self.SWING_TAB_BOOK_COLS); v.addWidget(self.sw_stk)
         v0hdr = QLabel("STOCK CREDIT v0 (c/w 0.35–0.40)   the band below the gate · book at 40% of credit · no stop · "
-                       "85.7% IS (+14.4%, +ve 6/6 yrs) · 81.8% OOS but only +7.2% and +ve 1 of 2 full yrs (99 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
+                       "short leg ≥ ₹30 · 86.2% IS (+14.7%, +ve 6/6 yrs, 297 trades) · 82.2% OOS but only +2.6% (146 trades) · paper forward-test · scans in parallel with v1/v2 — but on a same-stock clash v1 wins and v0 stands down")
         v0hdr.setWordWrap(True)
         v0hdr.setFont(QFont("Menlo", 12, QFont.Weight.Bold))
         v0hdr.setStyleSheet(f"color:{CYAN}; padding:8px; background-color:{PANEL}; border:2px solid {CYAN}; border-radius:4px;")
@@ -934,16 +934,17 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
      "the harness cannot model the live bid-ask gate, which rejects most candidates.")}
 <table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Signals<br>measured</td><td>Signals<br>/month</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Expectancy per trade = win% × avg win − loss% × avg loss</td><td>× signals<br>= ₹/month</td></tr>
-<tr><td>★ Stock v2 UNION</td><td>81</td><td>~3.7</td><td>84.0%</td><td style="color:{GREEN};">+₹5,530</td><td style="color:{RED};">−₹8,363</td><td>84.0% × ₹5,530 − 16.0% × ₹8,363 = <b style="color:{AMBER};">+₹3,300</b></td><td><b>₹12,150</b></td></tr>
-<tr><td>Stock v1</td><td>194</td><td>~8.8</td><td>83.0%</td><td style="color:{GREEN};">+₹4,023</td><td style="color:{RED};">−₹9,374</td><td>83.0% × ₹4,023 − 17.0% × ₹9,374 = <b style="color:{AMBER};">+₹1,744</b></td><td><b>₹15,382</b></td></tr>
-<tr><td>Stock v0 (0.35–0.40)</td><td>106</td><td>~4.8</td><td>83.0%</td><td style="color:{GREEN};">+₹3,814</td><td style="color:{RED};">−₹11,781</td><td>83.0% × ₹3,814 − 17.0% × ₹11,781 = <b style="color:{AMBER};">+₹1,166</b></td><td><b>₹5,617</b></td></tr>
+<tr><td>★ Stock v2 UNION</td><td>81</td><td>~3.5</td><td>84.0%</td><td style="color:{GREEN};">+₹5,530</td><td style="color:{RED};">−₹8,363</td><td>84.0% × ₹5,530 − 16.0% × ₹8,363 = <b style="color:{AMBER};">+₹3,300</b></td><td><b>₹11,622</b></td></tr>
+<tr><td>Stock v1</td><td>282</td><td>~12.3</td><td>81.6%</td><td style="color:{GREEN};">+₹3,789</td><td style="color:{RED};">−₹9,530</td><td>81.6% × ₹3,789 − 18.4% × ₹9,530 = <b style="color:{AMBER};">+₹1,333</b></td><td><b>₹16,343</b></td></tr>
+<tr><td>Stock v0 (0.35–0.40)</td><td>146</td><td>~6.3</td><td>82.2%</td><td style="color:{GREEN};">+₹3,872</td><td style="color:{RED};">−₹11,079</td><td>82.2% × ₹3,872 − 17.8% × ₹11,079 = <b style="color:{AMBER};">+₹1,209</b></td><td><b>₹7,676</b></td></tr>
 <tr style="color:{TEXT_DIM};"><td>Sidewise low credit (0.30–0.40)</td><td>76</td><td>~3.5</td><td>93.4%</td><td style="color:{GREEN};">+₹4,471</td><td style="color:{RED};">−₹10,494</td><td style="color:{GREEN};">+₹12,044</td><td>NOT in TOTAL — cells were picked ON this OOS window, so ₹12k/mo is a selection-inflated ceiling; the in-sample rate ₹3,592/mo is the planning number. Live record decides at 30 fills.</td></tr>
 <tr><td>Intraday NIFTY</td><td>73</td><td>~4</td><td>93.2%</td><td style="color:{GREEN};">+₹1,202</td><td style="color:{RED};">−₹6,274</td><td>93.2% × ₹1,202 − 6.8% × ₹6,274 = ₹1,120 − ₹427 = <b style="color:{GREEN};">+₹694</b></td><td>₹2,775</td></tr>
 <tr><td>Intraday SENSEX</td><td>89</td><td>~4</td><td>88.8%</td><td style="color:{GREEN};">+₹1,427</td><td style="color:{RED};">−₹4,549</td><td>88.8% × ₹1,427 − 11.2% × ₹4,549 = ₹1,267 − ₹509 = <b style="color:{GREEN};">+₹758</b></td><td>₹3,031</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>543</b></td><td><b>~25/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹38,955</b></td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>671</b></td><td><b>~30/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹41,447</b></td></tr>
 
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹31,164</b></td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹33,158</b></td></tr>
 </table>
+{dim("<b>Updated 27-Sep-2026 for the per-book premium floor.</b> v1 and v0 now include the trades with a ₹30–50 short leg: v1 194 → 282 out-of-sample trades, v0 106 → 146. These two rows are INTERIM — run-4 out-of-sample plus the extra trades the premium-floor sweep measured — until run 5 of the harness finishes and replaces them. Rupees per month are now over 23 months (Oct-2024 to Aug-2026 inclusive) instead of 22, which is why v2 reads ₹11,622 instead of ₹12,150 on the same 81 trades.")}
 {dim("The numbers above already include everything decided on 24-Aug: the 9 admitted names, the 8 "
      "pruned, and ICICIGI + PIIND. Nothing is separate. The only special handling anywhere: if "
      "ICICIGI or PIIND trades its historically weak side, that fill is tagged ADVISORY and shown on "
