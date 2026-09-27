@@ -3947,3 +3947,12 @@ symbol_history + name_history. 0.25-0.30 Rs 30-50 study: IS done (647 tr, BC -3.
 28 IS cells in research/premband25_is_qualifiers.json); OOS leg auto-runs after run5_done.flag,
 then screen both windows.
 27-Sep 09:05 · user: show LTM v1 trade; a 'live strategies' block still shows old ~24/mo — fixing.
+27-Sep · user wants the 0.25-0.30 Rs30-50 OOS qualifying names once done.
+27-Sep · run 5 OOS finished; publishing final figures in place of the interim ones.
+27-Sep 10:1x · run 5 OOS pass 1 NOT PUBLISHABLE: 242 signals dropped to network (FETCH INTEGRITY).
+Interim figures stay in UI. Chain armed: after premband25_done.flag, re-run run5 OOS until the
+dropped-signal line is gone (max 4 passes) -> research/run5_oos_passN.log, flag research/run5_clean.flag.
+27-Sep 10:35 · 0.25-0.30 Rs30-50 screen DONE (research/premband25_screen.txt): tranche OOS 326 tr
+81.3% -2.9% (BC -1.7%, BP -4.3%); 3 cells pass both windows: BAJAJFINSV BP (IS 5, OOS 8),
+HINDUNILVR BP (11 / 4), ULTRACEMCO BC (4 / 4); pooled OOS 16 tr 100% +17.5%. Not deployed.
+Run-5 retry chain now running (research/run5_retry.sh).
