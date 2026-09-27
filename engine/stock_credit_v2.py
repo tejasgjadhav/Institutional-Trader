@@ -504,7 +504,7 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
                 f"If they still pass on the close, the EXECUTE message follows at 15:36.\n")
     else:
         tail = "\nNo name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.\n"
-    tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 only v0 (0.35–0.40) and whitelisted vlc names (0.30–0.40) fire.\n"
+    tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 only v0 (0.35–0.40), whitelisted vlc names (0.30–0.40) and 3 vlc cells (0.25–0.30, short leg ₹30–50: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP) fire.\n"
              "\nhist = this name's own record on this side, trades/win/ROM · IS 2019–Sep 2024 · OOS Oct 2024–now · "
              "≥0.35 = live books, then today's band · 0/N = N breakouts, none cleared the gates · n/a = no in-sample data for this name.")
     # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut

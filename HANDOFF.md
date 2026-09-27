@@ -3987,3 +3987,5 @@ fails, restart engine outside market hours.
 27-Sep 15:1x · band retry CLEAN, same 3 cells pass; cells now max_prem=50 (as-deployed ≥30 failed for
 ULTRACEMCO BC OOS and BAJAJFINSV BP IS). name_history now has {v2,v1,v0}_{is,oos} per side;
 studies/BOOK_SIDE_HISTORY.csv exported. Engine restarted.
+27-Sep · user: show Telegram message + Excel workbook with all results -> ~/Downloads/Saavi_Strategy_Research_27Sep2026.xlsx
+27-Sep · Excel delivered ~/Downloads/Saavi_Strategy_Research_27Sep2026.xlsx (7 sheets, built by studies/ndte/export_research_xlsx.py); digest footer names the 3 vlc cells; engine restarted.
