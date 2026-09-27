@@ -3905,3 +3905,24 @@ Monday 15:31 = first live send of digest v3. Engine pid 22030 untouched.
 User confirms the laptop was off Fri 25-Sep. Replay of 25-Sep (done 17:30 Fri, scratchpad
 replay_day.py): 12 breakouts, no signal in any book. Digest v3 first live send = Mon 28-Sep 15:31.
 name_history.json complete (b25/b3035 IS+OOS for all names). Engine pid 22030 untouched.
+
+## 26-Sep (Sat) 05:xx · premium-floor question (context ~403k)
+User: the Rs 50 short-leg floor cuts signals; low-priced names never reach it. Proposal = segregate:
+keep Rs 50 where it works, and for names that never reach 50 test a Rs 30 floor with c/w >= 0.30,
+compute name-wise win rates, whitelist only the ones that work (same shape as vlc). Running:
+(1) studies/ndte/prem_floor_sweep.py PREM=10/20/30 IS then OOS with deployed BOOKS (bands >=0.35)
+    -> research/premfloor_{is,oos}_{10,20,30}_rows.json, flag research/premfloor_done.flag
+(2) queued after (1): studies/ndte/prem30_band30.py PREM=30 and 50, band (0.30, 99) on v0 geometry,
+    side stamped -> research/prem30_{is,oos}_{30,50}_rows.json, flag research/prem30_done.flag.
+Analysis = incremental rows (present at floor 30, absent at 50) per name/side, IS and OOS, qualifier
+rule >=80% win and ROM > +5% in BOTH windows. Nothing deployed; approval-first.
+
+## 27-Sep (Sun) · HANDOFF (context ~411k)
+Prior session ended with the sweep waiters orphaned; checking whether the premfloor and prem30 runs
+finished on their own. User's point: the Rs 50 floor makes the same high-priced names repeat and
+most of the universe never converts to a signal.
+27-Sep 08:40 · premium-floor sweep COMPLETE, written up in studies/PREMIUM_FLOOR_SWEEP.md.
+Verdict: per-book floor (v2 50 / v1 30 / v0 30) has an OOS case (+138 tr, 80%, +8.8%/+5.3%,
+3/3 yrs, ≈+6 signals/mo); c/w 0.30 at floor 30 is dead (−0.9% OOS); name-wise whitelist = 3 thin
+cells. NOTHING deployed — needs user approval, then per-book MIN_PREM constants (config has one
+STOCK_CREDIT_MIN_PREM shared by v2/v1/v0) and a live spread-gate check.
