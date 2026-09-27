@@ -3983,3 +3983,7 @@ Next: swap interim -> final in every block; rebuild symbol_history + name_histor
 Armed: research/rebuild_histories.sh rebuilds symbol_history + name_history after band retry.
 Band retry running (patient). When research/band_clean.flag lands: re-screen, drop any vlc cell that
 fails, restart engine outside market hours.
+27-Sep 14:53 · user: done? + wants per-stock history per book (v2/v1/v0/vlc) x side x IS/OOS.
+27-Sep 15:1x · band retry CLEAN, same 3 cells pass; cells now max_prem=50 (as-deployed ≥30 failed for
+ULTRACEMCO BC OOS and BAJAJFINSV BP IS). name_history now has {v2,v1,v0}_{is,oos} per side;
+studies/BOOK_SIDE_HISTORY.csv exported. Engine restarted.

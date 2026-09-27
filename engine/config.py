@@ -671,11 +671,13 @@ STOCK_CREDIT_VLC_WHITELIST = {
 }
 # vlc CELLS (user-approved 27-Sep-2026): side-locked cells with their own c/w band and floor. From
 # the 0.25-0.30 / Rs 30-50 screen (studies/PREMIUM_FLOOR_SWEEP.md): pass >= 80% win and ROM > +5% on
-# >= 3 trades in BOTH windows. Pooled OOS 16 trades, 100%, +17.5%. PROVISIONAL until the clean retry.
+# >= 3 trades in BOTH windows. max_prem=50 (27-Sep-2026): the screen tested ONLY the Rs 30-50 slice;
+# above Rs 50 ULTRACEMCO BC is 2 OOS trades 50%/-42% and BAJAJFINSV BP 5 IS trades 60%/-40%, so the
+# cell trades exactly the slice that passed. Pooled OOS 16 trades, 100%, +17.5%. Confirmed on the clean retry (0 failed fetches), 27-Sep-2026.
 STOCK_CREDIT_VLC_CELLS = {
-    ("ULTRACEMCO", "BEAR_CALL"): dict(min_cw=0.25, max_cw=0.30, min_prem=30.0),
-    ("HINDUNILVR", "BULL_PUT"):  dict(min_cw=0.25, max_cw=0.30, min_prem=30.0),
-    ("BAJAJFINSV", "BULL_PUT"):  dict(min_cw=0.25, max_cw=0.30, min_prem=30.0),
+    ("ULTRACEMCO", "BEAR_CALL"): dict(min_cw=0.25, max_cw=0.30, min_prem=30.0, max_prem=50.0),
+    ("HINDUNILVR", "BULL_PUT"):  dict(min_cw=0.25, max_cw=0.30, min_prem=30.0, max_prem=50.0),
+    ("BAJAJFINSV", "BULL_PUT"):  dict(min_cw=0.25, max_cw=0.30, min_prem=30.0, max_prem=50.0),
 }
 
 # ── T-1 EVE book (user-ordered 17-Sep-2026: "increase signals, take risk, >75% win, higher net") ──

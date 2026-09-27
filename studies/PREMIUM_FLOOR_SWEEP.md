@@ -102,3 +102,15 @@ Published basis (OOS median cohort, ROM in points; ₹/mo over 23 months, 1 lot)
 Against run 4: v1 194 → 289 trades, v0 106 → 145. v2 81 → 79 on an unchanged config (data refresh).
 Stock books ₹35,035/mo; with the two intraday index books ₹40,841/mo, ~30 signals/mo, plan-on-80%
 ₹32,673. Ceiling: the live 6% bid-ask gate is not modelled. Rows: research/deployed_bt_{is,oos}_rows_run5.json.
+
+## vlc cells confirmed on the clean retry, and capped at a Rs 50 short leg (27-Sep-2026)
+The band retry finished with 0 failed fetches and the same three cells passed. Scoring each cell on
+EVERYTHING it would trade (short leg ≥ Rs 30) exposed that the screen had tested only the Rs 30-50
+slice: above Rs 50, ULTRACEMCO BC is 2 OOS trades 50% / −42% and BAJAJFINSV BP 5 IS trades 60% / −40%.
+The cells now carry `max_prem=50`, so they trade exactly the slice that passed. Cell records:
+ULTRACEMCO BC IS 4/100%/+23% · OOS 4/100%/+18%; HINDUNILVR BP IS 11/100%/+17% · OOS 4/100%/+17%;
+BAJAJFINSV BP IS 5/80%/+13% (rupee net negative on lot changes) · OOS 8/100%/+17%.
+
+## Per-stock history by live book, side and window
+`studies/BOOK_SIDE_HISTORY.csv` (built by `studies/ndte/export_book_side_history.py` from
+`data/name_history.json`): every stock x v2/v1/v0/vlc x bear call/bull put x IS/OOS, run 5.

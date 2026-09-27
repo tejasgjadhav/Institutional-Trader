@@ -414,8 +414,8 @@ def _digest_book(r) -> "str | None":
     if cw >= 0.30 and r.get("sym") in getattr(_c, "STOCK_CREDIT_VLC_WHITELIST", {}).get(r.get("side"), ()):
         return "Sidewise low credit vlc (0.30–0.40, whitelisted side)"
     _cell = (getattr(_c, "STOCK_CREDIT_VLC_CELLS", {}) or {}).get((r.get("sym"), r.get("side")))
-    if _cell and _cell["min_cw"] <= cw < _cell["max_cw"]:
-        return "Sidewise low credit vlc cell (0.25–0.30, ₹30 floor)"
+    if _cell and _cell["min_cw"] <= cw < _cell["max_cw"] and (r.get("prem") or 0) < _cell.get("max_prem", float("inf")):
+        return "Sidewise low credit vlc cell (0.25–0.30, short leg ₹30–50)"
     return None
 
 
@@ -619,7 +619,8 @@ def scan_signals() -> list:
             # ── the gates ──
             if _cell is not None:
                 # vlc cell (27-Sep-2026): its own band and floor, studies/PREMIUM_FLOOR_SWEEP.md
-                if not (_cell["min_cw"] <= credit / width_pts < _cell["max_cw"]) or sm < _cell["min_prem"]:
+                if (not (_cell["min_cw"] <= credit / width_pts < _cell["max_cw"]) or sm < _cell["min_prem"]
+                        or sm >= _cell.get("max_prem", float("inf"))):
                     continue
             else:
                 if credit / width_pts < STOCK_CREDIT_MIN_CW:           # the edge: rich credit vs risk

@@ -59,6 +59,15 @@ for i, sym in enumerate(names):
         buck[(side, win)].append(x)
     for (side, win), v in buck.items():
         out[sym][side][f"gate_{win}"] = cell(v)
+    # PER BOOK (user, 27-Sep-2026): every live stock book's own record, by side and window
+    bb = collections.defaultdict(list)
+    for x in by_sym.get(sym, []):
+        t = daymap.get(x["day"])
+        if not t: continue
+        side = "BEAR_CALL" if t == "CE" else "BULL_PUT"
+        bb[(side, x["book"], "is" if x["day"] <= "2024-09-30" else "oos")].append(x)
+    for (side, book, win), v in bb.items():
+        out[sym][side][f"{book}_{win}"] = cell(v)
     if i % 25 == 0: print(f"  {i}/{len(names)}", flush=True)
 # 0.30-0.40 band cells (side recorded, rom already computed)
 for win, f in (("is", "research/band30_is_cells2.json"), ("oos", "research/band30_oos_cells2.json")):
