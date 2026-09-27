@@ -3956,3 +3956,4 @@ dropped-signal line is gone (max 4 passes) -> research/run5_oos_passN.log, flag 
 81.3% -2.9% (BC -1.7%, BP -4.3%); 3 cells pass both windows: BAJAJFINSV BP (IS 5, OOS 8),
 HINDUNILVR BP (11 / 4), ULTRACEMCO BC (4 / 4); pooled OOS 16 tr 100% +17.5%. Not deployed.
 Run-5 retry chain now running (research/run5_retry.sh).
+27-Sep 10:40 · band OOS pass 1 lost 195 legs (run 20260927-093558) -> result PROVISIONAL; research/band_retry.sh re-runs it after the run-5 retries until 0 legfails.
