@@ -4025,3 +4025,10 @@ rows -> research/tpsweep/, chain research/tp_sweep_chain.sh, flag research/tpswe
 89.6% but ₹44,597/mo; hold-to-expiry worst. OOS running (~23:00). On done.flag: report ->
 research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWEEP_208 (auto).
 08:40 Mon guard kills any leftover job.
+27-Sep 20:11 · user: TP sweep OOS done? better than engine?
+27-Sep 20:2x · OOS sweep was stalled by 429s: contract/expiry lists re-fetched each run. patient_run now disk-caches them (research/cache/contracts_cache.json). OOS chain relaunched: research/tp_sweep_oos_chain.sh (skips finished files). Auto-publish waiter still armed on done.flag.
+27-Sep · guard2 armed: Mon 08:38 kills the TP sweep chain + patient_run.
+27-Sep 21:13 · user: so all done? — status check.
+27-Sep 21:15 · user: confirm engine is NOT capped at c/w 0.50 — checking live gates.
+27-Sep 21:2x · confirmed no c/w ceiling on v2/v1 (None). User: update all studies + every UI tab.
+27-Sep 21:4x · UI README tab gates + Studies tab (weekend studies, >0.50 note) updated; LIVE_STRATEGIES, STRATEGY_SUMMARY rewritten; NEXT_ACTIONS current; TP_SWEEP_208.md added; DB rebuilt.

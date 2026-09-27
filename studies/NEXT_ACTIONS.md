@@ -1,4 +1,26 @@
-# Recommendation after the 2026-07-19 audit session — validate, don't modify
+# Next actions — as of 27-Sep-2026
+
+**Question:** how do we get more signals and more profit per month?
+
+**Answer: stop changing rules; capture what the rules already produce, and let live data decide the rest.**
+Every rule change that adds signals has been tested; the per-book premium floor is the only one that
+survived out-of-sample and it is deployed. Remaining levers, in order of value:
+
+1. **Uptime.** The Mac slept through four scan windows in the week of 21-Sep. Charger in and lid open
+   every trading day, or move the engine to an always-on machine.
+2. **Shadow books (paper-only, no EXECUTE):** a 10% bid-ask gate beside the live 6%, and a tracked
+   record of trades above c/w 0.50. Both answer questions no backtest can.
+3. **Lot size on the written rule:** v2+v1 to 2 lots at 30 closed fills with ≥ 80% win
+   (`FORWARD_RECORD_DECISION_RULE.md`). At 3/30 on 27-Sep, all winners. 2 lots ≈ ₹65k/mo on the plan.
+
+**Not to do:** c/w below 0.35, side-wise lists, adding outsider names, lower take-profit targets
+(win rate up, money down), more searches on the Oct-2024→now window.
+
+---
+
+## Archive — the 19-Jul-2026 recommendation (superseded)
+
+### Recommendation after the 2026-07-19 audit session — validate, don't modify
 
 **Question asked:** any change in strategy?
 

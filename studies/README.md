@@ -12,6 +12,8 @@ things that were tested and deliberately **not** deployed — those are as impor
 
 - [`PREMIUM_FLOOR_SWEEP.md`](PREMIUM_FLOOR_SWEEP.md) — the ₹50 short-leg floor split by book (v1/v0 → ₹30, DEPLOYED), run 5 final (clean pass), the 0.25–0.30 cells added to vlc with a ₹30–50 short leg.
 - [`SIDE_SCREEN_208.md`](SIDE_SCREEN_208.md) — per-side screen across all 208 F&O names: no rejected name has a hidden good side; a side-wise book halves profit. NOT deployed.
+- [`TP_SWEEP_208.md`](TP_SWEEP_208.md) — take-profit 20–60% or hold, all 208 names: today's mix earns most in-sample; OOS pending.
+- [`LIVE_STRATEGIES.md`](LIVE_STRATEGIES.md) and [`STRATEGY_SUMMARY.md`](STRATEGY_SUMMARY.md) — rewritten to the 27-Sep system; [`NEXT_ACTIONS.md`](NEXT_ACTIONS.md) — current recommendation.
 - [`LAST_3_MONTHS_JUN_AUG_2026.md`](LAST_3_MONTHS_JUN_AUG_2026.md) — old vs today's rules vs every name above c/w 0.25, month by month.
 - [`BOOK_SIDE_HISTORY.csv`](BOOK_SIDE_HISTORY.csv) — every stock × live book × side × window.
 - All studies, result tables and trade rows are also in the local database `data/studies.db` (`studies/studydb.py`).

@@ -1,21 +1,25 @@
-# Live strategies — one-table summary (updated 2026-07-08)
+# Live strategies — one-table summary (updated 27-Sep-2026)
 
-All five live paper books plus rejected/paper strategies, in a single consistent format. Real
-premiums, costs charged. This table is mirrored on the STUDIES tab in the app.
+Every live paper book, on its own gates, as deployed. Stock books: harness of record run 5 (clean
+pass, 0 dropped signals). IS = 2019→Sep-2024, 116-name basis, median cohort, ROM on rupee margin.
+OOS = Oct-2024→Aug-2026 (23 months), median cohort, ROM in points. ₹ at 1 lot. Mirrored on the
+STUDIES tab. July's version of this table is in git history.
 
-| # | Strategy | B/S | Win rate | Return | Sample | Freq/mo | Verdict | Status |
-|---|---|---|---|---|---|---|---|---|
-| 1 | ★ Stock fade v2 UNION (TP-50, LEADER) | SELL | 84.3% IS · 87% OOS | +26.2% IS · +29.5% OOS (of width) | 369+173 · 2019→Jun26 | 5-6 | ✓ VALIDATED+OOS | LIVE UNION 07-09 · 1 lot |
-| 2 | 0DTE NIFTY FLIP spread (Tue) | SELL | 87.1% (flip) vs 84.7% CE | +₹1.92L vs +₹1.17L · 2019→26 | 372 expiries · real prem | 4-5 | ✓ VALIDATED+OOS | LIVE FLIP 07-07 |
-| 3 | 0DTE SENSEX CE spread (Thu) | SELL | 88.8% | +7.6% of margin · +₹67k/21mo | 89 exp · Oct24→Jun26 | 4-5 | ✓ VALIDATED (21mo) | LIVE 07-09 |
-| 4 | 0DTE BANKNIFTY CE spread (mthly) | SELL | 91% mthly · 79.5% wk | +11%m mthly · +7.4%m wk | 273 wk + 23 mthly | ~1 | ✓ VALIDATED | LIVE · monthly |
-| 5 | Stock credit spread v1 · fade | SELL | 54% | +5.3% of width | 718 · 2019→Sep24 | ~10 | ✓ VALIDATED | LIVE · 1 lot |
-| — | Index fade · NIFTY/FINNIFTY | SELL | 54% | −1.4% of width | 181 · 2019→Sep24 | 2-3 | ✗ failed OOS | forward-test |
-| — | 3-Family stocks | BUY | 50.6% (direction) | dir +0.107%/tr · −1.0% net | 19,454 · 2019→2026 | daily | ~ dir edge only | paper · hidden |
+| Book | Gate | Short leg | Exit | IS | OOS | OOS signals/mo | OOS ₹/mo |
+|---|---|---|---|---|---|---|---|
+| ★ Stock v2 UNION | c/w ≥ 0.40, no ceiling | ≥ ₹50 | book 50%, no stop | 213 · 77.9% · +21.2% | 79 · 86.1% · +26.6% | 3.4 | ₹12,417 |
+| Stock v1 | c/w ≥ 0.40, Donchian-10, no ceiling | ≥ ₹30 | book 40%, no stop | 485 · 80.6% · +11.6% | 289 · 81.0% · +13.9% | 12.6 | ₹15,020 |
+| Stock v0 | c/w 0.35–0.40 | ≥ ₹30 | book 40%, no stop | 311 · 86.2% · +15.2% | 145 · 82.1% · +2.6% | 6.3 | ₹7,598 |
+| Sidewise low credit (vlc) | c/w 0.30–0.40, 21 name-sides | ≥ ₹50 | book 40%, no stop | 90.7% on its cells | 93.4% (cells chosen on OOS) | ~3.5 | not in total |
+| vlc cells | c/w 0.25–0.30: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP | ₹30–50 | book 40%, no stop | 20 · 95% · +17.8% | 16 · 100% · +17.5% | ~0.7 | not in total |
+| 0DTE NIFTY (Tue) | expiry-day spread | — | same day | 88% | 90% · 73 trades | ~4 | ₹2,775 |
+| 0DTE SENSEX (Thu) | expiry-day spread | — | same day | n/a (weeklies from Oct-2024) | 88.8% · 89 trades | ~4 | ₹3,031 |
+| **Total** | | | | | **675 trades** | **~30** | **₹40,841** (plan at 80%: ₹32,673) |
 
-**Capital:** ~₹2–2.5L at 1 lot each · ~₹4–5L at 2 lots (swing books + recycling intraday margins).
-**PLAN-ON:** ~half of model until live fills prove out (repo rule). Bad months are lumpy and the
-books are correlated short-premium in a crash — size on the worst month, not the average.
+All stock books also need a two-sided quote on both legs, short-leg bid-ask ≤ 6%, open interest,
+≥ 10 days to expiry and a 3-day cross-book re-entry gap. Trades above c/w 0.50 are taken by v2/v1 but
+excluded from the plan: they add ~₹17,361/mo (69 trades, 91.3%) — the full-band ceiling is ₹52,396/mo
+for the stock books. Figures are backtest ceilings; the live spread gate is not modelled.
 
-Detail + loss profiles: STOCK_FADE_TP50_UPGRADE.md · INTRADAY_85PCT_0DTE_CE_SPREAD.md ·
-FLIP_SIDE_CREDIT_FADE.md · STOCK_OPTIONS_NO_EDGE.md.
+**Off / rejected:** index swing fade (removed 24-Jul), T-1 EVE (disabled 17-Sep), monthly futures
+(regime-off, needs ~₹15L), BANKNIFTY 0DTE (rejected 19-Jul).

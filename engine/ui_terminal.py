@@ -910,6 +910,10 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {self._forward_record_html()}
 {dim("This tab is a record of RESULTS. The incident write-ups and the NSE session change live on GitHub — studies/STALE_BAR_INCIDENT.md, studies/DEPLOYED_EVIDENCE_AUDIT.md and studies/NSE_SESSION_CHANGE_2026_08_03.md — so they do not crowd the numbers here.")}
 
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WEEKEND OF 27 SEP — three more questions, none deployed</p>
+{res("<b>Side-wise book across all 208 F&amp;O names — rejected.</b> 34 name-sides pass ≥80% win and ROM &gt; +5% in both windows, and every one is already in the universe; no outsider and none of the 8 pruned names has a good side. A side-wise book gives 7.2 signals and ₹24,429 a month against the engine's 25.3 and ₹52,396; sides picked on history alone give 12.4 and ₹29,244. Adding all 208 names raises signals to 35.9 a month but lowers profit to ₹48,951. studies/SIDE_SCREEN_208.md")}
+{res("<b>Every name above c/w 0.25 — rejected.</b> June to 10-Aug: 177 trades against 79 on today's rules, but July lost ₹1,10,771 and early August ₹47,873. By band: 0.25–0.30 −₹1,07,809, 0.30–0.35 −₹25,991, 0.35–0.40 +₹63,471, 0.40+ +₹11,209. The money is made at 0.35 and above. studies/LAST_3_MONTHS_JUN_AUG_2026.md")}
+{res("<b>Take-profit 20/30/40/50/60% or hold — in-sample says keep today's mix.</b> All 208 names, 2019–Sep 2024: today's v2 50% / v1, v0 40% earns ₹53,995 a month at 81.2% win; 20% lifts the win rate to 89.6% but earns ₹44,597; holding to expiry earns ₹42,860 at 64.3%. Signals barely move (23–26 a month). The out-of-sample half is running; the setting changes only if another level wins clearly in both windows.")}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE PREMIUM FLOOR, 26–27 SEP — split by book (DEPLOYED 27-Sep)</p>
 {p("<b>The question.</b> The ₹50 short-leg floor made the same high-priced names repeat. Only 67 of 116 names produced even one out-of-sample trade, the top 10 carried 35% of them, and 13 names — AMBUJACEM, BPCL, HDFCLIFE, HINDALCO, ICICIBANK, INDIANB, ITC, JSWSTEEL, MARICO, PFC, SBIN, TATACONSUM, WIPRO — trade only below ₹50.")}
 {p("<b>The test.</b> The harness of record with only the floor changed, at ₹10, ₹20 and ₹30, in both windows. Each bucket is the set of trades that exists only because the floor is lower. Friction is the harness's own, which charges cheap legs the most.")}
@@ -945,6 +949,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹32,673</b></td></tr>
 </table>
 {dim("<b>Updated 27-Sep-2026 for the per-book premium floor.</b> v1 and v0 now include the trades with a ₹30–50 short leg: v1 194 → 289 out-of-sample trades, v0 106 → 145. All three rows are run 5 of the harness, a clean pass with zero signals dropped to the network. Rupees per month are now over 23 months (Oct-2024 to Aug-2026 inclusive) instead of 22.")}
+{dim("<b>Credit ÷ width above 0.50 is traded, not excluded.</b> v2 and v1 have no ceiling. This table reads the 0.40–0.50 cohort only, because out-of-sample cannot use put-call parity and residual pricing error can live above 0.50. Those 69 trades add about ₹17,361 a month (91.3% win) on top of this table — with them, the stock books read ₹52,396 a month. The plan does not count on them until live fills confirm them.")}
 {dim("The numbers above already include everything decided on 24-Aug: the 9 admitted names, the 8 "
      "pruned, and ICICIGI + PIIND. Nothing is separate. The only special handling anywhere: if "
      "ICICIGI or PIIND trades its historically weak side, that fill is tagged ADVISORY and shown on "
@@ -1284,7 +1289,7 @@ Paper forward-test only. For educational use. Not financial advice.
      "fires signals and records them daily; YOU place every order manually in Upstox. It never auto-trades.")}
 {p("<b>TELEGRAM ALERTS — LIVE (2026-07-13):</b> every book's new signal is pushed to the Telegram channel the "
    "moment the engine opens the position — all sources wired (3-Family, Stock Credit v1 + v2 UNION + v0, "
-   "Sidewise low credit 0.30–0.40, Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX 0DTE). One post per signal, "
+   "Sidewise low credit 0.30–0.40 + 3 cells at 0.25–0.30, Swing, Monthly Futures, Monthly Long-Call, 0DTE NIFTY, SENSEX 0DTE). One post per signal, "
    "no repeats; place the order manually in Upstox as usual. A quiet channel = nothing cleared the gates "
    "that day. Config in .env (TELEGRAM_BOT_TOKEN + TELEGRAM_CHAT_ID; a channel id fans out to all joiners).")}
 
@@ -1353,6 +1358,12 @@ Paper forward-test only. For educational use. Not financial advice.
    f"strikes and live option prices (the auction close is struck by then — pre-stage from this) → "
    f"<b>{C.STOCK_CREDIT_SCAN_AFTER}</b> the scan fires on TODAY'S OFFICIAL CLOSE → place by <b>{C.FNO_CLOSE}</b> "
    f"(derivatives close) → settles {C.SETTLE_AFTER}.")}
+{p("<b>Gates per book (since 27-Sep-2026):</b> v2 credit ÷ width ≥ 0.40, short leg ≥ ₹50, book at 50% · "
+   "v1 ≥ 0.40 on a Donchian-10 breakout, short leg ≥ ₹30, book at 40% · v0 0.35–0.40, short leg ≥ ₹30, book at 40% · "
+   "vlc 0.30–0.40 on 21 whitelisted name-sides, short leg ≥ ₹50 · vlc cells 0.25–0.30 on ULTRACEMCO bear call, "
+   "HINDUNILVR and BAJAJFINSV bull put, short leg ₹30–50. <b>No ceiling on v2 or v1</b> — a credit ÷ width of 0.50 "
+   "or more is taken (the published plan simply does not count those trades). Every book also needs a two-sided "
+   "quote on both legs, bid-ask ≤ 6%, open interest, 10+ days to expiry and a 3-day cross-book re-entry gap. No stops.")}
 {p(f"<b>Every signal shows the price it was computed on</b> (SIGNAL→LIVE on the watchlist, UNDERLYING on PM "
    "DECISIONS). 'AUC' means that price IS the closing-auction price — the official close, the exact field the "
    "2019–2026 backtests used. A red gap between signal and live price means the market has left the signal behind: "
