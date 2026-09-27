@@ -1107,8 +1107,8 @@ class EngineRunner:
                    "incomplete."),
                 f"• {n_wl} name(s) reached the watchlist, and none cleared every gate" if n_wl
                 else "• No stock closed outside its Donchian band, so nothing reached the watchlist",
-                "• A trade needs all four: a breakout, credit ÷ width ≥ 0.40, premium ≥ ₹50, "
-                "and a live two-sided market",
+                "• A trade needs all four: a breakout, credit ÷ width ≥ 0.40 (0.35 for v0), a short "
+                "premium of at least ₹50 for v2 or ₹30 for v1 and v0, and a live two-sided market",
                 "",
                 "<b>Sitting out is the strategy working, not failing.</b> These books fade a breakout "
                 "only when the market pays richly for it. On a quiet day that premium is not there, "

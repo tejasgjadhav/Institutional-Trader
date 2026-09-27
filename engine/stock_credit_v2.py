@@ -291,10 +291,11 @@ def build_watchlist() -> dict:
             # Evaluate ALL three gates independently (no short-circuit) so the watchlist shows
             # premium + liquidity status even when credit/width fails.
             cw_ok = cw >= STOCK_CREDIT_MIN_CW
-            prem_ok = sm >= STOCK_CREDIT_MIN_PREM
+            prem_floor = prem_floor_for(sym, side, cw)   # per-book floor (27-Sep-2026)
+            prem_ok = sm >= prem_floor
             lot = int(s.get("lot", 0) or l.get("lot", 0) or 0)
             liq_ok = (spr <= STOCK_CREDIT_MAX_SPREAD_PCT) and (soi >= STOCK_CREDIT_MIN_OI)
-            row.update(cw=cw, prem=round(sm, 1), spread=spr, oi=int(soi),
+            row.update(cw=cw, prem=round(sm, 1), prem_floor=prem_floor, spread=spr, oi=int(soi),
                        short_strike=s["strike"], long_strike=l["strike"], expiry=exp,
                        credit=credit, width_pts=w, lot=lot,
                        max_profit=round(credit * lot) if lot else None,
@@ -376,6 +377,25 @@ def _digest_history(sym: str, side: str, cw: float) -> str:
     return "   hist " + " · ".join(parts)
 
 
+def prem_floor_for(sym: str, side: str, cw: float) -> float:
+    """The short-leg premium floor of the book that would take this c/w (per-book floor,
+    user-approved 27-Sep-2026): v0 band 0.35-0.40 = V0 floor (Rs 30); v2 >= 0.40 and whitelisted vlc
+    0.30-0.40 = Rs 50; no book = the lowest floor any book uses, so a cross means no book would take
+    this premium. The watchlist builder is v2's geometry, so v1's own floor is not applied here."""
+    from engine import config as _c
+    base = float(getattr(_c, "STOCK_CREDIT_MIN_PREM", 50.0))
+    v0 = float(getattr(_c, "STOCK_CREDIT_V0_MIN_PREM", base))
+    v1 = float(getattr(_c, "STOCK_CREDIT_V1_MIN_PREM", base))
+    cw = cw or 0
+    if cw >= 0.40:
+        return base
+    if cw >= 0.35:
+        return v0
+    if cw >= 0.30 and sym in getattr(_c, "STOCK_CREDIT_VLC_WHITELIST", {}).get(side, ()):
+        return base
+    return min(v0, v1, base)
+
+
 def _digest_book(r) -> "str | None":
     """Which LIVE book takes this c/w on this name/side: v2 >= 0.40, v0 0.35-0.40, vlc 0.30-0.40 on
     a whitelisted side. None = no strategy fires on it, whatever the other gates say."""
@@ -432,14 +452,17 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         verb = "CE" if r.get("side") == "BEAR_CALL" else "PE"
         side = "Bear Call" if r.get("side") == "BEAR_CALL" else "Bull Put"
         book = _digest_book(r)
-        cw_ok, prem_ok = book is not None, bool(r.get("prem_ok"))
+        # per-book premium floor (27-Sep-2026): v0 = Rs 30, v2/vlc = Rs 50; with no book, the lowest
+        # floor any book uses, so a cross means "no book would take this premium"
+        _floor = prem_floor_for(str(r.get("sym")), str(r.get("side")), r.get("cw") or 0)
+        cw_ok, prem_ok = book is not None, (r.get("prem") or 0) >= _floor
         spr_ok = (r.get("spread") if r.get("spread") is not None else 999) <= max_spr
         oi_ok = (r.get("oi") or 0) >= min_oi
         issues = []
         if not cw_ok:
             issues.append("c/w below every strategy band")
         if not prem_ok:
-            issues.append(f"prem &lt; ₹50")
+            issues.append(f"prem &lt; ₹{_floor:g}")
         if not spr_ok:
             issues.append(f"spread &gt; {max_spr:g}%")
         if not oi_ok:
@@ -462,7 +485,7 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         l2 = (f"   SELL {ss} {verb} / BUY {ls} {verb} · {exp} · credit ₹{credit} on {('%g' % w) if isinstance(w, (int, float)) else '?'}"
               + (f" · lot {lot} · +₹{mp:,} / −₹{ml:,}" if mp is not None and ml is not None else "")
               + (f" · TP-40 ₹{round(credit * 0.6, 2)}" if isinstance(credit, (int, float)) else ""))
-        l3 = (f"   c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} {'✅' if prem_ok else '❌'} · "
+        l3 = (f"   c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} (≥{_floor:g}) {'✅' if prem_ok else '❌'} · "
               f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}"
               + (" — <b>READY</b>" if star else ""))   # no issue text: the ❌ says which gate failed (user, 25-Sep)
         l4 = _digest_history(str(r.get("sym")), str(r.get("side")), float(r.get("cw") or 0))

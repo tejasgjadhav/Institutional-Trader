@@ -325,7 +325,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     # off Qt SQUEEZES columns to the viewport — so the fixed widths were silently ignored and every
     # cell truncated. Both are derivable (credit x lot; (width-credit) x lot) and are shown in full
     # on the PM DECISIONS rows anyway. The columns the user actually reads keep real width.
-    WATCH_COLS = ["STOCK", "SIDE", "BRK", "PRICE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "PREM≥50", "LIQ", "CREDIT", "MAX ₹ +/−", "RESULT"]
+    WATCH_COLS = ["STOCK", "SIDE", "BRK", "PRICE", "SELL / BUY", "EXPIRY", "LOT", "C/W", "PREM", "LIQ", "CREDIT", "MAX ₹ +/−", "RESULT"]
 
     def _make_pm_table(self) -> QTableWidget:
         t = QTableWidget(); t.setColumnCount(len(self.PM_COLS))
@@ -910,6 +910,20 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {self._forward_record_html()}
 {dim("This tab is a record of RESULTS. The incident write-ups and the NSE session change live on GitHub — studies/STALE_BAR_INCIDENT.md, studies/DEPLOYED_EVIDENCE_AUDIT.md and studies/NSE_SESSION_CHANGE_2026_08_03.md — so they do not crowd the numbers here.")}
 
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE PREMIUM FLOOR, 26–27 SEP — split by book (DEPLOYED 27-Sep)</p>
+{p("<b>The question.</b> The ₹50 short-leg floor made the same high-priced names repeat. Only 67 of 116 names produced even one out-of-sample trade, the top 10 carried 35% of them, and 13 names — AMBUJACEM, BPCL, HDFCLIFE, HINDALCO, ICICIBANK, INDIANB, ITC, JSWSTEEL, MARICO, PFC, SBIN, TATACONSUM, WIPRO — trade only below ₹50.")}
+{p("<b>The test.</b> The harness of record with only the floor changed, at ₹10, ₹20 and ₹30, in both windows. Each bucket is the set of trades that exists only because the floor is lower. Friction is the harness's own, which charges cheap legs the most.")}
+<table cellpadding="5" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;font-size:13px;">
+<tr style="color:{CYAN};font-weight:bold;"><td>Extra trades, short leg</td><td>In-sample 2019–Sep 2024</td><td>Out-of-sample Oct 2024–Sep 2026</td></tr>
+<tr><td>₹30–50 · v1</td><td>151 · 83.4% · +18.6%</td><td style="color:{GREEN};">98 · 80.6% · +8.8% · 3/3 yrs</td></tr>
+<tr><td>₹30–50 · v0</td><td>89 · 87.6% · +16.5%</td><td style="color:{GREEN};">40 · 80.0% · +5.3% · 3/3 yrs</td></tr>
+<tr><td>₹30–50 · v2</td><td>101 · 82.2% · +34.3%</td><td style="color:{RED};">18 · 61.1% · −7.6% · 1/3 yrs</td></tr>
+<tr><td>₹20–30 · all books</td><td>201 · 89.1% · +22.5%</td><td>77 · 81.8% · +3.8% (v2 −24%)</td></tr>
+<tr><td>₹10–20 · all books</td><td>264 · 79.2% · +12.0%</td><td style="color:{RED};">91 · 71.4% · −7.0% · 1/3 yrs</td></tr>
+</table>
+{res("<b>Verdict, deployed 27-Sep-2026: v1 and v0 now take a ₹30 short leg, v2 and the vlc book stay at ₹50.</b> In-sample every bucket looks good; out-of-sample only ₹30–50 survives, and only for v1 and v0. v2's extra trades lose in every out-of-sample bucket, and below ₹30 the friction eats the credit. The credit/width gates do not move. The 6% live bid-ask gate still applies and will block some of these cheaper legs, so the added count is a ceiling.")}
+{res("<b>Rejected on the same run:</b> a ₹30 floor with credit/width 0.30 and up loses out-of-sample (170 extra trades, 75.9% win, −0.9%), so the 0.30–0.35 band stays dead at the lower floor. A name-by-name whitelist at ₹30 passes only three cells — ASTRAL bull put, VOLTAS bull put, INFY bear call — on 3 to 6 trades each, which is the selection shape that produced PAGEIND. Full write-up: studies/PREMIUM_FLOOR_SWEEP.md.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">PROFIT AND LOSS — the only money table</p>
 {dim("<b>Out-of-sample, Oct-2024 to Aug-2026, on the corrected harness.</b> Read on the median "
      "cohort — credit/width 0.40–0.50, where all 21 real live fills sit. Every leg is a contract that "
@@ -1205,7 +1219,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> (leader) — SELL 2 strikes OTM, BUY 4 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v1</b> — SELL 1 strike OTM, BUY 3 strikes further out. Only if credit ÷ width ≥ <b>0.40</b>.")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v0</b> — same strikes as v2, but takes the band v2 rejects: credit ÷ width between <b>0.35 and 0.40</b>.")}
-{p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium, bid-ask ≤ 6%, open interest present on both legs. If it fails, skip it — thin options eat the edge.")}
+{p("<b>5.</b> Short leg must be ≥ <b>₹50</b> premium for v2 and the vlc book, ≥ <b>₹30</b> for v1 and v0 (per-book floor since 27-Sep-2026), bid-ask ≤ 6%, open interest present on both legs. If it fails, skip it — thin options eat the edge.")}
 {p("<b>6.</b> Place it <b>between 15:36 and 15:40</b> — derivatives now close at 15:40, so that is the whole window. The 15:17 watchlist names the likely candidates ~19 minutes ahead, so pre-stage from it and treat the 15:36 signal as confirmation. Spreads are roughly twice as wide in this window as at 14:45, so use limit orders.")}
 {p("<b>7.</b> Exit — this is what sets the win rate, more than the entry does:")}
 {dim("&nbsp;&nbsp;&nbsp;• <b>v2</b> — buy the spread back when it costs <b>50%</b> of the credit you collected. <b>No stop</b>, same as v1 and v0: a stop priced as a multiple of the credit cannot be reached above c/w 1/3, because the spread can never cost more than its width. The bought wing is the stop.")}

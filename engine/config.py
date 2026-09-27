@@ -354,7 +354,13 @@ STOCK_CREDIT_MIN_DTE      = 10      # nearest monthly expiry >= 10 days out (sto
 STOCK_CREDIT_SHORT_OFFSET = 1       # short 1 strike OTM
 STOCK_CREDIT_WIDTH        = 3       # long 3 strikes further OTM (defined risk)
 STOCK_CREDIT_MIN_CW       = 0.40    # THE EDGE: only trade when credit >= 40% of the strike width
-STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/untradeable options)
+STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/untradeable options) — v2 + vlc
+# PER-BOOK PREMIUM FLOOR (user-approved 27-Sep-2026, studies/PREMIUM_FLOOR_SWEEP.md). The Rs 30–50
+# short-leg tranche is positive OOS for v1 (98 tr, 80.6%, +8.8% ROM, 3/3 yrs) and v0 (40 tr, 80.0%,
+# +5.3%, 3/3) but NEGATIVE for v2 (18 tr, 61%, −7.6%), and everything below Rs 30 is negative OOS.
+# So v1 and v0 drop to Rs 30; v2 and vlc stay at Rs 50. The 6% live spread gate still applies.
+STOCK_CREDIT_V1_MIN_PREM  = 30.0
+STOCK_CREDIT_V0_MIN_PREM  = 30.0
 # NO STOP, SETTLED (user, 2026-08-17: "no exit rule is no stop now for v0, v1 and v2, we wont
 # change"). All three stock books are take-profit only and the bought wing caps the loss at
 # (width - credit). New positions store stop_cost None; no book reads a stop multiple any more, so

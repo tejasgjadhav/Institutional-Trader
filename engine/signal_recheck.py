@@ -47,13 +47,15 @@ def _v2_tp() -> float:
 # books at 50% of credit, v1 and v0 at 40% — so it is read per book, never inferred from the label.
 BOOKS = [
     ("Stock Credit v2 UNION", "stock_credit_v2_positions.json",
-     lambda: (config.STOCK_CREDIT_MIN_CW, None), lambda: _v2_tp(), "STOCK CREDIT v2 UNION"),
+     lambda: (config.STOCK_CREDIT_MIN_CW, None), lambda: _v2_tp(), "STOCK CREDIT v2 UNION",
+     lambda: config.STOCK_CREDIT_MIN_PREM),
     ("Stock Credit v1", "stock_credit_positions.json",
      lambda: (config.STOCK_CREDIT_MIN_CW, None), lambda: config.STOCK_CREDIT_TAKE_PROFIT,
-     "STOCK CREDIT v1"),
+     "STOCK CREDIT v1", lambda: getattr(config, "STOCK_CREDIT_V1_MIN_PREM", config.STOCK_CREDIT_MIN_PREM)),
     ("Stock Credit v0", "stock_credit_v0_positions.json",
      lambda: (config.STOCK_CREDIT_V0_MIN_CW, config.STOCK_CREDIT_V0_MAX_CW),
-     lambda: config.STOCK_CREDIT_V0_TAKE_PROFIT, "STOCK CREDIT v0 (c/w 0.35-0.40)"),
+     lambda: config.STOCK_CREDIT_V0_TAKE_PROFIT, "STOCK CREDIT v0 (c/w 0.35-0.40)",
+     lambda: getattr(config, "STOCK_CREDIT_V0_MIN_PREM", config.STOCK_CREDIT_MIN_PREM)),
 ]
 
 
@@ -101,7 +103,7 @@ def _last_session(books: list) -> str:
     """
     today = date.today().isoformat()
     cands = [_prev_trading_day()]
-    entries = [p.get("entry_date") for _l, _b, _t, _e, ps in books for p in ps
+    entries = [p.get("entry_date") for _l, _b, _t, _e, ps, *_rest in books for p in ps
                if p.get("entry_date") and p["entry_date"] < today]
     if entries:
         cands.append(max(entries))
@@ -116,7 +118,7 @@ def _last_session(books: list) -> str:
     return max(cands)
 
 
-def _check(p: dict, lo: float, hi):
+def _check(p: dict, lo: float, hi, min_prem: float = None):
     """Re-run every gate on live quotes. Returns (ok, detail-dict, reason-if-failed)."""
     from engine.stock_credit_v2 import _quote, _spot
     sm, sb, sa, soi = _quote(p["short_key"])
@@ -134,8 +136,9 @@ def _check(p: dict, lo: float, hi):
     spot = _spot(p["symbol"])
     d = {"credit": round(credit, 2), "cw": round(cw, 3), "spread": round(spread_pct, 1),
          "oi": soi, "short_prem": round(sm, 2), "spot": spot}
-    if sm < config.STOCK_CREDIT_MIN_PREM:
-        return False, d, f"short premium ₹{sm:.0f} < ₹{config.STOCK_CREDIT_MIN_PREM:.0f}"
+    _mp = float(min_prem if min_prem is not None else config.STOCK_CREDIT_MIN_PREM)   # per-book floor
+    if sm < _mp:
+        return False, d, f"short premium ₹{sm:.0f} < ₹{_mp:.0f}"
     if spread_pct > config.STOCK_CREDIT_MAX_SPREAD_PCT:
         return False, d, f"bid-ask {spread_pct:.1f}% > {config.STOCK_CREDIT_MAX_SPREAD_PCT:.0f}%"
     if soi < config.STOCK_CREDIT_MIN_OI:
@@ -179,12 +182,12 @@ def _check(p: dict, lo: float, hi):
 def build_message():
     """(text, n_still_valid, dropped) — text is '' when nothing from the last session survives."""
     books = []
-    for label, fname, band, tp, eng in BOOKS:
+    for label, fname, band, tp, eng, mprem in BOOKS:
         path = os.path.join(DATA_DIR, fname)
         if not os.path.exists(path):
             continue
         try:
-            books.append((label, band, tp, eng, json.load(open(path)) or []))
+            books.append((label, band, tp, eng, json.load(open(path)) or [], mprem))
         except Exception:
             continue
     if not books:
@@ -195,12 +198,12 @@ def build_message():
     day = _last_session(books)
 
     ok_rows, bad_rows = [], []
-    for label, band, tp_get, eng, ps in books:
+    for label, band, tp_get, eng, ps, mprem in books:
         lo, hi = band()
         for p in ps:
             if p.get("entry_date") != day or p.get("status") != "OPEN":
                 continue
-            good, d, why = _check(p, lo, hi)
+            good, d, why = _check(p, lo, hi, mprem())
             (ok_rows if good else bad_rows).append((label, p, d, why, tp_get, eng))
     if not ok_rows and not bad_rows:
         logger.info("recheck: no stock-credit signal on %s (last trading day) — no message", day)

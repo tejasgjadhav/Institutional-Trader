@@ -93,8 +93,9 @@ PARITY_MAX_SPAN = 0.02      # accept the parity anchor only if CE and PE agree w
 ATM_MAX_DRIFT      = 0.05   # nearest strike must sit within 5% of the close
 ATM_MIN_LADDER_POS = 0.15   # ATM must sit mid-ladder, not at its edge
 BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
-         "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0)),
-         "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40))}
+         "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0), prem=30.0),
+         "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40), prem=30.0)}
+# run 5 (27-Sep-2026): per-book premium floor — v1/v0 Rs 30, v2 Rs 50 (MIN_PREM). See PREMIUM_FLOOR_SWEEP.md
 spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
 OUT = f"research/deployed_bt_{WINDOW.lower()}_rows.json"
 IS_PICKLE = "research/bhav_optstk.pkl"   # overridable by drivers (universe expansion 23-Aug-2026)
@@ -211,7 +212,7 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         if got is None: continue
         se, le, walk = got[0], got[1], got[2]
         oi = got[3] if len(got) > 3 else None      # (oi_short, oi_long), IS only
-        if se < MIN_PREM: continue
+        if se < cfg.get("prem", MIN_PREM): continue      # per-book floor (run 5)
         _floor = MIN_OI
         if oi is not None and (oi[0] < _floor or oi[1] < _floor): continue
         credit = se - le; width = abs(ks[si] - ks[li])
@@ -592,52 +593,6 @@ def run_oos():
 # backtest — and the json.dump three lines down OVERWRITES research/deployed_bt_<window>_rows.json,
 # the stored results every study reads. A stray import could therefore destroy the record it was
 # meant to reproduce. It also made the module impossible to unit-test.
-if __name__ == "__main__":
-    if WINDOW not in ("IS", "OOS"):
-        # Defaulting an unrecognised argument to OOS silently ran the wrong window and wrote its
-        # rows file. Refuse instead.
-        sys.exit(f"usage: deployed_backtest.py IS|OOS   (got {WINDOW!r})")
-    rows = run_is() if WINDOW == "IS" else run_oos()
-    json.dump(rows, open(OUT, "w"))
-    lbl = ("IS 2019-01-01 -> 2024-07-05 (bhavcopy, parity spot, OI>=100)" if WINDOW == "IS"
-           else "OOS Oct-2024 -> date (Upstox, guards)")
-    print(f"\n=== DEPLOYED CONFIGS · {lbl} ===")
-    print("Read the MEDIAN COHORT (c/w 0.40-0.50; v0 0.35-0.40) — where all 21 real live fills sit.")
-    print("ROM-pts pools strike points; ROM-Rs pools rupee margin, which is what an account commits.\n")
-    for scope in ("MEDIAN COHORT", "FULL BAND"):
-        print(f"--- {scope} ---")
-        print(f"{'book':<5}{'n':>7}{'WIN':>8}{'ROM-pts':>10}{'ROM-Rs':>10}{'Rs/trade':>11}{'+ve yrs':>9}")
-        for bk, cfg in BOOKS.items():
-            g = [x for x in rows if x["book"] == bk]
-            if scope == "MEDIAN COHORT":
-                lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
-                g = [x for x in g if lo <= x["cw"] < hi]
-            if len(g) < 20:
-                print(f"{bk:<5}{len(g):>7}   (too few)"); continue
-            by = collections.defaultdict(list)
-            for x in g: by[x["yr"]].append(x["net_rs"])
-            # A YEAR NEEDS ENOUGH TRADES TO BE A YEAR (fixed 21-Aug-2026). Out-of-sample 2024 is an
-            # Oct-Dec stub: v2 has ONE trade in it, v0 has one. Counting those as full years turned
-            # "positive 2 of 2 years plus a single observation" into the much stronger-sounding
-            # "positive 3 of 3 years". Years under MIN_YR_N are shown as stubs, never folded in.
-            full = {y: v for y, v in by.items() if len(v) >= MIN_YR_N}
-            stub = {y: v for y, v in by.items() if len(v) < MIN_YR_N}
-            pos = sum(1 for v in full.values() if sum(v) > 0)
-            mrs = sum(x["margin_rs"] for x in g)
-            rom_rs = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
-            rs_tr = (sum(x["net_rs"] for x in g) / len(g)) if g else 0.0
-            print(f"{bk:<5}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%"
-                  f"{sum(x['net'] for x in g)/sum(x['margin'] for x in g)*100:>+9.1f}%{rom_rs:>+9.1f}%"
-                  f"{rs_tr:>+11,.0f}{pos:>6}/{len(full):<2}"
-                  + (("  (+%d stub yr: " % len(stub))
-                     + ", ".join(f"{y} n={len(v)}" for y, v in sorted(stub.items())) + ")" if stub else ""))
-        print()
-    # A run that silently lost signals to the network must not read as a clean run. State it either
-    # way, so "0" is positive evidence rather than the absence of a warning.
-    print_integrity()
-    print_oi_buckets(rows)
-
-
 def print_integrity():
     """The run's integrity line. Callable from drivers, which bypass __main__ (audit 17-Sep-2026)."""
     for k in ("contract_list", "underlying_symbol"):
@@ -683,3 +638,49 @@ def print_oi_buckets(rows):
                   f"{sum(x['net_rs'] for x in g)/len(g):>+11,.0f}")
         print()
     print(f"DONE-{WINDOW}")
+
+
+if __name__ == "__main__":
+    if WINDOW not in ("IS", "OOS"):
+        # Defaulting an unrecognised argument to OOS silently ran the wrong window and wrote its
+        # rows file. Refuse instead.
+        sys.exit(f"usage: deployed_backtest.py IS|OOS   (got {WINDOW!r})")
+    rows = run_is() if WINDOW == "IS" else run_oos()
+    json.dump(rows, open(OUT, "w"))
+    lbl = ("IS 2019-01-01 -> 2024-07-05 (bhavcopy, parity spot, OI>=100)" if WINDOW == "IS"
+           else "OOS Oct-2024 -> date (Upstox, guards)")
+    print(f"\n=== DEPLOYED CONFIGS · {lbl} ===")
+    print("Read the MEDIAN COHORT (c/w 0.40-0.50; v0 0.35-0.40) — where all 21 real live fills sit.")
+    print("ROM-pts pools strike points; ROM-Rs pools rupee margin, which is what an account commits.\n")
+    for scope in ("MEDIAN COHORT", "FULL BAND"):
+        print(f"--- {scope} ---")
+        print(f"{'book':<5}{'n':>7}{'WIN':>8}{'ROM-pts':>10}{'ROM-Rs':>10}{'Rs/trade':>11}{'+ve yrs':>9}")
+        for bk, cfg in BOOKS.items():
+            g = [x for x in rows if x["book"] == bk]
+            if scope == "MEDIAN COHORT":
+                lo, hi = (0.35, 0.40) if bk == "v0" else (0.40, 0.50)
+                g = [x for x in g if lo <= x["cw"] < hi]
+            if len(g) < 20:
+                print(f"{bk:<5}{len(g):>7}   (too few)"); continue
+            by = collections.defaultdict(list)
+            for x in g: by[x["yr"]].append(x["net_rs"])
+            # A YEAR NEEDS ENOUGH TRADES TO BE A YEAR (fixed 21-Aug-2026). Out-of-sample 2024 is an
+            # Oct-Dec stub: v2 has ONE trade in it, v0 has one. Counting those as full years turned
+            # "positive 2 of 2 years plus a single observation" into the much stronger-sounding
+            # "positive 3 of 3 years". Years under MIN_YR_N are shown as stubs, never folded in.
+            full = {y: v for y, v in by.items() if len(v) >= MIN_YR_N}
+            stub = {y: v for y, v in by.items() if len(v) < MIN_YR_N}
+            pos = sum(1 for v in full.values() if sum(v) > 0)
+            mrs = sum(x["margin_rs"] for x in g)
+            rom_rs = (sum(x["net_rs"] for x in g) / mrs * 100) if mrs else 0.0
+            rs_tr = (sum(x["net_rs"] for x in g) / len(g)) if g else 0.0
+            print(f"{bk:<5}{len(g):>7}{sum(x['win'] for x in g)/len(g)*100:>7.1f}%"
+                  f"{sum(x['net'] for x in g)/sum(x['margin'] for x in g)*100:>+9.1f}%{rom_rs:>+9.1f}%"
+                  f"{rs_tr:>+11,.0f}{pos:>6}/{len(full):<2}"
+                  + (("  (+%d stub yr: " % len(stub))
+                     + ", ".join(f"{y} n={len(v)}" for y, v in sorted(stub.items())) + ")" if stub else ""))
+        print()
+    # A run that silently lost signals to the network must not read as a clean run. State it either
+    # way, so "0" is positive evidence rather than the absence of a warning.
+    print_integrity()
+    print_oi_buckets(rows)

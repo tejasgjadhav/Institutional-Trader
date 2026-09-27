@@ -3926,3 +3926,12 @@ Verdict: per-book floor (v2 50 / v1 30 / v0 30) has an OOS case (+138 tr, 80%, +
 3/3 yrs, ≈+6 signals/mo); c/w 0.30 at floor 30 is dead (−0.9% OOS); name-wise whitelist = 3 thin
 cells. NOTHING deployed — needs user approval, then per-book MIN_PREM constants (config has one
 STOCK_CREDIT_MIN_PREM shared by v2/v1/v0) and a live spread-gate check.
+
+## 27-Sep (Sun) · USER APPROVED per-book premium floor: v2 50 / v1 30 / v0 30 (vlc unchanged 50)
+Deploy + UI everywhere + bug test + engine check + studies/UI updated with new results.
+27-Sep 08:45 · per-book floor CODE DONE (config V1/V0_MIN_PREM=30, stock_credit.py rebind, v0 _impl
+rebind, signal_recheck per-book floor, digest+watchlist prem_floor_for(), harness BOOKS prem=30,
+run 5). NOT YET: engine/UI restart, UI Studies entry, UI/README/CLAUDE/_TG_ANALYSIS numbers (wait
+run-5 OOS), symbol_history + name_history rebuild, bug test. Run-4 rows backed up *_run4.json.
+Harness bug: __main__ block sits above def print_integrity -> NameError after rows are saved.
+Queued: prem_band25.py (0.25-0.30, Rs 30-50, per side) IS then OOS after run5_done.flag.

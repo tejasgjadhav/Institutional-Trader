@@ -29,6 +29,10 @@ from engine.instruments import to_instrument_key
 
 logger = logging.getLogger(__name__)
 
+# v1 runs its OWN premium floor (per-book floor, user-approved 27-Sep-2026 — see config).
+from engine import config as _cfg
+STOCK_CREDIT_MIN_PREM = float(getattr(_cfg, "STOCK_CREDIT_V1_MIN_PREM", STOCK_CREDIT_MIN_PREM))
+
 # FETCH INTEGRITY (16-Sep-2026). A name the feed could not answer for is SKIPPED, which is
 # correct - never scan a stale bar - but the 15:36 message still claimed the full universe
 # had been scanned. On a bad DNS day that is a false all-clear. scan_signals() resets this
