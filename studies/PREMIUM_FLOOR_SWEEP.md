@@ -89,3 +89,16 @@ lost 195 option-price fetches to Upstox rate limiting and is being re-run.
 Pass 1 dropped 242 signals to HTTP 429 (UDAPI10005). Retries run through `research/patient_run.py`
 (60 s wait per 429, 30 s socket timeout). Until a pass completes with zero drops, the v1/v0 OOS
 figures on screen stay INTERIM (run 4 + sweep-measured ₹30–50 trades).
+
+## Run 5 final, 27-Sep-2026 13:42 — clean pass (FETCH INTEGRITY: 0 dropped)
+Published basis (OOS median cohort, ROM in points; ₹/mo over 23 months, 1 lot):
+
+| book | OOS trades | /mo | win | ROM | avg win | avg loss | ₹/trade | ₹/mo | +ve full yrs |
+|---|---|---|---|---|---|---|---|---|---|
+| v2 (floor ₹50) | 79 | 3.4 | 86.1% | +26.6% | ₹5,530 | ₹8,220 | ₹3,615 | ₹12,417 | 2/2 |
+| v1 (floor ₹30) | 289 | 12.6 | 81.0% | +13.9% | ₹3,739 | ₹9,628 | ₹1,195 | ₹15,020 | 3/3 |
+| v0 (floor ₹30) | 145 | 6.3 | 82.1% | +2.6% | ₹3,889 | ₹11,079 | ₹1,205 | ₹7,598 | 2/2 |
+
+Against run 4: v1 194 → 289 trades, v0 106 → 145. v2 81 → 79 on an unchanged config (data refresh).
+Stock books ₹35,035/mo; with the two intraday index books ₹40,841/mo, ~30 signals/mo, plan-on-80%
+₹32,673. Ceiling: the live 6% bid-ask gate is not modelled. Rows: research/deployed_bt_{is,oos}_rows_run5.json.

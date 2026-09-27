@@ -3975,3 +3975,11 @@ _TG_ANALYSIS, CLAUDE.md, README; rebuild symbol_history + name_history.
 27-Sep 11:30 · Upstox 429 rate-limit (UDAPI10005) was the cause of both the drops and the 'hangs'. Retries relaunched via research/patient_run.py (60s wait on 429, 30s socket timeout). run5 retry then band retry chained. Do NOT run these during market hours (shared token).
 27-Sep 11:40 · published IS basis = UNIVERSE-filtered (main IS + expansion2 IS), median cohort, ROM on RUPEE margin; OOS = median cohort ROM in POINTS. Interim IS text for v1/v0 was on the wrong basis (main only, pts) — correcting. expansion2 IS re-run at per-book floor (backup is_rows_run4.json).
 27-Sep 11:27 · ALL UI blocks updated (commit 3732df8), engine 22447 / UI 22456. Pending only: clean run-5 OOS pass -> swap interim v1/v0 OOS; clean band pass -> confirm the 3 vlc cells.
+27-Sep 13:45 · RUN 5 OOS CLEAN (pass 2: FETCH INTEGRITY 0 dropped). Final OOS median cohort: v2 79 ·
+86.1% · +26.6% · v1 289 · 81.0% · +13.9% · v0 145 · 82.1% · +2.6%. Rows saved *_run5.json. Retry
+script bug fixed (the clean line also contains "signal(s) dropped"). Band retry now running.
+Next: swap interim -> final in every block; rebuild symbol_history + name_history.
+27-Sep 13:55 · FINAL run-5 figures published everywhere (no 'interim' left). Engine/UI restarted.
+Armed: research/rebuild_histories.sh rebuilds symbol_history + name_history after band retry.
+Band retry running (patient). When research/band_clean.flag lands: re-screen, drop any vlc cell that
+fails, restart engine outside market hours.
