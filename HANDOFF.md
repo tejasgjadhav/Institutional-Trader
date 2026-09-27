@@ -3957,3 +3957,10 @@ dropped-signal line is gone (max 4 passes) -> research/run5_oos_passN.log, flag 
 HINDUNILVR BP (11 / 4), ULTRACEMCO BC (4 / 4); pooled OOS 16 tr 100% +17.5%. Not deployed.
 Run-5 retry chain now running (research/run5_retry.sh).
 27-Sep 10:40 · band OOS pass 1 lost 195 legs (run 20260927-093558) -> result PROVISIONAL; research/band_retry.sh re-runs it after the run-5 retries until 0 legfails.
+27-Sep · user: sides are independent (PIDILITIND BC counts even if BP fails) — listing per side.
+27-Sep · user: 'include what u feel is right in strategy' — deciding the 0.25-0.30 set; sizing a side-locked book like vlc.
+27-Sep · DECISION on the 0.25-0.30 Rs30-50 cells: add ONLY the cells that pass BOTH windows on the
+CLEAN retry (currently ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP), as per-cell entries in the
+side-locked vlc book (TP-40, v2 geometry, floor 30, band 0.25-0.30). Not wired yet: current OOS lost
+195 legs and the change touches the scan shared by v2/v0/vlc. Do it when research/band_clean.flag
+appears, with a regression pass, then republish. Signal gain so far = per-book floor (deployed).
