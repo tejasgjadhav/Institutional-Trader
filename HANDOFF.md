@@ -3993,3 +3993,13 @@ studies/BOOK_SIDE_HISTORY.csv exported. Engine restarted.
 27-Sep · user: count swing (non-intraday) signals per month Jun/Jul/Aug.
 27-Sep · user: last 3 months, counts at old 50 / new per-book / everything c/w>=0.25 prem>=30.
 27-Sep · user: add the last-3-months comparison to the Excel workbook.
+27-Sep · user idea: per-side (BC/BP) strategy across the whole F&O universe (~208) — were names rejected wholesale for failing one side? checking + running full side screen.
+27-Sep 15:4x · side-screen chain running (research/side_screen_chain.sh): pruned 8 IS+OOS
+(research/pruned8_{is,oos}_rows.json) then outsiders OOS on run-5 harness (expansion2/oos_rows.json,
+old copy oos_rows_run4.json), patient runner. Flag research/side_screen_chain.done. Then screen all
+208 names per SIDE (n>=3 each window, win>=80%, ROM>+5%) and count added signals. Must finish before
+Monday 09:00 (shared token).
+27-Sep 15:5x · side screen PROVISIONAL (outsider OOS = Aug rows, floor 50): 34 name-sides pass both
+windows, ALL already in the universe; 0 outsiders, 0 pruned. IS-picked sides OOS 85.1%/+18.4%/12.2 per
+mo vs unpicked 77.4%/+11.4%/20.6 per mo (still +₹23.5k/mo). Final screen auto-writes
+research/side_screen_208_final.txt after the outsider OOS leg (rate-limited, patient).
