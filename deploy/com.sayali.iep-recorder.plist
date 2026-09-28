@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.sayali.iep-recorder</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/sayali/files/institutional-trader/.venv/bin/python</string>
+    <string>-m</string><string>engine.iep_recorder</string>
+  </array>
+  <key>WorkingDirectory</key><string>/Users/sayali/files/institutional-trader</string>
+  <key>StandardOutPath</key><string>/Users/sayali/files/institutional-trader/logs/iep_recorder.out.log</string>
+  <key>StandardErrorPath</key><string>/Users/sayali/files/institutional-trader/logs/iep_recorder.err.log</string>
+  <key>StartCalendarInterval</key>
+  <array>
+    <dict><key>Weekday</key><integer>1</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>11</integer></dict>
+    <dict><key>Weekday</key><integer>2</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>11</integer></dict>
+    <dict><key>Weekday</key><integer>3</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>11</integer></dict>
+    <dict><key>Weekday</key><integer>4</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>11</integer></dict>
+    <dict><key>Weekday</key><integer>5</integer><key>Hour</key><integer>15</integer><key>Minute</key><integer>11</integer></dict>
+  </array>
+  <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
+  <key>RunAtLoad</key><false/>
+</dict>
+</plist>

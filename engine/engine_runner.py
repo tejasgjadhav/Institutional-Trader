@@ -1241,6 +1241,11 @@ class EngineRunner:
         # was opened at 09:29:54 — straight through the open and past the 09:16 0DTE scan. Friday
         # carries no index expiry so nothing was lost, but a Tuesday or Thursday would have been.
         # Holding from PREOPEN_HOLD closes the gap the scheduled wake leaves behind.
+        # Linux server (28-Sep-2026): no `caffeinate` and no sleep to prevent — skip quietly instead of
+        # logging a failed Popen every cycle.
+        import shutil as _sh
+        if _sh.which("caffeinate") is None:
+            return
         now_m = datetime.now(IST).hour * 60 + datetime.now(IST).minute
         preopen = (datetime.now(IST).weekday() < 5
                    and (self._PREOPEN_HOLD_FROM <= now_m < self._PREOPEN_HOLD_TO))

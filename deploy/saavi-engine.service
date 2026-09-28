@@ -1,0 +1,18 @@
+[Unit]
+Description=Saavi Institutional Trader engine (headless)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=__USER__
+WorkingDirectory=/home/__USER__/saavi/institutional-trader
+Environment=TZ=Asia/Kolkata
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/__USER__/saavi/institutional-trader/.venv/bin/python -m engine.engine_runner
+Restart=always
+RestartSec=10
+StandardOutput=append:/home/__USER__/saavi/institutional-trader/logs/engine.out.log
+StandardError=append:/home/__USER__/saavi/institutional-trader/logs/app.log
+
+[Install]
+WantedBy=multi-user.target

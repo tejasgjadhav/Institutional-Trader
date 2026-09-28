@@ -4032,3 +4032,13 @@ research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWE
 27-Sep 21:15 · user: confirm engine is NOT capped at c/w 0.50 — checking live gates.
 27-Sep 21:2x · confirmed no c/w ceiling on v2/v1 (None). User: update all studies + every UI tab.
 27-Sep 21:4x · UI README tab gates + Studies tab (weekend studies, >0.50 note) updated; LIVE_STRATEGIES, STRATEGY_SUMMARY rewritten; NEXT_ACTIONS current; TP_SWEEP_208.md added; DB rebuilt.
+27-Sep 21:18 · user: TP sweep OOS done? show results.
+27-Sep 21:2x · user: 'lets do oos'. Chain2 (research/tp_sweep_oos_chain2.sh): universe for all TPs first, then outs, then p8; waits for the running tp20 main; stops if battery <35% discharging. report.txt refreshed after each universe run.
+27-Sep · user: 'completely first' — report only when all 18 OOS runs are done.
+28-Sep 10:09 · user: done research? — status check.
+28-Sep 10:1x · FOUND the TP sweep chain2 still running in market hours (guard2's pattern did not match chain2; guard1 killed only the driver, chain2 started the next). Killed all. Battery 39% discharging at 10:09.
+28-Sep 10:1x · guard3 kills by broad pattern in market hours — it also killed my tool shell and the old publish waiter. Re-armed as research/publish_results_after_close.sh (idle till 15:50). During 08:30-15:45 weekdays avoid those words in commands.
+28-Sep 10:18 · user: engine good? — health check.
+28-Sep 17:14 · user: did we miss signals today?
+28-Sep 17:17 · user: MOVE THE ENGINE TO A MACHINE THAT NEVER SLEEPS. Investigating token flow, deps, launchd jobs; user must pick provider/pay.
+28-Sep 18:xx · deploy/ kit written (README, server_setup, systemd unit, push, cutover, viewer_sync, rollback, requirements-server). Wakelock skips on Linux. Waiting on user: create Ubuntu 22.04 server in India + SSH key.
