@@ -12,7 +12,7 @@ ExecStart=/home/__USER__/saavi/institutional-trader/.venv/bin/python -m engine.e
 Restart=always
 RestartSec=10
 StandardOutput=append:/home/__USER__/saavi/institutional-trader/logs/engine.out.log
-StandardError=append:/home/__USER__/saavi/institutional-trader/logs/app.log
+StandardError=append:/home/__USER__/saavi/institutional-trader/logs/engine.err.log
 
 [Install]
 WantedBy=multi-user.target

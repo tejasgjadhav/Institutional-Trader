@@ -4047,3 +4047,13 @@ research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWE
 28-Sep 17:25 · user signed in to AWS. Next: Lightsail Mumbai create-instance form, stop before Create for price confirmation.
 28-Sep 17:29 · Lightsail form READY (not created): Mumbai ap-south-1a, Ubuntu 22.04, micro_3_1 1GB/2vCPU/40GB $7/mo, name saavi-engine, launch script adds ~/.ssh/saavi_lightsail.pub + IST. Awaiting user confirm to click Create instance (billing).
 28-Sep 19:44 · user asked how the UI catches up after the Mac was off. Added deploy/com.sayali.saavi-viewer-sync.plist (starts at login, KeepAlive) — installed at cutover with the real host; viewer_sync uses ~/.ssh/saavi_lightsail.
+28-Sep 19:47 · user: why not $5? measuring engine peak memory (import + watchlist build).
+28-Sep 19:48 · measured engine peak 123 MB (import 108 MB) -> switched form to nano_3_1 $5/512MB + 1 GB swap in launch script. Side effect of the test: build_watchlist rewrote data/union_watchlist.json and data/watchlist_archive/2026-09-28.json at 19:47 with post-close quotes (15:41 archive overwritten). Awaiting user confirm to create.
+28-Sep 19:49 · user worried about 15:36 scan speed on $5 server; checking scan durations from logs.
+28-Sep 19:50 · CREATED Lightsail saavi-engine (user confirmed $5): Mumbai ap-south-1a, IPv4 13.233.161.205 (dynamic — attach static IP), private 172.26.7.225. SSH key ~/.ssh/saavi_lightsail, user ubuntu.
+28-Sep 19:52 · server setup done (venv, libs, systemd enabled, NOT started). ssh alias 'saavi'. Next: user copies .env, then cutover.
+28-Sep 20:03 · user: standing OK ('always okay') + wants an easy, tested fallback to the Mac. Plan: static IP, copy .env, harden rollback (works if server unreachable), Mac-side heartbeat watchdog (notification, no auto-failover to avoid double engines), cutover tonight, then a full rollback->cutover DRILL while market closed.
+28-Sep 20:04 · .env copied to server (chmod 600), with user's standing OK.
+28-Sep 20:05 · running CUTOVER to server.
+28-Sep 20:06 · FALLBACK DRILL: rollback -> verify -> cutover.
+28-Sep 20:10 · STATIC IP 13.206.60.104 (StaticIp-1) attached; ~/.ssh/config Host saavi updated. Drill passed (rollback->cutover). Engine LIVE on server; Mac engine disabled; viewer-sync + watchdog launchd loaded.

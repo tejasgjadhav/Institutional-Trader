@@ -26,3 +26,20 @@ Rollback at any time: `deploy/rollback.sh user@ip`.
 Notes: the Upstox analytics token was issued 10-Jun-2026 and is read-only market data (no daily
 login). Paper trading places no orders, so no static-IP registration is needed. The three CAS/IEP
 recorders stay on the Mac for now; they can move the same way later.
+
+## LIVE since 28-Sep-2026 20:06 — AWS Lightsail Mumbai
+- Server `saavi-engine`, Ubuntu 22.04.5, 512 MB + 1 GB swap, $5/month (+ GST), static IP **13.206.60.104**.
+- SSH alias `saavi` (in `~/.ssh/config`, key `~/.ssh/saavi_lightsail`). Engine: systemd `saavi-engine`
+  (restarts on crash, starts on boot). Logs: `~/saavi/institutional-trader/logs/app.log` on the server.
+- Mac: engine disabled (plist in `~/Library/LaunchAgents/disabled/`); UI is a viewer; viewer sync
+  (`com.sayali.saavi-viewer-sync`) and watchdog (`com.sayali.saavi-watchdog`) start at login.
+
+## FALLBACK — back to the Mac in one command (drilled 28-Sep-2026, both directions passed)
+    cd ~/files/institutional-trader && deploy/rollback.sh saavi
+Stops the server engine, stops the viewer sync (so it cannot overwrite the Mac engine's files), pulls
+the server's latest state, re-enables the Mac engine and checks exactly one engine runs. If the server
+does not answer, it refuses unless you add `--force` — use that ONLY when the AWS console shows the
+instance stopped, or two engines would double every Telegram signal.
+Return to the server: `deploy/cutover.sh saavi` (after 15:45 or at a weekend).
+Check any time: `deploy/status.sh saavi`. The watchdog shows a Mac notification if the server's
+heartbeat is older than 12 minutes during 09:10–15:50 on weekdays; it never switches engines itself.
