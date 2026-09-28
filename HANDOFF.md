@@ -4042,3 +4042,8 @@ research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWE
 28-Sep 17:14 · user: did we miss signals today?
 28-Sep 17:17 · user: MOVE THE ENGINE TO A MACHINE THAT NEVER SLEEPS. Investigating token flow, deps, launchd jobs; user must pick provider/pay.
 28-Sep 18:xx · deploy/ kit written (README, server_setup, systemd unit, push, cutover, viewer_sync, rollback, requirements-server). Wakelock skips on Linux. Waiting on user: create Ubuntu 22.04 server in India + SSH key.
+28-Sep 17:20 · user chose AWS Lightsail Mumbai. Opening console in Chrome Tejas(bia); stop before any paid click for confirmation.
+28-Sep 17:20 · AWS not signed in (sign-in page). SSH key ~/.ssh/saavi_lightsail(.pub) created for the server. Waiting for user to sign in / create AWS account (user-only).
+28-Sep 17:25 · user signed in to AWS. Next: Lightsail Mumbai create-instance form, stop before Create for price confirmation.
+28-Sep 17:29 · Lightsail form READY (not created): Mumbai ap-south-1a, Ubuntu 22.04, micro_3_1 1GB/2vCPU/40GB $7/mo, name saavi-engine, launch script adds ~/.ssh/saavi_lightsail.pub + IST. Awaiting user confirm to click Create instance (billing).
+28-Sep 19:44 · user asked how the UI catches up after the Mac was off. Added deploy/com.sayali.saavi-viewer-sync.plist (starts at login, KeepAlive) — installed at cutover with the real host; viewer_sync uses ~/.ssh/saavi_lightsail.
