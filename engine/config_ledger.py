@@ -70,11 +70,24 @@ def snapshot() -> dict:
         if callable(v) or isinstance(v, type(os)):
             continue
         try:
-            json.dumps(v)
-            out[k] = v
+            nv = _norm(v)
+            json.dumps(nv)
+            out[k] = nv
         except (TypeError, ValueError):
             out[k] = repr(v)
     return out
+
+
+def _norm(v):
+    """One canonical, JSON-safe form (28-Sep-2026): sets print in a different order in every process
+    and tuples come back from JSON as lists, so both used to be logged as a "change" on every start."""
+    if isinstance(v, (set, frozenset)):
+        return sorted((_norm(x) for x in v), key=repr)
+    if isinstance(v, (list, tuple)):
+        return [_norm(x) for x in v]
+    if isinstance(v, dict):
+        return {(k if isinstance(k, str) else repr(_norm(k))): _norm(x) for k, x in sorted(v.items(), key=lambda kv: repr(kv[0]))}
+    return v
 
 
 def _last_snapshot() -> tuple:

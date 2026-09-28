@@ -4075,3 +4075,7 @@ research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWE
 28-Sep 20:30 · sandbox dress rehearsal of every live book run on the server (/tmp/saavi_sbx).
 28-Sep 20:31 · AUDIT DONE: 33/33 live data files on server (identical sizes), 43/43 engine files identical, 0 errors in server logs, sandbox rehearsal 17/17 OK + SENSEX scan OK (1-Oct 73100/73700 CE). Live books unchanged. No new bugs; earlier fixes today: caffeinate on Linux, rollback/viewer-sync overwrite, push guard, pgrep -c, CAS path, market-hours guard name match, test-script Telegram import order.
 28-Sep 20:32 · user: update GitHub + UI (README/Studies) with the AWS setup; show the files in the browser.
+28-Sep 20:33 · docs+UI pushed (f280f97). User: show the files IN AWS in the browser + explain the server process in layman terms.
+28-Sep 20:37 · user OK: install server security updates + reboot, confirm engine auto-restarts.
+28-Sep 20:41 · server updated (all packages incl. kernel), rebooted twice; engine auto-started each time (16 s after boot). CAS timer + swap + IST persist.
+28-Sep 20:50 · direct server check requested after classifier outage.
