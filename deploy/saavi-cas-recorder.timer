@@ -1,0 +1,10 @@
+[Unit]
+Description=Run the CAS recorder at 15:50 and 16:20 IST, Monday to Friday (same as the Mac schedule)
+
+[Timer]
+OnCalendar=Mon..Fri 15:50
+OnCalendar=Mon..Fri 16:20
+Persistent=true
+
+[Install]
+WantedBy=timers.target

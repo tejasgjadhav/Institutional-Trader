@@ -4057,3 +4057,12 @@ research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWE
 28-Sep 20:05 · running CUTOVER to server.
 28-Sep 20:06 · FALLBACK DRILL: rollback -> verify -> cutover.
 28-Sep 20:10 · STATIC IP 13.206.60.104 (StaticIp-1) attached; ~/.ssh/config Host saavi updated. Drill passed (rollback->cutover). Engine LIVE on server; Mac engine disabled; viewer-sync + watchdog launchd loaded.
+28-Sep 20:11 · user: is engine live? not paid / not attached Upstox+Telegram tokens? verifying tokens work on server (Telegram getMe, no post).
+28-Sep 20:14 · user opened AWS Billing, thinks ~$120 credits; reading the billing page (read-only).
+28-Sep · AWS billing: $120 credits ($100 Free Tier incl. Lightsail + $20 Bedrock), $0 used, both expire 05/07/2027. Account is on the FREE PLAN: free access ends when the free-plan period (6 months from 05/07/2026) ends or credits run out; server would stop unless the account is upgraded to the paid plan (credits carry over). Exact end date not shown on the console. Needs user's explicit OK to upgrade (account setting). Fallback to Mac exists.
+28-Sep 20:18 · user: 5/7/2026 = 5 July 2026 -> AWS free plan ends ~5-Jan-2027; credits expire 5-Jul-2027. Upgrade to paid plan before ~mid-Dec-2026 (user decision pending).
+28-Sep 20:19 · user: all engines live on AWS + free? — status check.
+28-Sep 20:21 · user: move CAS recorder to the AWS server too.
+28-Sep 20:22 · user: CAS recorder must stay INDEPENDENT of Saavi (own systemd timer/service, own move/back scripts); worried about memory. Fixing hard-coded PROJECT path in calc_vs_print_recorder.py.
+28-Sep 20:23 · CAS recorder MOVED to server as independent systemd timer saavi-cas-recorder (15:50/16:20 Mon-Fri, MemoryMax 300M); test peak 89/80 MB. Mac agent disabled; back: deploy/cas_recorder_to_mac.sh. viewer_sync pulls CAS outputs (--update, iep/ excluded). push_to_server refuses while server engine live. IEP recorder + cas-calc stay on Mac.
+28-Sep 20:23 · user: drop calc-vs-print; CAS = print recorder only.

@@ -15,7 +15,7 @@ Scheduled: chained after engine.cas_recorder in com.sayali.cas-recorder (15:50 +
 import os, sys, json, sqlite3
 from datetime import date, datetime, timedelta
 
-PROJECT = os.path.expanduser("~/files/institutional-trader")
+PROJECT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))   # works on the Mac and the server
 HERE = os.path.join(PROJECT, "studies", "CAS_NIFTY_SENSEX_DATA")
 os.chdir(PROJECT)
 sys.path.insert(0, PROJECT)

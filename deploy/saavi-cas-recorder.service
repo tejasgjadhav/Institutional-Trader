@@ -1,0 +1,14 @@
+[Unit]
+Description=CAS close-window recorder (independent of the Saavi engine)
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=__USER__
+WorkingDirectory=/home/__USER__/saavi/institutional-trader
+Environment=TZ=Asia/Kolkata
+ExecStart=/home/__USER__/saavi/institutional-trader/.venv/bin/python -m engine.cas_recorder
+StandardOutput=append:/home/__USER__/saavi/institutional-trader/logs/cas_recorder.out.log
+StandardError=append:/home/__USER__/saavi/institutional-trader/logs/cas_recorder.err.log
+MemoryMax=300M
+Nice=5
