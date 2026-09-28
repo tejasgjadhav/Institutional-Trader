@@ -25,6 +25,15 @@ money-maker — live fills remain the unproven link, so plan on **~half of model
 | **0DTE SENSEX** (Thu) | expiry-day index credit spread | 89% | ~4–5/mo |
 | **Monthly Futures** pullback | buy oversold front-month futures (needs ~₹15L; regime-gated) | 76% | 5/cycle |
 
+## Where it runs (since 28-Sep-2026)
+
+The engine runs on an always-on **AWS Lightsail server in Mumbai** (`saavi-engine`, Ubuntu 22.04,
+static IP 13.206.60.104, systemd service `saavi-engine`, restarts on crash and boot). The CAS print
+recorder runs there as its own timer. The Mac runs only the dashboard, fed by a one-minute sync, so a
+sleeping or closed laptop no longer costs signals. **Fallback to the Mac is one command:**
+`deploy/rollback.sh saavi` (tested both directions on 28-Sep-2026). Status: `deploy/status.sh saavi`.
+Everything — setup, cutover, rollback, watchdog, cost — is in [`deploy/README.md`](deploy/README.md).
+
 ## Where the evidence stands (21-Aug-2026)
 
 The backtest is **finished**. `studies/ndte/deployed_backtest.py` is the single harness of record,

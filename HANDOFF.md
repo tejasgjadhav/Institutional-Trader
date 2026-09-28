@@ -4066,3 +4066,12 @@ research/tpsweep/report.txt, workbook sheet 'Take-profit sweep', DB table TP_SWE
 28-Sep 20:22 · user: CAS recorder must stay INDEPENDENT of Saavi (own systemd timer/service, own move/back scripts); worried about memory. Fixing hard-coded PROJECT path in calc_vs_print_recorder.py.
 28-Sep 20:23 · CAS recorder MOVED to server as independent systemd timer saavi-cas-recorder (15:50/16:20 Mon-Fri, MemoryMax 300M); test peak 89/80 MB. Mac agent disabled; back: deploy/cas_recorder_to_mac.sh. viewer_sync pulls CAS outputs (--update, iep/ excluded). push_to_server refuses while server engine live. IEP recorder + cas-calc stay on Mac.
 28-Sep 20:23 · user: drop calc-vs-print; CAS = print recorder only.
+28-Sep 20:24 · user confirmed: send the TEST Telegram message from the server via engine.notifications.send_telegram.
+28-Sep 20:25 · first test send returned False: my test imported engine.notifications without engine.config (config does load_dotenv) -> no token; nothing posted. Re-sent with config loaded first.
+28-Sep 20:26 · user: run a sample NIFTY call. Plan: dry-run zero_dte on the server (no position write, no send), show the rendered Telegram text.
+28-Sep 20:27 · user: end-to-end demo — run NIFTY 0DTE scan on server (no save) and POST the engine-formatted message with a DEMO/NOT A TRADE banner.
+28-Sep 20:27 · DEMO posted from server (0DTE NIFTY 22900/23100 CE, credit 32.48, closing quotes) with DEMO/NOT A TRADE banner; no position saved; markers unchanged.
+28-Sep 20:29 · user: verify EVERYTHING (backtest histories, swing info, all live strategies) is on the server; find and fix bugs. Doing: file-dependency audit, Mac-vs-server data diff, sandbox end-to-end run of every live book on the server.
+28-Sep 20:30 · sandbox dress rehearsal of every live book run on the server (/tmp/saavi_sbx).
+28-Sep 20:31 · AUDIT DONE: 33/33 live data files on server (identical sizes), 43/43 engine files identical, 0 errors in server logs, sandbox rehearsal 17/17 OK + SENSEX scan OK (1-Oct 73100/73700 CE). Live books unchanged. No new bugs; earlier fixes today: caffeinate on Linux, rollback/viewer-sync overwrite, push guard, pgrep -c, CAS path, market-hours guard name match, test-script Telegram import order.
+28-Sep 20:32 · user: update GitHub + UI (README/Studies) with the AWS setup; show the files in the browser.

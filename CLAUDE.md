@@ -1,5 +1,8 @@
 # CLAUDE.md — Institutional Trader (project context for Claude Code)
 
+## Where the engine runs (28-Sep-2026)
+AWS Lightsail `saavi-engine` (Mumbai, alias `saavi`, systemd `saavi-engine`); the Mac is a viewer. Check `deploy/status.sh saavi` before assuming. Fallback `deploy/rollback.sh saavi`. Never run two engines. Backtests share the Upstox token — none between 08:30 and 15:45 on weekdays (guard enforces).
+
 Read this first. It is the canonical context for working on this repo. Add task-specific
 instructions on top of it.
 

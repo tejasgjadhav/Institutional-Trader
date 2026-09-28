@@ -910,6 +910,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {self._forward_record_html()}
 {dim("This tab is a record of RESULTS. The incident write-ups and the NSE session change live on GitHub — studies/STALE_BAR_INCIDENT.md, studies/DEPLOYED_EVIDENCE_AUDIT.md and studies/NSE_SESSION_CHANGE_2026_08_03.md — so they do not crowd the numbers here.")}
 
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">28 SEP — THE ENGINE MOVED TO AN ALWAYS-ON SERVER</p>
+{res("<b>Why:</b> in the week of 21-Sep the Mac slept through scan windows on five of six trading days; the engine itself never failed. <b>What:</b> the engine and the CAS print recorder now run on AWS Lightsail in Mumbai; this Mac is a viewer. <b>Checks before go-live:</b> all 33 live data files and all 43 engine files identical on both machines; a full dress rehearsal of every book on the server passed 18 of 18; a demo NIFTY call posted from the server (Telegram message 238); the fallback to the Mac drilled in both directions. Guide: deploy/README.md.")}
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">THE WEEKEND OF 27 SEP — three more questions, none deployed</p>
 {res("<b>Side-wise book across all 208 F&amp;O names — rejected.</b> 34 name-sides pass ≥80% win and ROM &gt; +5% in both windows, and every one is already in the universe; no outsider and none of the 8 pruned names has a good side. A side-wise book gives 7.2 signals and ₹24,429 a month against the engine's 25.3 and ₹52,396; sides picked on history alone give 12.4 and ₹29,244. Adding all 208 names raises signals to 35.9 a month but lowers profit to ₹48,951. studies/SIDE_SCREEN_208.md")}
 {res("<b>Every name above c/w 0.25 — rejected.</b> June to 10-Aug: 177 trades against 79 on today's rules, but July lost ₹1,10,771 and early August ₹47,873. By band: 0.25–0.30 −₹1,07,809, 0.30–0.35 −₹25,991, 0.35–0.40 +₹63,471, 0.40+ +₹11,209. The money is made at 0.35 and above. studies/LAST_3_MONTHS_JUN_AUG_2026.md")}
@@ -1303,6 +1305,19 @@ Paper forward-test only. For educational use. Not financial advice.
    "(hidden; data heartbeat). Full strategy detail + backtests: <b>STUDIES tab</b>.")}
 
 {h("2 — SETUP (Mac and Windows)")}
+{p(f"<b style='color:{GREEN}'>WHERE IT RUNS NOW (since 28-Sep-2026): an always-on AWS server in Mumbai.</b> "
+   "The engine lives on AWS Lightsail <b>saavi-engine</b> (Mumbai ap-south-1a, Ubuntu 22.04, 512 MB + 1 GB swap, "
+   "static IP 13.206.60.104, ~$5/month, covered by AWS credits to about Jul-2027 once the account is on the paid "
+   "plan — the free plan ends about 5-Jan-2027). It restarts itself after a crash or reboot and sends every "
+   "Telegram message itself. The CAS print recorder runs there too, as its own separate timer (15:50 and 16:20). "
+   "This Mac only shows the dashboard: a background sync copies the server's data every minute and at every login, "
+   "so the window catches up after the laptop was off. The Mac can sleep, close or be off — no signal is missed.")}
+{p("<b>Commands (run in ~/files/institutional-trader):</b> <b>deploy/status.sh saavi</b> — where the engine runs and "
+   "its last heartbeat · <b>deploy/rollback.sh saavi</b> — FALLBACK: run the engine on this Mac again in one "
+   "command (stops the server engine, pulls its state, re-enables the Mac engine; tested both ways 28-Sep) · "
+   "<b>deploy/cutover.sh saavi</b> — move it back to the server (after 15:45 or weekends). A Mac watchdog shows a "
+   "notification if the server is silent for 12 minutes in market hours; it never switches engines by itself, "
+   "because two engines would send every signal twice. Full guide: deploy/README.md on GitHub.")}
 {p("<b>macOS:</b> <b>1.</b> git clone the repo &amp; cd in. <b>2.</b> Run <b>./setup.sh</b> — makes the venv, "
    "installs deps, writes the .env template, and installs the two launchd jobs (engine + viewer, auto-start). "
    "<b>3.</b> Edit <b>.env</b> and add your free Upstox <b>Analytics</b> token (read-only feed, no trading "
@@ -1324,7 +1339,8 @@ Paper forward-test only. For educational use. Not financial advice.
 {p(f"<b style='color:{PURPLE}'>VIEWER</b> (this app, read-only): never scans/fires/writes — it only reads "
    "what the engine wrote and displays it (header shows 'READ-ONLY VIEWER — engine scan Nm ago'). Re-reads "
    "disk every ~5–15 s. <b>Why split:</b> a viewer crash can never stop trading, and timing is independent "
-   "of the display. <b>For unattended running:</b> keep the laptop on, lid open, on AC power.")}
+   "of the display. <b>Since 28-Sep-2026 the ENGINE runs on the AWS server</b> (see section 2); this Mac runs only "
+   "the VIEWER, fed by the minute-by-minute sync.")}
 
 {h("4 — THE APP, TAB BY TAB")}
 {sub("PM DECISIONS — today's actions")}
