@@ -353,31 +353,38 @@ NAME_HISTORY_PATH = os.path.join(DATA_DIR, "name_history.json")
 
 
 def _digest_history(sym: str, side: str, cw: float) -> str:
-    """One line: this name+side's own backtest at the deployed gate (c/w >= 0.35, IS and OOS) and
-    in the sub-band it sits in today. From data/name_history.json (studies/ndte/build_name_history.py).
-    Format per window: n/win%/ROM%. '—' = no trades on record."""
+    """This name+side's own backtest, one line per window: at the deployed gate (c/w >= 0.35) and in
+    the sub-band it sits in today. Signals and win rate only (user, 30-Sep-2026: no returns, and no
+    blank cell: every line says what is there, or why nothing is). From data/name_history.json
+    (studies/ndte/build_name_history.py)."""
     try:
         h = json.load(open(NAME_HISTORY_PATH)).get(sym, {}).get(side, {})
     except Exception:
         h = {}
-    def f(c, scanned=None):
+    if not h:
+        return "   History: this stock was not part of the backtest (IS or OOS)."
+    def f(c, scanned, window, band=False):
+        if window == "IS" and h.get("is_tested") is False:
+            return "not part of IS (no option data before Oct 2024)"
         if c:
-            return f"{c['n']}/{c['win']:.0f}%/{c['rom']:+.0f}%"
-        return f"0/{scanned}" if scanned else "—"
+            return f"{c['n']} signal{'s' if c['n'] != 1 else ''}, {c['win']:.0f}% won"
+        if scanned:
+            return f"0 signals ({scanned} breakouts, none {'in this band ' if band else ''}passed the checks)"
+        return "0 signals (no breakouts on this side)"
     band = "gate" if cw >= 0.35 else ("b3035" if cw >= 0.30 else "b25")
     label = {"gate": "", "b3035": "0.30–0.35", "b25": "0.25–0.30"}[band]
-    _is = "n/a" if h.get("is_tested") is False else f(h.get("gate_is"), h.get("scanned_is"))
-    parts = [f"≥0.35 IS {_is} · OOS {f(h.get('gate_oos'), h.get('scanned_oos'))}"]
+    si, so = h.get("scanned_is"), h.get("scanned_oos")
+    lines = [f"   c/w ≥0.35 · IS: {f(h.get('gate_is'), si, 'IS')}",
+             f"   c/w ≥0.35 · OOS: {f(h.get('gate_oos'), so, 'OOS')}"]
     if band != "gate":
         bi, bo = h.get(f"{band}_is"), h.get(f"{band}_oos")
-        if h.get("is_tested") is False:
-            bi = "n/a"
         if band == "b3035" and not bi and h.get("b30_is"):   # fall back to the 0.30–0.40 cells
             bi, label = h.get("b30_is"), "0.30–0.40"
         if band == "b3035" and not bo and h.get("b30_oos"):
             bo = h.get("b30_oos")
-        parts.append(f"{label} IS {bi if bi == 'n/a' else f(bi)} · OOS {f(bo)}")
-    return "   hist " + " · ".join(parts)
+        lines += [f"   c/w {label} · IS: {f(bi, si, 'IS', True)}",
+                  f"   c/w {label} · OOS: {f(bo, so, 'OOS', True)}"]
+    return "   <i>History, this stock on this side:</i>\n" + "\n".join(lines)
 
 
 def prem_floor_for(sym: str, side: str, cw: float) -> float:
@@ -505,8 +512,8 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
     else:
         tail = "\nNo name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.\n"
     tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 only v0 (0.35–0.40), whitelisted vlc names (0.30–0.40) and 3 vlc cells (0.25–0.30, short leg ₹30–50: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP) fire.\n"
-             "\nhist = this name's own record on this side, trades/win/ROM · IS 2019–Sep 2024 · OOS Oct 2024–now · "
-             "≥0.35 = live books, then today's band · 0/N = N breakouts, none cleared the gates · n/a = no in-sample data for this name.")
+             "\nHistory = this stock's own backtest on this side · IS = 2019 to Sep 2024 · OOS = Oct 2024 to now · "
+             "c/w ≥0.35 = what the live books trade, then today's c/w band.")
     # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut
     keep = len(blocks)
     while keep > 0:
