@@ -80,6 +80,7 @@ class EngineRunner:
         # nothing new (ULTRACEMCO was already held) and sent a spurious no-signal notice AFTER the
         # real EXECUTE message. Markers now load from disk at start and save on set.
         self._watchlist_tg_day = None
+        self._recheck_idle_logged = set()   # (date, reason) — the recheck's idle line logs once a day
         self._watchlist_build_day = None
         self._last_monthly_resolve = 0.0
         self._monthly_scan_day = None
@@ -1532,8 +1533,12 @@ class EngineRunner:
                 # holiday" logged nonsense every 5 minutes after the close (found 5-Aug). Only claim
                 # a holiday when the clock says we should be trading and the data says we are not.
                 _mkt_hours = self.agent.is_market_open()
-                logger.info("morning recheck: %s — no message",
-                            "exchange holiday" if _mkt_hours else "outside market hours")
+                # Once per day per reason (30-Sep-2026). The settle-grace fast tick after 15:40 ran
+                # this every 5 s and wrote 83 identical lines between 15:40 and 15:47 on 29-Sep.
+                _why = "exchange holiday" if _mkt_hours else "outside market hours"
+                if (now.date(), _why) not in self._recheck_idle_logged:
+                    self._recheck_idle_logged.add((now.date(), _why))
+                    logger.info("morning recheck: %s — no message", _why)
                 return
             h, m = map(int, _c.SIGNAL_RECHECK_AT.split(":"))
             if (now.hour * 60 + now.minute) < h * 60 + m:

@@ -17,6 +17,8 @@ engine.instruments.
 import pandas as pd
 import numpy as np
 import requests
+import threading
+import time
 from datetime import datetime, timedelta
 import logging
 
@@ -39,6 +41,38 @@ SESSION.headers.update(_HEADERS)
 _adapter = requests.adapters.HTTPAdapter(pool_connections=32, pool_maxsize=32, max_retries=0)
 SESSION.mount("https://", _adapter)
 SESSION.mount("http://", _adapter)
+
+# RATE-LIMIT WAIT (30-Sep-2026). On 29-Sep, the first scan on the AWS server, Upstox answered 51
+# requests with HTTP 429 inside 1.3 s at 15:36:38, and about 45 of 116 names were scanned without
+# data. The server sits next to Upstox in Mumbai, so it spends the per-minute allowance faster
+# than the Mac did. Each 429 used to fail at once. Now a 429 waits and retries, with the waits
+# capped in total so a long throttle can never push the scan past the 15:40 close.
+_429_STEPS = (2, 4, 8, 16)          # seconds to wait before each retry
+_429_BUDGET_S = 45                  # most 429-waiting allowed in any 120 s window
+_429_WAITS = []                     # (time, seconds) of recent waits
+_429_LOCK = threading.Lock()        # the scan sentinel thread shares this session
+
+
+def _reserve_429_wait(wait: float) -> bool:
+    """True if `wait` seconds still fit in the rolling 429 budget, and books them."""
+    with _429_LOCK:
+        now = time.time()
+        _429_WAITS[:] = [(t, w) for t, w in _429_WAITS if now - t < 120]
+        if sum(w for _, w in _429_WAITS) + wait > _429_BUDGET_S:
+            return False
+        _429_WAITS.append((now, wait))
+        return True
+
+
+def _upstox_get(url: str, timeout: float, **kw):
+    """SESSION.get with a wait-and-retry on HTTP 429. Returns the last response."""
+    for wait in _429_STEPS + (None,):
+        resp = SESSION.get(url, timeout=timeout, **kw)
+        if resp.status_code != 429 or wait is None or not _reserve_429_wait(wait):
+            return resp
+        logger.info(f"Upstox 429 — waiting {wait}s, then retrying {url[len(UPSTOX_BASE):][:70]}")
+        time.sleep(wait)
+    return resp
 
 
 def _candles_to_df(candles: list) -> pd.DataFrame:
@@ -134,7 +168,7 @@ def fetch_upstox_quote(instrument_key: str) -> dict:
     if not UPSTOX_ANALYTICS_TOKEN or not instrument_key:
         return {}
     try:
-        resp = SESSION.get(f"{UPSTOX_BASE}/v2/market-quote/quotes",
+        resp = _upstox_get(f"{UPSTOX_BASE}/v2/market-quote/quotes",
                            params={"instrument_key": instrument_key}, timeout=6)
         resp.raise_for_status()
         data = resp.json().get("data", {})
@@ -170,7 +204,7 @@ def fetch_upstox_intraday(ticker: str, interval: int = 5) -> pd.DataFrame:
 
     try:
         url = f"{UPSTOX_BASE}/v3/historical-candle/intraday/{encode_key(key)}/minutes/{interval}"
-        resp = SESSION.get(url, timeout=10)
+        resp = _upstox_get(url, timeout=10)
         resp.raise_for_status()
         data = resp.json()
         if data.get("status") == "success":
@@ -206,7 +240,7 @@ def fetch_upstox_historical(ticker: str, unit: str = "days", interval: int = 1,
 
     try:
         url = f"{UPSTOX_BASE}/v3/historical-candle/{encode_key(key)}/{unit}/{interval}/{to_date}/{from_date}"
-        resp = SESSION.get(url, timeout=15)
+        resp = _upstox_get(url, timeout=15)
         resp.raise_for_status()
         data = resp.json()
         if data.get("status") == "success":
