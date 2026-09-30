@@ -352,15 +352,35 @@ DIGEST_BACKTEST = {
 NAME_HISTORY_PATH = os.path.join(DATA_DIR, "name_history.json")
 
 
+def _name_hist(sym: str, side: str) -> dict:
+    """This name+side's record from data/name_history.json, or {} if it was never backtested."""
+    try:
+        return json.load(open(NAME_HISTORY_PATH)).get(sym, {}).get(side, {})
+    except Exception:
+        return {}
+
+
+def _band_cells(h: dict, cw: float) -> tuple:
+    """(band key, label, IS cell, OOS cell) for the c/w band this name sits in today. Shared by the
+    history lines and the verdict line so both always read the same numbers."""
+    band = "gate" if cw >= 0.35 else ("b3035" if cw >= 0.30 else "b25")
+    label = {"gate": "≥0.35", "b3035": "0.30–0.35", "b25": "0.25–0.30"}[band]
+    if band == "gate":
+        return band, label, h.get("gate_is"), h.get("gate_oos")
+    bi, bo = h.get(f"{band}_is"), h.get(f"{band}_oos")
+    if band == "b3035" and not bi and h.get("b30_is"):   # fall back to the 0.30–0.40 cells
+        bi, label = h.get("b30_is"), "0.30–0.40"
+    if band == "b3035" and not bo and h.get("b30_oos"):
+        bo = h.get("b30_oos")
+    return band, label, bi, bo
+
+
 def _digest_history(sym: str, side: str, cw: float) -> str:
     """This name+side's own backtest, one line per window: at the deployed gate (c/w >= 0.35) and in
     the sub-band it sits in today. Signals and win rate only (user, 30-Sep-2026: no returns, and no
     blank cell: every line says what is there, or why nothing is). From data/name_history.json
     (studies/ndte/build_name_history.py)."""
-    try:
-        h = json.load(open(NAME_HISTORY_PATH)).get(sym, {}).get(side, {})
-    except Exception:
-        h = {}
+    h = _name_hist(sym, side)
     if not h:
         return "   History: this stock was not part of the backtest (IS or OOS)."
     def f(c, scanned, window, band=False):
@@ -371,20 +391,55 @@ def _digest_history(sym: str, side: str, cw: float) -> str:
         if scanned:
             return f"0 signals ({scanned} breakouts, none {'in this band ' if band else ''}passed the checks)"
         return "0 signals (no breakouts on this side)"
-    band = "gate" if cw >= 0.35 else ("b3035" if cw >= 0.30 else "b25")
-    label = {"gate": "", "b3035": "0.30–0.35", "b25": "0.25–0.30"}[band]
     si, so = h.get("scanned_is"), h.get("scanned_oos")
     lines = [f"   c/w ≥0.35 · IS: {f(h.get('gate_is'), si, 'IS')}",
              f"   c/w ≥0.35 · OOS: {f(h.get('gate_oos'), so, 'OOS')}"]
+    band, label, bi, bo = _band_cells(h, cw)
     if band != "gate":
-        bi, bo = h.get(f"{band}_is"), h.get(f"{band}_oos")
-        if band == "b3035" and not bi and h.get("b30_is"):   # fall back to the 0.30–0.40 cells
-            bi, label = h.get("b30_is"), "0.30–0.40"
-        if band == "b3035" and not bo and h.get("b30_oos"):
-            bo = h.get("b30_oos")
         lines += [f"   c/w {label} · IS: {f(bi, si, 'IS', True)}",
                   f"   c/w {label} · OOS: {f(bo, so, 'OOS', True)}"]
     return "   <i>History, this stock on this side:</i>\n" + "\n".join(lines)
+
+
+def _digest_verdict(r: dict, book, star: bool, prem_ok: bool, spr_ok: bool, oi_ok: bool,
+                    held: list) -> str:
+    """The last line of each name: what to do, in one sentence (user, 30-Sep-2026).
+    ENGINE TRADE  = a live book takes it and every check is ✅.
+    YOUR CALL     = no book takes this c/w, but the stock passes the manual rule (config MANUAL_RULE_*):
+                    OOS in today's band >= 5 signals at >= 85% won (90% below c/w 0.30), IS >= 80% won
+                    or not part of IS, premium/spread/OI all ✅, and not already held. Never traded or
+                    logged by the engine.
+    SKIP          = anything else, with every reason listed."""
+    from engine import config as _c
+    cw = float(r.get("cw") or 0)
+    fails = [n for n, ok in (("premium", prem_ok), ("spread", spr_ok), ("OI", oi_ok)) if not ok]
+    if star:
+        return "   👉 <b>ENGINE TRADE</b>: the engine takes this at 15:36 if the close still passes."
+    if book:
+        return f"   👉 <b>SKIP</b>: the engine's book fits this c/w, but {', '.join(fails)} ❌."
+    h = _name_hist(str(r.get("sym")), str(r.get("side")))
+    if not h:
+        return "   👉 <b>SKIP</b>: no backtest history for this stock, so the manual rule cannot pass."
+    band, label, bi, bo = _band_cells(h, cw)
+    need_n = int(getattr(_c, "MANUAL_RULE_MIN_OOS_SIGNALS", 5))
+    need_oos = float(getattr(_c, "MANUAL_RULE_MIN_OOS_WIN", {}).get(band, 85.0))
+    need_is = float(getattr(_c, "MANUAL_RULE_MIN_IS_WIN", 80.0))
+    why = [f"{x} ❌" for x in fails]
+    n_oos = bo["n"] if bo else 0
+    if n_oos < need_n:
+        why.append(f"only {n_oos} OOS signal{'s' if n_oos != 1 else ''} in c/w {label} (need {need_n})")
+    elif bo["win"] < need_oos:
+        why.append(f"OOS {bo['win']:.0f}% won in c/w {label} (need {need_oos:.0f}%)")
+    if h.get("is_tested") is not False and bi and bi["win"] < need_is:
+        why.append(f"IS {bi['win']:.0f}% won in c/w {label} (need {need_is:.0f}%)")
+    if held:
+        why.append("you already hold this stock")
+    if why:
+        return "   👉 <b>SKIP</b>: " + "; ".join(why) + "."
+    is_txt = ("not part of IS" if h.get("is_tested") is False
+              else (f"IS {bi['n']} signals, {bi['win']:.0f}% won" if bi else "IS 0 signals"))
+    return (f"   👉 <b>YOUR CALL, passes the manual rule</b>: OOS {bo['n']} signals, {bo['win']:.0f}% won "
+            f"· {is_txt}. The engine will not take or log this trade.")
 
 
 def prem_floor_for(sym: str, side: str, cw: float) -> float:
@@ -461,9 +516,10 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
     rows.sort(key=lambda r: -(r.get("cw") or 0))
     ts = d.get("ts", "")[:16].replace("T", " ")
     head = (f"📋 <b>WATCHLIST — ⛔ DO NOT TRADE YET</b> ({ts})\n"
-            f"{d.get('breakouts', len(d.get('rows', [])))} breakouts · {len(rows)} at c/w ≥ {min_cw:.2f}, best first. "
+            f"{d.get('breakouts', len(d.get('rows', [])))} breakouts · {len(rows)} at c/w ≥ {min_cw:.2f}. "
+            f"⭐ names first, then best c/w first. "
             f"The engine decides at <b>15:36</b> on the official close.\n")
-    blocks, starred = [], []
+    blocks, starred, manual_names = [], [], []
     for i, r in enumerate(rows, 1):
         verb = "CE" if r.get("side") == "BEAR_CALL" else "PE"
         side = "Bear Call" if r.get("side") == "BEAR_CALL" else "Bull Put"
@@ -495,8 +551,14 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         except Exception:
             pass
         held = _digest_open_in(str(r.get("sym")))
-        l1 = (f"{'⭐ ' if star else ''}<b>{i}. {_h.escape(str(r.get('sym')))}</b> · {side} · c/w <b>{r.get('cw')}</b> · "
-              f"{book or 'no strategy'}" + (f" · open: {' · '.join(held)}" if held else ""))
+        # MANUAL RULE (user, 30-Sep-2026: "only star makes sense"): a no-book name that passes it gets
+        # the ⭐ and a label, nothing else; the reasons stay in the ❌ ticks and the history lines.
+        manual = (not star and book is None
+                  and "YOUR CALL" in _digest_verdict(r, book, star, prem_ok, spr_ok, oi_ok, held))
+        if manual:
+            manual_names.append(str(r.get("sym")))
+        l1 = (f"{'⭐ ' if star or manual else ''}<b>§N§. {_h.escape(str(r.get('sym')))}</b> · {side} · c/w <b>{r.get('cw')}</b> · "
+              f"{book or ('manual rule ✅, your call' if manual else 'no strategy')}" + (f" · open: {' · '.join(held)}" if held else ""))
         mp, ml, lot = r.get("max_profit"), r.get("max_loss"), r.get("lot")
         l2 = (f"   SELL {ss} {verb} / BUY {ls} {verb} · {exp} · credit ₹{credit} on {('%g' % w) if isinstance(w, (int, float)) else '?'}"
               + (f" · lot {lot} · +₹{mp:,} / −₹{ml:,}" if mp is not None and ml is not None else "")
@@ -505,21 +567,36 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
               f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}"
               + (" — <b>READY</b>" if star else ""))   # no issue text: the ❌ says which gate failed (user, 25-Sep)
         l4 = _digest_history(str(r.get("sym")), str(r.get("side")), float(r.get("cw") or 0))
-        blocks.append(f"{l1}\n{l2}\n{l3}\n{l4}\n")
+        rank = 0 if star else (1 if manual else 2)
+        blocks.append((rank, -(r.get("cw") or 0), f"{l1}\n{l2}\n{l3}\n{l4}\n", r))
+    # ⭐ NAMES FIRST (30-Sep-2026): engine ⭐, then manual-rule ⭐, then the rest, each best c/w first,
+    # so Telegram's size limit can only ever cut detail on a name you would not trade.
+    blocks.sort(key=lambda b: (b[0], b[1]))
+    rows = [b[3] for b in blocks]
+    ranks = [b[0] for b in blocks]
+    blocks = [b[2].replace("§N§", str(i), 1) for i, b in enumerate(blocks, 1)]
     if starred:
         tail = (f"\n⭐ <b>BE READY FOR SIGNALS: {', '.join(_h.escape(x) for x in starred)}</b> — all ticks at 15:31. "
                 f"If they still pass on the close, the EXECUTE message follows at 15:36.\n")
     else:
         tail = "\nNo name has all ticks at 15:31 — no signal expected at 15:36 unless the close changes a c/w.\n"
-    tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐ — below 0.40 only v0 (0.35–0.40), whitelisted vlc names (0.30–0.40) and 3 vlc cells (0.25–0.30, short leg ₹30–50: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP) fire.\n"
+    if manual_names:
+        tail += (f"⭐ <b>YOUR CALL, manual rule passed: {', '.join(_h.escape(x) for x in manual_names)}</b>. "
+                 f"The engine will not take or log these.\n")
+    tail += ("⛔ <b>DO NOT TRADE</b> anything without ⭐. Engine ⭐ below 0.40: only v0 (0.35–0.40), whitelisted vlc names (0.30–0.40) and 3 vlc cells (0.25–0.30, short leg ₹30–50: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP) fire.\n"
+             "⭐ with <i>manual rule ✅</i> (c/w 0.25–0.35, no engine book): in today's band OOS has 5+ signals and 85%+ won "
+             "(90%+ below c/w 0.30), IS 80%+ won or not part of IS, premium, spread and OI ✅, not already held.\n"
              "\nHistory = this stock's own backtest on this side · IS = 2019 to Sep 2024 · OOS = Oct 2024 to now · "
              "c/w ≥0.35 = what the live books trade, then today's c/w band.")
     # ONE message: drop the lowest-c/w blocks until it fits, and say how many were cut
     keep = len(blocks)
     while keep > 0:
         body = "\n".join(blocks[:keep])
+        _tag = {0: "⭐", 1: "⭐", 2: ""}
         cut = ("" if keep == len(blocks)
-               else f"\n(+{len(blocks) - keep} more at c/w {rows[keep]['cw']}–{rows[-1]['cw']} not shown — message limit)\n")
+               else f"\nAlso on the watchlist, details cut for Telegram's size limit: "
+                    + ", ".join(f"{_tag[rk]}{_h.escape(str(rr.get('sym')))} {rr.get('cw')}"
+                                for rr, rk in zip(rows[keep:], ranks[keep:])) + ".\n")
         msg = head + "\n" + body + cut + tail
         if len(msg) <= limit:
             return msg, starred

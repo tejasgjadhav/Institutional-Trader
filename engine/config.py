@@ -150,6 +150,14 @@ WATCHLIST_AFTER = "15:17"
 # hour before sending, so the message carries final strikes + live option prices, ~5 min before the
 # 15:36 scan.
 WATCHLIST_DIGEST_AT = "15:31"
+# MANUAL-CALL RULE (user, 30-Sep-2026). For a c/w 0.25-0.35 name that no engine book takes, the 15:31
+# digest prints YOUR CALL or SKIP from this stock's own history on this side. Display only: the
+# engine never trades or logs it. Break-even win rate on the all-116-name band study (wins average
+# ~0.2-0.25 of margin, losses ~0.85): about 78% at 0.30-0.35 and 81% at 0.25-0.30. The OOS
+# thresholds sit 7-9 points above that as a buffer.
+MANUAL_RULE_MIN_OOS_SIGNALS = 5
+MANUAL_RULE_MIN_OOS_WIN = {"b3035": 85.0, "b25": 90.0}   # % won, OOS, by c/w band
+MANUAL_RULE_MIN_IS_WIN = 80.0                            # % won, IS (skipped if not part of IS)
 
 # Morning re-check of the PREVIOUS session's stock-credit calls (engine/signal_recheck.py).
 # 09:30, not 09:16: the first 15 minutes are the noisiest part of the day and the re-check's
