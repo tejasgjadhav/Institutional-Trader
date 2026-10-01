@@ -109,6 +109,16 @@ def _todays_breakout(ticker: str):
     # shared once-a-day copy of the bars before today (1-Oct-2026, data_fetcher.fetch_daily_prior)
     from engine.data_fetcher import fetch_daily_prior
     df = fetch_daily_prior(ticker)
+    if df is None or df.empty:
+        # A FAILED HISTORY FETCH IS AN UNREAD NAME (1-Oct-2026). It used to return None before the
+        # integrity counter, so on 30-Sep, with ~117 names failing on HTTP 429, the 15:36 message
+        # still said the full universe was scanned.
+        logger.warning(f"{__name__}: no daily history for {ticker} — skipped, not scanned")
+        SCAN_INTEGRITY["unreachable"] += 1
+        _nm = str(ticker).replace(".NS", "")
+        if _nm not in SCAN_INTEGRITY["names"]:
+            SCAN_INTEGRITY["names"].append(_nm)
+        return None
     if df is None or df.empty or len(df) < STOCK_CREDIT_DONCHIAN + 2:
         return None
     df = df.sort_index()
@@ -157,11 +167,12 @@ def _todays_breakout(ticker: str):
 
     hi = float(prior["High"].rolling(STOCK_CREDIT_DONCHIAN).max().iloc[-1])
     lo = float(prior["Low"].rolling(STOCK_CREDIT_DONCHIAN).min().iloc[-1])
-    if c > hi:
-        return "LONG" if _dir_ok("LONG") else None
-    if c < lo:
-        return "SHORT" if _dir_ok("SHORT") else None
-    return None
+    d = "LONG" if c > hi else ("SHORT" if c < lo else None)
+    if d is None or not _dir_ok(d):
+        return None
+    from engine.data_utils import note_close_breakout
+    note_close_breakout(ticker, d, STOCK_CREDIT_DONCHIAN, "v1")   # 15:35-15:45 only, never gates
+    return d
 
 
 def _pick_legs(ticker: str, spot: float, opt_type: str):

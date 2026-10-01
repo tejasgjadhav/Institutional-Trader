@@ -3,6 +3,7 @@ Data Utilities — Index closes (Nifty/BankNifty/VIX), API health check.
 All via Upstox V3 (primary), no Yahoo latency.
 """
 import os
+import json
 import logging
 import time
 import requests
@@ -145,6 +146,60 @@ def _market_is_open() -> bool:
 
 
 _trading_cache = {"date": None, "at": None, "trading": None}
+
+
+CLOSE_ONLY_PATH = os.path.join(DATA_DIR, "close_only_breakouts.jsonl")
+
+
+def note_close_breakout(ticker: str, direction: str, dc, book: str) -> None:
+    """Record a 15:36 breakout that was NOT on the 15:31 watchlist (user, 1-Oct-2026). Read-only for
+    trading: it only appends one line to data/close_only_breakouts.jsonl and logs it, so after a few
+    weeks we can count how often a stock breaks out only in the closing auction. Runs only
+    15:35-15:45 on a day that has a watchlist archive; one row per day, stock and book."""
+    try:
+        now = datetime.now(IST)
+        if not ("15:35" <= now.strftime("%H:%M") <= "15:45"):
+            return
+        today = now.date().isoformat()
+        arch = os.path.join(DATA_DIR, "watchlist_archive", f"{today}.json")
+        if not os.path.exists(arch):
+            return
+        sym = str(ticker).replace(".NS", "")
+        if sym in {r.get("sym") for r in json.load(open(arch)).get("rows", [])}:
+            return
+        if os.path.exists(CLOSE_ONLY_PATH):
+            for line in open(CLOSE_ONLY_PATH):
+                try:
+                    x = json.loads(line)
+                except Exception:
+                    continue
+                if (x.get("date"), x.get("sym"), x.get("book")) == (today, sym, book):
+                    return
+        rec = {"date": today, "time": now.strftime("%H:%M:%S"), "sym": sym,
+               "dir": direction, "dc": dc, "book": book}
+        with open(CLOSE_ONLY_PATH, "a") as f:
+            f.write(json.dumps(rec) + "\n")
+        logger.info(f"CLOSE-ONLY BREAKOUT: {sym} {direction} D{dc} ({book}) was not on the 15:31 watchlist")
+    except Exception as e:
+        logger.warning(f"note_close_breakout: {e}")
+
+
+def close_only_today() -> list:
+    """Today's close-only breakout names (deduplicated across books), for the daily summary line."""
+    today = datetime.now(IST).date().isoformat()
+    out = []
+    try:
+        if os.path.exists(CLOSE_ONLY_PATH):
+            for line in open(CLOSE_ONLY_PATH):
+                try:
+                    x = json.loads(line)
+                except Exception:
+                    continue
+                if x.get("date") == today and x.get("sym") not in out:
+                    out.append(x.get("sym"))
+    except Exception:
+        pass
+    return out
 
 
 CLOSE_TTL_S = 90

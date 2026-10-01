@@ -154,6 +154,16 @@ def _todays_breakout(ticker: str):
     # shared once-a-day copy of the bars before today (1-Oct-2026, data_fetcher.fetch_daily_prior)
     from engine.data_fetcher import fetch_daily_prior
     df = fetch_daily_prior(ticker)
+    if df is None or df.empty:
+        # A FAILED HISTORY FETCH IS AN UNREAD NAME (1-Oct-2026). It used to return None before the
+        # integrity counter, so on 30-Sep, with ~117 names failing on HTTP 429, the 15:36 message
+        # still said the full universe was scanned.
+        logger.warning(f"{__name__}: no daily history for {ticker} — skipped, not scanned")
+        SCAN_INTEGRITY["unreachable"] += 1
+        _nm = str(ticker).replace(".NS", "")
+        if _nm not in SCAN_INTEGRITY["names"]:
+            SCAN_INTEGRITY["names"].append(_nm)
+        return None
     if df is None or df.empty or len(df) < max(UNION_DCS) + 2:
         return None
     df = df.sort_index()
@@ -214,6 +224,9 @@ def _todays_breakout(ticker: str):
             break                    # this window didn't break → no larger one will either
     if best and not _dir_ok(best[0]):
         return None
+    if best:
+        from engine.data_utils import note_close_breakout
+        note_close_breakout(ticker, best[0], best[1], _FR_BOOK)   # 15:35-15:45 only, never gates
     return best
 
 

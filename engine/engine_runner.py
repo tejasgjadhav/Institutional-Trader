@@ -1008,6 +1008,13 @@ class EngineRunner:
                     logger.warning(f"stock_credit_vlc scan: {e}")
             if _fired == 0:
                 self._tg_no_signal(now, late=late_ok)
+            try:   # daily record, a zero day included (user, 1-Oct-2026)
+                from engine.data_utils import close_only_today
+                _co = close_only_today()
+                logger.info(f"close-only breakouts today (not on the 15:31 watchlist): {len(_co)}"
+                            + (f" — {', '.join(_co)}" if _co else ""))
+            except Exception as e:
+                logger.warning(f"close-only summary: {e}")
 
 
     def _tg_intraday_skip(self, now, reasons):
