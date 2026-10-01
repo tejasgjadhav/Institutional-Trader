@@ -106,9 +106,9 @@ def _quote(key: str):
 
 
 def _todays_breakout(ticker: str):
-    start = (date.today() - timedelta(days=STOCK_CREDIT_DONCHIAN * 3 + 25)).isoformat()
-    df = fetch_upstox_historical(ticker, unit="days", interval=1,
-                                 from_date=start, to_date=date.today().isoformat())
+    # shared once-a-day copy of the bars before today (1-Oct-2026, data_fetcher.fetch_daily_prior)
+    from engine.data_fetcher import fetch_daily_prior
+    df = fetch_daily_prior(ticker)
     if df is None or df.empty or len(df) < STOCK_CREDIT_DONCHIAN + 2:
         return None
     df = df.sort_index()

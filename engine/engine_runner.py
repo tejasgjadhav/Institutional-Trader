@@ -859,14 +859,31 @@ class EngineRunner:
         # split for slack is unnecessary — build and send in the same pass. (the slow ~100-stock sweep; on a throttled day it took
         # 17 min → the old combined 15:05 call landed at 15:22). Doing it at 14:45 gives ~20 min of
         # slack so it's always ready by 15:05. Near-close data (breakouts are close-based).
-        if (self.agent.is_market_open() and _mins >= _watchlist_mins()
+        # 1-Oct-2026 (user): the 15:17 build is dropped. Its slot now only WARMS the shared daily
+        # history (data_fetcher.fetch_daily_prior) at HISTORY_WARM_AT, so the 15:31 build and the
+        # 15:36 books fetch only today's bars and the option quotes. _watchlist_build_day now marks
+        # "early stage done" for the day, whichever of the two ran.
+        _early = getattr(config, "WATCHLIST_EARLY_BUILD", True)
+        _h, _m = map(int, getattr(config, "HISTORY_WARM_AT", "15:00").split(":"))
+        _start = _watchlist_mins() if _early else _h * 60 + _m
+        if (self.agent.is_market_open() and _mins >= _start
                 and self._watchlist_build_day != now.date()):
             self._watchlist_build_day = now.date()
             try:
-                w = stock_credit_v2.build_watchlist()
-                logger.info(f"union watchlist built (15:17): {w.get('breakouts',0)} breakouts")
+                if _early:
+                    w = stock_credit_v2.build_watchlist()
+                    logger.info(f"union watchlist built (15:17): {w.get('breakouts',0)} breakouts")
+                else:
+                    from engine.data_fetcher import fetch_daily_prior
+                    t0 = time.time()
+                    ok = 0
+                    for tk in config.UNIVERSE:
+                        d = fetch_daily_prior(tk)
+                        ok += int(d is not None and not d.empty)
+                    logger.info(f"daily history warmed at {now:%H:%M}: {ok}/{len(config.UNIVERSE)} "
+                                f"names in {time.time() - t0:.0f}s")
             except Exception as e:
-                logger.warning(f"watchlist build 14:45: {e}")
+                logger.warning(f"watchlist early stage: {e}")
         # 15:31 — REBUILD the watchlist and SEND the digest (user decision, 2026-08-06; 3-agent
         # adjudication 5-Aug). By 15:31 the CAS random close (15:28-15:30) has passed, so spot is
         # the auction value and the STRIKES ARE FINAL — the 15:17 build priced off the frozen 15:15

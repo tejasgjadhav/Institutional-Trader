@@ -4,6 +4,7 @@ All via Upstox V3 (primary), no Yahoo latency.
 """
 import os
 import logging
+import time
 import requests
 from datetime import datetime, timedelta, date
 
@@ -146,6 +147,10 @@ def _market_is_open() -> bool:
 _trading_cache = {"date": None, "at": None, "trading": None}
 
 
+CLOSE_TTL_S = 90
+_CLOSE_CACHE = {}         # sym -> (time, (price, source)); only successful intraday reads
+
+
 def todays_close(ticker: str):
     """(price, source) for TODAY's close of one stock — or (None, "stale") if today's is not there.
 
@@ -169,10 +174,18 @@ def todays_close(ticker: str):
     """
     sym = ticker.replace(".NS", "")
     today = datetime.now(IST).date()
+    # SHARED FOR CLOSE_TTL_S (1-Oct-2026): the four stock books scan one after another at 15:36,
+    # after the auction has set the close, and each used to fetch every stock's 5-min bars again.
+    # The 15:31 build is five minutes earlier, so it never feeds the 15:36 scan from this cache.
+    hit = _CLOSE_CACHE.get(sym)
+    if hit and time.time() - hit[0] < CLOSE_TTL_S and hit[1][0] is not None:
+        return hit[1]
     try:
         df = fetch_upstox_intraday(sym, interval=5)
         if df is not None and not df.empty and df.index[-1].date() == today:
-            return float(df["Close"].iloc[-1]), "intraday"
+            out = (float(df["Close"].iloc[-1]), "intraday")
+            _CLOSE_CACHE[sym] = (time.time(), out)
+            return out
     except Exception as e:
         logger.debug(f"todays_close intraday {sym}: {e}")
     try:

@@ -151,9 +151,9 @@ def _todays_breakout(ticker: str):
     read a stale bar; nothing on screen could have revealed that. Now the watchlist and PM
     DECISIONS print the signal price beside the live price, so a mismatch is visible at a glance.
     """
-    start = (date.today() - timedelta(days=max(UNION_DCS) * 3 + 25)).isoformat()
-    df = fetch_upstox_historical(ticker, unit="days", interval=1,
-                                 from_date=start, to_date=date.today().isoformat())
+    # shared once-a-day copy of the bars before today (1-Oct-2026, data_fetcher.fetch_daily_prior)
+    from engine.data_fetcher import fetch_daily_prior
+    df = fetch_daily_prior(ticker)
     if df is None or df.empty or len(df) < max(UNION_DCS) + 2:
         return None
     df = df.sort_index()

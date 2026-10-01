@@ -142,6 +142,10 @@ SETTLE_GRACE_MIN = 6
 # before the 15:36 scan so there is time to pre-stage. Kept in config, not as a bare literal in
 # engine_runner, because the UI quotes it too and the two must never drift.
 WATCHLIST_AFTER = "15:17"
+# 1-Oct-2026 (user): no 15:17 build. Its slot only pre-loads each stock's daily history at
+# HISTORY_WARM_AT (about 116 Upstox calls, ~18 s) so the 15:31 build and 15:36 scan stay light.
+WATCHLIST_EARLY_BUILD = False
+HISTORY_WARM_AT = "15:00"
 
 # When the watchlist DIGEST goes to Telegram — separate from the 15:17 build (user, 2026-08-06).
 # 15:31 is after the CAS random close (15:28-15:30): spot is the auction value and does not move

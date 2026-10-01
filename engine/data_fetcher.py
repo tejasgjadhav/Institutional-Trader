@@ -47,32 +47,70 @@ SESSION.mount("http://", _adapter)
 # data. The server sits next to Upstox in Mumbai, so it spends the per-minute allowance faster
 # than the Mac did. Each 429 used to fail at once. Now a 429 waits and retries, with the waits
 # capped in total so a long throttle can never push the scan past the 15:40 close.
-_429_STEPS = (2, 4, 8, 16)          # seconds to wait before each retry
-_429_BUDGET_S = 45                  # most 429-waiting allowed in any 120 s window
+#
+# PACING (1-Oct-2026). The retry alone failed on 30-Sep: the scan's first 429 came at 15:36:14 and
+# the 45 s budget went on one name (POLYCAB), after which all 117 names failed at once and the
+# "no signal" verdict was reached on no data. Upstox counts requests per minute, and the server
+# sends them faster than that limit allows. So every Upstox call through SESSION is now spaced
+# UPSTOX_MIN_GAP_S apart (at most 400 a minute, under the 500/minute limit, leaving room for the
+# Mac's CAS page on the same token), and a 429 waits for the next minute window rather than a few
+# seconds. Calls per minute are logged 15:10-15:45 so the real load is on record.
+UPSTOX_MIN_GAP_S = 0.15
+_429_STEPS = (5, 15, 30, 30)        # seconds to wait before each retry (reaches a fresh minute)
+_429_BUDGET_S = 120                 # most 429-waiting allowed in any 300 s window
 _429_WAITS = []                     # (time, seconds) of recent waits
 _429_LOCK = threading.Lock()        # the scan sentinel thread shares this session
+_PACE_LOCK = threading.Lock()
+_PACE_LAST = [0.0]
+_MIN_COUNT = [None, 0]              # (HH:MM, Upstox calls in that minute)
 
 
 def _reserve_429_wait(wait: float) -> bool:
     """True if `wait` seconds still fit in the rolling 429 budget, and books them."""
     with _429_LOCK:
         now = time.time()
-        _429_WAITS[:] = [(t, w) for t, w in _429_WAITS if now - t < 120]
+        _429_WAITS[:] = [(t, w) for t, w in _429_WAITS if now - t < 300]
         if sum(w for _, w in _429_WAITS) + wait > _429_BUDGET_S:
             return False
         _429_WAITS.append((now, wait))
         return True
 
 
-def _upstox_get(url: str, timeout: float, **kw):
-    """SESSION.get with a wait-and-retry on HTTP 429. Returns the last response."""
+_RAW_REQUEST = SESSION.request
+
+
+def _paced_request(method, url, *a, **kw):
+    """SESSION.request for every caller (data_utils, options_flow, dte_multi, histdb share SESSION):
+    Upstox calls are spaced UPSTOX_MIN_GAP_S apart, and a 429 waits and retries within the budget.
+    Non-Upstox URLs pass straight through."""
+    if "api.upstox.com" not in str(url):
+        return _RAW_REQUEST(method, url, *a, **kw)
     for wait in _429_STEPS + (None,):
-        resp = SESSION.get(url, timeout=timeout, **kw)
+        with _PACE_LOCK:
+            gap = time.time() - _PACE_LAST[0]
+            if gap < UPSTOX_MIN_GAP_S:
+                time.sleep(UPSTOX_MIN_GAP_S - gap)
+            _PACE_LAST[0] = time.time()
+            hm = datetime.now(IST).strftime("%H:%M")
+            if _MIN_COUNT[0] != hm:
+                if _MIN_COUNT[0] and "15:10" <= _MIN_COUNT[0] <= "15:45":
+                    logger.info(f"Upstox calls in {_MIN_COUNT[0]}: {_MIN_COUNT[1]}")
+                _MIN_COUNT[:] = [hm, 0]
+            _MIN_COUNT[1] += 1
+        resp = _RAW_REQUEST(method, url, *a, **kw)
         if resp.status_code != 429 or wait is None or not _reserve_429_wait(wait):
             return resp
-        logger.info(f"Upstox 429 — waiting {wait}s, then retrying {url[len(UPSTOX_BASE):][:70]}")
+        logger.info(f"Upstox 429 — waiting {wait}s, then retrying {str(url)[len(UPSTOX_BASE):][:70]}")
         time.sleep(wait)
     return resp
+
+
+SESSION.request = _paced_request
+
+
+def _upstox_get(url: str, timeout: float, **kw):
+    """SESSION.get; pacing and the 429 retry now live in _paced_request for every caller."""
+    return SESSION.get(url, timeout=timeout, **kw)
 
 
 def _candles_to_df(candles: list) -> pd.DataFrame:
@@ -161,12 +199,21 @@ def fetch_upstox_ltp(ticker: str) -> dict:
         return {"price": None, "timestamp": None, "success": False, "error": str(e)}
 
 
+QUOTE_TTL_S = 60          # shared by the four stock books at 15:36 (1-Oct-2026), see fetch_daily_prior
+_QUOTE_CACHE = {}         # instrument_key -> (time, quote dict)
+
+
 def fetch_upstox_quote(instrument_key: str) -> dict:
     """Full market quote for ONE instrument key (used for the liquidity gate): best bid/ask
     from the depth, open interest, day volume, LTP. Returns {} on any failure.
-    Response is keyed by trading symbol (not the instrument_key), so we take the one entry."""
+    Response is keyed by trading symbol (not the instrument_key), so we take the one entry.
+    A successful quote is reused for QUOTE_TTL_S: v2, v0 and vlc price the SAME legs one after
+    another at 15:36, and used to fetch each of them three times."""
     if not UPSTOX_ANALYTICS_TOKEN or not instrument_key:
         return {}
+    hit = _QUOTE_CACHE.get(instrument_key)
+    if hit and time.time() - hit[0] < QUOTE_TTL_S:
+        return dict(hit[1])
     try:
         resp = _upstox_get(f"{UPSTOX_BASE}/v2/market-quote/quotes",
                            params={"instrument_key": instrument_key}, timeout=6)
@@ -180,8 +227,10 @@ def fetch_upstox_quote(instrument_key: str) -> dict:
         sell = depth.get("sell") or []
         bid = float(buy[0]["price"]) if buy and buy[0].get("price") else 0.0
         ask = float(sell[0]["price"]) if sell and sell[0].get("price") else 0.0
-        return {"ltp": q.get("last_price"), "bid": bid, "ask": ask,
-                "oi": q.get("oi") or 0, "volume": q.get("volume") or 0}
+        out = {"ltp": q.get("last_price"), "bid": bid, "ask": ask,
+               "oi": q.get("oi") or 0, "volume": q.get("volume") or 0}
+        _QUOTE_CACHE[instrument_key] = (time.time(), out)
+        return dict(out)
     except Exception as e:
         logger.warning(f"Upstox quote fetch failed for {instrument_key}: {e}")
         return {}
@@ -270,6 +319,31 @@ def fetch_intraday_5min(ticker: str, days: int = 1) -> pd.DataFrame:
 # Daily bars don't change during the session → cache per (ticker, date) so the
 # 5-min scan loop doesn't refetch 400 days of history every cycle.
 _daily_hist_cache = {}
+
+# ONE DAILY-HISTORY FETCH PER STOCK PER DAY for the breakout scanners (1-Oct-2026). The bars before
+# today do not change during the session, yet the 15:31 build and all four 15:36 books (v2, v1, v0,
+# vlc) downloaded them again: five fetches of the same data per stock, about 580 calls a day, and
+# the main reason the 15:36 scan hit Upstox's per-minute limit on the server. Callers only use bars
+# dated BEFORE today (today's close comes from data_utils.todays_close), so a copy fetched earlier
+# in the day is exactly as good. A failed or empty fetch is never cached, so it is retried.
+PRIOR_DAYS = 120          # covers v2 (85 days) and v1 (55 days) lookbacks with room to spare
+_PRIOR_CACHE = {}         # (ticker, date) -> DataFrame
+
+
+def fetch_daily_prior(ticker: str) -> pd.DataFrame:
+    """Daily bars for the last PRIOR_DAYS calendar days, fetched once per stock per day."""
+    today = datetime.now(IST).date()
+    key = (ticker, today)
+    if key in _PRIOR_CACHE:
+        return _PRIOR_CACHE[key]
+    for k in [k for k in _PRIOR_CACHE if k[1] != today]:
+        del _PRIOR_CACHE[k]
+    df = fetch_upstox_historical(ticker, unit="days", interval=1,
+                                 from_date=(today - timedelta(days=PRIOR_DAYS)).isoformat(),
+                                 to_date=today.isoformat())
+    if df is not None and not df.empty:
+        _PRIOR_CACHE[key] = df
+    return df
 
 
 def fetch_historical(ticker: str, days: int = 400) -> pd.DataFrame:
