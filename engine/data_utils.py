@@ -133,12 +133,15 @@ def _yahoo_index_prices(names: list) -> dict:
 
 
 def _market_is_open() -> bool:
-    """True during NSE trading hours (Mon–Fri, 09:15–15:40 IST) — TIME ONLY (holiday-blind).
-    Tracks FNO_CLOSE, not the cash close: since NSE's 3-Aug-2026 change derivatives run to 15:40
-    and every one of our books trades options."""
+    """True during NSE trading hours (Mon–Fri, 09:15–15:40 IST), and False on NSE's published F&O
+    holidays (engine/nse_holidays.json, 4-Oct-2026). Tracks FNO_CLOSE, not the cash close: since
+    NSE's 3-Aug-2026 change derivatives run to 15:40 and every one of our books trades options."""
     from engine.config import FNO_CLOSE
     now = datetime.now(IST)
     if now.weekday() >= 5:
+        return False
+    from engine.nse_holidays import is_exchange_holiday
+    if is_exchange_holiday(now.date()):
         return False
     o = datetime.strptime(MARKET_OPEN, "%H:%M").time()
     c = datetime.strptime(FNO_CLOSE, "%H:%M").time()

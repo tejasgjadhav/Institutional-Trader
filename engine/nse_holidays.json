@@ -1,0 +1,110 @@
+{
+ "source": "https://www.nseindia.com/api/holiday-master?type=trading (segment FO)",
+ "fetched": "2026-10-04",
+ "note": "NSE F&O trading holidays. Refresh each December with: python -m engine.nse_holidays --refresh",
+ "years": [
+  "2026"
+ ],
+ "holidays": [
+  {
+   "date": "2026-01-15",
+   "day": "Thursday",
+   "name": "Municipal Corporation Election - Maharashtra"
+  },
+  {
+   "date": "2026-01-26",
+   "day": "Monday",
+   "name": "Republic Day"
+  },
+  {
+   "date": "2026-02-15",
+   "day": "Sunday",
+   "name": "Mahashivratri"
+  },
+  {
+   "date": "2026-03-03",
+   "day": "Tuesday",
+   "name": "Holi"
+  },
+  {
+   "date": "2026-03-21",
+   "day": "Saturday",
+   "name": "Id-Ul-Fitr (Ramadan Eid)"
+  },
+  {
+   "date": "2026-03-26",
+   "day": "Thursday",
+   "name": "Shri Ram Navami"
+  },
+  {
+   "date": "2026-03-31",
+   "day": "Tuesday",
+   "name": "Shri Mahavir Jayanti"
+  },
+  {
+   "date": "2026-04-03",
+   "day": "Friday",
+   "name": "Good Friday"
+  },
+  {
+   "date": "2026-04-14",
+   "day": "Tuesday",
+   "name": "Dr. Baba Saheb Ambedkar Jayanti"
+  },
+  {
+   "date": "2026-05-01",
+   "day": "Friday",
+   "name": "Maharashtra Day"
+  },
+  {
+   "date": "2026-05-28",
+   "day": "Thursday",
+   "name": "Bakri Id"
+  },
+  {
+   "date": "2026-06-26",
+   "day": "Friday",
+   "name": "Muharram"
+  },
+  {
+   "date": "2026-08-15",
+   "day": "Saturday",
+   "name": "Independence Day"
+  },
+  {
+   "date": "2026-09-14",
+   "day": "Monday",
+   "name": "Ganesh Chaturthi"
+  },
+  {
+   "date": "2026-10-02",
+   "day": "Friday",
+   "name": "Mahatma Gandhi Jayanti"
+  },
+  {
+   "date": "2026-10-20",
+   "day": "Tuesday",
+   "name": "Dussehra"
+  },
+  {
+   "date": "2026-11-08",
+   "day": "Sunday",
+   "name": "Diwali Laxmi Pujan"
+  },
+  {
+   "date": "2026-11-10",
+   "day": "Tuesday",
+   "name": "Diwali-Balipratipada"
+  },
+  {
+   "date": "2026-11-24",
+   "day": "Tuesday",
+   "name": "Prakash Gurpurb Sri Guru Nanak Dev"
+  },
+  {
+   "date": "2026-12-25",
+   "day": "Friday",
+   "name": "Christmas"
+  }
+ ]
+}

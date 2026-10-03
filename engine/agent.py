@@ -78,6 +78,10 @@ class Agent:
         weekday = now.weekday()  # 0=Mon, 4=Fri, 5=Sat, 6=Sun
         if weekday >= 5:  # Weekend
             return False
+        # NSE HOLIDAY (4-Oct-2026): on 2-Oct the engine messaged as if the exchange were open.
+        from engine.nse_holidays import is_exchange_holiday
+        if is_exchange_holiday(now.date()):
+            return False
 
         # Tracks the DERIVATIVES close (config.FNO_CLOSE = 15:40 since NSE's 3-Aug-2026 change).
         # Every live book trades options, so 15:40 is the session that matters. This used to be a
@@ -95,6 +99,9 @@ class Agent:
         from engine.config import CASH_CLOSE
         now = datetime.now(IST)
         if now.weekday() >= 5:
+            return False
+        from engine.nse_holidays import is_exchange_holiday
+        if is_exchange_holiday(now.date()):
             return False
         return (datetime.strptime(MARKET_OPEN, "%H:%M").time() <= now.time()
                 <= datetime.strptime(CASH_CLOSE, "%H:%M").time())

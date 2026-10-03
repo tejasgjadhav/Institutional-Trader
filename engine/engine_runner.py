@@ -817,6 +817,9 @@ class EngineRunner:
                 now = datetime.now(IST)
                 if now.weekday() >= 5:
                     continue
+                from engine.nse_holidays import is_exchange_holiday
+                if is_exchange_holiday(now.date()):
+                    continue                       # NSE holiday: no scan is due (4-Oct-2026)
                 mins = now.hour * 60 + now.minute
                 if not (15 * 60 + 36 <= mins <= 15 * 60 + 44):
                     continue
@@ -950,7 +953,11 @@ class EngineRunner:
         # Weekday guard (21-Sep-2026): is_market_open() is False all weekend, so this catch-up
         # fired on Sat 19-Sep and Sun 20-Sep and sent two record-only no-signal notices. The
         # sentinel thread already skips weekends; the main loop must too.
-        late_ok = (now.weekday() < 5 and (not self.agent.is_market_open()) and after_cutoff
+        # Holiday guard (4-Oct-2026): is_market_open() is now False on NSE holidays, so without this
+        # the catch-up would read a holiday as a missed session and send a LATE notice.
+        from engine.nse_holidays import is_exchange_holiday
+        late_ok = (now.weekday() < 5 and not is_exchange_holiday(now.date())
+                   and (not self.agent.is_market_open()) and after_cutoff
                    and mins_now <= (16 * 60 + 30))
         if ((self.agent.is_market_open() or late_ok) and after_cutoff
                 and self._stockcr_scan_day != now.date()):
