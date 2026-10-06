@@ -494,6 +494,32 @@ def _digest_book(r) -> "str | None":
     return None
 
 
+def _digest_blocked(sym: str, book) -> "str | None":
+    """Why the engine will NOT open this name today even with every tick green, or None (6-Oct-2026).
+    On 5-Oct the digest starred COFORGE as READY while vlc already held it from 1-Oct, so 15:36
+    correctly sent no signal. The scan skips a name its own book holds OPEN, and any name any book
+    entered within STOCK_CREDIT_REENTRY_GAP_DAYS; the digest now applies the same two rules."""
+    if not book:
+        return None
+    lbl = "vlc" if "vlc" in book else ("v0" if "v0" in book else "v2")
+    f = {"v2": "stock_credit_v2_positions.json", "v0": "stock_credit_v0_positions.json",
+         "vlc": "stock_credit_vlc_positions.json"}[lbl]
+    try:
+        if any(p.get("symbol") == sym and p.get("status") == "OPEN"
+               for p in json.load(open(os.path.join(DATA_DIR, f)))):
+            return f"already open in {lbl}"
+    except Exception:
+        pass
+    try:
+        from engine.data_utils import recent_entry_symbols
+        if sym in recent_entry_symbols():
+            gap = int(getattr(config, "STOCK_CREDIT_REENTRY_GAP_DAYS", 3))
+            return f"entered by a book in the last {gap} days"
+    except Exception:
+        pass
+    return None
+
+
 def _digest_open_in(sym: str) -> list:
     """'v1 PE 4400/4250 since 2026-09-07' for every book holding sym OPEN — so a second entry in
     the same name is visible in the digest before it happens."""
@@ -552,6 +578,9 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
             issues.append(f"spread &gt; {max_spr:g}%")
         if not oi_ok:
             issues.append("no OI")
+        _blk = _digest_blocked(str(r.get("sym")), book)
+        if _blk:
+            issues.append(_blk)
         star = not issues
         if star:
             starred.append(str(r.get("sym")))
@@ -578,7 +607,8 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
               + (f" · TP-40 ₹{round(credit * 0.6, 2)}" if isinstance(credit, (int, float)) else ""))
         l3 = (f"   c/w {'✅' if cw_ok else '❌'} · prem ₹{r.get('prem')} (≥{_floor:g}) {'✅' if prem_ok else '❌'} · "
               f"spread {r.get('spread')}% {'✅' if spr_ok else '❌'} · OI {int(r.get('oi') or 0):,} {'✅' if oi_ok else '❌'}"
-              + (" — <b>READY</b>" if star else ""))   # no issue text: the ❌ says which gate failed (user, 25-Sep)
+              + (" — <b>READY</b>" if star else "")
+              + (f" — <b>no new entry: {_blk}</b>" if _blk else ""))   # no issue text: the ❌ says which gate failed (user, 25-Sep)
         l4 = _digest_history(str(r.get("sym")), str(r.get("side")), float(r.get("cw") or 0))
         rank = 0 if star else (1 if manual else 2)
         blocks.append((rank, -(r.get("cw") or 0), f"{l1}\n{l2}\n{l3}\n{l4}\n", r))
