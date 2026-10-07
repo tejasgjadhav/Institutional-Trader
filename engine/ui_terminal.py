@@ -1369,8 +1369,11 @@ Paper forward-test only. For educational use. Not financial advice.
 
 {h("5 — SIGNAL TIMING (IST, trading days only)")}
 {p(f"<b>The daily credit-spread flow (v2 / v1 / v0 / swing):</b> "
-   f"<b>{C.WATCHLIST_AFTER}</b> watchlist preview on this screen (names ~70% settled, strikes provisional — the "
-   f"auction is still running) → <b>{getattr(C, 'WATCHLIST_DIGEST_AT', '15:31')}</b> Telegram digest with FINAL "
+   + (f"<b>{C.WATCHLIST_AFTER}</b> watchlist preview on this screen (names ~70% settled, strikes provisional — the "
+      f"auction is still running) → " if getattr(C, "WATCHLIST_EARLY_BUILD", True) else
+      f"<b>{getattr(C, 'HISTORY_WARM_AT', '15:00')}</b> each stock's daily history is loaded once (no 15:17 build "
+      f"since 1-Oct-2026) → ")
+   + f"<b>{getattr(C, 'WATCHLIST_DIGEST_AT', '15:31')}</b> Telegram digest with FINAL "
    f"strikes and live option prices (the auction close is struck by then — pre-stage from this) → "
    f"<b>{C.STOCK_CREDIT_SCAN_AFTER}</b> the scan fires on TODAY'S OFFICIAL CLOSE → place by <b>{C.FNO_CLOSE}</b> "
    f"(derivatives close) → settles {C.SETTLE_AFTER}.")}
@@ -1613,13 +1616,15 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
             return "&nbsp;&nbsp;<b>SIGNAL TIMINGS</b> &nbsp; " + \
                    f'<span style="color:{BORDER};"> &#8594; </span>'.join(out)
 
-        wl, scan = C.WATCHLIST_AFTER, C.STOCK_CREDIT_SCAN_AFTER
+        _early = getattr(C, "WATCHLIST_EARLY_BUILD", True)
+        wl = C.WATCHLIST_AFTER if _early else getattr(C, "HISTORY_WARM_AT", "15:00")
+        scan = C.STOCK_CREDIT_SCAN_AFTER
         dg = getattr(C, "WATCHLIST_DIGEST_AT", "15:31")
         close, settle = C.FNO_CLOSE, C.SETTLE_AFTER
         if hasattr(self, "pm_timings"):
             self.pm_timings.setText(strip([
                 (mins(C.MARKET_OPEN), mins(wl) - 1, C.MARKET_OPEN, "market opens"),
-                (mins(wl), mins(dg) - 1, wl, "WATCHLIST (UI)"),
+                (mins(wl), mins(dg) - 1, wl, "WATCHLIST (UI)" if _early else "history loaded"),
                 (mins(dg), mins(scan) - 1, dg, "digest &#183; FINAL strikes + prices"),
                 (mins(scan), mins(close), f"{scan}-{close}",
                  "SIGNALS fire &#183; v2 / v1 / v0 / swing &#183; PLACE the order"),
@@ -1692,12 +1697,12 @@ Universe: {len(C.UNIVERSE)} stocks &nbsp;·&nbsp; weights TREND {C.FAMILY_WEIGHT
         try:
             path = _os.path.join(DATA_DIR, "union_watchlist.json")
             if not _os.path.exists(path):
-                self.pm_watch_hdr.setText(f"UNION WATCHLIST — no scan yet today (engine builds it at {C.WATCHLIST_AFTER}, once the auction has struck the close)")
+                self.pm_watch_hdr.setText(f"UNION WATCHLIST — no scan yet today (engine builds it at {getattr(C, 'WATCHLIST_DIGEST_AT', '15:31') if not getattr(C, 'WATCHLIST_EARLY_BUILD', True) else C.WATCHLIST_AFTER}, once the auction has struck the close)")
                 self.pm_watch.setRowCount(0); return
             d = _json.load(open(path)); rows = d.get("rows", []); ts = d.get("ts", "")
             # clear a stale (prior-day) watchlist — only ever show TODAY's scan
             if not ts.startswith(datetime.now(IST).date().isoformat()):
-                self.pm_watch_hdr.setText(f"UNION WATCHLIST — no scan yet today (engine builds it at {C.WATCHLIST_AFTER}, once the auction has struck the close)")
+                self.pm_watch_hdr.setText(f"UNION WATCHLIST — no scan yet today (engine builds it at {getattr(C, 'WATCHLIST_DIGEST_AT', '15:31') if not getattr(C, 'WATCHLIST_EARLY_BUILD', True) else C.WATCHLIST_AFTER}, once the auction has struck the close)")
                 self.pm_watch.setRowCount(0); return
             hhmm = ts[11:16] if len(ts) >= 16 else "—"
             self.pm_watch_hdr.setText(f"UNION WATCHLIST · today's breakout stocks only — last scan {hhmm} · "
