@@ -8,6 +8,11 @@ things that were tested and deliberately **not** deployed — those are as impor
 [`CONSOLIDATED_PNL.md`](CONSOLIDATED_PNL.md) — monthly P&L model.
 
 
+## 7–8 Oct 2026 — 0DTE exits and entry, the swing-call drought
+
+- [`ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md`](ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md) — NIFTY and SENSEX 0DTE: a time-based loss cut, entry time and strike distance, weighted to post-CAS. Keep 09:16, 0.5% OTM, no cut. Two side findings await an audit.
+- [`SIGNAL_DROUGHT_LOW_VIX.md`](SIGNAL_DROUGHT_LOW_VIX.md) — few swing calls and repeat names, Aug–Oct 2026. No trading-path bug was found and the drought is real in live option prices, but low VIX does not explain the 4× gap against the backtest. Nine universe names have no option contracts, and gate rejections are unrecorded.
+
 ## 27-Sep-2026 — premium floor, vlc cells, per-side screen
 
 - [`PREMIUM_FLOOR_SWEEP.md`](PREMIUM_FLOOR_SWEEP.md) — the ₹50 short-leg floor split by book (v1/v0 → ₹30, DEPLOYED), run 5 final (clean pass), the 0.25–0.30 cells added to vlc with a ₹30–50 short leg.
