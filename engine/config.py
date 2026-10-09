@@ -40,10 +40,9 @@ UNIVERSE = [
     "IRFC.NS", "RELIANCE.NS", "ONGC.NS", "BPCL.NS", "IOC.NS", "COALINDIA.NS",
     "POWERGRID.NS", "NTPC.NS", "TATAPOWER.NS", "ADANIGREEN.NS", "LT.NS", "ADANIENT.NS",
     "ADANIPORTS.NS", "SIEMENS.NS", "ABB.NS", "BHEL.NS", "HAVELLS.NS", "POLYCAB.NS",
-    "VOLTAS.NS", "ULTRACEMCO.NS", "GRASIM.NS", "AMBUJACEM.NS", "ACC.NS", "JSWSTEEL.NS",
+    "VOLTAS.NS", "ULTRACEMCO.NS", "GRASIM.NS", "AMBUJACEM.NS", "JSWSTEEL.NS",
     "TATASTEEL.NS", "HINDALCO.NS", "VEDL.NS", "SAIL.NS", "NMDC.NS", "MARUTI.NS",
-    "BAJAJ-AUTO.NS", "HEROMOTOCO.NS", "EICHERMOT.NS", "M&M.NS", "ASHOKLEY.NS", "BALKRISIND.NS",
-    "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "TATACONSUM.NS", "ASIANPAINT.NS",
+    "BAJAJ-AUTO.NS", "HEROMOTOCO.NS", "EICHERMOT.NS", "M&M.NS", "ASHOKLEY.NS",     "HINDUNILVR.NS", "ITC.NS", "NESTLEIND.NS", "BRITANNIA.NS", "TATACONSUM.NS", "ASIANPAINT.NS",
     "GODREJCP.NS", "MARICO.NS", "DABUR.NS", "PIDILITIND.NS", "SUNPHARMA.NS", "DRREDDY.NS",
     "CIPLA.NS", "DIVISLAB.NS", "APOLLOHOSP.NS", "LUPIN.NS", "TORNTPHARM.NS", "AUROPHARMA.NS",
     "ZYDUSLIFE.NS", "TITAN.NS", "TRENT.NS", "JUBLFOOD.NS", "BHARTIARTL.NS",
@@ -54,8 +53,7 @@ UNIVERSE = [
     # +25.7->+27.6% of width, +ve 6/6 yrs IS. IS-only (2019->Sep'24 bhavcopy; no per-name OOS —
     # Upstox premium history too short). Higher-priced/liquid mid-large caps. See
     # studies/UNIVERSE_EXPANSION.md. The c/w + live liquidity gates still decide each trade. ===
-    "COLPAL.NS", "ASTRAL.NS", "INDIAMART.NS", "ALKEM.NS", "DALBHARAT.NS", "UBL.NS",
-    "NAVINFLUOR.NS", "MRF.NS", "ATUL.NS", "CUMMINSIND.NS", "DEEPAKNTR.NS", "HAL.NS", "BOSCHLTD.NS",
+    "COLPAL.NS", "ASTRAL.NS", "ALKEM.NS",     "CUMMINSIND.NS", "HAL.NS", "BOSCHLTD.NS",
     # === UNIVERSE EXPANSION 2 (24-Aug-2026, user-approved) — 9 names measured name-by-name on the
     # HARNESS OF RECORD in both windows (studies/UNIVERSE_EXPANSION_2.md; admission rule fixed
     # BEFORE the OOS landed). First four: positive in BOTH windows. Last five entered F&O after
@@ -86,7 +84,12 @@ SIDE_QUALIFIED = {"ICICIGI": "BEAR_CALL", "PIIND": "BULL_PUT"}
 # demonstrated-failure pattern that kept HDFCAMC out), TCS (66 trades, pooled -10,984), TECHM (17,
 # -9,171), HDFCBANK (-18,077, never positive), DMART (-22,822), JINDALSTEL (-21,360). Names with
 # ZERO trades ever stay: they cost nothing, carry no negative evidence, and the gates decide.
-assert len(UNIVERSE) == 116, "Universe: 122 - 8 pruned + 2 side-qualified (ICICIGI, PIIND) (24-Aug-2026)"
+# NINE NAMES WITH NO OPTION CONTRACTS REMOVED 9-Oct-2026 (user-approved): ACC, BALKRISIND, INDIAMART,
+# DALBHARAT, UBL, NAVINFLUOR, MRF, ATUL, DEEPAKNTR. The Upstox contract master (refreshed 8-Oct) holds
+# 0 option contracts for each, they showed NO_STRIKE every day, and their last backtest trade was on
+# 8-Apr-2026, which looks like an F&O exit. They could never trade, so nothing tradeable is lost.
+# Re-admit a name only if it returns to the F&O segment. See studies/SIGNAL_DROUGHT_LOW_VIX.md.
+assert len(UNIVERSE) == 107, "Universe: 116 (24-Aug-2026) - 9 with no option contracts (9-Oct-2026)"
 
 # Telegram: per-name backtest block in signal messages (user-approved 24-Aug-2026 after four
 # sample iterations - scanned counts, both windows, pooled expectancy, side split, per-lot line).
@@ -677,8 +680,8 @@ STOCK_CREDIT_VLC_MAX_OPEN = 10
 STOCK_CREDIT_VLC_LOTS = 1
 STOCK_CREDIT_VLC_WHITELIST = {
     "BEAR_CALL": {"ALKEM", "ASIANPAINT", "BRITANNIA", "COFORGE", "CUMMINSIND", "HEROMOTOCO",
-                  "HINDUNILVR", "INDIAMART", "LT", "M&M", "MUTHOOTFIN", "VOLTAS"},
-    "BULL_PUT":  {"ABB", "ACC", "APOLLOHOSP", "COFORGE", "CUMMINSIND", "EICHERMOT", "HAL",
+                  "HINDUNILVR", "LT", "M&M", "MUTHOOTFIN", "VOLTAS"},   # INDIAMART dropped 9-Oct: no F&O
+    "BULL_PUT":  {"ABB", "APOLLOHOSP", "COFORGE", "CUMMINSIND", "EICHERMOT", "HAL",   # ACC dropped 9-Oct: no F&O
                   "PERSISTENT", "TORNTPHARM"},
 }
 # vlc CELLS (user-approved 27-Sep-2026): side-locked cells with their own c/w band and floor. From
