@@ -11,7 +11,8 @@ things that were tested and deliberately **not** deployed — those are as impor
 ## 7–8 Oct 2026 — 0DTE exits and entry, the swing-call drought
 
 - [`ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md`](ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md) — NIFTY and SENSEX 0DTE: a time-based loss cut, entry time and strike distance, weighted to post-CAS. Keep 09:16, 0.5% OTM, no cut. Two side findings await an audit.
-- [`SIGNAL_DROUGHT_LOW_VIX.md`](SIGNAL_DROUGHT_LOW_VIX.md) — few swing calls and repeat names, Aug–Oct 2026. No trading-path bug was found and the drought is real in live option prices, but low VIX does not explain the 4× gap against the backtest. Nine universe names have no option contracts, and gate rejections are unrecorded.
+- [`SIGNAL_DROUGHT_LOW_VIX.md`](SIGNAL_DROUGHT_LOW_VIX.md) — few swing calls and repeat names, Aug–Oct 2026. No trading-path bug was found and the drought is real in live option prices, but low VIX does not explain the 4× gap against the backtest. Nine universe names had no option contracts (removed 9-Oct) and gate rejections were unrecorded (logged from 9-Oct).
+- [`STRIKE_GRID_IV_GAP.md`](STRIKE_GRID_IV_GAP.md) — why live fell ~4× below the backtest: coarser NSE strike ladders in the Aug–Sep 2026 series, a shift to bull puts (carry + skew), lower IV; v2 has no gap. The c/w gate mostly measures grid fineness and side, not rich IV. Research only.
 
 ## 27-Sep-2026 — premium floor, vlc cells, per-side screen
 

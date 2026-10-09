@@ -117,7 +117,13 @@ the backtest spread its trades over 42 names.
 
 Audit scripts and outputs are in research/audit_drought/.
 
-## Next steps (proposed, not done)
+## Follow-up (9-Oct-2026)
+
+Steps 1 and 2 below are DONE and live: rejection logging (commit 008734e) and the universe cleanup to 107
+names (commit 86f30a4). Step 3 is answered in [STRIKE_GRID_IV_GAP.md](STRIKE_GRID_IV_GAP.md): the gap sits
+in coarser strike ladders in the Aug and Sep 2026 series, a shift to bull puts, and lower IV. No code bug.
+
+## Next steps (proposed on 8-Oct)
 
 1. Remove the nine no-contract names from UNIVERSE and the two dead vlc cells. This is a config
    change, so it needs approval.
