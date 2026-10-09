@@ -39,6 +39,23 @@ STOCK_CREDIT_MIN_PREM = float(getattr(_cfg, "STOCK_CREDIT_V1_MIN_PREM", STOCK_CR
 # and the runner reports it, so a degraded scan says so.
 SCAN_INTEGRITY = {"universe": 0, "unreachable": 0, "names": []}
 
+# REJECTION RECORD (9-Oct-2026, logging only). scan_signals() writes one forward-record row per
+# breakout name it does not open, under book "v1". RECORD_REJECTIONS=False turns it off without
+# touching any decision. For names skipped before the breakout check the evidence is the 15:31
+# watchlist archive, counted only where it broke D{STOCK_CREDIT_DONCHIAN} or wider; its numbers
+# are v2 geometry, so they are NOT attached to v1 rows (see forward_record.RejectionLog).
+RECORD_REJECTIONS = True
+WATCHLIST_ARCHIVE_DIR = os.path.join(DATA_DIR, "watchlist_archive")
+
+
+def _rj(rej, fn, *a, **k):
+    """Call a RejectionLog method; any failure is logged at WARNING and swallowed. Never gates."""
+    try:
+        if rej is not None:
+            getattr(rej, fn)(*a, **k)
+    except Exception as e:
+        logger.warning(f"v1 rejection record ({fn}): {e}")
+
 
 # {ticker: (signal_price, source)} from the most recent breakout check — read by the UI so the
 # price a signal was computed on is visible next to the live price (GRASIM lesson, 2026-08-05).
@@ -239,67 +256,98 @@ def scan_signals() -> list:
     new = []
     from engine.data_utils import recent_entry_symbols
     _cross_gap = recent_entry_symbols()
-    for ticker in UNIVERSE:
+    _rej = None
+    try:   # rejection record (9-Oct-2026): logging only, every call goes through _rj()
+        from engine.forward_record import RejectionLog
+        _rej = RejectionLog("v1", watchlist_dir=WATCHLIST_ARCHIVE_DIR, min_dc=STOCK_CREDIT_DONCHIAN,
+                            watchlist_numbers=False, enabled=bool(RECORD_REJECTIONS))
+    except Exception as e:
+        logger.warning(f"v1 rejection record init: {e}")
+    for _ti, ticker in enumerate(UNIVERSE):
         if len(open_now) + len(new) >= STOCK_CREDIT_MAX_OPEN:
+            _rj(_rej, "cap", UNIVERSE[_ti:], f"open-position cap {STOCK_CREDIT_MAX_OPEN} reached; "
+                                             f"not evaluated")
             break
         if len(new) >= STOCK_CREDIT_MAX_NEW_PER_DAY:
+            _rj(_rej, "cap", UNIVERSE[_ti:], f"daily cap {STOCK_CREDIT_MAX_NEW_PER_DAY} new reached; "
+                                             f"not evaluated")
             break
         sym = ticker.replace(".NS", "")
+        bdir = None
+        _q = None
         try:
             if sym in v2_open:                                  # v2 already holds it — defer
+                _rj(_rej, "pre", sym, "clash", "v2 holds it open; v1 defers to v2")
                 continue
             if any(p["symbol"] == sym and p["status"] == "OPEN" for p in book):
+                _rj(_rej, "pre", sym, "held_open", "already open in v1")
                 continue
             if sym in _cross_gap:           # ANY book entered this name within the 3-day gap
+                _rj(_rej, "pre", sym, "reentry_gap", f"a stock book entered it within "
+                                                     f"{STOCK_CREDIT_REENTRY_GAP_DAYS} days")
                 continue                    # (cross-book rule, user 2026-08-07 — matches REENTRY=3)
             entries = [p["entry_date"] for p in book if p["symbol"] == sym]
             if entries and (today - max(date.fromisoformat(d) for d in entries)).days < STOCK_CREDIT_REENTRY_GAP_DAYS:
+                _rj(_rej, "pre", sym, "reentry_gap", f"v1 entered it within "
+                                                     f"{STOCK_CREDIT_REENTRY_GAP_DAYS} days")
                 continue
             bdir = _todays_breakout(ticker)
             if not bdir:
                 continue
             spot = _spot(ticker)
             if not spot:
+                _rj(_rej, "add", sym, "no_spot", "breakout D{dc} {d}, no spot price",
+                    dc=STOCK_CREDIT_DONCHIAN, d=bdir)
                 continue
             opt_type = "CE" if bdir == "LONG" else "PE"   # FADE
             legs = _pick_legs(ticker, spot, opt_type)
             if not legs:
+                _rj(_rej, "add", sym, "no_legs", "no {o} strikes at DTE >= {n} around spot {sp}",
+                    o=opt_type, n=STOCK_CREDIT_MIN_DTE, sp=spot)
                 continue
             short, long, expiry = legs
             sm, sbid, sask, soi = _quote(short["key"])
             lm, lbid, lask, loi = _quote(long["key"])
+            _q = {"sm": sm, "sb": sbid, "sa": sask, "oi": soi}
             if sm is None or lm is None:
+                _rj(_rej, "add", sym, "no_quote", "no quote: short {a}, long {b}", q=_q,
+                    a=short.get("strike"), b=long.get("strike"))
                 continue
             # STRIKE VALIDATION (MPHASIS-2260 bug, 2026-07-08): require both legs to show a live
             # TWO-SIDED market — rejects stale/non-standard master strikes that aren't real
             # tradeable contracts. No fail-open on missing quotes.
             if not (sbid > 0 and sask > 0 and lbid > 0 and lask > 0):
+                _rj(_rej, "add", sym, "no_quote", "one-sided quote: short {a} {sb}/{sa}, long {b} {lb}/{la}",
+                    q=_q, a=short.get("strike"), b=long.get("strike"), sb=sbid, sa=sask, lb=lbid, la=lask)
                 continue
             credit = round(sm - lm, 2)
             width_pts = abs(short["strike"] - long["strike"])
+            _q = {"sm": sm, "sb": sbid, "sa": sask, "oi": soi, "credit": credit, "width": width_pts}
             if credit <= 0 or width_pts <= 0:
+                _rj(_rej, "add", sym, "cw_below" if width_pts > 0 else "no_legs",
+                    "credit {c} on width {w}", q=_q, c=credit, w=width_pts)
                 continue
             # ── the gates ──
             if credit / width_pts < STOCK_CREDIT_MIN_CW:           # the edge: rich credit vs risk
+                _rj(_rej, "add", sym, "cw_below", "c/w {cw:.3f} below floor {f}", q=_q,
+                    f=STOCK_CREDIT_MIN_CW)
                 continue
             if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
+                _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}",
+                    q=_q, f=STOCK_CREDIT_MIN_PREM)
                 continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
             if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
                 # RECORD THE REJECTION. A blocked candidate leaves no trace anywhere else, so the
                 # take rate - the fraction of backtest trades actually fillable - was unmeasured.
-                try:
-                    from engine import forward_record as _fr
-                    _fr.record_rejection(
-                        "v1", sym,
-                        "spread" if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT else "open_interest",
-                        f"spread {spread_pct:.2f}% oi {soi}", spread_pct, soi, sm,
-                        (credit / width_pts) if width_pts else None)
-                except Exception:
-                    pass
+                _rj(_rej, "add", sym,
+                    "spread_wide" if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT else "oi_low",
+                    "spread {spread_pct}% (max {ms}), OI {oi} (min {mo})", q=_q,
+                    ms=STOCK_CREDIT_MAX_SPREAD_PCT, mo=STOCK_CREDIT_MIN_OI)
                 continue
             if lot <= 0:                                            # no lot size -> not tradeable
+                _rj(_rej, "add", sym, "no_lot", "no lot size on the contract", q=_q)
                 continue
             num_lots = int(STOCK_CREDIT_LOTS or 1)
             qty = lot * num_lots
@@ -353,9 +401,12 @@ def scan_signals() -> list:
             logger.info(f"stock_credit: opened {side} {sym} (fade {bdir}) credit Rs{credit} c/w {pos['credit_width']} exp {expiry}")
         except Exception as e:
             logger.warning(f"stock_credit scan {sym}: {e}")
+            if bdir and not any(p.get("symbol") == sym for p in new):
+                _rj(_rej, "add", sym, "error", "scan error: {e}", q=_q, e=str(e)[:120])
     if new:
         _save_book(book)
     _save_snapshot()
+    _rj(_rej, "flush", logger)    # after the book is saved: recording never delays a position
     return new
 
 

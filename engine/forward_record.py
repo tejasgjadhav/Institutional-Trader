@@ -113,20 +113,179 @@ def record_exit(pos_id, reason, exit_cost=None, pnl_rs=None):
         logger.warning(f"forward_record.record_exit: {e}")
 
 
+NON_GATE_REASONS = ("held_open", "reentry_gap", "clash", "cap_reached", "exposure_cap", "error")
+
+
 def record_rejection(book, symbol, reason, detail="", spread_pct=None, oi=None, premium=None, cw=None):
     """A candidate the live gate blocked. These leave no trace anywhere else, so the fraction of
     backtest trades that are actually takeable is otherwise unmeasured. On 17-Aug-2026 the live gates
-    rejected 10 of 17 candidates; nothing recorded it."""
+    rejected 10 of 17 candidates; nothing recorded it. One row per (trade_date, book, symbol)."""
+    record_rejections([dict(book=book, symbol=symbol, reason=reason, detail=detail,
+                            spread_pct=spread_pct, oi=oi, premium=premium, cw=cw)])
+
+
+def record_rejections(rows) -> int:
+    """Write rejection rows, keeping ONE per (trade_date, book, symbol): the first one wins, so a
+    re-run of the scan (late catch-up, restart) never doubles a name. Returns rows written.
+
+    Reason codes used by the 15:36 stock scans (9-Oct-2026): held_open, reentry_gap, clash,
+    side_not_whitelisted, cell_band, no_spot, no_legs, no_quote, cw_below, cw_above, prem_below,
+    spread_wide, oi_low, exposure_cap, no_lot, cap_reached, error."""
+    n = 0
     try:
         now = datetime.now()
+        td = now.date().isoformat()
         with _conn() as c:
-            c.execute("""INSERT INTO rejections
-                (ts, trade_date, book, symbol, reason, detail, spread_pct, oi, premium, cw)
-                VALUES (?,?,?,?,?,?,?,?,?,?)""",
-                (now.isoformat(timespec="seconds"), now.date().isoformat(), book, symbol,
-                 reason, str(detail)[:200], spread_pct, oi, premium, cw))
+            for r in rows:
+                if c.execute("SELECT 1 FROM rejections WHERE trade_date=? AND book=? AND symbol=? "
+                             "LIMIT 1", (td, r["book"], r["symbol"])).fetchone():
+                    continue
+                c.execute("""INSERT INTO rejections
+                    (ts, trade_date, book, symbol, reason, detail, spread_pct, oi, premium, cw)
+                    VALUES (?,?,?,?,?,?,?,?,?,?)""",
+                    (now.isoformat(timespec="seconds"), td, r["book"], r["symbol"],
+                     r["reason"], str(r.get("detail") or "")[:200], r.get("spread_pct"),
+                     r.get("oi"), r.get("premium"), r.get("cw")))
+                n += 1
     except Exception as e:
-        logger.warning(f"forward_record.record_rejection: {e}")
+        logger.warning(f"forward_record.record_rejections: {e}")
+    return n
+
+
+class RejectionLog:
+    """Per-scan buffer of 15:36 rejections (user-approved 9-Oct-2026). LOGGING ONLY.
+
+    WHY. The rejections table had 0 rows from 21-Aug to 9-Oct-2026 because every failed candidate
+    left the scan through a bare `continue`. An audit could not say why ZYDUSLIFE (v1 c/w ~0.407)
+    was not taken on 24-Sep. This records one row per breakout name that the book did not open.
+
+    It never touches a trading decision. Rows are buffered in memory during the scan and written in
+    one transaction by flush(), after the book is saved, so the scan's timing up to the last
+    position is unchanged. The scan modules call every method through a guard that logs and
+    swallows any exception.
+
+    Names skipped BEFORE the breakout check (held, re-entry gap, clash) and names the cap stopped
+    the loop from reaching never had their breakout computed, and computing it here would add
+    network calls. For those the evidence is today's 15:31 watchlist archive: a name is recorded
+    only if it appears there as a breakout. That watchlist is v2 geometry priced at 15:31, before
+    the auction close, so its numbers are attached only for the v2-geometry books (v2/v0/vlc), and
+    `min_dc` makes v1 count only rows that broke its own Donchian window.
+    """
+
+    def __init__(self, book, watchlist_dir=None, min_dc=None, watchlist_numbers=True, enabled=True):
+        self.book = book
+        self.watchlist_dir = watchlist_dir
+        self.min_dc = min_dc
+        self.watchlist_numbers = watchlist_numbers
+        self.enabled = enabled
+        self.rows = []
+        self._syms = set()
+        self._wl = None
+
+    @staticmethod
+    def _nums(q):
+        """cw / premium / spread % / OI from the raw leg numbers the scan holds at that point."""
+        q = q or {}
+        sm, sb, sa = q.get("sm"), q.get("sb"), q.get("sa")
+        credit, width = q.get("credit"), q.get("width")
+        out = {"premium": sm, "oi": q.get("oi"), "spread_pct": None, "cw": None}
+        try:
+            if sm and sb and sa:
+                out["spread_pct"] = round((sa - sb) / sm * 100, 2)
+        except Exception:
+            pass
+        try:
+            if credit is not None and width:
+                out["cw"] = round(credit / width, 4)
+        except Exception:
+            pass
+        return out
+
+    def _put(self, sym, reason, detail, nums):
+        if not self.enabled or sym in self._syms:
+            return
+        self._syms.add(sym)
+        self.rows.append(dict(book=self.book, symbol=sym, reason=reason, detail=detail,
+                              spread_pct=nums.get("spread_pct"), oi=nums.get("oi"),
+                              premium=nums.get("premium"), cw=nums.get("cw")))
+
+    def add(self, sym, reason, detail="", q=None, **fmt):
+        """A name that broke out today and failed at this point. `detail` is a str.format template
+        over the computed numbers (cw, premium, spread_pct, oi) plus any keyword in `fmt`."""
+        if not self.enabled:
+            return
+        nums = self._nums(q)
+        try:
+            text = detail.format(**{**nums, **fmt})
+        except Exception:
+            text = f"{detail} {fmt}" if fmt else detail
+        self._put(sym, reason, text, nums)
+
+    def _watchlist(self):
+        if self._wl is None:
+            self._wl = {}
+            try:
+                import json as _json
+                from datetime import date as _date
+                fp = os.path.join(self.watchlist_dir or "", f"{_date.today().isoformat()}.json")
+                if self.watchlist_dir and os.path.exists(fp):
+                    with open(fp) as f:
+                        for r in (_json.load(f) or {}).get("rows", []):
+                            if r.get("sym"):
+                                self._wl[r["sym"]] = r
+            except Exception as e:
+                logger.warning(f"RejectionLog watchlist read: {e}")
+        return self._wl
+
+    def _wl_row(self, sym):
+        r = self._watchlist().get(sym)
+        if r is None:
+            return None
+        if self.min_dc is not None:
+            try:
+                if int(r.get("dc") or 0) < int(self.min_dc):
+                    return None
+            except Exception:
+                return None
+        return r
+
+    def pre(self, sym, reason, detail=""):
+        """A name skipped BEFORE its breakout was computed. Recorded only if the 15:31 watchlist
+        shows it as a breakout today (see the class docstring)."""
+        if not self.enabled:
+            return
+        r = self._wl_row(sym)
+        if r is None:
+            return
+        nums = {"premium": None, "oi": None, "spread_pct": None, "cw": None}
+        tag = f"; breakout {r.get('dir')} D{r.get('dc')} on the 15:31 watchlist"
+        if self.watchlist_numbers:
+            nums = {"premium": r.get("prem"), "oi": r.get("oi"), "spread_pct": r.get("spread"),
+                    "cw": r.get("cw")}
+            tag += ", numbers from it"
+        self._put(sym, reason, detail + tag, nums)
+
+    def cap(self, tickers, detail=""):
+        """The per-day or open-position cap ended the loop: every remaining name that the 15:31
+        watchlist shows as a breakout is recorded as cap_reached."""
+        if not self.enabled:
+            return
+        for t in tickers:
+            self.pre(str(t).replace(".NS", ""), "cap_reached", detail)
+
+    def flush(self, log=None):
+        """Write the buffer (deduplicated per day/book/symbol) and log the one-line tally."""
+        if not self.enabled:
+            return 0
+        log = log or logger
+        counts = {}
+        for r in self.rows:
+            counts[r["reason"]] = counts.get(r["reason"], 0) + 1
+        n = record_rejections(self.rows) if self.rows else 0
+        tally = ", ".join(f"{k} {v}" for k, v in sorted(counts.items(), key=lambda kv: (-kv[1], kv[0])))
+        log.info(f"{self.book} rejections today: {len(self.rows)}" + (f" ({tally})" if tally else "")
+                 + (f" [{n} new row(s) written]" if n != len(self.rows) else ""))
+        return n
 
 
 def summary():
@@ -150,7 +309,12 @@ def summary():
             out["rej_by_reason"] = dict(c.execute(
                 "SELECT reason, COUNT(*) FROM rejections GROUP BY reason").fetchall())
             taken = out["closed"] + out["open"]
-            tot = taken + out["rejections"]
+            # Take rate counts GATE failures only (9-Oct-2026): held/re-entry/clash/cap rows say the
+            # name was never eligible, so counting them would understate how often the gates pass.
+            out["gate_rejections"] = c.execute(
+                "SELECT COUNT(*) FROM rejections WHERE reason NOT IN (%s)"
+                % ",".join("?" * len(NON_GATE_REASONS)), NON_GATE_REASONS).fetchone()[0]
+            tot = taken + out["gate_rejections"]
             out["take_rate_pct"] = (100.0 * taken / tot) if tot else None
             return out
     except Exception as e:

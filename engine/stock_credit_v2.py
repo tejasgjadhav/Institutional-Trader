@@ -60,6 +60,22 @@ EXCLUDE_SYMBOLS     = frozenset()   # symbols another book already holds open �
 # and the runner reports it, so a degraded scan says so.
 SCAN_INTEGRITY = {"universe": 0, "unreachable": 0, "names": []}
 
+# REJECTION RECORD (9-Oct-2026, logging only). scan_signals() writes one forward-record row per
+# breakout name it does not open, under _FR_BOOK. RECORD_REJECTIONS=False turns it off without
+# touching any decision; the watchlist archive is the breakout evidence for names skipped before
+# the breakout check (see forward_record.RejectionLog).
+RECORD_REJECTIONS = True
+WATCHLIST_ARCHIVE_DIR = os.path.join(DATA_DIR, "watchlist_archive")
+
+
+def _rj(rej, fn, *a, **k):
+    """Call a RejectionLog method; any failure is logged at WARNING and swallowed. Never gates."""
+    try:
+        if rej is not None:
+            getattr(rej, fn)(*a, **k)
+    except Exception as e:
+        logger.warning(f"{_FR_BOOK} rejection record ({fn}): {e}")
+
 
 # ── persistence ──────────────────────────────────────────────────────────────
 def _load_book() -> list:
@@ -694,21 +710,41 @@ def scan_signals() -> list:
     new = []
     from engine.data_utils import recent_entry_symbols
     _cross_gap = recent_entry_symbols()
-    for ticker in UNIVERSE:
+    _rej = None
+    try:   # rejection record (9-Oct-2026): logging only, every call goes through _rj()
+        from engine.forward_record import RejectionLog
+        _rej = RejectionLog(_FR_BOOK, watchlist_dir=WATCHLIST_ARCHIVE_DIR,
+                            watchlist_numbers=True, enabled=bool(RECORD_REJECTIONS))
+    except Exception as e:
+        logger.warning(f"{_FR_BOOK} rejection record init: {e}")
+    for _ti, ticker in enumerate(UNIVERSE):
         if len(open_now) + len(new) >= STOCK_CREDIT_MAX_OPEN:
+            _rj(_rej, "cap", UNIVERSE[_ti:], f"open-position cap {STOCK_CREDIT_MAX_OPEN} reached; "
+                                             f"not evaluated")
             break
         if len(new) >= STOCK_CREDIT_MAX_NEW_PER_DAY:
+            _rj(_rej, "cap", UNIVERSE[_ti:], f"daily cap {STOCK_CREDIT_MAX_NEW_PER_DAY} new reached; "
+                                             f"not evaluated")
             break
         sym = ticker.replace(".NS", "")
+        bk = None
+        _q = None
         try:
             if sym in EXCLUDE_SYMBOLS:      # another stock-credit book already holds this name
+                _rj(_rej, "pre", sym, "clash", "excluded by another book (v0: v1 entered it "
+                                               "within the re-entry gap, v1 wins)")
                 continue
             if sym in _cross_gap:           # ANY book entered this name within the 3-day gap
+                _rj(_rej, "pre", sym, "reentry_gap", f"a stock book entered it within "
+                                                     f"{STOCK_CREDIT_REENTRY_GAP_DAYS} days")
                 continue                    # (cross-book rule, user 2026-08-07 — matches REENTRY=3)
             if any(p["symbol"] == sym and p["status"] == "OPEN" for p in book):
+                _rj(_rej, "pre", sym, "held_open", f"already open in {_FR_BOOK}")
                 continue
             entries = [p["entry_date"] for p in book if p["symbol"] == sym]
             if entries and (today - max(date.fromisoformat(d) for d in entries)).days < STOCK_CREDIT_REENTRY_GAP_DAYS:
+                _rj(_rej, "pre", sym, "reentry_gap", f"{_FR_BOOK} entered it within "
+                                                     f"{STOCK_CREDIT_REENTRY_GAP_DAYS} days")
                 continue
             bk = _todays_breakout(ticker)
             if not bk:
@@ -716,6 +752,7 @@ def scan_signals() -> list:
             bdir, dcw, sig_px, sig_src = bk
             spot = _spot(ticker)
             if not spot:
+                _rj(_rej, "add", sym, "no_spot", "breakout D{dc} {d}, no spot price", dc=dcw, d=bdir)
                 continue
             opt_type = "CE" if bdir == "LONG" else "PE"   # FADE
             _cell = None
@@ -724,37 +761,64 @@ def scan_signals() -> list:
                 if sym not in SIDE_WHITELIST.get(_side, ()):
                     _cell = (CELL_BANDS or {}).get((sym, _side))
                     if _cell is None:
+                        _rj(_rej, "add", sym, "side_not_whitelisted",
+                            "{s} is not a qualified side or cell for this name", s=_side)
                         continue                # vlc trades a name ONLY on its qualified side
             legs = _pick_legs(ticker, spot, opt_type)
             if not legs:
+                _rj(_rej, "add", sym, "no_legs", "no {o} strikes at DTE >= {n} around spot {sp}",
+                    o=opt_type, n=STOCK_CREDIT_MIN_DTE, sp=spot)
                 continue
             short, long, expiry = legs
             sm, sbid, sask, soi = _quote(short["key"])
             lm, lbid, lask, loi = _quote(long["key"])
+            _q = {"sm": sm, "sb": sbid, "sa": sask, "oi": soi}
             if sm is None or lm is None:
+                _rj(_rej, "add", sym, "no_quote", "no quote: short {a}, long {b}", q=_q,
+                    a=short.get("strike"), b=long.get("strike"))
                 continue
             # STRIKE VALIDATION (MPHASIS-2260 bug, 2026-07-08): the option master can carry
             # stale/non-standard strikes that mutate intra-day, so a picked strike may not be a
             # real tradeable contract. REQUIRE both legs to show a live TWO-SIDED market (real
             # bid AND ask) — a bogus/illiquid strike won't. No more fail-open on missing quotes.
             if not (sbid > 0 and sask > 0 and lbid > 0 and lask > 0):
+                _rj(_rej, "add", sym, "no_quote", "one-sided quote: short {a} {sb}/{sa}, long {b} {lb}/{la}",
+                    q=_q, a=short.get("strike"), b=long.get("strike"), sb=sbid, sa=sask, lb=lbid, la=lask)
                 continue
             credit = round(sm - lm, 2)
             width_pts = abs(short["strike"] - long["strike"])
+            _q = {"sm": sm, "sb": sbid, "sa": sask, "oi": soi, "credit": credit, "width": width_pts}
             if credit <= 0 or width_pts <= 0:
+                _rj(_rej, "add", sym, "cw_below" if width_pts > 0 else "no_legs",
+                    "credit {c} on width {w}", q=_q, c=credit, w=width_pts)
                 continue
             # ── the gates ──
             if _cell is not None:
                 # vlc cell (27-Sep-2026): its own band and floor, studies/PREMIUM_FLOOR_SWEEP.md
                 if (not (_cell["min_cw"] <= credit / width_pts < _cell["max_cw"]) or sm < _cell["min_prem"]
                         or sm >= _cell.get("max_prem", float("inf"))):
+                    if not (_cell["min_cw"] <= credit / width_pts < _cell["max_cw"]):
+                        _rj(_rej, "add", sym, "cell_band", "c/w {cw:.3f} outside cell band {a}-{b}",
+                            q=_q, a=_cell["min_cw"], b=_cell["max_cw"])
+                    elif sm < _cell["min_prem"]:
+                        _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below cell "
+                            "floor {f}", q=_q, f=_cell["min_prem"])
+                    else:
+                        _rj(_rej, "add", sym, "cell_band", "short premium {premium:.2f} at or above "
+                            "cell ceiling {f}", q=_q, f=_cell.get("max_prem"))
                     continue
             else:
                 if credit / width_pts < STOCK_CREDIT_MIN_CW:           # the edge: rich credit vs risk
+                    _rj(_rej, "add", sym, "cw_below", "c/w {cw:.3f} below floor {f}", q=_q,
+                        f=STOCK_CREDIT_MIN_CW)
                     continue
                 if STOCK_CREDIT_MAX_CW is not None and credit / width_pts >= STOCK_CREDIT_MAX_CW:
+                    _rj(_rej, "add", sym, "cw_above", "c/w {cw:.3f} at or above ceiling {f}", q=_q,
+                        f=STOCK_CREDIT_MAX_CW)
                     continue                                            # v0 only: v2 owns >= its ceiling
                 if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
+                    _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}",
+                        q=_q, f=STOCK_CREDIT_MIN_PREM)
                     continue
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
@@ -762,23 +826,21 @@ def scan_signals() -> list:
             if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
                 # RECORD THE REJECTION. A blocked candidate leaves no trace anywhere else, so the
                 # take rate - the fraction of backtest trades actually fillable - was unmeasured.
-                try:
-                    from engine import forward_record as _fr
-                    _fr.record_rejection(
-                        _FR_BOOK, sym,
-                        "spread" if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT else "open_interest",
-                        f"spread {spread_pct:.2f}% oi {soi}", spread_pct, soi, sm,
-                        (credit / width_pts) if width_pts else None)
-                except Exception:
-                    pass
+                _rj(_rej, "add", sym,
+                    "spread_wide" if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT else "oi_low",
+                    "spread {spread_pct}% (max {ms}), OI {oi} (min {mo})", q=_q,
+                    ms=STOCK_CREDIT_MAX_SPREAD_PCT, mo=STOCK_CREDIT_MIN_OI)
                 continue
             # EXPOSURE CAP: skip extreme-notional names — width x lot <= STOCK_CREDIT_MAX_EXPOSURE
             # (0 = NO CAP since 2026-07-31; was 40,000 then 60,000). At 40k the backtest showed win rate
             # unchanged (85.7%), worst single loss -84.7k -> -21.6k, worst MONTH -2.28L -> -26.4k.
             # See config for the 40k-vs-60k measurement and its caveats.
             if STOCK_CREDIT_MAX_EXPOSURE and lot > 0 and width_pts * lot > STOCK_CREDIT_MAX_EXPOSURE:
+                _rj(_rej, "add", sym, "exposure_cap", "width x lot {x} above cap {f}", q=_q,
+                    x=width_pts * lot, f=STOCK_CREDIT_MAX_EXPOSURE)
                 continue
             if lot <= 0:                                            # no lot size -> not tradeable
+                _rj(_rej, "add", sym, "no_lot", "no lot size on the contract", q=_q)
                 continue
             num_lots = int(STOCK_CREDIT_LOTS or 1)
             qty = lot * num_lots
@@ -831,9 +893,12 @@ def scan_signals() -> list:
             logger.info(f"stock_credit: opened {side} {sym} (fade {bdir}) credit Rs{credit} c/w {pos['credit_width']} exp {expiry}")
         except Exception as e:
             logger.warning(f"stock_credit scan {sym}: {e}")
+            if bk and not any(p.get("symbol") == sym for p in new):
+                _rj(_rej, "add", sym, "error", "scan error: {e}", q=_q, e=str(e)[:120])
     if new:
         _save_book(book)
     _save_snapshot()
+    _rj(_rej, "flush", logger)    # after the book is saved: recording never delays a position
     return new
 
 

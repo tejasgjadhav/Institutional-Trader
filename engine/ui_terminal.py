@@ -824,7 +824,9 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                 counter = c.execute("""SELECT COUNT(*) FROM fills WHERE book IN ('v2','v1')
                                        AND entry_date>='2026-08-06' AND status='CLOSED'
                                        AND advisory=0""").fetchone()[0]
-                rej = c.execute("SELECT COUNT(*) FROM rejections").fetchone()[0]
+                rej = c.execute("SELECT COUNT(*) FROM rejections WHERE reason NOT IN "
+                                "('held_open','reentry_gap','clash','cap_reached','exposure_cap','error')"
+                                ).fetchone()[0]   # gate failures only (9-Oct-2026)
         except Exception:
             return self._d("Forward record unavailable (data/forward_record.db not readable).")
 
