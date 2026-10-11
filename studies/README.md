@@ -12,6 +12,11 @@ things that were tested and deliberately **not** deployed — those are as impor
 
 - [`NIFTY_2PCT_SEARCH/README.md`](NIFTY_2PCT_SEARCH/README.md) — ten studies looking for 2% a day, or a 75%+ win rate, in NIFTY and F&O stocks, without option spreads. Nothing survives 1-minute fills, live-timing OI and Indian costs. Cash-futures arbitrage is the only always-positive trade, at about 6–9% a year at 2025–26 basis levels. Includes the published 5-min ORB and noise-boundary strategies, which have a gross edge that costs remove.
 
+## 9–11 Oct 2026 — run 6, floors, sides, loss cuts
+
+- [`RUN6_TRADED_LEGS.md`](RUN6_TRADED_LEGS.md) — **the harness of record now counts traded prices only** (run 6). System OOS 80.6% win, +10.9% ROM, 24.2/mo, ₹31.4k/mo; IS 75.5%, +8.6%. Supersedes every run-5 stock figure. No signal-adding rule passes the goal; the 2-month what-if is inside.
+- Bull-put sub-floor for v1/v0 (short ≥ ₹10, credit × lot ≥ ₹3k) — LIVE and permanent since 11-Oct (research/floor_width/fw_side.py). Width-scaled floors, sub-₹30 bear calls, loss-cut exits, earnings skips and trend filters all failed (research/floor_width, research/loss_cut).
+
 ## 7–8 Oct 2026 — 0DTE exits and entry, the swing-call drought
 
 - [`ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md`](ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md) — NIFTY and SENSEX 0DTE: a time-based loss cut, entry time and strike distance, weighted to post-CAS. Keep 09:16, 0.5% OTM, no cut. Two side findings await an audit.

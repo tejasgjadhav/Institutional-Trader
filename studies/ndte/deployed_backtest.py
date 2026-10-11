@@ -96,7 +96,35 @@ BOOKS = {"v2": dict(S=2, W=4, tp=0.50, stop=None, band=(0.40, 99.0)),
          "v1": dict(S=1, W=3, tp=0.40, stop=None, band=(0.40, 99.0), prem=30.0),
          "v0": dict(S=2, W=4, tp=0.40, stop=None, band=(0.35, 0.40), prem=30.0)}
 # run 5 (27-Sep-2026): per-book premium floor — v1/v0 Rs 30, v2 Rs 50 (MIN_PREM). See PREMIUM_FLOOR_SWEEP.md
-spf = lambda p: min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0
+#
+# RUN 6 (11-Oct-2026). Two rules, each behind its own flag, both ON by default. Setting both OFF
+# reproduces run 5 exactly (research/run6/test_run6.py checks it row by row).
+#  TRADED_LEGS - a leg counts only on a day it TRADED: both legs on entry day, and both legs on any
+#    take-profit day (the expiry-day print is kept, as before). The stale-print audit (10-Oct-2026,
+#    research/audit_stale/a4_harness_traded.py, mode "both") found run 5 counting options on days
+#    they did not trade: a bhavcopy CLOSE for an untraded contract is the previous print or NSE's
+#    theoretical price, and an Upstox expired candle can exist with zero volume.
+#      IS : untraded = CLOSE and OPEN_INT both unchanged from the contract's previous row (the
+#           audit's proxy, checked on the Jul-Sep 2024 overlap with the real traded counts).
+#      OOS: untraded = NSE UDiFF bhavcopy TtlNbOfTxsExctd == 0 (OOS_TRADED_DIRS), and, where the
+#           Upstox candle carries a volume field, volume == 0. A day with no bhavcopy file and no
+#           volume is unknown and counts as traded (counted in TRADED_STATS["unknown_day"]).
+#  BP_SUBFLOOR - the live bull-put sub-floor, PERMANENT since 11-Oct-2026 (config
+#    STOCK_CREDIT_BP_SUBFLOOR_*): a v1/v0 BULL PUT whose short is below the book's Rs30 floor still
+#    passes when short >= Rs10 AND credit x lot >= Rs3,000. Bear calls and v2 keep their floors.
+#    In-sample the credit is put on today's lot scale with the candidate's own adjusted/parity ratio
+#    (snapped to 1 within 3%), exactly as research/floor_width/fw_core.lot_credit did when the rule
+#    was chosen.
+import os as _os
+TRADED_LEGS = _os.environ.get("RUN6_TRADED_LEGS", "1") == "1"
+BP_SUBFLOOR = _os.environ.get("RUN6_BP_SUBFLOOR", "1") == "1"
+BP_SUB_MIN_PREM, BP_SUB_MIN_CREDIT_LOT = 10.0, 3000.0
+OOS_TRADED_DIRS = ["data/bhavcopy/fo", "research/more_signals/nse_fo"]   # first file per date wins
+TRADED_STATS = collections.Counter()
+# FRICTION SENSITIVITY: costs scale linearly with FRIC (1.0 = the harness's own cost model).
+FRIC = float(_os.environ.get("FRIC", "1.0"))
+def spf(p):
+    return FRIC * (min(6.0, max(1.0, 60.0 / p)) if p > 0 else 6.0)
 OUT = f"research/deployed_bt_{WINDOW.lower()}_rows.json"
 IS_PICKLE = "research/bhav_optstk.pkl"   # overridable by drivers (universe expansion 23-Aug-2026)
 LEGFAIL_PATH = "research/expansion2/legfails.jsonl"   # tests override to a scratch path
@@ -193,8 +221,16 @@ def _wings_monotonic(px_one, ks, si, li, typ, sym="", day=""):
     return True if WING_INVERSION_TOL is None else worst <= WING_INVERSION_TOL
 
 
+def bp_subfloor_ok(bk, typ, se, credit, sym, lot_ratio=1.0):
+    """Run 6: the live bull-put sub-floor (engine.stock_credit_v2.bp_subfloor) for v1 and v0."""
+    if not BP_SUBFLOOR or bk not in ("v1", "v0") or typ != "PE" or se < BP_SUB_MIN_PREM:
+        return False
+    f = 1.0 if 0.97 < lot_ratio < 1.03 else lot_ratio
+    return credit * LOTMAP.get(sym, 0) * f >= BP_SUB_MIN_CREDIT_LOT
+
+
 def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, rows, open_until, rs_scale=1.0,
-               px_one=None):
+               px_one=None, lot_ratio=1.0):
     """walk yields (walk_day, se, le) after entry, same-day pairs only. Applies the live hierarchy:
     v2 first; v1 only on a D10 breakout and only if v2 neither fires today nor holds the name; v0
     only if v1 did not fire. `open_until` is {book: exit_day} for THIS symbol - a book holding an
@@ -212,10 +248,11 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
         if got is None: continue
         se, le, walk = got[0], got[1], got[2]
         oi = got[3] if len(got) > 3 else None      # (oi_short, oi_long), IS only
-        if se < cfg.get("prem", MIN_PREM): continue      # per-book floor (run 5)
+        credit = se - le; width = abs(ks[si] - ks[li])
+        if se < cfg.get("prem", MIN_PREM) and not bp_subfloor_ok(bk, typ, se, credit, sym, lot_ratio):
+            continue                                     # per-book floor (run 5) + BP sub-floor (run 6)
         _floor = MIN_OI
         if oi is not None and (oi[0] < _floor or oi[1] < _floor): continue
-        credit = se - le; width = abs(ks[si] - ks[li])
         if credit <= 0 or credit >= width: continue
         # INVERTED-WING GUARD (run 4, 17-Sep-2026). The width-3 audit found 15 of 83 "extra" trades
         # existed only because a wing print was out of order - a FARTHER strike priced above a
@@ -276,7 +313,8 @@ def eval_books(day, sym, typ, ks, atm, px_short_long, cb, exp, spot, d10_hit, ro
                          oi_units=_oiu, oi_lots=(round(_oiu / _lot, 1) if (_oiu and _lot) else None),
                          net=round(net, 2), margin=round(width - credit, 2), win=int(net > 0),
                          lot=_lot, net_rs=round(net * _lot * rs_scale, 2),
-                         margin_rs=round((width - credit) * _lot * rs_scale, 2)))
+                         margin_rs=round((width - credit) * _lot * rs_scale, 2),
+                         typ=typ, se=round(se, 2), exit=exit_day))     # run 6: side, short, exit day
     return True, exits
 
 def breakout_days(u):
@@ -295,6 +333,55 @@ def breakout_days(u):
         if not typ: continue
         d10 = "CE" if c > float(hi[i-10:i].max()) else ("PE" if c < float(lo[i-10:i].min()) else None)
         yield days[i], c, typ, (d10 == typ)
+
+def _is_traded_matrix(Cv, Ov):
+    """Run 6, IS traded flag. Cv/Ov are one (symbol, expiry, side) pivot, days x strikes, float64.
+    A contract-day is UNTRADED when its CLOSE and OPEN_INT both equal the contract's previous row
+    (the previous day it appears in the file); its first row counts as traded. Identical to
+    research/audit_stale/a4_harness_traded.py's groupby-shift proxy."""
+    T = np.ones(Cv.shape, dtype=bool)
+    ex = np.isfinite(Cv) | np.isfinite(Ov)
+    for j in range(Cv.shape[1]):
+        idx = np.flatnonzero(ex[:, j])
+        if len(idx) < 2: continue
+        c, o = Cv[idx, j], Ov[idx, j]
+        unch = (c[1:] == c[:-1]) & (o[1:] == o[:-1])
+        T[idx[1:][unch], j] = False
+    return T
+
+_OOS_UNTR = None
+def _oos_untraded():
+    """Run 6, OOS traded flag: {(sym, expiry, side, strike, day)} with zero trades in NSE UDiFF, and
+    the set of days a file covers. Loaded once, lazily, from OOS_TRADED_DIRS."""
+    global _OOS_UNTR
+    if _OOS_UNTR is None:
+        import glob, zipfile, io, os
+        files = {}
+        for dd in OOS_TRADED_DIRS:
+            for f in sorted(glob.glob(f"{dd}/*.csv.zip")):
+                files.setdefault(os.path.basename(f)[:10], f)
+        untr, days = set(), set()
+        for dstr in sorted(files):
+            with zipfile.ZipFile(files[dstr]) as z:
+                df = pd.read_csv(io.BytesIO(z.read(z.namelist()[0])),
+                                 usecols=["TradDt", "FinInstrmTp", "TckrSymb", "XpryDt", "StrkPric", "OptnTp",
+                                          "TtlNbOfTxsExctd"])
+            df = df[df.FinInstrmTp == "STO"]
+            if not len(df): continue
+            days.add(df.TradDt.iloc[0])
+            u = df[df.TtlNbOfTxsExctd == 0]
+            untr.update(zip(u.TckrSymb, u.XpryDt, u.OptnTp, u.StrkPric.astype(float), u.TradDt))
+        _OOS_UNTR = (untr, days)
+    return _OOS_UNTR
+
+def oos_traded(sym, exp, typ, K, day, q=None):
+    """Run 6: did this OOS contract trade on `day`? q is the leg's cached [close, oi(, volume)]."""
+    if q is not None and len(q) > 2 and q[2] is not None and q[2] <= 0:
+        return False                                  # Upstox candle with zero volume
+    untr, days = _oos_untraded()
+    if day not in days:
+        TRADED_STATS["unknown_day"] += 1; return True
+    return (sym, exp, typ, float(K), day) not in untr
 
 # ---------------- IS: bhavcopy pickle ----------------
 def run_is():
@@ -316,7 +403,8 @@ def run_is():
         PX[(str(k[0]), str(k[1]), str(k[2]))] = dict(
             ks=np.asarray(c.columns, dtype="float64"),
             didx={str(d): i for i, d in enumerate(c.index)}, C=c.values.astype("float32"),
-            O=o.values.astype("float32"))
+            O=o.values.astype("float32"),
+            T=(_is_traded_matrix(c.values, o.values) if TRADED_LEGS else None))   # run 6
     del big
     exps_by = collections.defaultdict(set)
     for (s, e, t) in PX: exps_by[(s, t)].add(e)
@@ -377,6 +465,12 @@ def run_is():
                 walk = [w for t, w in enumerate(walk_all)
                         if (np.isfinite(P["O"][di+1+_idx[t], si]) and P["O"][di+1+_idx[t], si] >= _f
                             and np.isfinite(P["O"][di+1+_idx[t], li]) and P["O"][di+1+_idx[t], li] >= _f)]
+                if TRADED_LEGS:     # run 6: both legs traded on entry day and on any TP day
+                    T = P["T"]
+                    if not (T[di, si] and T[di, li]):
+                        TRADED_STATS["entry_untraded"] += 1; return None
+                    walk = [w for w in walk if w[0] == exp or
+                            (T[P["didx"][w[0]], si] and T[P["didx"][w[0]], li])]
                 return se, le, walk, (oS, oL)
             cb_t = dict(cb)
             if exp in P["didx"] and exp in Q["didx"]:
@@ -397,7 +491,7 @@ def run_is():
                 if not (np.isfinite(v) and np.isfinite(o) and o >= MIN_OI): return None
                 return float(v)
             ok, ex = eval_books(d, sym, typ, ks, atm, px, cb_t, exp, spot_t, d10_hit, rows, open_until,
-                                rs_scale=1.0, px_one=px_one)
+                                rs_scale=1.0, px_one=px_one, lot_ratio=_r)
             if len(rows) > _len0:
                 _pending_ratio.append((list(range(_len0, len(rows))), _r))
             if ok:
@@ -497,7 +591,8 @@ def leg(key, d0, to):
         return None
     out = {}
     for c in j.get("data", {}).get("candles", []) or []:
-        out[str(c[0])[:10]] = [float(c[4]), float(c[6]) if len(c) > 6 and c[6] is not None else 0.0]
+        out[str(c[0])[:10]] = [float(c[4]), float(c[6]) if len(c) > 6 and c[6] is not None else 0.0,
+                               float(c[5]) if len(c) > 5 and c[5] is not None else None]   # run 6: volume
     if out:                                   # never cache an empty (network-poisoned) result
         with LK: LEGC[ck] = out
     return out
@@ -567,6 +662,14 @@ def run_oos():
                 # gate the walk out-of-sample too, exactly as in-sample
                 walk = [(x, sp[x][0], lp[x][0]) for x in both
                         if x > d and sp[x][1] >= _f and lp[x][1] >= _f]
+                if TRADED_LEGS:     # run 6: both legs traded on entry day and on any TP day
+                    Ks, Kl = chain[si]["strike_price"], chain[li]["strike_price"]
+                    if not (oos_traded(sym, exp, typ, Ks, d, sp[d]) and oos_traded(sym, exp, typ, Kl, d, lp[d])):
+                        with LK: TRADED_STATS["entry_untraded"] += 1
+                        return None
+                    walk = [w for w in walk if w[0] == exp or
+                            (oos_traded(sym, exp, typ, Ks, w[0], sp[w[0]]) and
+                             oos_traded(sym, exp, typ, Kl, w[0], lp[w[0]]))]
                 return sp[d][0], lp[d][0], walk, (sp[d][1], lp[d][1])
             def px_one(i, chain=chain, d=d, to=to):
                 q = leg(chain[i]["instrument_key"], d, to)
@@ -595,6 +698,8 @@ def run_oos():
 # meant to reproduce. It also made the module impossible to unit-test.
 def print_integrity():
     """The run's integrity line. Callable from drivers, which bypass __main__ (audit 17-Sep-2026)."""
+    print(f"RUN 6 FLAGS: TRADED_LEGS={TRADED_LEGS} BP_SUBFLOOR={BP_SUBFLOOR} FRIC={FRIC:g}  "
+          f"traded-leg stats {dict(TRADED_STATS)}")
     for k in ("contract_list", "underlying_symbol"):
         if FETCHFAIL[k]:
             print(f"FETCH INTEGRITY: {FETCHFAIL[k]} {k.replace('_',' ')} fetch(es) failed and were skipped.")

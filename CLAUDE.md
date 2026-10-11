@@ -22,9 +22,9 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 
 | Book | Flag | Win | ₹/mo @1 lot | Evidence strength |
 |---|---|---|---|---|
-| ★ Stock fade v2 UNION (TP-50, NO stop, short leg ≥ ₹50) | `STOCK_CREDIT_ENABLED` | 77.9% IS / 86.1% OOS | ₹12,417/mo (23-mo basis) | IS **+21.2%** [n=213, 6/6 yrs] · OOS **+26.6%** [n=79, 2/2 full yrs] — run 5 (27-Sep-2026), clean pass, 0 fetch drops |
-| Stock credit v1 (TP-40/no-stop, D10 only, **short leg ≥ ₹30** since 27-Sep; **bull puts may go to ₹10 if credit × lot ≥ ₹3,000**, PERMANENT since 11-Oct) | `STOCK_CREDIT_ENABLED` · `STOCK_CREDIT_V1_MIN_PREM` · `STOCK_CREDIT_BP_SUBFLOOR_*` | 80.6% IS / 81.0% OOS | ₹15,020/mo OOS-measured (23-mo basis) | IS **+11.6%** [n=485, 6/6] · OOS **+13.9%** [n=289, 3/3] — run 5 (27-Sep-2026), clean pass; IS on the 116-name basis, ROM on rupee margin |
-| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash, **short leg ≥ ₹30** since 27-Sep; **same bull-put sub-floor**, PERMANENT since 11-Oct) | `STOCK_CREDIT_V0_ENABLED` · `STOCK_CREDIT_V0_MIN_PREM` · `STOCK_CREDIT_BP_SUBFLOOR_*` | 86.2% IS / 82.1% OOS | ₹7,598/mo (23-mo basis) | IS +15.2% [n=311, 6/6] · OOS **+2.6%** [n=145, 2/2] — the watch book; run 4 moved its ROM from +7.2 (thin, ~100 trades) |
+| ★ Stock fade v2 UNION (TP-50, NO stop, short leg ≥ ₹50) | `STOCK_CREDIT_ENABLED` | 61.3% IS / 81.9% OOS | ₹8,138/mo OOS (IS ₹1,566) | **run 6 (11-Oct-2026, traded legs only)**: IS **+5.4%** [n=238, 4/6 yrs] · OOS **+22.3%** [n=72, 2/2] · NSE path +17.6% [n=79] · cohort IS +5.1% / OOS +22.5% |
+| Stock credit v1 (TP-40/no-stop, D10 only, short leg ≥ ₹30; **bull puts from ₹10 if credit × lot ≥ ₹3,000**, PERMANENT since 11-Oct) | `STOCK_CREDIT_ENABLED` · `STOCK_CREDIT_V1_MIN_PREM` · `STOCK_CREDIT_BP_SUBFLOOR_*` | 77.4% IS / 79.9% OOS | ₹16,865/mo OOS (IS ₹7,709) | **run 6**: IS **+10.7%** [n=624, 5/6] · OOS **+11.1%** [n=313, 3/3] · NSE path +9.6% [n=342] · cohort IS +6.6% / OOS +9.2% |
+| Stock credit **v0** (c/w 0.35–0.40, v1 wins same-stock clash, short leg ≥ ₹30; **same bull-put sub-floor**, PERMANENT since 11-Oct) | `STOCK_CREDIT_V0_ENABLED` · `STOCK_CREDIT_V0_MIN_PREM` · `STOCK_CREDIT_BP_SUBFLOOR_*` | 83.4% IS / 81.3% OOS | ₹6,416/mo OOS (IS ₹3,514) | **run 6**: IS **+7.3%** [n=283, 5/6] · OOS **+6.5%** [n=155, 2/2] · NSE path +4.9% [n=175, 2/3] |
 | Sidewise low credit ("vlc", c/w 0.30-0.40, 12 BC + 9 BP names side-locked) | `STOCK_CREDIT_VLC_ENABLED` | 90.7% IS / 93.4% OOS on its 21 cells | plan ₹3,592/mo (IS rate; OOS ₹12,044/mo is selection-inflated) | deployed 3-Sep-2026 from studies/BAND_030_040_NAMEWISE.md — cells CHOSEN on the OOS window, pooled qualifier screen was −3.5% OOS; live forward record decides at 30 fills |
 | ~~T-1 EVE~~ (SENSEX eve / BANKNIFTY monthly eve bear call) | `T1_EVE_ENABLED=False` | — | — | **DEPLOYED AND DISABLED THE SAME DAY (17-Sep-2026)**, before its first eve. The refutation audit (research/audit_t1_eve.md) found the study's own final verdict had REJECTED the book, SENSEX expectancy unproven (P≤0 6.4%, drawdown ₹38k vs ₹27k/yr claimed), BANKNIFTY monthly resting on weekly-era evidence, and direction explaining ~⅔ of the P&L. Code kept, off; re-enable only on a new study |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
@@ -40,12 +40,16 @@ because sub-floor bear calls lost in every window. Evidence: research/floor_widt
 carry `floor_rule="bp_subfloor"` so the forward record can judge it separately. Do not remove it or turn it
 off without the user.
 
-**STALE-PRINT CORRECTION (audit 10-Oct-2026, research/audit_stale/).** The run-5 figures in this table
-count options on days they did not trade. Counting traded legs only: all books IS +7.9% ROM / ₹9.5k a month,
-OOS +11.1% / ₹30k (v2 +5.5/+22.3, v1 +9.1/+11.1, v0 +8.0/+6.7). A full restatement (run 6) is pending the
-user's go-ahead; until then treat the table as an upper bound.
+**THE STOCK-BOOK NUMBERS ABOVE ARE RUN 6 (11-Oct-2026), see studies/RUN6_TRADED_LEGS.md.** Run 6 counts an
+option only on days it actually traded (the 10-Oct stale-print audit found run 5 entered and booked
+take-profits on carried-forward closes, inflating credit). System v2+v1+v0: IS 75.5% win / +8.6% ROM /
+16.6 trades a month / ₹12.8k a month; OOS 80.6% / +10.9% / 24.2 a month / ₹31.4k a month; avg win
+₹3.9k vs avg loss ₹9.5k OOS; worst −₹22k; max DD ₹141k. At 0.75x friction OOS +12.8% / ₹36.7k. **Every
+run-5 and earlier stock-book figure (the paragraph below included) is superseded and must not be quoted.**
+No signal-adding rule passed the user's goal on run 6 (max signals, win ≥ 75%, positive net for system
+AND each addition); the live system meets the goal on its own.
 
-**THE NUMBERS ABOVE ARE RUN 4 (17-Sep-2026)** of `studies/ndte/deployed_backtest.py` — the first
+**HISTORICAL (superseded by run 6): THE RUN-4 NOTES (17-Sep-2026)** of `studies/ndte/deployed_backtest.py` — the first
 single-run out-of-sample on the real 116-name universe with every fetch failure counted (439 rows,
 197 network drops; see `studies/RUN4_WING_GUARD.md`). In-sample is bit-identical to run 3. Run 3
 itself was the 21-Aug-2026 re-run, after a
