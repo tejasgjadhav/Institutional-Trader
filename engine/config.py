@@ -376,6 +376,14 @@ STOCK_CREDIT_MIN_PREM     = 50.0    # short-leg premium >= Rs50 (avoid cheap/unt
 # So v1 and v0 drop to Rs 30; v2 and vlc stay at Rs 50. The 6% live spread gate still applies.
 STOCK_CREDIT_V1_MIN_PREM  = 30.0
 STOCK_CREDIT_V0_MIN_PREM  = 30.0
+# BULL-PUT SUB-FLOOR (user switched it on 11-Oct-2026; research/floor_width/fw_side.py, picks_side_is.json).
+# v1 and v0 BULL PUTS below their Rs30 floor are taken when short premium >= Rs10 AND credit x lot
+# >= Rs3,000. Bear calls keep Rs30 (sub-floor bear calls lost in every window); v2 and vlc unchanged.
+# Picked on IS only; OOS met the objective on all 6 readings but adds only ~1.5 trades/month.
+# Positions it admits carry floor_rule="bp_subfloor". Set False to revert instantly.
+STOCK_CREDIT_BP_SUBFLOOR_ENABLED = True
+STOCK_CREDIT_BP_SUBFLOOR_MIN_PREM = 10.0
+STOCK_CREDIT_BP_SUBFLOOR_MIN_CREDIT_PER_LOT = 3000.0
 # NO STOP, SETTLED (user, 2026-08-17: "no exit rule is no stop now for v0, v1 and v2, we wont
 # change"). All three stock books are take-profit only and the bought wing caps the loss at
 # (width - credit). New positions store stop_cost None; no book reads a stop multiple any more, so

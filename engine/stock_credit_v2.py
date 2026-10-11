@@ -53,6 +53,8 @@ CELL_BANDS          = None     # vlc only (27-Sep-2026): {(name, side): {min_cw,
                                # side-locked cells with their OWN c/w band and premium floor, for names
                                # NOT on SIDE_WHITELIST for that side. None everywhere else = no-op.
 EXCLUDE_SYMBOLS     = frozenset()   # symbols another book already holds open — skip them
+BP_SUBFLOOR         = False    # v0 only (11-Oct-2026): stock_credit_v0.py sets True so its bull puts may
+                               # use the sub-floor clause (bp_subfloor below). False in v2 and vlc.
 
 # FETCH INTEGRITY (16-Sep-2026). A name the feed could not answer for is SKIPPED, which is
 # correct - never scan a stale bar - but the 15:36 message still claimed the full universe
@@ -323,9 +325,9 @@ def build_watchlist() -> dict:
             # Evaluate ALL three gates independently (no short-circuit) so the watchlist shows
             # premium + liquidity status even when credit/width fails.
             cw_ok = cw >= STOCK_CREDIT_MIN_CW
-            prem_floor = prem_floor_for(sym, side, cw)   # per-book floor (27-Sep-2026)
-            prem_ok = sm >= prem_floor
             lot = int(s.get("lot", 0) or l.get("lot", 0) or 0)
+            # per-book floor (27-Sep-2026) + the v0-band bull-put sub-floor (11-Oct-2026)
+            prem_ok, prem_floor = prem_check(sym, side, cw, sm, credit, lot)
             liq_ok = (spr <= STOCK_CREDIT_MAX_SPREAD_PCT) and (soi >= STOCK_CREDIT_MIN_OI)
             row.update(cw=cw, prem=round(sm, 1), prem_floor=prem_floor, spread=spr, oi=int(soi),
                        short_strike=s["strike"], long_strike=l["strike"], expiry=exp,
@@ -471,6 +473,40 @@ def _digest_verdict(r: dict, book, star: bool, prem_ok: bool, spr_ok: bool, oi_o
             f"· {is_txt}. The engine will not take or log this trade.")
 
 
+def bp_subfloor(side, short_prem, credit, lot) -> tuple:
+    """(ok, why): does a BULL_PUT below its book's premium floor pass the sub-floor clause?
+    (user switched it on 11-Oct-2026, research/floor_width/fw_side.py). v1 and v0 only — the caller
+    decides the book; this only reads the rule. ok needs the switch on, side BULL_PUT, short premium
+    >= STOCK_CREDIT_BP_SUBFLOOR_MIN_PREM and credit x lot >= STOCK_CREDIT_BP_SUBFLOOR_MIN_CREDIT_PER_LOT.
+    `why` names the clause that failed, for the prem_below rejection detail. Read at call time."""
+    if not getattr(config, "STOCK_CREDIT_BP_SUBFLOOR_ENABLED", False):
+        return False, "bull-put sub-floor off"
+    if side != "BULL_PUT":
+        return False, "bear calls keep the floor"
+    mn = float(getattr(config, "STOCK_CREDIT_BP_SUBFLOOR_MIN_PREM", 10.0))
+    mc = float(getattr(config, "STOCK_CREDIT_BP_SUBFLOOR_MIN_CREDIT_PER_LOT", 3000.0))
+    if short_prem is None or short_prem < mn:
+        return False, f"short premium below Rs{mn:g}"
+    cl = (credit or 0) * (lot or 0)
+    if cl < mc:
+        return False, f"credit x lot Rs{cl:,.0f} below Rs{mc:,.0f}"
+    return True, f"bull-put sub-floor: short >= Rs{mn:g}, credit x lot Rs{cl:,.0f} >= Rs{mc:,.0f}"
+
+
+def prem_check(sym: str, side: str, cw: float, prem, credit, lot) -> tuple:
+    """(prem_ok, floor shown) for the 15:31 watchlist and digest. The book's floor (prem_floor_for),
+    plus the bull-put sub-floor for the v0 band (c/w 0.35-0.40, the same band prem_floor_for gives v0),
+    so a bull put v0 would now take does not show a premium cross. The floor shown becomes the
+    sub-floor minimum when that clause is what passes it. The watchlist is v2 geometry, so v1's own
+    trades are not represented here (unchanged)."""
+    floor = prem_floor_for(sym, side, cw)
+    if (prem or 0) >= floor:
+        return True, floor
+    if 0.35 <= (cw or 0) < 0.40 and bp_subfloor(side, prem, credit, lot)[0]:
+        return True, float(getattr(config, "STOCK_CREDIT_BP_SUBFLOOR_MIN_PREM", 10.0))
+    return False, floor
+
+
 def prem_floor_for(sym: str, side: str, cw: float) -> float:
     """The short-leg premium floor of the book that would take this c/w (per-book floor,
     user-approved 27-Sep-2026): v0 band 0.35-0.40 = V0 floor (Rs 30); v2 >= 0.40 and whitelisted vlc
@@ -581,8 +617,9 @@ def build_digest(d: dict, min_cw: float = 0.25, limit: int = 4000) -> tuple:
         book = _digest_book(r)
         # per-book premium floor (27-Sep-2026): v0 = Rs 30, v2/vlc = Rs 50; with no book, the lowest
         # floor any book uses, so a cross means "no book would take this premium"
-        _floor = prem_floor_for(str(r.get("sym")), str(r.get("side")), r.get("cw") or 0)
-        cw_ok, prem_ok = book is not None, (r.get("prem") or 0) >= _floor
+        prem_ok, _floor = prem_check(str(r.get("sym")), str(r.get("side")), r.get("cw") or 0,
+                                     r.get("prem"), r.get("credit"), r.get("lot"))
+        cw_ok = book is not None
         spr_ok = (r.get("spread") if r.get("spread") is not None else 999) <= max_spr
         oi_ok = (r.get("oi") or 0) >= min_oi
         issues = []
@@ -729,6 +766,7 @@ def scan_signals() -> list:
         sym = ticker.replace(".NS", "")
         bk = None
         _q = None
+        _floor_rule = None                  # "bp_subfloor" when the bull-put sub-floor admitted it
         try:
             if sym in EXCLUDE_SYMBOLS:      # another stock-credit book already holds this name
                 _rj(_rej, "pre", sym, "clash", "excluded by another book (v0: v1 entered it "
@@ -817,9 +855,20 @@ def scan_signals() -> list:
                         f=STOCK_CREDIT_MAX_CW)
                     continue                                            # v0 only: v2 owns >= its ceiling
                 if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
-                    _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}",
-                        q=_q, f=STOCK_CREDIT_MIN_PREM)
-                    continue
+                    # BULL-PUT SUB-FLOOR (11-Oct-2026), v0 instance only (BP_SUBFLOOR): a bull put
+                    # below the floor passes when short >= Rs10 and credit x lot >= Rs3,000.
+                    _sub_ok, _sub_why = (bp_subfloor("BULL_PUT" if opt_type == "PE" else "BEAR_CALL",
+                                                     sm, credit, int(short.get("lot", 0) or long.get("lot", 0) or 0))
+                                         if BP_SUBFLOOR else (False, None))
+                    if not _sub_ok:
+                        if BP_SUBFLOOR and opt_type == "PE" and getattr(config, "STOCK_CREDIT_BP_SUBFLOOR_ENABLED", False):
+                            _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}; "
+                                "bull-put sub-floor failed: {why}", q=_q, f=STOCK_CREDIT_MIN_PREM, why=_sub_why)
+                        else:
+                            _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}",
+                                q=_q, f=STOCK_CREDIT_MIN_PREM)
+                        continue
+                    _floor_rule = "bp_subfloor"
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
             # OI must EXIST — see config.STOCK_CREDIT_MIN_OI for why this is a floor, not a filter.
@@ -884,6 +933,8 @@ def scan_signals() -> list:
                     pos["advisory"] = True
             except Exception:
                 pass
+            if _floor_rule:
+                pos["floor_rule"] = _floor_rule      # measured separately later (11-Oct-2026)
             book.append(pos); new.append(pos)
             try:
                 from engine import forward_record as _fr

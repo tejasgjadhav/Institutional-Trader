@@ -8,6 +8,10 @@ things that were tested and deliberately **not** deployed — those are as impor
 [`CONSOLIDATED_PNL.md`](CONSOLIDATED_PNL.md) — monthly P&L model.
 
 
+## 9–10 Oct 2026 — the 2% a day search (closed, nothing deployed)
+
+- [`NIFTY_2PCT_SEARCH/README.md`](NIFTY_2PCT_SEARCH/README.md) — ten studies looking for 2% a day, or a 75%+ win rate, in NIFTY and F&O stocks, without option spreads. Nothing survives 1-minute fills, live-timing OI and Indian costs. Cash-futures arbitrage is the only always-positive trade, at about 6–9% a year at 2025–26 basis levels. Includes the published 5-min ORB and noise-boundary strategies, which have a gross edge that costs remove.
+
 ## 7–8 Oct 2026 — 0DTE exits and entry, the swing-call drought
 
 - [`ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md`](ZERO_DTE_TIME_LOSSCUT_AND_ENTRY.md) — NIFTY and SENSEX 0DTE: a time-based loss cut, entry time and strike distance, weighted to post-CAS. Keep 09:16, 0.5% OTM, no cut. Two side findings await an audit.

@@ -275,6 +275,7 @@ def scan_signals() -> list:
         sym = ticker.replace(".NS", "")
         bdir = None
         _q = None
+        _floor_rule = None                  # "bp_subfloor" when the bull-put sub-floor admitted it
         try:
             if sym in v2_open:                                  # v2 already holds it — defer
                 _rj(_rej, "pre", sym, "clash", "v2 holds it open; v1 defers to v2")
@@ -333,9 +334,20 @@ def scan_signals() -> list:
                     f=STOCK_CREDIT_MIN_CW)
                 continue
             if sm < STOCK_CREDIT_MIN_PREM:                          # tradeable premium
-                _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}",
-                    q=_q, f=STOCK_CREDIT_MIN_PREM)
-                continue
+                # BULL-PUT SUB-FLOOR (11-Oct-2026): a bull put below the floor passes when short
+                # >= Rs10 and credit x lot >= Rs3,000 (engine.stock_credit_v2.bp_subfloor).
+                from engine.stock_credit_v2 import bp_subfloor
+                _sub_ok, _sub_why = bp_subfloor("BULL_PUT" if opt_type == "PE" else "BEAR_CALL", sm, credit,
+                                                int(short.get("lot", 0) or long.get("lot", 0) or 0))
+                if not _sub_ok:
+                    if opt_type == "PE" and getattr(_cfg, "STOCK_CREDIT_BP_SUBFLOOR_ENABLED", False):
+                        _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}; "
+                            "bull-put sub-floor failed: {why}", q=_q, f=STOCK_CREDIT_MIN_PREM, why=_sub_why)
+                    else:
+                        _rj(_rej, "add", sym, "prem_below", "short premium {premium:.2f} below floor {f}",
+                            q=_q, f=STOCK_CREDIT_MIN_PREM)
+                    continue
+                _floor_rule = "bp_subfloor"
             lot = int(short.get("lot", 0) or long.get("lot", 0) or 0)
             spread_pct = (sask - sbid) / sm * 100 if sm else 999   # live liquidity gate
             if spread_pct > STOCK_CREDIT_MAX_SPREAD_PCT or soi < STOCK_CREDIT_MIN_OI:
@@ -392,6 +404,8 @@ def scan_signals() -> list:
                     pos["advisory"] = True
             except Exception:
                 pass
+            if _floor_rule:
+                pos["floor_rule"] = _floor_rule      # measured separately later (11-Oct-2026)
             book.append(pos); new.append(pos)
             try:
                 from engine import forward_record as _fr

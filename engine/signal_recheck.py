@@ -138,7 +138,14 @@ def _check(p: dict, lo: float, hi, min_prem: float = None):
          "oi": soi, "short_prem": round(sm, 2), "spot": spot}
     _mp = float(min_prem if min_prem is not None else config.STOCK_CREDIT_MIN_PREM)   # per-book floor
     if sm < _mp:
-        return False, d, f"short premium ₹{sm:.0f} < ₹{_mp:.0f}"
+        # BULL-PUT SUB-FLOOR (11-Oct-2026): a position the sub-floor admitted is re-checked against
+        # that clause (short >= Rs10, credit x lot >= Rs3,000), not against the Rs30 book floor.
+        _sub_ok = False
+        if p.get("floor_rule") == "bp_subfloor":
+            from engine.stock_credit_v2 import bp_subfloor
+            _sub_ok = bp_subfloor(p.get("side"), sm, credit, int(p.get("lot") or 0))[0]
+        if not _sub_ok:
+            return False, d, f"short premium ₹{sm:.0f} < ₹{_mp:.0f}"
     if spread_pct > config.STOCK_CREDIT_MAX_SPREAD_PCT:
         return False, d, f"bid-ask {spread_pct:.1f}% > {config.STOCK_CREDIT_MAX_SPREAD_PCT:.0f}%"
     if soi < config.STOCK_CREDIT_MIN_OI:

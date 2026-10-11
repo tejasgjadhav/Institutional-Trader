@@ -52,6 +52,7 @@ _impl.STOCK_CREDIT_MAX_NEW_PER_DAY = int(getattr(config, "STOCK_CREDIT_V0_MAX_NE
 _impl.STOCK_CREDIT_MAX_OPEN   = int(getattr(config, "STOCK_CREDIT_V0_MAX_OPEN", 10))
 _impl.STOCK_CREDIT_LOTS       = int(getattr(config, "STOCK_CREDIT_V0_LOTS", 1))
 _impl.STOCK_CREDIT_MIN_PREM   = float(getattr(config, "STOCK_CREDIT_V0_MIN_PREM", 50.0))  # per-book floor, 27-Sep-2026
+_impl.BP_SUBFLOOR = True           # bull-put sub-floor (11-Oct-2026); off in v2 and vlc
 
 # geometry and every other gate stay exactly as v2 has them (short 2-OTM, width 4, DTE >= 10,
 # premium >= Rs50, live spread/OI, the Rs40k width x lot exposure cap, re-entry gap).
