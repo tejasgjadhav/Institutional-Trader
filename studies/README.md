@@ -16,6 +16,7 @@ things that were tested and deliberately **not** deployed — those are as impor
 
 - [`RUN6_TRADED_LEGS.md`](RUN6_TRADED_LEGS.md) — **the harness of record now counts traded prices only** (run 6). System OOS 80.6% win, +10.9% ROM, 24.2/mo, ₹31.4k/mo; IS 75.5%, +8.6%. Supersedes every run-5 stock figure. No signal-adding rule passes the goal; the 2-month what-if is inside.
 - Bull-put sub-floor for v1/v0 (short ≥ ₹10, credit × lot ≥ ₹3k) — LIVE and permanent since 11-Oct (research/floor_width/fw_side.py). Width-scaled floors, sub-₹30 bear calls, loss-cut exits, earnings skips and trend filters all failed (research/floor_width, research/loss_cut).
+- Separate bull-put and bear-call books on the 106 F&O outsiders (not in the live universe) — both FAIL on run 6 (BP OOS 73% win / −4.4% ROM; BC 71% / −6.9%); the only pass was a second position on names already held, i.e. pyramiding, not deployed (research/bp_book/). Shadow book v1u (v1 on union-not-D10 days) is live as paper-only (engine/shadow_v1u.py).
 
 ## 7–8 Oct 2026 — 0DTE exits and entry, the swing-call drought
 
