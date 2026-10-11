@@ -384,6 +384,9 @@ STOCK_CREDIT_V0_MIN_PREM  = 30.0
 STOCK_CREDIT_BP_SUBFLOOR_ENABLED = True
 STOCK_CREDIT_BP_SUBFLOOR_MIN_PREM = 10.0
 STOCK_CREDIT_BP_SUBFLOOR_MIN_CREDIT_PER_LOT = 3000.0
+# SHADOW v1u (user-approved 11-Oct-2026): paper-only book, engine/shadow_v1u.py. v1's rules on union
+# breakout days that are not D10 breakouts; no Telegram, no forward record, no effect on live books.
+SHADOW_V1U_ENABLED = True
 # NO STOP, SETTLED (user, 2026-08-17: "no exit rule is no stop now for v0, v1 and v2, we wont
 # change"). All three stock books are take-profit only and the bought wing caps the loss at
 # (width - credit). New positions store stop_cost None; no book reads a stop multiple any more, so

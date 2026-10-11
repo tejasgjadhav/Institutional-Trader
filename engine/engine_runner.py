@@ -948,6 +948,13 @@ class EngineRunner:
                         logger.info(f"stock_credit_v0: resolved/closed {n3} position(s)")
                 except Exception as e:
                     logger.warning(f"stock_credit_v0 resolve: {e}")
+            try:   # shadow v1u marks and settles with v1's own exits, no Telegram
+                from engine import shadow_v1u
+                ns = shadow_v1u.resolve()
+                if ns:
+                    logger.info(f"shadow v1u: resolved/closed {ns} position(s)")
+            except Exception as e:
+                logger.warning(f"shadow v1u resolve: {e}")
         h, m = map(int, config.STOCK_CREDIT_SCAN_AFTER.split(":"))
         mins_now = now.hour * 60 + now.minute
         after_cutoff = mins_now >= (h * 60 + m)
@@ -1030,6 +1037,11 @@ class EngineRunner:
                             + (f" — {', '.join(_co)}" if _co else ""))
             except Exception as e:
                 logger.warning(f"close-only summary: {e}")
+            try:   # SHADOW v1u (11-Oct-2026): paper-only, no Telegram, after the live books
+                from engine import shadow_v1u
+                shadow_v1u.scan()
+            except Exception as e:
+                logger.warning(f"shadow v1u: {e}")
 
 
     def _tg_intraday_skip(self, now, reasons):
