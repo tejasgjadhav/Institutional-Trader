@@ -601,6 +601,14 @@ class EngineRunner:
                                 lines.append("📎 <b>ADVISORY BOOK</b> — builds its own record; not in the headline totals")
                     if have_nums:
                         lines.append(f"Max profit/lot ₹{credit*lot:,.0f} · Max loss/lot ₹{(w-credit)*lot:,.0f}")
+                    # NEW ADDITION (user, 11-Oct-2026): say when the bull-put sub-floor admitted the trade
+                    if s.get("floor_rule") == "bp_subfloor":
+                        _mn = getattr(config, "STOCK_CREDIT_BP_SUBFLOOR_MIN_PREM", 10.0)
+                        _mc = getattr(config, "STOCK_CREDIT_BP_SUBFLOOR_MIN_CREDIT_PER_LOT", 3000.0)
+                        _cl = f" · credit × lot ₹{credit*lot:,.0f}" if have_nums else ""
+                        lines.append(f"🆕 <b>Bull-put sub-floor rule</b> (live since 11-Oct): short leg under "
+                                     f"₹30 but at least ₹{_mn:g}{_cl} (needs ≥ ₹{_mc:,.0f}). Tagged so its "
+                                     f"own record is tracked.")
                 elif s.get("order_label"):
                     lines.append(str(s["order_label"]))
                     tgt_stop = self._tgt_stop(book)
@@ -1140,7 +1148,8 @@ class EngineRunner:
                 f"• {n_wl} name(s) reached the watchlist, and none cleared every gate" if n_wl
                 else "• No stock closed outside its Donchian band, so nothing reached the watchlist",
                 "• A trade needs all four: a breakout, credit ÷ width ≥ 0.40 (0.35 for v0), a short "
-                "premium of at least ₹50 for v2 or ₹30 for v1 and v0, and a live two-sided market",
+                "premium of at least ₹50 for v2 or ₹30 for v1 and v0 (bull puts in v1 and v0 from ₹10 when "
+                "credit × lot is at least ₹3,000), and a live two-sided market",
                 "",
                 "<b>Sitting out is the strategy working, not failing.</b> These books fade a breakout "
                 "only when the market pays richly for it. On a quiet day that premium is not there, "
