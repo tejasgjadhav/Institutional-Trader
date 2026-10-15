@@ -28,8 +28,9 @@ def load(files):
                     seen.add(k); rows.append(x)
             except Exception: pass
     return rows
-gate = load(["research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json",
-             "research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"])
+# RUN 6 (15-Oct-2026): gate rows now come from run 6 (traded legs only + live bull-put sub-floor);
+# it covers the 107 live names, so the expansion2 files are dropped.
+gate = load(["research/run6/rows_IS_run6.json", "research/run6/rows_OOSU_run6.json"])
 by_sym = collections.defaultdict(list)
 for x in gate: by_sym[x["sym"]].append(x)
 out = collections.defaultdict(lambda: {"BEAR_CALL": {}, "BULL_PUT": {}})

@@ -30,16 +30,18 @@ def fold(files, key):
         out[s][key] = {"n": len(v), "win": round(100 * len(w) / len(v), 1),
                        "avg_win": round(sum(w) / len(w)) if w else None,
                        "avg_loss": round(sum(l) / len(l)) if l else None}
-fold(["research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json"], "is")
-fold(["research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"], "oos")
+# RUN 6 (15-Oct-2026): read the run-6 rows (traded legs only + live bull-put sub-floor, the harness
+# of record since 11-Oct). They already cover the 107 live names, so the expansion2 files are dropped.
+RUN6_IS, RUN6_OOS = "research/run6/rows_IS_run6.json", "research/run6/rows_OOSU_run6.json"
+fold([RUN6_IS], "is")
+fold([RUN6_OOS], "oos")
 
 # PER-BOOK SPLIT (user, 24-Aug-2026): v2/v1/v0 carry different exits (TP-50 vs TP-40) and
 # geometries, so a signal must quote ITS OWN book's record, not a pool of three strategies.
 # Windows pooled inside each book to keep n meaningful at per-name grain.
 _all = []
 _seen_bb = set()
-for f in ("research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json",
-          "research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"):
+for f in (RUN6_IS, RUN6_OOS):
     try:
         for x in json.load(open(f)):
             k = (x["book"], x["sym"], x["day"])
@@ -58,8 +60,7 @@ for s2, bks in _bb.items():
 # breakout direction - an up-break is faded with a BEAR CALL, a down-break with a BULL PUT -
 # so map each (sym, day) to CE/PE with the same breakout_days() and join the trade rows on it.
 ALL_ROWS = []
-for f in ("research/deployed_bt_is_rows.json", "research/expansion2/is_rows.json",
-          "research/deployed_bt_oos_rows.json", "research/expansion2/oos_rows.json"):
+for f in (RUN6_IS, RUN6_OOS):
     try: ALL_ROWS += json.load(open(f))
     except Exception: pass
 ROWS_BY_SYM = collections.defaultdict(list)
