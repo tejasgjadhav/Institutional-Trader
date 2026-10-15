@@ -372,11 +372,11 @@ def build_watchlist() -> dict:
 # table in CLAUDE.md (run 4, 17-Sep-2026) and studies/CW_BAND_BY_BOOK.md for the sub-0.35 bands.
 # Update these strings whenever the harness is re-run and the table changes.
 DIGEST_BACKTEST = {
-    "v2":    "IS 77.9% win / +21.2% ROM (n=213, 6/6 yrs) · OOS 86.1% / +26.6% (n=79, 2/2 full yrs) — short leg ≥ ₹50",
-    "v1":    "IS 80.6% / +11.6% (n=485, 6/6) · OOS 81.0% / +13.9% (n=289, 3/3) — 1-OTM/width-3 on DC-10 only, short leg ≥ ₹30",
-    "v0":    "IS 86.2% / +15.2% (n=311, 6/6) · OOS 82.1% / +2.6% (n=145, 2/2) — short leg ≥ ₹30",
-    "vlc":   "IS 90.7% · OOS 93.4% on its 21 name-side cells (cells chosen on OOS; live record decides at 30 fills)",
-    "below": "0.30–0.35: 79.0% / −1.2% · 0.25–0.30: 79.1% / −1.9% (OOS, v0 geometry) — no edge, the engine skips them",
+    "v2":    "run 6: IS 61.3% win / +5.4% ROM (n=238, 4/6 yrs) · OOS 81.9% / +22.3% (n=72, 2/2) — short leg ≥ ₹50",
+    "v1":    "run 6: IS 77.4% / +10.7% (n=624, 5/6) · OOS 79.9% / +11.1% (n=313, 3/3) — 1-OTM/width-3 on DC-10, short ≥ ₹30 (bull puts ₹10 if credit×lot ≥ ₹3k)",
+    "v0":    "run 6: IS 83.4% / +7.3% (n=283, 5/6) · OOS 81.3% / +6.5% (n=155, 2/2) — short ≥ ₹30 (bull puts ₹10 if credit×lot ≥ ₹3k)",
+    "vlc":   "IS 90.7% · OOS 93.4% on its name-side cells (cells chosen on OOS; not restated in run 6; live record decides at 30 fills)",
+    "below": "c/w 0.30–0.40 below the live bands loses on run 6 at every premium (15-Oct-2026 study) — the engine skips them",
 }
 
 

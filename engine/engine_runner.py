@@ -291,28 +291,31 @@ class EngineRunner:
     _TG_ANALYSIS = {
         "STOCK CREDIT v2 UNION":
             "• Donchian-union breakout fade · credit/width ≥ 0.40 · short leg ≥ ₹50 · nearest expiry at least 10 days out\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 213 trades · <b>77.9%</b> win rate · +21.2% on margin · ₹2,436 net per trade · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 79 trades · <b>86.1%</b> win rate · +26.6% on margin · ₹3,615 net per trade · positive in both full years (2024 is a 3-month stub)\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 238 trades · <b>61.3%</b> win rate · +5.4% on margin · ₹454 net per trade · positive in 4 of 6 years\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 72 trades · <b>81.9%</b> win rate · +22.3% on margin · ₹2,520 net per trade · positive in both full years\n"
+            "• Run 6 (11-Oct-2026): only prices that actually traded are counted\n"
             "• The backtest cannot model the live bid-ask gate, which rejects most candidates, so read this as a ceiling",
         "STOCK CREDIT v0 (c/w 0.35-0.40)":
             "• The tier just BELOW the c/w≥0.40 gate — same fade, same geometry, priced one band lower · short leg ≥ ₹30\n"
             "• The weakest evidence of the three stock books · forward paper-test at 1 lot\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 311 trades · <b>86.2%</b> win rate · +15.2% on margin · ₹1,784 net per trade · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 145 trades · <b>82.1%</b> win rate · only +2.6% on margin · ₹1,205 net per trade\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 283 trades · <b>83.4%</b> win rate · +7.3% on margin · ₹857 net per trade · positive in 5 of 6 years\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 155 trades · <b>81.3%</b> win rate · +6.5% on margin · ₹923 net per trade · positive in both full years\n"
+            "• Run 6 (11-Oct-2026): only prices that actually traded are counted; bull puts may use the ₹10 / ₹3,000-per-lot sub-floor\n"
             "• It wins about four trades in five and still clears the least of the three books per trade",
         "STOCK CREDIT v1":
             "• Same fade, short 1-OTM · width 3 · book at 40% of credit · Donchian-10 · short leg ≥ ₹30 · nearest expiry at least 10 days out\n"
-            "• In-sample (1-Jan-2019 → 30-Sep-2024): 485 trades · <b>80.6%</b> win rate · +11.6% on margin · ₹987 net per trade · positive every year\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): 289 trades · <b>81.0%</b> win rate · +13.9% on margin · ₹1,195 net per trade · positive every year\n"
+            "• In-sample (1-Jan-2019 → 30-Sep-2024): 624 trades · <b>77.4%</b> win rate · +10.7% on margin · ₹853 net per trade · positive in 5 of 6 years\n"
+            "• Out-of-sample (1-Oct-2024 → {TODAY}): 313 trades · <b>79.9%</b> win rate · +11.1% on margin · ₹1,201 net per trade · positive every year\n"
+            "• Run 6 (11-Oct-2026): only prices that actually traded are counted; bull puts may use the ₹10 / ₹3,000-per-lot sub-floor\n"
             "• Fires about twice as often as v2 and rests on the larger measured sample",
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>88%</b> win rate achieved\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>90%</b> win rate achieved",
+            "• Out-of-sample (1-Oct-2024 → Sep-2026): <b>93.3%</b> win rate on 90 expiries (7-Oct-2026 re-test, real 1-minute prices)",
         "0DTE SENSEX":
-            "• 89 expiries analysed\n"
+            "• 93 expiries analysed (7-Oct-2026 re-test, real 1-minute prices)\n"
             "• In-sample: CANNOT be captured — SENSEX weekly options only exist from Oct-2024\n"
-            "• Out-of-sample (1-Oct-2024 → {TODAY}): <b>88.8%</b> win rate achieved",
+            "• Out-of-sample (1-Oct-2024 → Sep-2026): <b>89.2%</b> win rate achieved",
         "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "• forward paper-test — regime-dependent, unproven",
         "MONTHLY FUTURES PULLBACK":
             "• In-sample (2018 → 30-Sep-2024): <b>77.8%</b> win rate achieved\n"
