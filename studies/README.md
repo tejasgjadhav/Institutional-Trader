@@ -55,7 +55,8 @@ Equity **derivatives** now close at **15:40** (was 15:30), and F&O stocks stop c
 3-Aug-2026 are a 15:00–15:30 VWAP; after, they are auction equilibrium prices — not the same
 construct.** One day against seven years invalidates nothing here, but do not read a level shift as a
 regime change and do not splice pre- and post-3-Aug closes without saying so. The engine's schedule
-moved with it: watchlist 15:17, scans 15:36, settlement 15:40.
+moved with it: scans 15:36, settlement 15:40. The 15:17 watchlist build was dropped on 1-Oct-2026;
+history now loads at 15:00 and the digest goes out at 15:31.
 See [`NSE_SESSION_CHANGE_2026_08_03.md`](NSE_SESSION_CHANGE_2026_08_03.md).
 
 The new 15:15–15:40 close window is now recorded every session by

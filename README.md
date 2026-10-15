@@ -18,11 +18,14 @@ money-maker — live fills remain the unproven link, so plan on **~half of model
 
 | Book | What it does | Win (OOS) | Cadence |
 |---|---|---|---|
-| ★ Stock fade **v2 UNION** (leader) | sell a credit spread against a stock breakout, book at half credit | 83.6% | ~2.4/mo |
-| Stock fade **v1** (control) | same fade, higher-frequency geometry | 79.3% | ~8/mo |
-| Stock fade **v0** (c/w 0.35–0.40) | the tier just below the gate; v1 wins a same-stock clash | 79.6% | ~4/mo |
-| **0DTE NIFTY** (Tue) | expiry-day index credit spread, flips side on momentum; since 07-31 also sells the opposite side when it pays c/w ≥ 0.08 (hybrid add, shared margin — paper) | 87% | ~4–5/mo |
-| **0DTE SENSEX** (Thu) | expiry-day index credit spread | 89% | ~4–5/mo |
+| ★ Stock fade **v2 UNION** (leader) | sell a credit spread against a stock breakout, book at half credit | 81.9% | ~3.2/mo |
+| Stock fade **v1** | same fade, higher-frequency geometry; bull puts may use the ₹10 / ₹3,000-a-lot sub-floor | 79.9% | ~14/mo |
+| Stock fade **v0** (c/w 0.35–0.40) | the tier just below the gate; same sub-floor; v1 wins a same-stock clash | 81.3% | ~7/mo |
+| **0DTE NIFTY** (Tue) | expiry-day index credit spread, flips side on momentum; since 07-31 also sells the opposite side when it pays c/w ≥ 0.08 (hybrid add, shared margin — paper) | 93.3% | ~4/mo |
+| **0DTE SENSEX** (Thu) | expiry-day index credit spread | 89.2% | ~4/mo |
+
+Stock figures are harness run 6 (11-Oct-2026), out-of-sample Oct-2024 to 10-Aug-2026. 0DTE figures
+are the 7-Oct-2026 re-test. Full table: [`studies/LIVE_STRATEGIES.md`](studies/LIVE_STRATEGIES.md).
 | **Monthly Futures** pullback | buy oversold front-month futures (needs ~₹15L; regime-gated) | 76% | 5/cycle |
 
 ## Where it runs (since 28-Sep-2026)
@@ -34,20 +37,22 @@ sleeping or closed laptop no longer costs signals. **Fallback to the Mac is one 
 `deploy/rollback.sh saavi` (tested both directions on 28-Sep-2026). Status: `deploy/status.sh saavi`.
 Everything — setup, cutover, rollback, watchdog, cost — is in [`deploy/README.md`](deploy/README.md).
 
-## Where the evidence stands (21-Aug-2026)
+## Where the evidence stands (15-Oct-2026, run 6)
 
-The backtest is **finished**. `studies/ndte/deployed_backtest.py` is the single harness of record,
-locked by `studies/ndte/test_harness.py` (19 checks, mutation-tested). Median cohort, c/w 0.40–0.50:
+`studies/ndte/deployed_backtest.py` is the single harness of record. Run 6 (11-Oct-2026,
+[`studies/RUN6_TRADED_LEGS.md`](studies/RUN6_TRADED_LEGS.md)) counts a leg only on days it actually
+traded, which removed the stale carried-forward prices that inflated run 5. All c/w, 107 live names,
+1 lot, with the permanent bull-put sub-floor on v1 and v0:
 
-| book | in-sample 2019→Sep-2024 | out-of-sample Oct-2024→date |
+| book | in-sample 2019→Sep-2024 | out-of-sample Oct-2024→10-Aug-2026 |
 |---|---|---|
-| v2 | 78.8% · **+27.2%** ROM [+18.4, +34.7] · 6/6 yrs · n=217 | 83.6% · **+27.2%** [+16.4, +37.2] · 2/2 full yrs · n=55 |
-| v1 | 79.1% · **+10.3%** [+2.9, +17.1] · 6/6 yrs · n=359 | 79.3% · **+9.5%** [+2.5, +15.9] · 2/2 full yrs · n=179 |
-| v0 | 83.1% · +14.4% [+5.9, +21.9] · 5/6 yrs · n=237 | 79.6% · **+3.0%** [−6.2, +11.5] · **1/2 full yrs** · n=93 |
+| v2 | 61.3% · +5.4% ROM · 4/6 yrs · n=238 | 81.9% · **+22.3%** · 2/2 full yrs · n=72 · ₹8,138/mo |
+| v1 | 77.4% · **+10.7%** · 5/6 yrs · n=624 | 79.9% · **+11.1%** · 3/3 yrs · n=313 · ₹16,865/mo |
+| v0 | 83.4% · +7.3% · 5/6 yrs · n=283 | 81.3% · +6.5% · 2/2 full yrs · n=155 · ₹6,416/mo |
+| system | 75.5% · +8.6% · 6/6 yrs · 16.6/mo | 80.6% · **+10.9%** · 24.2/mo · ₹31,419/mo |
 
-**v2 and v1 clear zero in both windows.** v0 does not, and is excluded from any sizing decision.
-The v2 figures agree to 0.04 points across windows, which is coincidence rather than precision —
-both intervals are about 18 points wide.
+**All three books are positive in both windows.** v2's in-sample case is much weaker than run 5
+showed (+5.4% against +34%). v1 carries the most money and the largest sample.
 
 **The backtest is a CEILING, not an estimate.** NSE bhavcopy carries no bid/ask, so no backtest here
 can model the live spread gate — and on 17-Aug that gate took only 7 of 17 candidates. The
@@ -280,7 +285,7 @@ flowchart LR
     subgraph ENGINE["HEADLESS ENGINE - engine_runner.py (launchd, always on)"]
         direction TB
         SCAN["scan<br/>Donchian breakout on today's close"]
-        GATE["gates<br/>c/w >= 0.40 · premium >= Rs50 v2 / Rs30 v1,v0<br/>bid-ask <= 6% · open interest > 0"]
+        GATE["gates<br/>c/w >= 0.40 · premium >= Rs50 v2 / Rs30 v1,v0<br/>v1,v0 bull puts: Rs10 and Rs3,000 a lot<br/>bid-ask <= 6% · open interest > 0"]
         BOOK["book the spread<br/>v2 / v1 / v0 - one book per name"]
         RES["resolve<br/>take-profit, expiry settlement"]
         SCAN --> GATE --> BOOK
@@ -322,16 +327,16 @@ timeline
     09:30 : morning re-check - do yesterday's calls still pass every gate
     15:15 : F&O stocks stop continuous trading, closing auction begins
           : DEPLOYMENT FREEZE starts, no restarts until 15:40
-    15:17 : watchlist built - the likely candidates, for pre-staging
-    15:31 : digest sent, rebuilt after the auction has matched
+    15:00 : each stock's daily history loaded once, ahead of the freeze
+    15:31 : digest sent with final strikes, built after the auction has matched
     15:35 : auction ends, the official close is struck
     15:36 : THE SCAN - breakouts read off the official close, signals fire
     15:40 : derivatives close, positions settle, freeze ends
 ```
 
-Stocks are scanned **once a day**, at 15:36, on the auction close. The 15:17 watchlist is a
-pre-stage list rather than a signal: it is built before the auction matches, so its strikes can
-still move. See `studies/NSE_SESSION_CHANGE_2026_08_03.md` for why these timings exist.
+Stocks are scanned **once a day**, at 15:36, on the auction close. The 15:31 digest is a
+pre-stage list rather than a signal. The 15:17 watchlist build was dropped on 1-Oct-2026 to cut
+Upstox requests inside the auction window. See `studies/NSE_SESSION_CHANGE_2026_08_03.md` for why these timings exist.
 
 **All data is saved locally daily** in `data/engine.db` — every scan (one row per stock with
 its full gate state) and every market snapshot — apart from trade outcomes, which stay in

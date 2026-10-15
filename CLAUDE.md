@@ -272,8 +272,8 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
   Session 15:15–15:35**, and their official close is the **auction equilibrium price**. Every name in
   `UNIVERSE` is an F&O stock. The engine has ONE session model in `config.py` — `CASH_CLOSE` 15:30,
   `CAS_END` 15:35, `FNO_CLOSE` 15:40, **`SETTLE_AFTER` 15:40** — and every settle site reads it; do
-  not reintroduce a bare time literal (there were seven). Schedule: watchlist+digest **15:17**, scans
-  **15:36**, place 15:36–15:40, EOD 15:40. Settlement takes the **official close first**, live spot
+  not reintroduce a bare time literal (there were seven). Schedule: history warm **15:00** (the 15:17
+  watchlist build was dropped 1-Oct-2026), digest **15:31**, scans **15:36**, place 15:36–15:40, EOD 15:40. Settlement takes the **official close first**, live spot
   only as fallback. **Backtests before 3-Aug-2026 use 15:00–15:30 VWAP closes; after, auction
   equilibrium prices — not the same construct.** See `studies/NSE_SESSION_CHANGE_2026_08_03.md`.
 
