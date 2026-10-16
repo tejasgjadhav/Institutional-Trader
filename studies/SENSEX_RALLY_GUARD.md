@@ -81,3 +81,29 @@ option and hold the bought one until the close.
 - On NIFTY it is worse on both counts: Rs1.1–1.5k less in total, and a worse worst trade (−Rs7.5k).
 - Holding the long call after the buy-back is a bet that the rally continues. It won 2 times in 8 on
   SENSEX and once in 5 on NIFTY.
+
+## Part 4: raising the net % of margin (ndte34) and the opening 7 minutes (ndte35), 16-Oct-2026
+
+Return is measured as net rupees a month divided by the margin one trade blocks (its max loss).
+Pre-registrations: research/rally_guard/prereg34.json and prereg35.json.
+
+**The 95% early profit close costs money.** It was deployed on 4-Aug-2026 without a measurement. Closing a
+spread that is almost worthless pays a full set of exit charges to save a few rupees of premium.
+- NIFTY with the Rs5,000 cap: 9.0% a month with the early close, 12.7% without it. The worst trade is
+  the same (−Rs5,920). It wins in both halves (5.1% → 9.2% and 12.4% → 15.8%). **Passes.**
+- SENSEX with the cap: 9.1% → 10.2% overall, but the recent half falls from 3.7% to 1.4%. **Fails the
+  both-halves rule.** 15-Oct is still missing from this data.
+- Booking earlier (at 70% or 50% of the credit) is worse on both books.
+
+**Selling the put side as well on SENSEX (condor) is worse** at every setting (best 10.4% against 14.9%).
+
+**The opening 7 minutes (09:15–09:21).**
+- Phase A, NIFTY index only, 2022-01 to 2024-07, 105 expiries: entering at 09:22 did not lower the
+  breach rate (14.3% against 13.3% at 09:16). The breach rate rose with the opening range: 9% when the
+  range was ≤ 0.2%, 22% at 0.3–0.4% and 30% above 0.4%. The 0.30% cut was chosen after reading this.
+- Phase B, real option prices from Oct-2024: **every opening-window rule fails.**
+  - Entering at 09:22 earns less: NIFTY 9.0% → 5.9% and SENSEX 9.1% → 5.2% a month. The six minutes cost premium.
+  - Skipping days with a range ≥ 0.30% skips half of all days since Oct-2024, and those days were
+    profitable. NIFTY falls to 3.1% and SENSEX to 1.5%.
+  - Moving the short to 1.0% on wide-range days, or skipping after an early move away, are also worse.
+- Markets since Oct-2024 open wider than in 2022–24. A range of 0.30% was a warning then; now it is a normal morning.
