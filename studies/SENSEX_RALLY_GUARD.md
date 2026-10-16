@@ -125,3 +125,23 @@ Rs5,000 cap), real option prices Oct-2024 onwards. **A later entry does not avoi
 - The credit falls (NIFTY 20.2 → 16.0 points, SENSEX 71.3 → 64.5), so each win pays less.
 - 15-Oct at 09:45: SENSEX was about 73,380, so the short would have been 73,700. It closed at 74,316,
   which is a full-width loss again before the cap.
+
+## Part 6: the 09:15–09:45 window and every entry/exit combination (ndte37, ndte38), 16-Oct-2026
+
+User goal: the most net profit; skipping days is acceptable. Pre-registrations prereg37.json and prereg38.json.
+
+- **Older NIFTY data (index only, 2022-01 to 2024-07)** gave two hints. Days with a 09:15–09:44 range of 0.5% or
+  more broke the short strike 28% of the time against 13%. After a rising half-hour the call side broke more
+  often than the put side (29% against 14%, but on only 7 days).
+- **On real option prices from Oct-2024 both hints fail.** Every 09:45 rule earns less than the 09:16 entry:
+  - NIFTY: 09:16 +Rs36.6k. Then 09:45 +20.7k; skip wide mornings +4.6k; side from the half-hour +4.4k; both −3.5k.
+  - SENSEX: 09:16 +26.7k. Then 09:45 +19.6k; skip +16.9k; side +8.5k; both +19.3k.
+  - Exiting a 09:16 trade at 09:45 after a wide or adverse half-hour is also worse on both books.
+- **28 combinations of entry, filter and exit per book (ndte38):** the highest net on both books is the
+  plain 09:16 entry held to settle with no cap: NIFTY +Rs41,525 and SENSEX +Rs38,819 to 8-Oct.
+  - The live Rs5,000 cap gives NIFTY +36,637 and SENSEX +26,701.
+  - On SENSEX the cap cost Rs17.9k in the recent year alone (H2 +1,906 against +19,799), because it closed
+    trades that recovered by the close.
+  - 15-Oct is still missing. Uncapped it lost Rs10,524; the cap would have saved about Rs5k of that.
+- No combination passes the pre-registered test. The only change that raised net was switching off the
+  95% early close (part 4, deployed 16-Oct).
