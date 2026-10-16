@@ -21,11 +21,11 @@ money-maker — live fills remain the unproven link, so plan on **~half of model
 | ★ Stock fade **v2 UNION** (leader) | sell a credit spread against a stock breakout, book at half credit | 81.9% | ~3.2/mo |
 | Stock fade **v1** | same fade, higher-frequency geometry; bull puts may use the ₹10 / ₹3,000-a-lot sub-floor | 79.9% | ~14/mo |
 | Stock fade **v0** (c/w 0.35–0.40) | the tier just below the gate; same sub-floor; v1 wins a same-stock clash | 81.3% | ~7/mo |
-| **0DTE NIFTY** (Tue) | expiry-day index credit spread, flips side on momentum; since 07-31 also sells the opposite side when it pays c/w ≥ 0.08 (hybrid add, shared margin — paper) | 93.3% | ~4/mo |
-| **0DTE SENSEX** (Thu) | expiry-day index credit spread | 89.2% | ~4/mo |
+| **0DTE NIFTY** (Tue) | expiry-day index credit spread, flips side on momentum; since 07-31 also sells the opposite side when it pays c/w ≥ 0.08 (hybrid add, shared margin — paper); held to settle since 16-Oct | 91.6% | ~3.4/mo |
+| **0DTE SENSEX** (Thu) | expiry-day index credit spread; after a ≥ 0.25% gap-up open it sells the put side 0.5% below (16-Oct); held to settle | 91.2% | ~3.8/mo |
 
 Stock figures are harness run 6 (11-Oct-2026), out-of-sample Oct-2024 to 10-Aug-2026. 0DTE figures
-are the 7-Oct-2026 re-test. Full table: [`studies/LIVE_STRATEGIES.md`](studies/LIVE_STRATEGIES.md).
+are the 16-Oct-2026 re-test (`studies/SENSEX_RALLY_GUARD.md`). Full table: [`studies/LIVE_STRATEGIES.md`](studies/LIVE_STRATEGIES.md).
 | **Monthly Futures** pullback | buy oversold front-month futures (needs ~₹15L; regime-gated) | 76% | 5/cycle |
 
 ## Where it runs (since 28-Sep-2026)

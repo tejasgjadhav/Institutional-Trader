@@ -1,5 +1,9 @@
 # 0DTE NIFTY and SENSEX: time-based loss cut, entry time and strike distance (7-Oct-2026)
 
+> **Update 16-Oct-2026:** the exits changed after this study. The 95% early profit close is now OFF (it cost money),
+> and a ₹5,000 loss cap was re-tested and rejected for net profit. Entry stays 09:16; later entries were re-tested and
+> lost again. See `SENSEX_RALLY_GUARD.md`.
+
 **Question (user, 7-Oct-2026, after the 6-Oct NIFTY loss):**
 1. Should a losing trade be closed at a set time, such as 3 pm, to cut the average loss? The time T and
    the loss threshold L are both variables.

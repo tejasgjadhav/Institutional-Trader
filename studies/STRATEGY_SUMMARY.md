@@ -1,4 +1,4 @@
-# Strategy Summary — current structure (updated 15-Oct-2026)
+# Strategy Summary — current structure (updated 16-Oct-2026)
 
 The canonical view of the live system. July's version of this file is in git history.
 
@@ -12,7 +12,7 @@ floor keeps the legs tradeable; no stop, because the bought wing caps the loss.
 | v1 | short 1-OTM, width 3, Donchian-10, c/w ≥ 0.40, ₹30 floor (bull puts: ₹10 and ₹3,000 a lot sub-floor), book 40% | the biggest earner; most signals |
 | v0 | v2 geometry one band lower (0.35–0.40), ₹30 floor (bull puts: same sub-floor), book 40% | the smallest earner per trade; both windows now agree |
 | vlc | 0.30–0.40 on 21 name-sides + 3 cells at 0.25–0.30 (₹30–50) | side-locked exceptions that held in both windows |
-| 0DTE NIFTY / SENSEX | expiry-day index spreads | high win rate, small money |
+| 0DTE NIFTY / SENSEX | expiry-day index spreads, held to settle; SENSEX sells the put side after a ≥ 0.25% gap-up open (16-Oct) | high win rate, small money; `SENSEX_RALLY_GUARD.md` |
 
 Current figures: `LIVE_STRATEGIES.md` (run 6). Evidence: `RUN6_TRADED_LEGS.md` (harness of record and the
 bull-put sub-floor), `PREMIUM_FLOOR_SWEEP.md` (floors, run 5),

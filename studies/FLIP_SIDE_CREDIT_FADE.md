@@ -1,5 +1,8 @@
 # FLIP-side index credit fade — momentum-gated PE/CE selection (2026-07-07 night)
 
+> **Update 16-Oct-2026:** SENSEX still does not use the 5-day FLIP. It now switches side on the opening gap
+> instead (≥ 0.25% gap-up → put 0.5% below). See `SENSEX_RALLY_GUARD.md` parts 7–10.
+
 **User goal:** an index credit-fade model that FLIPS between PE and CE by gates, >=80% win.
 
 **Rule (frozen on IS before OOS):** each NIFTY weekly expiry morning, if 5-day return >= +1.0%

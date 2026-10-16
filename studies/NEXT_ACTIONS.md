@@ -1,5 +1,18 @@
 # Next actions — as of 27-Sep-2026
 
+## Update 16-Oct-2026 — 0DTE
+
+After the 15-Oct SENSEX full-width loss, three 0DTE changes went live (`SENSEX_RALLY_GUARD.md`): the SENSEX
+gap-up switch, hold to settle on both books, and the 09:15–09:25 opening recorder. Open items:
+
+1. **Re-run ndte31–40 with 15-Oct** once Upstox lists that expiry. The 15-Oct put result is an estimate today.
+2. **Review the gap-up switch after its first 5–6 live gap-up days.** It missed its pre-registered second-year
+   test before 15-Oct was counted, and the 0.20% cliff is close to the live 0.25% threshold.
+3. **Read the opening recorder** after about 8 expiries, to measure real 09:16 fills against the 1-min prices.
+
+The section below is the 27-Sep-2026 version; its 0DTE rupee figures are superseded by `LIVE_STRATEGIES.md`.
+
+
 **Question:** how do we get more signals and more profit per month?
 
 **Answer: stop changing rules; capture what the rules already produce, and let live data decide the rest.**

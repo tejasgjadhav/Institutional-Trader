@@ -1,12 +1,22 @@
 # Studies index
 
-Research write-ups (73 as of 27-Sep-2026). Every live tunable in this repo traces to one of them, and several document
+Research write-ups (80 as of 16-Oct-2026). Every live tunable in this repo traces to one of them, and several document
 things that were tested and deliberately **not** deployed — those are as important as the wins.
 
 **Start here:** [`NEXT_ACTIONS.md`](NEXT_ACTIONS.md) — current recommendation and open gaps ·
 [`STRATEGY_SUMMARY.md`](STRATEGY_SUMMARY.md) — canonical strategy table ·
 [`CONSOLIDATED_PNL.md`](CONSOLIDATED_PNL.md) — monthly P&L model.
 
+
+## 16 Oct 2026 — 0DTE after the 15-Oct SENSEX loss (three changes LIVE)
+
+- [`SENSEX_RALLY_GUARD.md`](SENSEX_RALLY_GUARD.md) — ten parts, all pre-registered (research/rally_guard/prereg*.json), real Upstox 1-min option prices Oct-2024 → Oct-2026.
+  - **LIVE: SENSEX gap-up switch** (part 7–10). On a ≥ 0.25% gap-up open, sell the bull put 0.5% below instead of the bear call; no trade if it pays too little. Win 88.3% → 91.2%, net ₹38,819 → ₹53,567, worst −₹10,628 → −₹9,614. An independent SENSEX index check on 2023–24 points the same way. NIFTY is not switched: the rule lost money there.
+  - **LIVE: no early profit close on either 0DTE book** (part 4). The 95% close cost charges; NIFTY ₹30,541 → ₹41,525 held to settle.
+  - **LIVE: opening recorder** (engine/open_recorder.py). The bid/ask of every strike within 1.5% of spot is saved 09:15–09:25 on expiry mornings.
+  - **Rejected:** narrower wings; spot stops; skip after a 4-day rally; a ₹5,000 loss cap (deployed and removed the same day: it cut the worst day to ~−₹6k but lowered net); leg-out at the cap; booking at 70%/50%; a SENSEX condor; entries at 09:22, 09:30, 09:45 and 10:00; filters on the 09:15–09:21 and 09:15–09:45 range or direction; 28 entry × filter × exit combinations (none beat 09:16 + hold).
+  - **Pending:** re-run with 15-Oct once Upstox lists that expiry.
+- Scripts: `ndte/ndte31_rally_guard.py` … `ndte/ndte40_gap_switch_deep.py`; tests `ndte/test_gap_switch.py`, `ndte/test_loss_cap.py`.
 
 ## 9–10 Oct 2026 — the 2% a day search (closed, nothing deployed)
 

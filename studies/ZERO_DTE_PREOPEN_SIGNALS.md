@@ -1,5 +1,8 @@
 # 0DTE pre-open signals — can we tell before 09:15 that today is a bad day? (2026-07-19)
 
+> **Update 16-Oct-2026:** skipping gap days is still rejected. A different lever, switching SENSEX to the put
+> side after a ≥ 0.25% gap-up open, passed most checks and is live. See `SENSEX_RALLY_GUARD.md` parts 7–10.
+
 Companion to `ZERO_DTE_EVENT_DAYS.md`. That study rejected a *calendar* filter (RBI/Budget/FOMC).
 This one asks the broader version of the user's question: **of everything knowable before 09:15 —
 overnight global cues, geopolitical shocks, volatility regime — does anything reliably tell us to

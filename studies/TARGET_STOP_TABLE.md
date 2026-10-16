@@ -1,5 +1,9 @@
 # Target & Stop-Loss — per book (2026-07-29)
 
+> **Update 16-Oct-2026 (0DTE):** the 95% early profit close was switched OFF on both 0DTE books, so both hold to
+> settlement. A ₹5,000 loss cap was tested, deployed and removed the same day because it lowered net profit. The
+> SENSEX row below carries the new gap-up switch. Evidence: `SENSEX_RALLY_GUARD.md`.
+
 The exact profit target (TP) and stop each deployed book uses, straight from `engine/config.py`
 and the module overrides. All are **paper/signals-only at 1 lot**. Credit spreads are defined-risk:
 **max profit = credit collected; max loss = (width − credit)**, both × lot size.
@@ -18,7 +22,7 @@ and the module overrides. All are **paper/signals-only at 1 lot**. Credit spread
 > (`SWING_PUTCALL_STOP_ANALYSIS.md`), and tighter stops tested WORSE — so the inert 3× is left as-is (no trading
 > change); only the labels were corrected. The Telegram signal now prints this per-trade.
 | **0DTE NIFTY** (FLIP) | sell ~0.5% OTM / buy **200-pt wing**, same-day expiry | none — **hold to expiry** | none (the bought wing IS the cap; `ZERO_DTE_STOP_MULT=0`) | same-day 15:30 settle |
-| **0DTE SENSEX** | sell 1-OTM / buy wing, same-day expiry | hold to expiry | none | same-day settle |
+| **0DTE SENSEX** | sell ~0.5% OTM CE / buy wing 0.83% further, same-day expiry; **on a ≥ 0.25% gap-up open sell the PE 0.5% below instead** (16-Oct-2026) | hold to expiry | none | same-day settle |
 | **Monthly Futures** (REGIME-OFF) | BUY front-month future on pullback | **+2% on close** (decays to +1% late in cycle) | **−5% on close** (real gaps avg ≈ −6.3%) | monthly expiry |
 | ~~Swing index fade~~ | DISABLED (`SWING_CREDIT_ENABLED=False`) | was hold-to-expiry | was 2× credit | — (failed OOS) |
 
