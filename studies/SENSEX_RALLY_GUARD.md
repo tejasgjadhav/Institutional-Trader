@@ -107,3 +107,21 @@ spread that is almost worthless pays a full set of exit charges to save a few ru
     profitable. NIFTY falls to 3.1% and SENSEX to 1.5%.
   - Moving the short to 1.0% on wide-range days, or skipping after an early move away, are also worse.
 - Markets since Oct-2024 open wider than in 2022–24. A range of 0.30% was a warning then; now it is a normal morning.
+
+## Part 5: a later entry (ndte36, user asked about 09:45), 16-Oct-2026
+
+Same strike rule (0.5% from the spot at the entry time), live exits from 16-Oct (hold to settle,
+Rs5,000 cap), real option prices Oct-2024 onwards. **A later entry does not avoid the losses.**
+
+| Entry | NIFTY losses / win / % a month | SENSEX losses / win / % a month |
+|---|---|---|
+| 09:16 (live) | 9 / 89.2% / 12.7% | 12 / 87.2% / 10.2% |
+| 09:30 | 10 / 87.7% / 7.9% | 13 / 84.7% / 3.5% |
+| 09:45 | 9 / 88.5% / 7.1% | 13 / 84.5% / 7.6% |
+| 10:00 | 10 / 87.5% / 1.6% | 16 / 78.1% / −6.2% |
+
+- The number of losing days does not fall. The strike moves with the 09:45 spot, so a rally that has
+  already started carries the strike up with it, and most of these rallies keep going.
+- The credit falls (NIFTY 20.2 → 16.0 points, SENSEX 71.3 → 64.5), so each win pays less.
+- 15-Oct at 09:45: SENSEX was about 73,380, so the short would have been 73,700. It closed at 74,316,
+  which is a full-width loss again before the cap.
