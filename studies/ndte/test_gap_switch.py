@@ -28,6 +28,7 @@ def quote(key):
     dist = (k - SPOT) if t == "CE" else (SPOT - k)        # distance out of the money
     return PR.get(key, max(1.0, 200.0 - dist * 0.15))
 D._quote = quote
+D.SENSEX_GAP_PUT_OTM = 0.01          # fixed geometry for the checks below; live value checked at the end
 
 def scan(gap, switch=0.50):
     D.SENSEX_GAP_SWITCH_PCT = switch
@@ -59,5 +60,11 @@ for close, want in ((74000.0, 40.0), (73100.0, -160.0), (72000.0, -560.0)):
     D._expiry_close = lambda bk, exp, c=close: c
     D._resolve_book(BK, past_settle=True)
     check(f"put settles at close {close:.0f}: pnl {want:+.0f} pts", store["b"][0]["pnl_pts"], want)
+import engine.config as C
+D.SENSEX_GAP_PUT_OTM = C.SENSEX_GAP_PUT_OTM
+p = scan(0.30, switch=C.SENSEX_GAP_SWITCH_PCT)
+check(f"LIVE config ({C.SENSEX_GAP_SWITCH_PCT}% gap, put {C.SENSEX_GAP_PUT_OTM:.1%}): gap 0.30% -> put 73600/73000", (p[0]["side"], p[0]["short_strike"], p[0]["long_strike"]), ("BULL_PUT", 73600, 73000))
+p = scan(0.20, switch=C.SENSEX_GAP_SWITCH_PCT)
+check("LIVE config: gap 0.20% stays a bear call", p[0]["side"], "BEAR_CALL")
 print(f"\n{'ALL PASS' if not FAILED else f'{len(FAILED)} FAILED: {FAILED}'}")
 sys.exit(1 if FAILED else 0)

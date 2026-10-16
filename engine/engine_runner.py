@@ -316,9 +316,9 @@ class EngineRunner:
             "• 93 expiries analysed (7-Oct-2026 re-test, real 1-minute prices)\n"
             "• In-sample: CANNOT be captured — SENSEX weekly options only exist from Oct-2024\n"
             "• Out-of-sample (1-Oct-2024 → Sep-2026): <b>89.2%</b> win rate achieved\n"
-            "• Gap-up rule (16-Oct-2026): if SENSEX opens 0.50% or more above the previous close, sell the "
-            "put spread 1% below instead of the call spread; if it pays too little, no trade that day. "
-            "Backtest Oct-2024 → Oct-2026: +₹12,474 over 2 years, no losing switched day",
+            "• Gap-up rule (16-Oct-2026): if SENSEX opens 0.25% or more above the previous close, sell the "
+            "put spread 0.5% below instead of the call spread; if it pays too little, no trade that day. "
+            "Backtest Oct-2024 → Oct-2026: 91.2% win, +₹14,748 over 2 years vs the call every day",
         "SWING CREDIT · multi-day (NIFTY/FINNIFTY)": "• forward paper-test — regime-dependent, unproven",
         "MONTHLY FUTURES PULLBACK":
             "• In-sample (2018 → 30-Sep-2024): <b>77.8%</b> win rate achieved\n"

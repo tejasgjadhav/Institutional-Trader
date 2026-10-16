@@ -206,3 +206,13 @@ option data, on years it never saw.
 
 On the 15 gap-up days of 0.50% or more, the call won 10 of 14 and lost Rs7,964 net. The put won 6 of 6
 (+Rs4,510), and the other 9 days had no trade.
+
+## Part 10: switched to option 3 (16-Oct-2026, user decision)
+
+`SENSEX_GAP_SWITCH_PCT = 0.25`, `SENSEX_GAP_PUT_OTM = 0.005`. Backtest to 8-Oct-2026: 91 trades, 91.2% win,
++Rs53,567, worst −Rs9,614. It is the only option that switches on a 15-Oct-type day (gap +0.253%), so
+counting 15-Oct it is about +Rs54.6k (the put's credit on that day is estimated, about +Rs1k) against about
++Rs40.8k for option 2. Cautions: the gain disappears at a 0.20% gap, and the 0.5% put lost on 3 faded
+gap-ups. **NIFTY is not switched:** in ndte39 every NIFTY switch lost money (gap ≥ 0.25% → put 0.5%:
++28,935 against +41,525), because NIFTY's call spread won on gap-up days and NIFTY already picks its side
+from the 5-day move.

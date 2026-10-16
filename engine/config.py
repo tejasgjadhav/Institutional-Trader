@@ -615,8 +615,13 @@ OPEN_RECORDER_ENABLED = True
 # 2 years (38,819 -> 51,293), no losing switched day, inside a stable 0.25-0.50% plateau; SENSEX index
 # 2023-24 agrees (call side broken 50% of >=0.50% gap-ups, the 1% put never). Missed its second-year
 # test by Rs786. NIFTY unchanged (switching lost money there). 0 = off.
-SENSEX_GAP_SWITCH_PCT = 0.50
-SENSEX_GAP_PUT_OTM = 0.01
+# Same day, later: SWITCHED TO OPTION 3 by the user (gap >= 0.25%, put 0.5% below). Backtest to 8-Oct-26:
+# 91 trades, 91.2% win, +Rs53,567 (vs 51,293 option 2, 38,819 before). It is the only option that would
+# have switched on 15-Oct-2026 (gap +0.253%), turning the -Rs10,524 call loss into an estimated ~+Rs1k put
+# win; with 15-Oct counted it beats the old setup in both years. Cautions: 0.20% loses the gain (cliff),
+# and the 0.5% put lost on 3 faded gap-ups (-4,052 / -2,907 / -5,129). studies/SENSEX_RALLY_GUARD.md part 10.
+SENSEX_GAP_SWITCH_PCT = 0.25
+SENSEX_GAP_PUT_OTM = 0.005
 OPEN_RECORDER_FROM = "09:15"
 OPEN_RECORDER_TO = "09:25"
 OPEN_RECORDER_EVERY_S = 30

@@ -29,6 +29,10 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 | ~~T-1 EVE~~ (SENSEX eve / BANKNIFTY monthly eve bear call) | `T1_EVE_ENABLED=False` | — | — | **DEPLOYED AND DISABLED THE SAME DAY (17-Sep-2026)**, before its first eve. The refutation audit (research/audit_t1_eve.md) found the study's own final verdict had REJECTED the book, SENSEX expectancy unproven (P≤0 6.4%, drawdown ₹38k vs ₹27k/yr claimed), BANKNIFTY monthly resting on weekly-era evidence, and direction explaining ~⅔ of the P&L. Code kept, off; re-enable only on a new study |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 
+**SENSEX 0DTE GAP-UP SWITCH (LIVE 16-Oct-2026, user chose option 3):** if SENSEX opens >= 0.25% above the previous
+close, the 09:16 trade is a BULL PUT spread 0.5% below spot (no trade if c/w < 0.04). NIFTY is NOT switched (it lost
+money there). `SENSEX_GAP_SWITCH_PCT`, `SENSEX_GAP_PUT_OTM`; studies/SENSEX_RALLY_GUARD.md parts 7-10.
+
 **0DTE EXITS (16-Oct-2026, user decisions): early profit close OFF and loss cap OFF (both 0) — hold every 0DTE
 trade to settle, the highest net in ndte38. History of the cap, deployed and then removed the same day:**
 **0DTE LOSS CAP (deployed 16-Oct-2026, REMOVED the same day for max net, user-approved):** both 0DTE books buy the spread back the first time
