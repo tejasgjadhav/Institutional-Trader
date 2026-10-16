@@ -23,7 +23,7 @@ import logging
 from datetime import datetime, date
 
 from engine.config import (
-    ZERO_DTE_EARLY_CLOSE_FRAC, ZERO_DTE_LOSS_CAP_RS, IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW)
+    ZERO_DTE_EARLY_CLOSE_FRAC, ZERO_DTE_LOSS_CAP_RS, SENSEX_GAP_SWITCH_PCT, SENSEX_GAP_PUT_OTM, IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW)
 from engine.data_fetcher import SESSION, UPSTOX_BASE, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
 from engine.instruments import to_instrument_key, encode_key
 
@@ -79,12 +79,12 @@ def _bse_sensex_options():
         return (c or {}).get("rows", [])
 
 
-def _chain_today(bk):
-    """CE contracts expiring TODAY for this book, sorted by strike."""
+def _chain_today(bk, opt_type="CE"):
+    """opt_type contracts expiring TODAY for this book, sorted by strike."""
     today = date.today()
     if bk["src"] == "BSE":
         rows = _bse_sensex_options()
-        ch = [c for c in rows if c["type"] == "CE"
+        ch = [c for c in rows if c["type"] == opt_type
               and datetime.fromtimestamp(c["expiry"] / 1000).date() == today]
     else:
         from engine.options import _load_index
@@ -92,8 +92,24 @@ def _chain_today(bk):
         ch = [dict(key=c["key"], strike=c["strike"], expiry=c["expiry"],
                    lot=int(c.get("lot") or 30))
               for c in _load_index().get(uk, [])
-              if c["type"] == "CE" and datetime.fromtimestamp(c["expiry"] / 1000).date() == today]
+              if c["type"] == opt_type and datetime.fromtimestamp(c["expiry"] / 1000).date() == today]
     return sorted(ch, key=lambda c: c["strike"])
+
+
+def _gap_pct(bk):
+    """Today's opening gap, %: the index's first print (quote ohlc.open) against the previous close
+    (last price minus net change). None if the quote is unavailable."""
+    try:
+        r = SESSION.get(f"{UPSTOX_BASE}/v2/market-quote/quotes",
+                        params={"instrument_key": bk["spot_key"]}, timeout=15)
+        for v in (r.json().get("data") or {}).values():
+            o = (v.get("ohlc") or {}).get("open")
+            ltp, chg = v.get("last_price"), v.get("net_change")
+            if o and ltp and chg is not None and (ltp - chg) > 0:
+                return 100.0 * (o / (ltp - chg) - 1)
+    except Exception as e:
+        logger.warning(f"dte_multi gap {bk['name']}: {e}")
+    return None
 
 
 def _next_expiry(bk):
@@ -173,12 +189,23 @@ def _scan_book(bk):
     spot = _spot(bk)
     if not spot:
         return []
+    # GAP-UP SWITCH (user-approved 16-Oct-2026): on a >= SENSEX_GAP_SWITCH_PCT gap-up open, sell the
+    # BULL PUT spread SENSEX_GAP_PUT_OTM below spot instead of the bear call. See config.
+    gap = _gap_pct(bk) if (bk["name"] == "SENSEX" and SENSEX_GAP_SWITCH_PCT) else None
+    put = gap is not None and gap >= SENSEX_GAP_SWITCH_PCT
+    if put:
+        chain = _chain_today(bk, "PE")
+        if not chain:
+            return []
+        logger.info(f"dte_multi[{bk['name']}]: gap-up {gap:+.2f}% >= {SENSEX_GAP_SWITCH_PCT}% -> bull put "
+                    f"{SENSEX_GAP_PUT_OTM:.1%} below spot")
+    sgn, otm = (-1, SENSEX_GAP_PUT_OTM) if put else (1, bk["otm"])
     strikes = [c["strike"] for c in chain]
-    si = min(range(len(strikes)), key=lambda i: abs(strikes[i] - spot * (1 + bk["otm"])))
-    wing_t = strikes[si] + spot * bk["wing_pct"]
+    si = min(range(len(strikes)), key=lambda i: abs(strikes[i] - spot * (1 + sgn * otm)))
+    wing_t = strikes[si] + sgn * spot * bk["wing_pct"]
     li = min(range(len(strikes)), key=lambda i: abs(strikes[i] - wing_t))
     short, long = chain[si], chain[li]
-    width = long["strike"] - short["strike"]
+    width = sgn * (long["strike"] - short["strike"])
     if width < spot * bk["wing_pct"] * 0.5:
         return []
     sm, lm = _quote(short["key"]), _quote(long["key"])
@@ -197,6 +224,11 @@ def _scan_book(bk):
         SCAN_TRACE[bk["name"]] = (f"the spread paid credit ÷ width of {credit/width:.3f}, below the "
                                   f"{ZERO_DTE_MULTI_MIN_CW} floor. The market was not paying enough for "
                                   f"the risk of a full-width loss.")
+        if put:
+            SCAN_TRACE[bk["name"]] = (f"SENSEX opened {gap:+.2f}%, so the gap-up rule switched to the put "
+                                      f"spread {SENSEX_GAP_PUT_OTM:.0%} below. It paid credit ÷ width of "
+                                      f"{credit/width:.3f}, below the {ZERO_DTE_MULTI_MIN_CW} floor, so there is "
+                                      f"no trade today (rule since 16-Oct-2026).")
         return []
     lot = int(short.get("lot") or 0)
     if lot <= 0:
@@ -204,7 +236,8 @@ def _scan_book(bk):
     qty = lot * int(bk["lots"])
     pos = {
         "id": f"{bk['name']}-0DTE-{today.isoformat()}", "symbol": bk["name"], "breakout_dir": None,
-        "side": "BEAR_CALL", "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
+        "side": "BULL_PUT" if put else "BEAR_CALL", "entry_date": today.isoformat(), "entry_spot": round(spot, 1),
+        "gap_pct": round(gap, 3) if gap is not None else None, "rule": "gap_switch" if put else None,
         "short_key": short["key"], "short_strike": int(short["strike"]),
         "long_key": long["key"], "long_strike": int(long["strike"]),
         "width_pts": int(width), "lot": lot, "num_lots": int(bk["lots"]), "qty": qty,
@@ -212,8 +245,8 @@ def _scan_book(bk):
         "credit": credit, "credit_width": round(credit / width, 3),
         "stop_cost": None, "max_loss_pts": round(width - credit, 2),
         "capital": round((width - credit) * qty, 0),
-        "order_label": (f"SELL {bk['name']} {int(short['strike'])} CE / BUY {int(long['strike'])} CE"
-                        f"  0DTE {today.isoformat()}  (bear-call, credit Rs{credit}, settles today 15:40)"),
+        "order_label": (f"SELL {bk['name']} {int(short['strike'])} {'PE' if put else 'CE'} / BUY {int(long['strike'])} {'PE' if put else 'CE'}"
+                        f"  0DTE {today.isoformat()}  ({'bull-put, gap-up switch' if put else 'bear-call'}, credit Rs{credit}, settles today 15:40)"),
         "current_cost": credit, "short_cur": round(sm, 2), "long_cur": round(lm, 2),
         "pnl_pts": 0.0, "status": "OPEN", "closed_date": None, "exit_cost": None,
     }
@@ -276,7 +309,10 @@ def _resolve_book(bk, past_settle):
                 if not spot:
                     logger.warning(f"dte_multi: {p['id']} expired but NO SETTLE PRICE — leaving OPEN, will retry")
                     continue
-                si = max(0.0, spot - p["short_strike"]); li = max(0.0, spot - p["long_strike"])
+                if p.get("side") == "BULL_PUT":
+                    si = max(0.0, p["short_strike"] - spot); li = max(0.0, p["long_strike"] - spot)
+                else:
+                    si = max(0.0, spot - p["short_strike"]); li = max(0.0, spot - p["long_strike"])
                 cost = min(max(si - li, 0.0), p["width_pts"])
                 p["short_cur"] = round(si, 2); p["long_cur"] = round(li, 2)
                 p["exit_cost"] = round(cost, 2); p["current_cost"] = round(cost, 2)

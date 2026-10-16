@@ -608,6 +608,15 @@ ZERO_DTE_LOSS_CAP_RS = 0.0
 # OPEN RECORDER (user-approved 16-Oct-2026): live bid/ask of every strike within the band, CE and PE,
 # 09:15-09:25 on each 0DTE expiry day, to measure real opening fills. Read-only. engine/open_recorder.py
 OPEN_RECORDER_ENABLED = True
+# SENSEX GAP-UP SWITCH (user-approved 16-Oct-2026, "option 2"): when SENSEX opens at least this many %
+# above the previous close, the 09:16 trade is a BULL PUT spread with the short this far BELOW spot
+# (same 0.83% wing) instead of the bear call. If that put fails the c/w floor, NO trade that day (no
+# fallback to the call). Evidence (studies/SENSEX_RALLY_GUARD.md parts 7-8, ndte39/40): +Rs12,474 over
+# 2 years (38,819 -> 51,293), no losing switched day, inside a stable 0.25-0.50% plateau; SENSEX index
+# 2023-24 agrees (call side broken 50% of >=0.50% gap-ups, the 1% put never). Missed its second-year
+# test by Rs786. NIFTY unchanged (switching lost money there). 0 = off.
+SENSEX_GAP_SWITCH_PCT = 0.50
+SENSEX_GAP_PUT_OTM = 0.01
 OPEN_RECORDER_FROM = "09:15"
 OPEN_RECORDER_TO = "09:25"
 OPEN_RECORDER_EVERY_S = 30
