@@ -584,9 +584,11 @@ class EngineRunner:
                     exit_ = self._TG_EXIT.get(book)
                     if kind == "INTRADAY":
                         _f = getattr(config, "ZERO_DTE_EARLY_CLOSE_FRAC", 0) or 0
-                        lines.append(f"🎯 Books early at {_f:.0%} of max profit, else holds to settle · "
-                                     "no stop — bought wing caps the loss" if _f else
-                                     "🎯 Hold to settle · no stop — bought wing caps the loss")
+                        _cap = getattr(config, "ZERO_DTE_LOSS_CAP_RS", 0) or 0
+                        _capt = (f"🛑 Loss cap: exit if the loss reaches ₹{_cap:,.0f}/lot (Telegram will say EXIT NOW)"
+                                 if _cap else "no stop — bought wing caps the loss")
+                        lines.append(f"🎯 Books early at {_f:.0%} of max profit, else holds to settle · {_capt}" if _f else
+                                     f"🎯 Hold to settle · {_capt}")
                     elif exit_ and have_nums:
                         tp_frac, stop_mult = exit_
                         binds = stop_mult * credit < w   # a vertical can't cost > width to close
@@ -1239,6 +1241,11 @@ class EngineRunner:
                         self._tg(f"T-1 EVE {p_['symbol']}", [p_])   # one message per index, never combined
         except Exception as e:
             logger.warning(f"t1_eve: {e}")
+        try:
+            from engine import open_recorder      # 09:15-09:25 quotes on expiry days, read-only
+            open_recorder.tick(now)
+        except Exception as e:
+            logger.warning(f"open_recorder: {e}")
         h1, m1 = map(int, config.ZERO_DTE_SCAN_AFTER.split(":"))
         h2, m2 = map(int, config.ZERO_DTE_ENTRY_CUTOFF.split(":"))
         mins = now.hour * 60 + now.minute

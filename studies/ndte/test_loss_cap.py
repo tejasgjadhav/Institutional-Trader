@@ -61,8 +61,13 @@ check("one EXIT alert", len(s), 1)
 check("alert names the buy-back", "BUY BACK 73400 CE / SELL 74000 CE" in (s[0] if s else ""), True)
 n, p, s = run_sensex(330.0, cap=0.0)
 check("cap 0 disables it", p["status"], "OPEN")
+D.ZERO_DTE_EARLY_CLOSE_FRAC = 0.95
 n, p, s = run_sensex(2.0)
-check("take-profit still wins first", (p["status"], p.get("exit_reason")), ("WIN", None))
+D.ZERO_DTE_EARLY_CLOSE_FRAC = 0.0
+check("take-profit still wins first when switched on", (p["status"], p.get("exit_reason")), ("WIN", None))
+
+n, p, s = run_sensex(2.0)
+check("early close off (16-Oct): a cheap spread stays open to settle", p["status"], "OPEN")
 
 print("NIFTY book (lot 65, credit 19.5 -> cap at a spread cost of 96.4)")
 n, p, s = run_nifty(90.0)

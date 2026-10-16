@@ -586,7 +586,12 @@ ZERO_DTE_RESOLVE_INTERVAL = 120  # intraday mark-to-market cadence (s)
 # 89.0%) and intraday option premium history does not exist beyond ~1 month (DATA_AVAILABILITY_LIMITS)
 # — unlike v1's TP-40 which was tested on 242 real trades, this ships UNMEASURED. Set to 0 to disable
 # and fall back to pure hold-to-expiry for a forward-test comparison.
-ZERO_DTE_EARLY_CLOSE_FRAC = 0.95
+# 16-Oct-2026: SET TO 0 (off) on BOTH books by the user. Measured at last (ndte34, real 1-min candles
+# Oct-24 -> Oct-26): closing a near-worthless spread pays a full set of exit charges for a few rupees,
+# so it cost money: NIFTY with the Rs5,000 cap 9.0% -> 12.7% of margin a month without it (same worst
+# trade), SENSEX 9.1% -> 10.2% (but its recent half fell 3.7% -> 1.4%). The loss cap below now covers
+# the late-reversal tail this was meant to remove. studies/SENSEX_RALLY_GUARD.md part 4.
+ZERO_DTE_EARLY_CLOSE_FRAC = 0.0
 # LOSS CAP (user-approved 16-Oct-2026, after the 15-Oct SENSEX full-width loss of -Rs10,524): buy the
 # spread back the first time its open loss reaches this many rupees PER LOT, on BOTH 0DTE books
 # (NIFTY incl. the hybrid add, SENSEX). Telegram sends an EXIT alert at that moment. Measured on real
@@ -595,6 +600,13 @@ ZERO_DTE_EARLY_CLOSE_FRAC = 0.95
 # before 15-Oct (which alone it would have cut by about Rs5k). It failed the pre-registered
 # out-of-sample profit test; the user chose it as a cap, knowing the cost. 0 = disabled.
 ZERO_DTE_LOSS_CAP_RS = 5000.0
+# OPEN RECORDER (user-approved 16-Oct-2026): live bid/ask of every strike within the band, CE and PE,
+# 09:15-09:25 on each 0DTE expiry day, to measure real opening fills. Read-only. engine/open_recorder.py
+OPEN_RECORDER_ENABLED = True
+OPEN_RECORDER_FROM = "09:15"
+OPEN_RECORDER_TO = "09:25"
+OPEN_RECORDER_EVERY_S = 30
+OPEN_RECORDER_BAND = 0.015
 
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own
