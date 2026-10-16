@@ -65,3 +65,19 @@ The cap costs money in every form. These are the useful points on the curve (SEN
 - 15-Oct is not in these totals yet. Deployed loses Rs10,524 on it. Every rule above would have exited
   that morning, so the real gap to deployed is smaller than the table shows.
 - The rupee cap is the only rule that caps both books at about Rs6,000 for a modest NIFTY cost (−15%).
+
+## Part 3: deployed, and the leg-out idea tested (16-Oct-2026)
+
+**Deployed:** the Rs5,000 rupee cap on both 0DTE books, closing both legs, with a Telegram EXIT alert
+(`ZERO_DTE_LOSS_CAP_RS`, commit 34bba00, offline test studies/ndte/test_loss_cap.py). The user chose it
+as a cap, knowing it failed the pre-registered profit test.
+
+**Leg-out, rejected (ndte33).** The user asked whether, at the cap, we could buy back only the sold
+option and hold the bought one until the close.
+- On SENSEX it earns more in total (+Rs28.6k against +Rs23.8k for closing both), but the worst trade
+  goes back to −Rs9.9k. That is almost the uncapped loss, so the cap stops working.
+- The reason is that the index reversed after 6 of the 8 cap exits. On those days the held call lost
+  its value, and that loss landed on top of the buy-back.
+- On NIFTY it is worse on both counts: Rs1.1–1.5k less in total, and a worse worst trade (−Rs7.5k).
+- Holding the long call after the buy-back is a bet that the rally continues. It won 2 times in 8 on
+  SENSEX and once in 5 on NIFTY.

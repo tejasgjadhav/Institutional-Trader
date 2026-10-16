@@ -28,6 +28,12 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 | Sidewise low credit ("vlc", c/w 0.30-0.40, 12 BC + 9 BP names side-locked) | `STOCK_CREDIT_VLC_ENABLED` | 90.7% IS / 93.4% OOS on its 21 cells | plan ₹3,592/mo (IS rate; OOS ₹12,044/mo is selection-inflated) | deployed 3-Sep-2026 from studies/BAND_030_040_NAMEWISE.md — cells CHOSEN on the OOS window, pooled qualifier screen was −3.5% OOS; live forward record decides at 30 fills |
 | ~~T-1 EVE~~ (SENSEX eve / BANKNIFTY monthly eve bear call) | `T1_EVE_ENABLED=False` | — | — | **DEPLOYED AND DISABLED THE SAME DAY (17-Sep-2026)**, before its first eve. The refutation audit (research/audit_t1_eve.md) found the study's own final verdict had REJECTED the book, SENSEX expectancy unproven (P≤0 6.4%, drawdown ₹38k vs ₹27k/yr claimed), BANKNIFTY monthly resting on weekly-era evidence, and direction explaining ~⅔ of the P&L. Code kept, off; re-enable only on a new study |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
+
+**0DTE LOSS CAP (LIVE since 16-Oct-2026, user-approved):** both 0DTE books buy the spread back the first time
+the open loss reaches `ZERO_DTE_LOSS_CAP_RS` = ₹5,000 per lot, and Telegram sends an EXIT alert. It caps the
+worst trade near −₹6k (was −₹10.6k / −₹11.5k) and costs about a quarter of SENSEX's profit before 15-Oct. Leg-out
+(buy back only the short, hold the long) was tested and rejected: it undoes the cap. `studies/SENSEX_RALLY_GUARD.md`.
+
 | 0DTE NIFTY (FLIP) (+hybrid add 07-31) | `ZERO_DTE_ENABLED` | 88.3% | ₹1,771 | t=+4.43 · +ve 7/8 yrs |
 | ~~0DTE BANKNIFTY~~ | **REMOVED 2026-08-20** | 78.6% | — | **REJECTED 07-19** · t=+0.10, CI spans 0 · book deleted from `engine/dte_multi.py`, never opened a position |
 | Index swing fade | `SWING_CREDIT_ENABLED` | 54% | ~₹0 | regime-dep · failed OOS |
