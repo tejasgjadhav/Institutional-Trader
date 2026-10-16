@@ -13,8 +13,8 @@ in git history and must not be quoted.
 | Stock v0 | c/w 0.35–0.40 | ≥ ₹30, or BP sub-floor | book 40%, no stop | 283 · 83.4% · +7.3% | 155 · 81.3% · +6.5% | 7.0 | ₹6,416 |
 | Sidewise low credit (vlc) | c/w 0.30–0.40, 21 name-sides | ≥ ₹50 | book 40%, no stop | 90.7% on its cells | 93.4% (cells chosen on OOS) | ~3.5 | ~₹3,600 planning, not in total |
 | vlc cells | c/w 0.25–0.30: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP | ₹30–50 | book 40%, no stop | 20 · 95% · +17.8% | 16 · 100% · +17.5% | ~0.7 | not in total |
-| 0DTE NIFTY (Tue) | expiry-day spread, FLIP side | — | hold to settle (since 16-Oct) | 88% | 91.6% · 83 expiries | ~3.4 | ₹1,716 |
-| 0DTE SENSEX (Thu) | bear call 0.5% above; **gap-up ≥ 0.25% → bull put 0.5% below** (since 16-Oct) | — | hold to settle | n/a (weeklies from Oct-2024) | 91.2% · 91 expiries | ~3.8 | ₹2,214 |
+| 0DTE NIFTY (Tue; Mon if Tue is a holiday) | expiry-day spread, FLIP side | — | hold to settle (since 16-Oct) | 88% | 91.6% · 83 expiries | ~3.4 | ₹1,716 |
+| 0DTE SENSEX (Thu; Wed if Thu is a holiday) | bear call 0.5% above; **gap-up ≥ 0.25% → bull put 0.5% below** (since 16-Oct) | — | hold to settle | n/a (weeklies from Oct-2024) | 91.2% · 91 expiries | ~3.8 | ₹2,214 |
 | **Total** | | | | | **714 trades** | **~31** | **₹35,349** (with vlc ~₹38,950; plan at 80%: ₹28,279) |
 
 **BP sub-floor (permanent since 11-Oct-2026):** a v1 or v0 bull put with a short leg below ₹30 is

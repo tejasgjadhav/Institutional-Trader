@@ -607,7 +607,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_status.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
-        hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% over 2019–Sep 2024 / 91.6% over Oct 2024–now (held to settle, 16-Oct re-test) · EVERY TUESDAY 9:16 · "
+        hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% over 2019–Sep 2024 / 91.6% over Oct 2024–now (held to settle, 16-Oct re-test) · EVERY NIFTY EXPIRY DAY 9:16 (Tuesday, or Monday when Tuesday is an NSE holiday: 19-Oct, 9-Nov, 23-Nov) · "
                      "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise · "
                      "HYBRID ADD (paper 07-31): the OPPOSITE side ~1% OTM is ALSO sold when it pays c/w ≥ 0.08 — "
                      "shared margin · IS 86.5%/+₹1.48L vs FLIP +₹1.04L · OOS 91.5%/+₹0.82L vs +₹0.64L · worst-case identical")
@@ -630,7 +630,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
         self.zdte_table.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.zdte_table, 1)
-        v.addWidget(self._section_label("SENSEX EXPIRY-DAY — THURSDAYS 9:16 · bear call 0.5% above · GAP-UP RULE (16-Oct): opens ≥ 0.25% up → bull put 0.5% below instead, "
+        v.addWidget(self._section_label("SENSEX EXPIRY-DAY — THURSDAYS 9:16 (Wednesday if Thursday is a holiday) · bear call 0.5% above · GAP-UP RULE (16-Oct): opens ≥ 0.25% up → bull put 0.5% below instead, "
                                         "no trade if it pays too little · held to settle · WIN 91.2% over Oct 2024–Oct 2026 (91 expiries, real 1-min prices)", AMBER))
         self.sdte_status = self._stats_label(); v.addWidget(self.sdte_status)
         self.sdte_stats = self._stats_label(); v.addWidget(self.sdte_stats)
@@ -759,7 +759,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.log_stock = self._make_log_table(); self.log_stock.setVisible(False)  # hidden (3-Family)
         self.log_nifty = self._make_log_table(); self.log_nifty.setVisible(False)  # hidden (ORB retired)
         # INTRADAY 0DTE credit spreads (SELL) — same 2-leg format as SWING TRADES
-        v.addWidget(self._section_label("INTRADAY  —  NIFTY expiry-day FLIP spread (Tuesdays)", CYAN))
+        v.addWidget(self._section_label("INTRADAY  —  NIFTY expiry-day FLIP spread (Tuesdays; Monday when Tuesday is a holiday)", CYAN))
         self.log_zdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_zdte, 1)
         v.addWidget(self._section_label("INTRADAY  —  SENSEX expiry-day CE spread (Thursdays)", AMBER))
         self.log_sdte = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.log_sdte, 1)
@@ -994,8 +994,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.4% · +7.3% on margin · positive in 5 of 6 years · short leg ≥ ₹30 or the bull-put sub-floor <span style="color:{TEXT_DIM};">(283 trades)</span></td><td>81.3% · +6.5% <span style="color:{TEXT_DIM};">(155 trades)</span></td><td><b>~7.0</b></td></tr>
 <tr style="color:{TEXT_DIM};"><td>Sidewise low credit <span style="color:{TEXT_DIM};">(c/w 0.30–0.40 · 12 BC + 9 BP names, side-locked, TP-40, no stop · plus 3 cells at 0.25–0.30 with a ₹30–50 short leg since 27-Sep: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP — pooled OOS 16 trades, 100%, +17.5%, confirmed on a clean pass)</span></td><td>90.7% on its 21 cells (n=108) · band pooled 82.4%/+10.0%</td><td>93.4% (n=76) — but the cells were CHOSEN on this window</td><td>~3.5/mo</td></tr>
 <tr style="color:{TEXT_DIM};"><td>T-1 EVE <span style="color:{TEXT_DIM};">(index bear call at the eve close)</span></td><td colspan="2" style="color:{RED};">DEPLOYED AND DISABLED 17-Sep-2026 — refutation audit: the study's own final verdict rejected it; SENSEX expectancy unproven; BNF monthly not the evidence measured</td><td>0</td></tr>
-<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>91.6% on 83 expiries, held to settle (16-Oct-2026 re-test)</td><td>~3.4</td></tr>
-<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>91.2% on 91 expiries with the gap-up rule (16-Oct-2026 re-test)</td><td>~3.8</td></tr>
+<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry; Monday if Tuesday is a holiday)</span></td><td>88% · positive 7 of the 8 years</td><td>91.6% on 83 expiries, held to settle (16-Oct-2026 re-test)</td><td>~3.4</td></tr>
+<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry; Wednesday if Thursday is a holiday)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>91.2% on 91 expiries with the gap-up rule (16-Oct-2026 re-test)</td><td>~3.8</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~32/mo</b> (~35 with vlc)</td></tr>
 </table>
@@ -1253,7 +1253,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {p("<b>8.</b> If nothing is bought back, it settles itself at expiry. Max loss is always (width − credit) × lot, known the moment you enter.")}
 {p("<b>9.</b> If <b>v1 and v0 both signal the same stock, take v1 only</b> — the engine already suppresses v0's, so you will see one signal.")}
 
-<p style="color:{AMBER};font-size:15px;font-weight:bold;margin-top:14px;">THE EXPIRY-DAY BOOKS — NIFTY (Tue) and SENSEX (Thu)</p>
+<p style="color:{AMBER};font-size:15px;font-weight:bold;margin-top:14px;">THE EXPIRY-DAY BOOKS — NIFTY (Tue) and SENSEX (Thu). A holiday moves the expiry one trading day earlier, and the engine follows the exchange contract list, so it trades on that day.</p>
 {p("<b>1.</b> Only on that index's expiry day. The engine posts a pre-market status strip by 9:00 telling you whether it expects a signal.")}
 {p("<b>2.</b> At <b>09:16</b>, off the opening price: SELL the call about <b>0.5% out of the money</b>, BUY the call <b>200 points</b> further out.")}
 {p("<b>3.</b> NIFTY skips the week when 5-day realised volatility is ≥ 0.9% — losses cluster when the tape is already hot. The engine applies this for you.")}

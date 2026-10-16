@@ -321,7 +321,9 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
   resets them and re-runs that day's scan under whatever was just deployed. The morning window
   was missing from this rule and got breached on 21-Aug at 09:17 — harmless only because Friday
   carries no index expiry, so no book was eligible. **Check the day before restarting in the
-  morning: NIFTY expires Tuesday, SENSEX Thursday.** On trading days, do
+  morning: NIFTY expires Tuesday, SENSEX Thursday — and a holiday moves the expiry one trading day EARLIER
+  (NIFTY on Monday 19-Oct, 9-Nov and 23-Nov 2026). The engine follows the exchange contract list, so the
+  09:16–09:45 freeze applies on those Mondays too (`studies/ndte/test_holiday_expiry.py`).** On trading days, do
   NOT deploy code/config or restart the engine between **15:15 and 15:40** (auction start to
   derivatives close) unless fixing an active failure the user knows about. Mechanism: the engine's
   once-a-day markers (watchlist built, digest sent, scan done) are IN-MEMORY, so a mid-window
