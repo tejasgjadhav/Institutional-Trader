@@ -171,3 +171,26 @@ User question: if the market opens up 0.5% or more (or another number), sell a p
   day; its put would have expired worthless for a win instead of the −Rs10,524 loss.
 - The mirror (call further away on a gap-down) is worse on both books.
 - Caution: 12 SENSEX cells were read on 15–26 gap days per cell.
+
+## Part 8: deeper checks on options 2 and 3 before going live (ndte40), 16-Oct-2026
+
+Option 2 = gap up ≥ 0.50% → put spread 1.0% below. Option 3 = gap up ≥ 0.25% → put spread 0.5% below.
+Live exits, real option prices Oct-2024 to 8-Oct-2026. Live SENSEX net: +Rs38,819.
+
+**1. Neighbourhood (book net, change vs live).** Gaps of 0.25–0.50% are positive at every put distance,
++Rs8.8k to +Rs16.6k. At 0.20% the gain disappears (−2.0k to +2.2k), and at 0.60% it shrinks (+2.9k to +5.5k).
+Option 3 sits right next to the 0.20% cliff. Option 2 sits inside the plateau.
+
+**2. Quarter by quarter.** Each option beats live in only 4 of 9 quarters. Most of the gain comes from two
+quarters with big call losses on gap-up rallies: 2025Q1 (live −2.5k, options +15–16k) and 2026Q1. Option 3
+gave back −8.7k against live in 2026Q2, when three gap-ups faded and its 0.5% put lost.
+
+**3. Every gap-up day.** At ≥ 0.25% the call spread lost on 6 of 26 days (−27.2k in total: −10.6k on
+4-Feb-25, −7.0k on 18-Mar-25, −5.2k on 22-Nov-24). The 0.5% put lost on 3 days (−12.1k). The 1.0% put never
+lost, but on 10 of the 15 option-2 days its credit was below the c/w 0.04 floor, so option 2 takes no trade
+on those days.
+
+**4. An independent window, SENSEX index only, Friday expiries May-2023 to Sep-2024 (71 expiries).** After a
+gap up the call side breaks far more often: 27% at ≥ 0.25%, 36% at ≥ 0.40%, 50% at ≥ 0.50% (4 days), against
+14% on other days. The 1.0% put breaks 5% at ≥ 0.25% and never at ≥ 0.50%. This is the same direction as the
+option data, on years it never saw.
