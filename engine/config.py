@@ -599,7 +599,12 @@ ZERO_DTE_EARLY_CLOSE_FRAC = 0.0
 # -10,628 -> -5,941, NIFTY -11,472 -> -6,169; cost SENSEX +31,862 -> +23,802, NIFTY +30,541 -> +25,908
 # before 15-Oct (which alone it would have cut by about Rs5k). It failed the pre-registered
 # out-of-sample profit test; the user chose it as a cap, knowing the cost. 0 = disabled.
-ZERO_DTE_LOSS_CAP_RS = 5000.0
+# 16-Oct-2026 (later the same day): SET TO 0 by the user for MAXIMUM NET. ndte38 (28 entry/filter/exit
+# combinations per book) found 09:16 + hold to settle + no cap the highest net on both books: NIFTY
+# +41,525 vs +36,637 capped, SENSEX +38,819 vs +26,701 (the cap closed trades that recovered; about
+# Rs7k net even counting 15-Oct). The price: a full-width loss of ~Rs10.5k about 3 times in 2 years.
+# The code stays; set 5000.0 to switch it back on.
+ZERO_DTE_LOSS_CAP_RS = 0.0
 # OPEN RECORDER (user-approved 16-Oct-2026): live bid/ask of every strike within the band, CE and PE,
 # 09:15-09:25 on each 0DTE expiry day, to measure real opening fills. Read-only. engine/open_recorder.py
 OPEN_RECORDER_ENABLED = True

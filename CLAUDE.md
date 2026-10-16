@@ -29,7 +29,9 @@ OFF (3-Family `SCAN_3FAMILY_ENABLED=False`, ORB+VWAP `ORB_VWAP_ENABLED=False`, m
 | ~~T-1 EVE~~ (SENSEX eve / BANKNIFTY monthly eve bear call) | `T1_EVE_ENABLED=False` | — | — | **DEPLOYED AND DISABLED THE SAME DAY (17-Sep-2026)**, before its first eve. The refutation audit (research/audit_t1_eve.md) found the study's own final verdict had REJECTED the book, SENSEX expectancy unproven (P≤0 6.4%, drawdown ₹38k vs ₹27k/yr claimed), BANKNIFTY monthly resting on weekly-era evidence, and direction explaining ~⅔ of the P&L. Code kept, off; re-enable only on a new study |
 | 0DTE SENSEX | `dte_multi` BOOKS | 89.0% | ₹3,153 | measured · 3 yrs only |
 
-**0DTE LOSS CAP (LIVE since 16-Oct-2026, user-approved):** both 0DTE books buy the spread back the first time
+**0DTE EXITS (16-Oct-2026, user decisions): early profit close OFF and loss cap OFF (both 0) — hold every 0DTE
+trade to settle, the highest net in ndte38. History of the cap, deployed and then removed the same day:**
+**0DTE LOSS CAP (deployed 16-Oct-2026, REMOVED the same day for max net, user-approved):** both 0DTE books buy the spread back the first time
 the open loss reaches `ZERO_DTE_LOSS_CAP_RS` = ₹5,000 per lot, and Telegram sends an EXIT alert. It caps the
 worst trade near −₹6k (was −₹10.6k / −₹11.5k) and costs about a quarter of SENSEX's profit before 15-Oct. Leg-out
 (buy back only the short, hold the long) was tested and rejected: it undoes the cap. `studies/SENSEX_RALLY_GUARD.md`.
