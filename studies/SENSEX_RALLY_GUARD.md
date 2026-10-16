@@ -40,3 +40,28 @@ Pre-registration: research/rally_guard/prereg.json. Script: studies/ndte/ndte31_
 - **15-Oct under the stops (estimate from the index path only):** SENSEX crossed the short strike at
   09:47, short + 0.25% at 09:59 and short + 0.5% at 10:15. Option prices for that day are not
   available yet, so the exit cost is not measured. Re-run when Upstox lists the 15-Oct expiry.
+
+## Part 2: an exit rule that caps the loss (ndte32, pre-registered in research/rally_guard/prereg32.json)
+
+The user's goal changed to "we don't want zero loss but cap it". 31 exit rules were tested on the
+cached 1-minute data: a rupee cap, a velocity exit, a confirmed breach (M minutes in a row) and a
+time-gated breach. The rule was picked on Oct-24..Sep-25 only and tested on Oct-25 onwards.
+
+**Pre-registered result: FAIL.** The H1 pick was the Rs5,000 rupee cap. It holds the cap in both halves
+(worst −Rs5,840 and −Rs5,941), but out of sample it kept only Rs5,170 of the deployed Rs19,004.
+
+The cap costs money in every form. These are the useful points on the curve (SENSEX, all 94 trades to 8-Oct):
+
+| Rule | Total | Worst | Max DD | NIFTY total / worst |
+|---|---|---|---|---|
+| Deployed, no exit | +31,862 | −10,628 | −14,180 | +30,541 / −11,472 |
+| Rupee cap Rs5,000 | +23,802 | −5,941 | −16,059 | +25,908 / −6,169 |
+| 15 minutes in a row above the short strike | +24,528 | −4,596 | −7,636 | +16,828 / −6,700 |
+| Above short + 0.25% before 14:00 | +23,950 | −5,764 | −12,760 | +18,491 / −6,028 |
+| Above short + 0.5% before 14:00 | +31,744 | −7,316 | −10,027 | +26,109 / −8,282 |
+
+- Capping through an exit rule costs about a quarter of the SENSEX profit. Capping through a narrower
+  wing costs about three quarters (wing 300: worst −Rs5,384, total +Rs8,549).
+- 15-Oct is not in these totals yet. Deployed loses Rs10,524 on it. Every rule above would have exited
+  that morning, so the real gap to deployed is smaller than the table shows.
+- The rupee cap is the only rule that caps both books at about Rs6,000 for a modest NIFTY cost (−15%).
