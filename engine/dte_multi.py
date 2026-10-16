@@ -23,7 +23,7 @@ import logging
 from datetime import datetime, date
 
 from engine.config import (
-    ZERO_DTE_EARLY_CLOSE_FRAC,IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW)
+    ZERO_DTE_EARLY_CLOSE_FRAC, ZERO_DTE_LOSS_CAP_RS, IST, DATA_DIR, ZERO_DTE_ELECTION_BLACKOUT, ZERO_DTE_MULTI_MIN_CW)
 from engine.data_fetcher import SESSION, UPSTOX_BASE, fetch_upstox_quote, fetch_upstox_ltp, get_cached_ltp
 from engine.instruments import to_instrument_key, encode_key
 
@@ -242,6 +242,21 @@ def _expiry_close(bk, exp):
     return None
 
 
+def _send_loss_cap_alert(p):
+    """Telegram EXIT instruction the moment the loss cap fires. Guarded: never disturbs the loop."""
+    try:
+        from engine.notifications import send_telegram
+        typ = "CE" if "CALL" in str(p.get("side")) else "PE"
+        rs = (p["credit"] - p["current_cost"]) * (p.get("qty") or p.get("lot") or 0)
+        send_telegram(
+            f"🛑 <b>EXIT NOW — LOSS CAP</b>: {p.get('symbol')} 0DTE\n"
+            f"BUY BACK {p.get('short_strike'):g} {typ} / SELL {p.get('long_strike'):g} {typ} (exp {p.get('expiry')})\n"
+            f"Spread costs {p['current_cost']:.2f} against a credit of {p['credit']:.2f} · open loss ₹{rs:,.0f}\n"
+            f"The cap is ₹{ZERO_DTE_LOSS_CAP_RS:,.0f} a lot (since 16-Oct-2026). Use a limit order near the mid.")
+    except Exception as e:
+        logger.warning(f"loss cap alert {p.get('id')}: {e}")
+
+
 def _resolve_book(bk, past_settle):
     book = _load_json(bk["book"], [])
     today = date.today()
@@ -290,6 +305,21 @@ def _resolve_book(bk, past_settle):
                         logger.info("dte_multi: EARLY CLOSE %s at %.0f%% of credit "
                                     "(cost %.2f vs credit %.2f) pnl %+.1f",
                                     p["id"], _f * 100, p["current_cost"], p["credit"], p["pnl_pts"])
+                        continue
+                    # LOSS CAP (user-approved 16-Oct-2026): buy back once the open loss reaches
+                    # ZERO_DTE_LOSS_CAP_RS per lot, and tell Telegram to exit now.
+                    _lot = p.get("lot") or p.get("qty") or 0
+                    if ZERO_DTE_LOSS_CAP_RS and _lot and \
+                            (p["current_cost"] - p["credit"]) * _lot >= ZERO_DTE_LOSS_CAP_RS:
+                        p["exit_cost"] = p["current_cost"]
+                        p["status"] = "LOSS"
+                        p["exit_reason"] = "loss_cap"
+                        p["closed_date"] = today.isoformat()
+                        p["closed_at"] = datetime.now(IST).strftime("%H:%M")
+                        closed += 1; changed += 1
+                        logger.info("dte_multi: LOSS CAP %s at Rs%.0f/lot (cost %.2f vs credit %.2f) pnl %+.1f",
+                                    p["id"], ZERO_DTE_LOSS_CAP_RS, p["current_cost"], p["credit"], p["pnl_pts"])
+                        _send_loss_cap_alert(p)
                         continue
 
                     changed += 1

@@ -587,6 +587,14 @@ ZERO_DTE_RESOLVE_INTERVAL = 120  # intraday mark-to-market cadence (s)
 # — unlike v1's TP-40 which was tested on 242 real trades, this ships UNMEASURED. Set to 0 to disable
 # and fall back to pure hold-to-expiry for a forward-test comparison.
 ZERO_DTE_EARLY_CLOSE_FRAC = 0.95
+# LOSS CAP (user-approved 16-Oct-2026, after the 15-Oct SENSEX full-width loss of -Rs10,524): buy the
+# spread back the first time its open loss reaches this many rupees PER LOT, on BOTH 0DTE books
+# (NIFTY incl. the hybrid add, SENSEX). Telegram sends an EXIT alert at that moment. Measured on real
+# 1-min candles Oct-24 -> 8-Oct-26 (studies/SENSEX_RALLY_GUARD.md, ndte32): worst trade SENSEX
+# -10,628 -> -5,941, NIFTY -11,472 -> -6,169; cost SENSEX +31,862 -> +23,802, NIFTY +30,541 -> +25,908
+# before 15-Oct (which alone it would have cut by about Rs5k). It failed the pre-registered
+# out-of-sample profit test; the user chose it as a cap, knowing the cost. 0 = disabled.
+ZERO_DTE_LOSS_CAP_RS = 5000.0
 
 # === ORB+VWAP INDEX STRATEGY (parallel paper forward-test) ===
 # Runs ALONGSIDE the 3-Family system on NIFTY/BANKNIFTY and is reported in its own

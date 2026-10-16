@@ -1409,6 +1409,8 @@ class EngineRunner:
                                 p.get("entry_date") == datetime.now(IST).date().isoformat():
                             _today_bit = "<b>Today</b> "
                         _advtag = " · 📎 ADVISORY (weak side — not in the headline totals)" if p.get("advisory") else ""
+                        if p.get("exit_reason") == "loss_cap":
+                            _advtag += f" · 🛑 closed by the loss cap at {p.get('closed_at', '?')}"
                         ok = send_telegram(
                             f"📊 <b>RESULT — {lbl}</b>: {sym} {side} → {'✅ WIN' if won else '❌ LOSS'}{rs}{_advtag}\n"
                             f"This is the outcome of the Signal we gave for execution {_today_bit}on "
