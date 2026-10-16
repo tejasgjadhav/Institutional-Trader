@@ -187,10 +187,22 @@ gave back −8.7k against live in 2026Q2, when three gap-ups faded and its 0.5% 
 
 **3. Every gap-up day.** At ≥ 0.25% the call spread lost on 6 of 26 days (−27.2k in total: −10.6k on
 4-Feb-25, −7.0k on 18-Mar-25, −5.2k on 22-Nov-24). The 0.5% put lost on 3 days (−12.1k). The 1.0% put never
-lost, but on 10 of the 15 option-2 days its credit was below the c/w 0.04 floor, so option 2 takes no trade
-on those days.
+lost, but it traded on only 6 of the 15 option-2 days (6 wins out of 6). On the other 9 its credit was below the
+c/w 0.04 floor, so option 2 takes no trade on those days.
 
 **4. An independent window, SENSEX index only, Friday expiries May-2023 to Sep-2024 (71 expiries).** After a
 gap up the call side breaks far more often: 27% at ≥ 0.25%, 36% at ≥ 0.40%, 50% at ≥ 0.50% (4 days), against
 14% on other days. The 1.0% put breaks 5% at ≥ 0.25% and never at ≥ 0.50%. This is the same direction as the
 option data, on years it never saw.
+
+## Part 9: option 2 deployed (16-Oct-2026, commit 4afdef2)
+
+`SENSEX_GAP_SWITCH_PCT = 0.50`, `SENSEX_GAP_PUT_OTM = 0.01`. Backtest, Oct-2024 to 8-Oct-2026, hold to settle:
+
+| | Trades | Win rate | Net | Avg win | Avg loss | Worst |
+|---|---|---|---|---|---|---|
+| Before (call every day) | 94 | 88.3% | +Rs38,819 | Rs1,093 | −Rs4,715 | −Rs10,628 |
+| Option 2 | 86 | 91.9% | +Rs51,293 | Rs1,036 | −Rs4,362 | −Rs9,614 |
+
+On the 15 gap-up days of 0.50% or more, the call won 10 of 14 and lost Rs7,964 net. The put won 6 of 6
+(+Rs4,510), and the other 9 days had no trade.
