@@ -311,11 +311,12 @@ class EngineRunner:
         "0DTE NIFTY":
             "• 448 weekly expiries analysed since 2019\n"
             "• In-sample (1-Jan-2019 → 30-Sep-2024): <b>88%</b> win rate achieved\n"
-            "• Out-of-sample (1-Oct-2024 → Sep-2026): <b>93.3%</b> win rate on 90 expiries (7-Oct-2026 re-test, real 1-minute prices)",
+            "• Out-of-sample (1-Oct-2024 → Oct-2026): <b>91.6%</b> win rate on 83 expiries, held to settle (16-Oct-2026 re-test, real 1-minute prices)\n"
+            "• Since 16-Oct-2026 there is no early profit close: holding to settle made ₹41,525 against ₹30,541 with it",
         "0DTE SENSEX":
-            "• 93 expiries analysed (7-Oct-2026 re-test, real 1-minute prices)\n"
+            "• 91 expiries analysed with the gap-up rule (16-Oct-2026 re-test, real 1-minute prices)\n"
             "• In-sample: CANNOT be captured — SENSEX weekly options only exist from Oct-2024\n"
-            "• Out-of-sample (1-Oct-2024 → Sep-2026): <b>89.2%</b> win rate achieved\n"
+            "• Out-of-sample (1-Oct-2024 → Oct-2026): <b>91.2%</b> win rate achieved (88.3% before the rule)\n"
             "• Gap-up rule (16-Oct-2026): if SENSEX opens 0.25% or more above the previous close, sell the "
             "put spread 0.5% below instead of the call spread; if it pays too little, no trade that day. "
             "Backtest Oct-2024 → Oct-2026: 91.2% win, +₹14,748 over 2 years vs the call every day",

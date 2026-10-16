@@ -607,7 +607,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_status.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         self.zdte_status.setStyleSheet(f"color:{TEXT_DIM}; padding:10px; background-color:{PANEL}; border:2px solid {BORDER};")
         v.addWidget(self.zdte_status)
-        hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% over 2019–Sep 2024 / 90% over Oct 2024–now · +5.9%/MARGIN/TRADE · EVERY TUESDAY 9:16 · "
+        hdr = QLabel("★ NIFTY EXPIRY-DAY CE SPREAD — WIN 88% over 2019–Sep 2024 / 91.6% over Oct 2024–now (held to settle, 16-Oct re-test) · EVERY TUESDAY 9:16 · "
                      "MARGIN ≈ ₹14k/LOT (= MAX LOSS) · FLIP: sells PE in up-momentum weeks, CE otherwise · "
                      "HYBRID ADD (paper 07-31): the OPPOSITE side ~1% OTM is ALSO sold when it pays c/w ≥ 0.08 — "
                      "shared margin · IS 86.5%/+₹1.48L vs FLIP +₹1.04L · OOS 91.5%/+₹0.82L vs +₹0.64L · worst-case identical")
@@ -620,7 +620,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                      "  9:16   SELL the chosen leg ~0.5% OTM · BUY the hedge 200 pts further out (same-day expiry)\n"
                      "  hybrid if the engine ALSO fires the opposite side (~1% OTM, c/w ≥ 0.08), place that spread too — margin is shared\n"
                      "  order  basket, wing (BUY) first, limit at mid · then NOTHING — no stop, no adjusting\n"
-                     "  15:40  settles automatically (or earlier at 95% of max profit) · wins ~9 weeks in 10 · the rare loss can cost the full margin\n"
+                     "  15:40  settles automatically · NO early close since 16-Oct (it cost money) · wins ~9 weeks in 10 · the rare loss can cost the full margin\n"
                      "FLIP edge: 87.1% win / +₹1.92L since 2019 vs 84.7% / +₹1.17L CE-only. Full research: STUDIES tab.")
         how.setWordWrap(True); how.setFont(QFont("Menlo", 11))
         how.setStyleSheet(f"color:{TEXT}; padding:8px; background-color:{PANEL}; border:1px solid {BORDER};")
@@ -630,8 +630,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         self.zdte_table = self._make_log_table(self.SWING_TAB_COLS)
         self.zdte_table.setStyleSheet(f"QTableWidget {{ border: 2px solid {CYAN}; }}")
         v.addWidget(self.zdte_table, 1)
-        v.addWidget(self._section_label("SENSEX EXPIRY-DAY — THURSDAYS · WIN 88.8% over Oct 2024–now · no earlier data (SENSEX option data starts Oct'24) · +7.6%/margin "
-                                        "(89 expiries · 21-month history only · unfiltered)", AMBER))
+        v.addWidget(self._section_label("SENSEX EXPIRY-DAY — THURSDAYS 9:16 · bear call 0.5% above · GAP-UP RULE (16-Oct): opens ≥ 0.25% up → bull put 0.5% below instead, "
+                                        "no trade if it pays too little · held to settle · WIN 91.2% over Oct 2024–Oct 2026 (91 expiries, real 1-min prices)", AMBER))
         self.sdte_status = self._stats_label(); v.addWidget(self.sdte_status)
         self.sdte_stats = self._stats_label(); v.addWidget(self.sdte_stats)
         self.sdte_table = self._make_log_table(self.SWING_TAB_COLS); v.addWidget(self.sdte_table, 1)
@@ -912,6 +912,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {self._forward_record_html()}
 {dim("This tab is a record of RESULTS. The incident write-ups and the NSE session change live on GitHub — studies/STALE_BAR_INCIDENT.md, studies/DEPLOYED_EVIDENCE_AUDIT.md and studies/NSE_SESSION_CHANGE_2026_08_03.md — so they do not crowd the numbers here.")}
 
+<p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">16 OCT — AFTER THE 15-OCT SENSEX LOSS: THREE 0DTE CHANGES, LIVE</p>
+{res("<b>What happened.</b> On 15-Oct SENSEX opened +0.25% and then rallied 1.85% from the open. The bear call 73400/74000 lost its full width, −₹10,524. A move of 1,200+ points against the call happened 3 times in 95 expiries.")}
+{res("<b>1. SENSEX gap-up rule (LIVE).</b> If SENSEX opens 0.25% or more above the previous close, the 09:16 trade is a bull put spread 0.5% below spot instead of the bear call. If it pays too little, there is no trade that day. Backtest Oct-2024 → Oct-2026 on real 1-minute option prices: win rate 88.3% → <b>91.2%</b>, net ₹38,819 → <b>₹53,567</b>, worst day −₹10,628 → −₹9,614. On gap-up mornings the call lost on 6 of 24 days (−₹5,437 net); the put won 18 of 21 (+₹9,311). On 15-Oct it would have sold the 72,700 put, and SENSEX never went below 72,896 after entry.")}
+{res("<b>2. Early profit close switched OFF on both 0DTE books (LIVE).</b> Closing a nearly worthless spread paid a full set of charges for a few rupees. Holding to settle: NIFTY ₹30,541 → <b>₹41,525</b>, SENSEX ₹31,862 → ₹38,819, with the same worst day.")}
+{res("<b>3. Opening recorder (LIVE).</b> From 09:15 to 09:25 on each expiry morning the server saves the bid and ask of every strike within 1.5% of spot, so real opening fills can be measured.")}
+{dim("<b>Tested and rejected:</b> a ₹5,000 loss cap (it cut the worst day to ~−₹6k but lowered net: NIFTY −₹4.9k, SENSEX −₹12k); narrower wings; skipping after a 4-day rally; entering at 09:22, 09:30, 09:45 or 10:00; filters on the 09:15–09:45 range or direction; selling the put side as well (condor); the gap rule on NIFTY (it lost money there, ₹41,525 → ₹28,935). Write-up: studies/SENSEX_RALLY_GUARD.md.")}
+
 <p style="color:{CYAN};font-size:17px;font-weight:bold;margin-top:18px;">9–10 OCT — THE 2% A DAY SEARCH, CLOSED</p>
 {res("<b>No stock or rule makes 2% a day, and nothing new is deployed.</b> The search ran daily, 15-, 5- and 1-minute bars, 2008 to Oct-2026, on the NIFTY 50 and 100 F&amp;O stocks. Stop-free dip buys win 81–83% but net about zero on real futures prices. A falling-OI dip filter looked strong on bhavcopy OI (+0.43% a trade, t=4) but lost 0.57% a trade on the OI visible at 15:20. A model that picks one stock at the open, 450 exit designs, and three published strategies (5-min Stocks-in-Play ORB, NIFTY noise-boundary momentum, first-30-min momentum) all net zero or below after Indian costs. studies/NIFTY_2PCT_SEARCH/README.md")}
 {res("<b>The one always-positive trade is cash-futures arbitrage.</b> Buying the stock and selling its future at a basis of 0.8% or more made 554 trades in 2018–2026, and every one was positive. That is 13% a year to expiry, or about 19% with an early exit, but the gaps became rare in 2025–26, so expect about 6–9% a year now.")}
@@ -956,13 +963,13 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Stock v1</td><td>313</td><td>~14.0</td><td>79.9%</td><td style="color:{GREEN};">+₹3,731</td><td style="color:{RED};">−₹8,838</td><td>79.9% × ₹3,731 − 20.1% × ₹8,838 = <b style="color:{AMBER};">+₹1,201</b></td><td><b>₹16,865</b></td></tr>
 <tr><td>Stock v0 (0.35–0.40)</td><td>155</td><td>~7.0</td><td>81.3%</td><td style="color:{GREEN};">+₹3,696</td><td style="color:{RED};">−₹11,126</td><td>81.3% × ₹3,696 − 18.7% × ₹11,126 = <b style="color:{AMBER};">+₹923</b></td><td><b>₹6,416</b></td></tr>
 <tr style="color:{TEXT_DIM};"><td>Sidewise low credit (0.30–0.40, + 3 cells at 0.25–0.30 from 27-Sep)</td><td>76</td><td>~3.5</td><td>93.4%</td><td style="color:{GREEN};">+₹4,471</td><td style="color:{RED};">−₹10,494</td><td style="color:{GREEN};">+₹12,044</td><td>NOT in TOTAL — cells were picked ON this OOS window, so ₹12k/mo is a selection-inflated ceiling; the in-sample rate ₹3,592/mo is the planning number. Live record decides at 30 fills.</td></tr>
-<tr><td>Intraday NIFTY</td><td>90</td><td>~4</td><td>93.3%</td><td style="color:{GREEN};">+₹809</td><td style="color:{RED};">−₹5,607</td><td>93.3% × ₹809 − 6.7% × ₹5,607 = ₹755 − ₹376 = <b style="color:{GREEN};">+₹381</b></td><td>₹1,450</td></tr>
-<tr><td>Intraday SENSEX</td><td>93</td><td>~4</td><td>89.2%</td><td style="color:{GREEN};">+₹972</td><td style="color:{RED};">−₹4,959</td><td>89.2% × ₹972 − 10.8% × ₹4,959 = ₹867 − ₹536 = <b style="color:{GREEN};">+₹334</b></td><td>₹1,300</td></tr>
-<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>723</b></td><td><b>~32/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹34,169</b></td></tr>
-<tr style="color:{TEXT_DIM};"><td>With vlc at its in-sample planning rate</td><td></td><td>~35/mo</td><td></td><td></td><td></td><td></td><td>~₹37,800</td></tr>
-<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹27,335</b></td></tr>
+<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(hold to settle, 16-Oct)</span></td><td>83</td><td>~3.4</td><td>91.6%</td><td style="color:{GREEN};">+₹1,005</td><td style="color:{RED};">−₹4,978</td><td>91.6% × ₹1,005 − 8.4% × ₹4,978 = ₹921 − ₹418 = <b style="color:{GREEN};">+₹500</b></td><td>₹1,716</td></tr>
+<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(gap-up rule + hold, 16-Oct)</span></td><td>91</td><td>~3.8</td><td>91.2%</td><td style="color:{GREEN};">+₹1,089</td><td style="color:{RED};">−₹4,598</td><td>91.2% × ₹1,089 − 8.8% × ₹4,598 = ₹993 − ₹405 = <b style="color:{GREEN};">+₹589</b></td><td>₹2,214</td></tr>
+<tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td><b>714</b></td><td><b>~31/mo</b></td><td></td><td></td><td></td><td></td><td><b>₹35,349</b></td></tr>
+<tr style="color:{TEXT_DIM};"><td>With vlc at its in-sample planning rate</td><td></td><td>~35/mo</td><td></td><td></td><td></td><td></td><td>~₹38,950</td></tr>
+<tr style="color:{AMBER};font-weight:bold;"><td><b>Plan on 80%</b></td><td></td><td></td><td></td><td></td><td></td><td></td><td><b>₹28,279</b></td></tr>
 </table>
-{dim("<b>Updated 15-Oct-2026 to run 6.</b> The three stock rows are run 6 out-of-sample, with the bull-put sub-floor that has been live since 11-Oct. The 0DTE rows are the 7-Oct-2026 re-test on real 1-minute prices, Oct-2024 to Sep-2026, with the deployed exit and no loss cut. The vlc book was not re-run on run 6, so it stays out of TOTAL. On the complete NSE path to 18-Sep-2026 the stock system reads 78.7% win, +9.0% on margin and ₹27,210 a month. At 0.75× friction it reads +12.8% and ₹36,695 a month.")}
+{dim("<b>Updated 15-Oct-2026 to run 6.</b> The three stock rows are run 6 out-of-sample, with the bull-put sub-floor that has been live since 11-Oct. The 0DTE rows are the 16-Oct-2026 re-test on real 1-minute prices, Oct-2024 to 8-Oct-2026, with the exits live from 16-Oct (hold to settle) and, for SENSEX, the gap-up rule. 15-Oct is not in them yet. The vlc book was not re-run on run 6, so it stays out of TOTAL. On the complete NSE path to 18-Sep-2026 the stock system reads 78.7% win, +9.0% on margin and ₹27,210 a month. At 0.75× friction it reads +12.8% and ₹36,695 a month.")}
 {dim("<b>Credit ÷ width above 0.50 is now inside this table.</b> v2 and v1 have no ceiling. Run 5 kept those trades out because most of them were priced off stale prints. Run 6 removes the stale prints, so they are counted. The median cohort alone (c/w 0.40–0.50, v0 its whole band) is 80.7% win, +9.8% on margin and ₹27,050 a month out-of-sample.")}
 {dim("The numbers above already include everything decided on 24-Aug: the 9 admitted names, the 8 "
      "pruned, and ICICIGI + PIIND. Nothing is separate. The only special handling anywhere: if "
@@ -987,8 +994,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Stock v0 <span style="color:{TEXT_DIM};">(c/w 0.35–0.40, TP-40, no stop)</span></td><td>83.4% · +7.3% on margin · positive in 5 of 6 years · short leg ≥ ₹30 or the bull-put sub-floor <span style="color:{TEXT_DIM};">(283 trades)</span></td><td>81.3% · +6.5% <span style="color:{TEXT_DIM};">(155 trades)</span></td><td><b>~7.0</b></td></tr>
 <tr style="color:{TEXT_DIM};"><td>Sidewise low credit <span style="color:{TEXT_DIM};">(c/w 0.30–0.40 · 12 BC + 9 BP names, side-locked, TP-40, no stop · plus 3 cells at 0.25–0.30 with a ₹30–50 short leg since 27-Sep: ULTRACEMCO BC, HINDUNILVR BP, BAJAJFINSV BP — pooled OOS 16 trades, 100%, +17.5%, confirmed on a clean pass)</span></td><td>90.7% on its 21 cells (n=108) · band pooled 82.4%/+10.0%</td><td>93.4% (n=76) — but the cells were CHOSEN on this window</td><td>~3.5/mo</td></tr>
 <tr style="color:{TEXT_DIM};"><td>T-1 EVE <span style="color:{TEXT_DIM};">(index bear call at the eve close)</span></td><td colspan="2" style="color:{RED};">DEPLOYED AND DISABLED 17-Sep-2026 — refutation audit: the study's own final verdict rejected it; SENSEX expectancy unproven; BNF monthly not the evidence measured</td><td>0</td></tr>
-<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>93.3% on 90 expiries (7-Oct-2026 re-test)</td><td>~4</td></tr>
-<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>89.2% on 93 expiries (7-Oct-2026 re-test)</td><td>~4</td></tr>
+<tr><td>Intraday NIFTY <span style="color:{TEXT_DIM};">(Tuesday expiry)</span></td><td>88% · positive 7 of the 8 years</td><td>91.6% on 83 expiries, held to settle (16-Oct-2026 re-test)</td><td>~3.4</td></tr>
+<tr><td>Intraday SENSEX <span style="color:{TEXT_DIM};">(Thursday expiry)</span></td><td style="color:{TEXT_DIM};">no window exists — SENSEX <b>weekly options only began Oct 2024</b>, so this strategy has no 2019–2024 history to test on</td><td>91.2% on 91 expiries with the gap-up rule (16-Oct-2026 re-test)</td><td>~3.8</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Index swing fade</td><td>worked on these years</td><td style="color:{RED};">FAILED — −1.4% of width</td><td>~2.5</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL</b></td><td></td><td></td><td><b>~32/mo</b> (~35 with vlc)</td></tr>
 </table>
@@ -1169,7 +1176,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 {dim("How much was screened to arrive at each live book, and what a winning and a losing trade actually pay, in rupees at 1 lot. "
      "The three stock rows come from the production harness, run 6 of 11-Oct-2026, which counts traded prices only and includes the bull-put sub-floor. Win rates are IS / OOS, and the rupee columns are "
      "the OUT-OF-SAMPLE window only, each trade at its own current lot size. The raw-signal counts are from the run-5 sweep. <b>NIFTY</b> and "
-     "<b>SENSEX</b> come from the 7-Oct-2026 0DTE re-test. No stock book has a winner larger than its loser, so all three depend on "
+     "<b>SENSEX</b> come from the 16-Oct-2026 0DTE re-test (hold to settle; SENSEX with the gap-up rule). No stock book has a winner larger than its loser, so all three depend on "
      "keeping the win rate near 80%.")}
 <table cellpadding="6" cellspacing="0" style="color:{TEXT};border-collapse:collapse;margin:6px 0;">
 <tr style="color:{CYAN};font-weight:bold;"><td>Book</td><td>Raw signals screened</td><td>Trades analysed</td><td>Win rate</td><td>Avg WIN</td><td>Avg LOSS</td><td>Win : loss size</td></tr>
@@ -1177,8 +1184,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
 <tr><td>Stock v1</td><td>25,978</td><td>624 IS · 313 OOS</td><td>77.4% / 79.9%</td><td>+₹3,731</td><td>−₹8,838</td><td>0.42 : 1</td></tr>
 <tr><td>Stock v0 (0.35–0.40)</td><td>36,873</td><td>283 IS · 155 OOS</td><td>83.4% / 81.3%</td><td>+₹3,696</td><td>−₹11,126</td><td>0.33 : 1</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Sidewise low credit (0.30–0.40, 21 name×side cells, + 3 cells at 0.25–0.30)</td><td>~6,700</td><td>108 IS · 76 OOS</td><td>90.7% / 93.4%</td><td>+₹4,471</td><td>−₹10,494</td><td>0.4 : 1</td></tr>
-<tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448 IS · 90 OOS</td><td>88% / 93.3%</td><td>+₹809</td><td>−₹5,607</td><td>0.14 : 1</td></tr>
-<tr><td>Intraday SENSEX</td><td>93 expiry days</td><td>93</td><td>89.2%</td><td>+₹972</td><td>−₹4,959</td><td>0.2 : 1</td></tr>
+<tr><td>Intraday NIFTY</td><td>448 expiry days</td><td>448 IS · 83 OOS</td><td>88% / 91.6%</td><td>+₹1,005</td><td>−₹4,978</td><td>0.2 : 1</td></tr>
+<tr><td>Intraday SENSEX</td><td>105 expiry days</td><td>91</td><td>91.2%</td><td>+₹1,089</td><td>−₹4,598</td><td>0.24 : 1</td></tr>
 <tr style="color:{TEXT_DIM};"><td>Classic strategies (all rejected)</td><td>227,000 trades · 7 families</td><td>0 kept</td><td>up to 83.6%</td><td colspan="3">every one negative after costs — Connors RSI-2, Larry Williams, Turtle, Supertrend, VWAP reversion, gap plays, NR7. The 83.6% is the illusion demo: a high win rate with negative expectancy.</td></tr>
 <tr style="color:{GREEN};font-weight:bold;"><td><b>TOTAL RESEARCH</b></td><td><b>~287,000 signals/trades</b></td><td><b>~2,500 analysed</b></td><td colspan="4"><b>57 written studies · 113 runnable scripts · 2019 → 2026</b></td></tr>
 </table>
