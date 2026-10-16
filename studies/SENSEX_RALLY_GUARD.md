@@ -145,3 +145,29 @@ User goal: the most net profit; skipping days is acceptable. Pre-registrations p
   - 15-Oct is still missing. Uncapped it lost Rs10,524; the cap would have saved about Rs5k of that.
 - No combination passes the pre-registered test. The only change that raised net was switching off the
   95% early close (part 4, deployed 16-Oct).
+
+## Part 7: switch to a put spread on a gap-up open (ndte39, prereg39.json), 16-Oct-2026
+
+User question: if the market opens up 0.5% or more (or another number), sell a put spread with the short
+1% below instead of the call spread. Live exits (hold to settle, no cap). Real option prices Oct-2024 to 8-Oct-2026.
+
+- **NIFTY: rejected.** NIFTY's call spread did well on gap-up days (+Rs13.7k on 15 days at a 0.25% gap). Every
+  switch loses money (book +28.2k to +40.6k against +41.5k). NIFTY already picks its side from the 5-day move.
+- **SENSEX: promising, but it narrowly fails the pre-registered test.** SENSEX's call spread LOST money on
+  gap-up days (−Rs5.4k on 26 days at 0.25%, −Rs8.0k on 15 days at 0.50%).
+
+| SENSEX rule | Gap days | Book net H1 | H2 | All | Worst |
+|---|---|---|---|---|---|
+| Live (call spread every day) | — | +19,020 | +19,799 | +38,819 | −10,628 |
+| Gap ≥ 0.25% → put 0.5% below | 26 | +36,067 | +17,500 | +53,567 | −9,614 |
+| Gap ≥ 0.25% → put 1.0% below | 26 | +35,281 | +15,993 | +51,274 | −9,614 |
+| Gap ≥ 0.50% → put 0.5% below | 15 | +32,049 | +16,140 | +48,189 | −9,614 |
+| Gap ≥ 0.50% → put 1.0% below | 15 | +32,280 | +19,013 | +51,293 | −9,614 |
+| Gap ≥ 0.75% → put (either) | 6 | about +13,000 | about +21,000 | about +34,500 | −10,628 |
+
+- The H1 pick (gap ≥ 0.25%, put 0.5%) earns less than live in H2 (−Rs2.3k), so it fails. The gap ≥ 0.50%,
+  put 1.0% cell misses H2 by only Rs786 and adds Rs12.5k overall.
+- 15-Oct opened +0.253% (72,965.8 against a 72,781.9 close). Only the 0.25% rule would have switched that
+  day; its put would have expired worthless for a win instead of the −Rs10,524 loss.
+- The mirror (call further away on a gap-down) is worse on both books.
+- Caution: 12 SENSEX cells were read on 15–26 gap days per cell.
