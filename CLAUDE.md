@@ -1,5 +1,8 @@
 # CLAUDE.md — Institutional Trader (project context for Claude Code)
 
+> ⚠️ **READER EDITION FOR READERS OF *THE ALGO TRADING BIBLE*, FROZEN 3-SEP-2026. Read [READER_EDITION.md](READER_EDITION.md) first.** It is built for the Indian market and needs an Indian broker account with Upstox data access. It has known defects, and its backtest figures are too high because they include option prices that never traded. Fixing them is up to you: clone it, use an AI assistant to study and change it, run the backtests and paper-trade before you deploy anything. You use it at your own risk. Not investment advice.
+
+
 Read this first. It is the canonical context for working on this repo. Add task-specific
 instructions on top of it.
 
@@ -240,8 +243,7 @@ data/                     engine.db / signals.db / trade_log.json (gitignored ru
 - **RESULTS → STUDIES → UI → GITHUB (standing rule, user 2026-07-31):** whenever new trading
   results land (a backtest completes, a paper trade resolves into a meaningful sample, a book's
   measured stats change), update the STUDIES tab + README tables in `engine/ui_terminal.py` in the
-  SAME format as the existing cards/tables, restart the viewer, and commit+push BOTH remotes
-  (`origin` = Institutional-Trader public, `private` = Institutional-Trader-private-). Never leave
+  SAME format as the existing cards/tables, restart the viewer, and commit and push. Never leave
   the UI or the repos behind the studies/ files.
 
 - **NSE SESSION, since 3-Aug-2026 (do not re-derive this):** equity **derivatives close 15:40**

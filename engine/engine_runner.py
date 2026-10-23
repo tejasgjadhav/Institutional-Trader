@@ -1452,6 +1452,7 @@ class EngineRunner:
                 logger.error(f"scan cycle failed: {e}", exc_info=True)
 
     def run(self):
+        logger.warning("READER EDITION, frozen 3-Sep-2026: known defects and over-stated backtests. Read READER_EDITION.md. Paper trading and study only.")
         logger.info(f"Engine runner started. DB stats: {store.stats()}")
         # Record any tunable that moved since the last start, before trading anything. Answers
         # "did we change something?" from the record instead of from git archaeology.

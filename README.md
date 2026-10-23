@@ -1,10 +1,15 @@
 # Institutional Trader — multi-strategy paper-trading system · NSE Options
 
+> ⚠️ **READER EDITION FOR READERS OF *THE ALGO TRADING BIBLE*, FROZEN 3-SEP-2026. Read [READER_EDITION.md](READER_EDITION.md) first.** It is built for the Indian market and needs an Indian broker account with Upstox data access. It has known defects, and its backtest figures are too high because they include option prices that never traded. Fixing them is up to you: clone it, use an AI assistant to study and change it, run the backtests and paper-trade before you deploy anything. You use it at your own risk. Not investment advice.
+
+> 📘 **Readers of *The Algo Trading Bible*: start with the [setup guide](READER_SETUP.md).** It covers the Upstox account and the read-only token this system needs.
+
+
 > **Copyright © 2026 Tejas Jadhav · [PolyForm Noncommercial 1.0.0](LICENSE).**
 > Free to use, study, and modify for personal, noncommercial purposes. Commercial use
 > (resale, paid services, paid signals) requires written permission. For education only —
-> not investment advice; no proven live track record. This public repository is the frozen
-> **book edition** of the system; live development continues privately.
+> not investment advice; no proven live track record. This repository is the frozen
+> **book edition** of the system described in *The Algo Trading Bible*.
 
 
 A disciplined **paper-trading** system for NSE (Indian market) options and futures. It runs a

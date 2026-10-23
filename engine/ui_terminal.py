@@ -906,6 +906,8 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
             return f'<p style="color:{CYAN};margin:4px 0;">{t}</p>'
 
         return f"""
+<div style="border:2px solid {RED};padding:8px 10px;margin:6px 0 12px 0;"><p style="color:{RED};font-weight:bold;margin:0 0 4px 0;">⚠️ READER EDITION FOR READERS OF THE ALGO TRADING BIBLE, FROZEN 3-SEP-2026. Read READER_EDITION.md first.</p><p style="color:{TEXT};margin:0;">It is built for the Indian market and needs an Indian broker account with Upstox data access. It has known defects. Its backtest figures are too high because they include option prices that never traded. Only the leg you sell is checked for liquidity. There is no holiday calendar, and the engine misses scans when the computer sleeps. An average loss is about 2.5 times an average win. Fixing these is up to you: study and change the code with an AI assistant, run the backtests and paper-trade before you deploy anything, at your own risk. Not investment advice.</p></div>
+
 <div style="color:{TEXT};">
 {self._forward_record_html()}
 {dim("This tab is a record of RESULTS. The incident write-ups and the NSE session change live on GitHub — studies/STALE_BAR_INCIDENT.md, studies/DEPLOYED_EVIDENCE_AUDIT.md and studies/NSE_SESSION_CHANGE_2026_08_03.md — so they do not crowd the numbers here.")}
@@ -1260,6 +1262,8 @@ Paper forward-test only. For educational use. Not financial advice.
             return f'<p style="color:{TEXT_DIM};margin:3px 0;">{t}</p>'
 
         return f"""
+<div style="border:2px solid {RED};padding:8px 10px;margin:6px 0 12px 0;"><p style="color:{RED};font-weight:bold;margin:0 0 4px 0;">⚠️ READER EDITION FOR READERS OF THE ALGO TRADING BIBLE, FROZEN 3-SEP-2026. Read READER_EDITION.md first.</p><p style="color:{TEXT};margin:0;">It is built for the Indian market and needs an Indian broker account with Upstox data access. It has known defects. Its backtest figures are too high because they include option prices that never traded. Only the leg you sell is checked for liquidity. There is no holiday calendar, and the engine misses scans when the computer sleeps. An average loss is about 2.5 times an average win. Fixing these is up to you: study and change the code with an AI assistant, run the backtests and paper-trade before you deploy anything, at your own risk. Not investment advice.</p></div>
+
 <div style="color:{TEXT};">
 
 <p style="color:{CYAN};font-size:17px;font-weight:bold;">SYSTEM SETUP &amp; APPLICATION MANUAL</p>
