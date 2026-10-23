@@ -299,6 +299,15 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
                     f"QPushButton:hover{{color:{TEXT};}}")
 
     # ── screens ───────────────────────────────────────────────────────────────
+    def _reader_banner(self) -> QLabel:
+        """Reader-edition warning shown at the top of the decision tabs (23-Oct-2026)."""
+        l = QLabel("⚠️ READER EDITION for readers of The Algo Trading Bible, frozen 3-Sep-2026. Paper trading and "
+                   "study only. It has known defects and its backtest win rates are too high. Read READER_EDITION.md "
+                   "before you trust any number here. Not investment advice.")
+        l.setWordWrap(True); l.setFont(QFont("Menlo", 11, QFont.Weight.Bold))
+        l.setStyleSheet(f"color:{RED}; border:2px solid {RED}; padding:6px 8px; margin:4px 0;")
+        return l
+
     def _panel_title(self, text, color=GREEN) -> QLabel:
         l = QLabel(text); l.setFont(QFont("Menlo", 14, QFont.Weight.Bold))
         l.setStyleSheet(f"color:{color}; padding:10px 4px; letter-spacing:1px;")
@@ -354,6 +363,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
     def _screen_pm(self) -> QWidget:
         """PM DECISIONS — every strategy book, each section sized to its content inside a scroll area."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(6)
+        v.addWidget(self._reader_banner())
         v.addWidget(self._panel_title("LATEST PM DECISIONS  -  place manually in Upstox", AMBER))
         self.pm_timings = self._timings_label()
         v.addWidget(self.pm_timings)
@@ -598,6 +608,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """INTRADAY DECISIONS — the 0DTE NIFTY expiry-day CE credit spread (5th strategy).
         One defined-risk trade per weekly expiry day, opened ~9:16, settled the same day 15:40."""
         inner = QWidget(); v = QVBoxLayout(inner); v.setContentsMargins(12, 4, 12, 8); v.setSpacing(4)
+        v.addWidget(self._reader_banner())
         v.addWidget(self._panel_title("INTRADAY DECISIONS  -  NIFTY expiry-day call credit spread", CYAN))
         self.zdte_timings = self._timings_label()
         v.addWidget(self.zdte_timings)

@@ -7,6 +7,75 @@ edition of the system described in the book. The reader edition is frozen at 3 S
 This system is built for the Indian market. It needs an account with an Indian stockbroker called Upstox, and a
 market-data token from that account. It is a paper-trading research system and it never places an order. Nothing here is investment advice.
 
+## Quick start (macOS, about 15 minutes once you have the token)
+
+1. Get an Upstox account and its Analytics token (sections 1 and 2).
+2. Install Python 3.10 or 3.11 from python.org.
+3. Run these three commands in Terminal:
+   ```bash
+   git clone https://github.com/tejasgjadhav/Institutional-Trader.git
+   cd Institutional-Trader
+   ./setup.sh
+   ```
+4. Open `.env` in a text editor and paste your token after `UPSTOX_ANALYTICS_TOKEN=`.
+5. Test one cycle with `.venv/bin/python -m engine.engine_runner --once`, then open the dashboard with
+   `.venv/bin/python main.py`.
+
+On Windows, run `setup.bat` instead of `./setup.sh`, then start `run_engine.bat` and `run_viewer.bat`.
+The full steps are in sections 3 to 5.
+
+## What is in this repository
+
+**Start here**
+- `READER_EDITION.md`: the known defects and the weak results. Read it first.
+- `READER_SETUP.md`: this guide.
+- `README.md`: an overview of the system and its strategy books.
+- `LICENSE`: the PolyForm Noncommercial licence.
+
+**Install and run**
+- `setup.sh` (macOS) and `setup.bat` (Windows): the installers.
+- `requirements.txt`: the Python libraries the installers add.
+- `.env.example`: the template for your settings file, `.env`. It holds the Upstox token and the optional
+  Telegram keys.
+- `main.py`: opens the dashboard.
+- `run_engine.bat`, `run_viewer.bat` and `autostart_windows.bat`: the Windows start scripts.
+- `deploy/`: the macOS launchd job files that `setup.sh` installs.
+
+**The system, in `engine/`**
+- `engine_runner.py`: the engine. It runs the daily schedule and writes every result to `data/`.
+- `ui_terminal.py`: the dashboard. It only reads what the engine wrote.
+- `config.py`: every setting and rule in one place. This is where you change a rule.
+- `data_fetcher.py`, `instruments.py` and `options.py`: read prices and option contracts from Upstox.
+- `stock_credit.py` (v1), `stock_credit_v2.py` (v2), `stock_credit_v0.py` (v0) and `stock_credit_vlc.py`
+  (vlc): the stock credit-spread books.
+- `zero_dte.py` (NIFTY) and `dte_multi.py` (SENSEX): the expiry-day index books.
+- `signal_recheck.py`: the 09:30 morning re-check.
+- `notifications.py`: the Telegram alerts.
+- `forward_record.py`, `trade_log.py`, `paper_resolver.py`, `signal_db.py` and `store.py`: the record
+  keeping.
+- `expired_options.py`: historical option prices for backtests. It needs a paid Upstox plan.
+- `swing_credit.py`, `monthly_fut.py` and `monthly_call.py`: the index swing and monthly books. They are
+  switched off or paper-only in this edition.
+- `agent.py`, `signals.py`, `orb_vwap_live.py`, `portfolio.py`, `events.py` and `options_flow.py`: the first
+  strategy from the book's early chapters. They are kept for the history and switched off.
+
+**Research and records**
+- `studies/`: one write-up per research question, plus the scripts behind them. `studies/README.md` is the
+  index.
+- `studies/ndte/`: the backtest harness (`deployed_backtest.py`) and the offline tests (`test_*.py`).
+- `CLAUDE.md`: the working notes for an AI coding assistant, with the rules, conventions and health checks.
+  Point your assistant at it first.
+- `BACKTEST_RESULTS.md` and `CONFIG_CHANGELOG.md`: the results log and the history of every setting change.
+- `live_tracker.py`: compares paper results with the backtest, as described in the book's trade-log chapter.
+- `How_We_Built_The_Strategy.pdf` and `build_teaching_pdf.py`: a teaching PDF and the script that builds it.
+- `trade_log_120d.csv`: an example paper trade log.
+- `research/`: two short research notes.
+
+**Created when you run it**
+- `.venv/`: the Python environment that the installer creates.
+- `data/`: positions, the trade log and the databases. It starts almost empty.
+- `logs/`: the engine and dashboard logs.
+
 ## 1. Check this first: you need an Indian broker account and a market-data token
 
 **Upstox** is an Indian stockbroker, the Indian equivalent of a US brokerage such as Schwab or Interactive
@@ -41,7 +110,8 @@ one and paste it into `.env` again.
 ## 3. What else you need
 
 - **A computer.** macOS is the tested platform. Windows works through the `.bat` files.
-- **Python 3.9 or newer.** On Windows, tick "Add python.exe to PATH" in the python.org installer.
+- **Python 3.9, 3.10 or 3.11.** Python 3.12 and newer will not install the pinned libraries (numpy 1.24 and
+  pandas 2.0). On Windows, tick "Add python.exe to PATH" in the python.org installer.
 - **Git**, or download this repository as a ZIP from GitHub and unzip it.
 - **Optional: a Telegram bot** for phone alerts (section 6).
 
@@ -56,6 +126,9 @@ cd Institutional-Trader
 `setup.sh` creates the Python environment, installs the libraries and creates `.env` from
 `.env.example`. It also installs two launchd jobs: the engine runs all the time, and the viewer opens at
 09:00 on weekdays.
+
+The library install downloads about 300 MB and takes 5 to 10 minutes. A pip warning that says the scipy
+version is "yanked" is harmless.
 
 ### Windows
 ```bat
@@ -114,6 +187,8 @@ Outside market hours the engine waits. A blank dashboard at night is not a bug.
 
 ## 8. Common problems
 
+- **`pip install` fails on numpy or pandas.** Your Python is 3.12 or newer. Install Python 3.11 and run the
+  installer again.
 - **Nothing changes after you edit `.env` or the code (macOS).** launchd does not reload code by itself.
   Run the restart command in step 3 of section 5.
 - **Two engines.** Run one engine only. Two engines write the same files and send duplicate alerts.
