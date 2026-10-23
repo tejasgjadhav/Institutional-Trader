@@ -219,6 +219,8 @@ Outside market hours the engine waits. A blank dashboard at night is not a bug.
 
 ## 9. Make it yours before you trade
 
+> 🧪 **Backtest disclaimer.** Every backtest in this repository is the author's own research, and it can contain errors. Do your own backtests, check the code, and change the algorithm to suit you before you rely on any of it. Past results, real or simulated, do not predict future returns.
+
 1. Clone the repository and read the code and the studies.
 2. Use an AI coding assistant to fix the known defects and change the rules you want to change.
 3. Re-run the backtests on your own data. Treat every figure as a ceiling.

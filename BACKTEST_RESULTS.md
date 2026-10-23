@@ -1,5 +1,8 @@
 # Backtest Results
 
+> 🧪 **Backtest disclaimer.** Every backtest in this repository is the author's own research, and it can contain errors. Do your own backtests, check the code, and change the algorithm to suit you before you rely on any of it. Past results, real or simulated, do not predict future returns.
+
+
 Honest record of what the strategy actually produced on real Upstox data.
 Updated whenever parameters change.
 

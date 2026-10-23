@@ -13,6 +13,25 @@ The defects below are not fixed in this edition. Fixing them is up to you. Clone
 coding assistant to study and change it, run the backtests again, and paper-trade it before you deploy
 anything. Everything you do with it is at your own risk. The book walks through that same loop.
 
+> 🧪 **Backtest disclaimer.** Every backtest in this repository is the author's own research, and it can contain errors. Do your own backtests, check the code, and change the algorithm to suit you before you rely on any of it. Past results, real or simulated, do not predict future returns.
+
+## The book's numbers, corrected
+
+Appendix A of the book gives the strategy figures as they stood in July 2026. Later tests changed several of
+them. Compare win rates directly. Compare returns with care, because the book quotes some of them as a share of
+the spread's width and the re-runs quote them as a share of the margin.
+
+| Strategy | What the book says (Appendix A) | What later tests found |
+|---|---|---|
+| Stock fade v2 UNION | 84.3% wins in-sample, 87% out-of-sample; +26.2% and +29.5% of width | 61.3% wins in-sample (2019 to Sep-2024) and 81.9% out-of-sample; +5.4% and +22.3% on margin; profitable in 4 of 6 in-sample years (re-run on traded prices only, 11-Oct-2026) |
+| Stock credit v1 | 54% wins, +5.3% of width (718 trades) | 77.4% wins in-sample and 79.9% out-of-sample; +10.7% and +11.1% on margin. These figures use later rules (book profit at 40% of the credit, no stop, Donchian-10 breakouts), so they are not the book's exact v1 |
+| 0DTE BANKNIFTY | 91% wins, +11% a month of margin; "validated" | Rejected in a deeper test (no edge, t = +0.10) and removed on 20-Aug-2026 |
+| 0DTE NIFTY | 87.1% wins | 88% in-sample and 91.6% out-of-sample, held to settlement (16-Oct-2026 re-test) |
+| 0DTE SENSEX | 88.8% wins, +7.6% of margin | 88.3% before a later gap-up rule and 91.2% with it (16-Oct-2026 re-test, Oct-2024 to Oct-2026); this edition does not have the gap-up rule |
+
+The direction of every correction is the same: the earlier figures were higher than the traded prices support.
+Treat every number in this repository and in the book as the author's estimate, and measure it again yourself.
+
 ## Known defects in this edition (fix these yourself)
 
 **Backtests**

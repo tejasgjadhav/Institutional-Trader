@@ -2,7 +2,9 @@
 
 > ⚠️ **READER EDITION FOR READERS OF *THE ALGO TRADING BIBLE*, FROZEN 3-SEP-2026. Read [READER_EDITION.md](READER_EDITION.md) first.** It is built for the Indian market and needs a market-data token from an Indian stockbroker. The token lets the system view and read market data; it cannot place orders. It ships set up for Upstox. To use Zerodha, Groww, Angel One or another broker, ask your AI assistant to configure the data connection. It has known defects, and its backtest figures are too high because they include option prices that never traded. Fixing them is up to you: clone it, use an AI assistant to study and change it, run the backtests and paper-trade before you deploy anything. You use it at your own risk. Not investment advice.
 
-> 📘 **Readers of *The Algo Trading Bible*: start with the [setup guide](READER_SETUP.md).** It covers the Upstox account and the read-only token this system needs.
+> 🧪 **Backtest disclaimer.** The book's figures were corrected later: see [the corrected numbers](READER_EDITION.md#the-books-numbers-corrected). Every backtest in this repository is the author's own research, and it can contain errors. Do your own backtests, check the code, and change the algorithm to suit you before you rely on any of it. Past results, real or simulated, do not predict future returns.
+
+> 📘 **Readers of *The Algo Trading Bible*: start with the [setup guide](READER_SETUP.md).** It covers the Indian broker account and the market-data token this system needs.
 
 
 > **Copyright © 2026 Tejas Jadhav · [PolyForm Noncommercial 1.0.0](LICENSE).**
