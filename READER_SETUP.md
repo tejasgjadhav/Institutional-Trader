@@ -4,18 +4,23 @@ This guide is for readers of *The Algo Trading Bible* by Tejas Jadhav, CFA, FRM.
 edition of the system described in the book. The reader edition is frozen at 3 September 2026. Read
 [READER_EDITION.md](READER_EDITION.md) first, because it lists the known defects and the weak backtest results.
 
-This system is built for the Indian market and needs an Indian broker account with Upstox data access. It is a
-paper-trading research system and it never places an order. Nothing here is investment advice.
+This system is built for the Indian market. It needs an account with an Indian stockbroker called Upstox, and a
+market-data token from that account. It is a paper-trading research system and it never places an order. Nothing here is investment advice.
 
-## 1. Check this first: you need an Indian broker account
+## 1. Check this first: you need an Indian broker account and a market-data token
 
-The engine reads every price from **Upstox**, an Indian stockbroker. It cannot run without an Upstox token.
+**Upstox** is an Indian stockbroker, the Indian equivalent of a US brokerage such as Schwab or Interactive
+Brokers. This system gets every price it uses from Upstox: stock prices, index levels and option quotes.
 
-- **Who can open an Upstox account.** Upstox follows Indian KYC rules. You need a PAN card, an Aadhaar
-  number linked to your mobile, and an Indian bank account. Non-resident Indians should check Upstox's
+It reads those prices through a **token**. A token is a long code that you generate inside your Upstox account
+and paste into a settings file. It lets the system view and read market data on your behalf. It cannot place
+orders or move money. Without a token the system has no prices, so it cannot run.
+
+- **Who can open an Upstox account.** Upstox follows India's identity-check rules (KYC, "know your
+  customer"). You need a PAN card (India's tax ID), an Aadhaar number (India's national ID) linked to your
+  mobile, and an Indian bank account. Non-resident Indians should check Upstox's
   own rules for NRI accounts.
-- **What the engine needs.** It needs a free, read-only **Analytics token**. That token can read market
-  data. It cannot place orders or move money.
+- **Which token.** Upstox calls it the **Analytics token**. It is free and read-only.
 - **What you need to trade yourself.** To place option trades by hand, your Upstox account needs the
   F&O (futures and options) segment switched on. Upstox asks for income proof for that. The engine
   itself does not need it.

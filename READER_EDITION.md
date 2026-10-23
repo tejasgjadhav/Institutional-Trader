@@ -4,8 +4,9 @@ This repository is the reader edition of the system described in *The Algo Tradi
 3 September 2026 (commit `c13fbaa`, 562 commits). It is a paper-trading research system for study. It is not
 investment advice.
 
-It is built for the Indian market (NSE options) and needs an Indian broker account with Upstox data access.
-The setup guide, [READER_SETUP.md](READER_SETUP.md), explains the account and the read-only token.
+It is built for the Indian market (NSE options). It gets every price from Upstox, an Indian stockbroker, through
+a market-data token from your Upstox account. The token lets the system view and read market data; it cannot
+place orders. The setup guide, [READER_SETUP.md](READER_SETUP.md), explains the account and the token.
 
 The defects below are not fixed in this edition. Fixing them is up to you. Clone the repository, use an AI
 coding assistant to study and change it, run the backtests again, and paper-trade it before you deploy
