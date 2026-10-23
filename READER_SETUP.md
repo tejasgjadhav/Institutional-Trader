@@ -4,12 +4,12 @@ This guide is for readers of *The Algo Trading Bible* by Tejas Jadhav, CFA, FRM.
 edition of the system described in the book. The reader edition is frozen at 3 September 2026. Read
 [READER_EDITION.md](READER_EDITION.md) first, because it lists the known defects and the weak backtest results.
 
-This system is built for the Indian market. It needs an account with an Indian stockbroker called Upstox, and a
-market-data token from that account. It is a paper-trading research system and it never places an order. Nothing here is investment advice.
+This system is built for the Indian market. It needs a market-data token from an Indian stockbroker. It is a paper-trading research system and it never places an order. Nothing here is investment advice.
 
 ## Quick start (macOS, about 15 minutes once you have the token)
 
-1. Get an Upstox account and its Analytics token (sections 1 and 2).
+1. Get a market-data token from an Indian broker (sections 1 and 2). Upstox works as shipped. For Zerodha,
+   Groww or another broker, ask your AI assistant to configure the data connection first.
 2. Install Python 3.10 or 3.11 from python.org.
 3. Run these three commands in Terminal:
    ```bash
@@ -17,7 +17,7 @@ market-data token from that account. It is a paper-trading research system and i
    cd Institutional-Trader
    ./setup.sh
    ```
-4. Open `.env` in a text editor and paste your token after `UPSTOX_ANALYTICS_TOKEN=`.
+4. Open `.env` in a text editor and paste your token. For Upstox it goes after `UPSTOX_ANALYTICS_TOKEN=`.
 5. Test one cycle with `.venv/bin/python -m engine.engine_runner --once`, then open the dashboard with
    `.venv/bin/python main.py`.
 
@@ -35,8 +35,8 @@ The full steps are in sections 3 to 5.
 **Install and run**
 - `setup.sh` (macOS) and `setup.bat` (Windows): the installers.
 - `requirements.txt`: the Python libraries the installers add.
-- `.env.example`: the template for your settings file, `.env`. It holds the Upstox token and the optional
-  Telegram keys.
+- `.env.example`: the template for your settings file, `.env`. It holds your broker's market-data token and
+  the optional Telegram keys.
 - `main.py`: opens the dashboard.
 - `run_engine.bat`, `run_viewer.bat` and `autostart_windows.bat`: the Windows start scripts.
 - `deploy/`: the macOS launchd job files that `setup.sh` installs.
@@ -45,7 +45,8 @@ The full steps are in sections 3 to 5.
 - `engine_runner.py`: the engine. It runs the daily schedule and writes every result to `data/`.
 - `ui_terminal.py`: the dashboard. It only reads what the engine wrote.
 - `config.py`: every setting and rule in one place. This is where you change a rule.
-- `data_fetcher.py`, `instruments.py` and `options.py`: read prices and option contracts from Upstox.
+- `data_fetcher.py`, `instruments.py` and `options.py`: read prices and option contracts from the broker
+  (Upstox as shipped). These are the files your AI assistant changes to connect another broker.
 - `stock_credit.py` (v1), `stock_credit_v2.py` (v2), `stock_credit_v0.py` (v0) and `stock_credit_vlc.py`
   (vlc): the stock credit-spread books.
 - `zero_dte.py` (NIFTY) and `dte_multi.py` (SENSEX): the expiry-day index books.
@@ -53,7 +54,7 @@ The full steps are in sections 3 to 5.
 - `notifications.py`: the Telegram alerts.
 - `forward_record.py`, `trade_log.py`, `paper_resolver.py`, `signal_db.py` and `store.py`: the record
   keeping.
-- `expired_options.py`: historical option prices for backtests. It needs a paid Upstox plan.
+- `expired_options.py`: historical option prices for backtests, from a paid Upstox plan.
 - `swing_credit.py`, `monthly_fut.py` and `monthly_call.py`: the index swing and monthly books. They are
   switched off or paper-only in this edition.
 - `agent.py`, `signals.py`, `orb_vwap_live.py`, `portfolio.py`, `events.py` and `options_flow.py`: the first
@@ -76,28 +77,47 @@ The full steps are in sections 3 to 5.
 - `data/`: positions, the trade log and the databases. It starts almost empty.
 - `logs/`: the engine and dashboard logs.
 
-## 1. Check this first: you need an Indian broker account and a market-data token
+## 1. Check this first: you need market data from an Indian broker
 
-**Upstox** is an Indian stockbroker, the Indian equivalent of a US brokerage such as Schwab or Interactive
-Brokers. This system gets every price it uses from Upstox: stock prices, index levels and option quotes.
+The system needs live prices for Indian stocks, indices and options. It reads them from an Indian stockbroker
+through a **market-data token**. A token is a long code that you create inside your broker account and paste
+into a settings file. It lets the system view and read market data on your behalf. The system never needs
+permission to place orders, so give it a read-only token where your broker offers one.
 
-It reads those prices through a **token**. A token is a long code that you generate inside your Upstox account
-and paste into a settings file. It lets the system view and read market data on your behalf. It cannot place
-orders or move money. Without a token the system has no prices, so it cannot run.
+**Choose a broker**
+- **Upstox works as shipped.** Its free, read-only Analytics token is all you need, and no code changes
+  (section 2).
+- **Zerodha (Kite Connect), Groww, Angel One (SmartAPI), Dhan, Fyers, ICICI Direct (Breeze)** and other
+  Indian brokers also offer APIs for market data. The code is written for Upstox, so it will not use them as
+  shipped. Ask your AI coding assistant to configure the data connection for your broker.
+- **Check your broker's own API terms first.** Some brokers charge a monthly fee for market data, and some
+  give historical data only on a paid plan.
+- **Token life differs.** Upstox's Analytics token lasts about a year. Some other tokens expire every day.
+  Zerodha's Kite Connect access token does, so your setup then needs a fresh login each morning.
 
-- **Who can open an Upstox account.** Upstox follows India's identity-check rules (KYC, "know your
+Example of a prompt for your AI assistant:
+
+> This repo reads market data from Upstox in engine/data_fetcher.py, engine/instruments.py and
+> engine/options.py. Change it to read the same data from my Zerodha Kite Connect account instead. Keep every
+> function's inputs and outputs the same, keep the token in .env, and run the offline tests in studies/ndte/.
+
+After the change, run the one-cycle test in section 5 and check that the prices match your broker's app.
+Then paper-trade before you trust it.
+
+**Rules that apply to every Indian broker**
+- **Opening an account.** Every Indian broker follows India's identity-check rules (KYC, "know your
   customer"). You need a PAN card (India's tax ID), an Aadhaar number (India's national ID) linked to your
-  mobile, and an Indian bank account. Non-resident Indians should check Upstox's
-  own rules for NRI accounts.
-- **Which token.** Upstox calls it the **Analytics token**. It is free and read-only.
-- **What you need to trade yourself.** To place option trades by hand, your Upstox account needs the
-  F&O (futures and options) segment switched on. Upstox asks for income proof for that. The engine
-  itself does not need it.
-- **Outside India.** If you cannot open an Upstox account, this code will not get prices. Use the book's
-  US chapters instead: "The US Toolkit" shows the free US data sources and brokers, and the US worked
+  mobile, and an Indian bank account. Non-resident Indians should check their broker's NRI rules.
+- **Trading yourself.** To place option trades by hand, your account needs the F&O (futures and options)
+  segment switched on. Brokers ask for income proof for that. The system itself does not need it.
+- **Outside India.** If you cannot open an Indian broker account, this code will not get prices. Use the
+  book's US chapters instead: "The US Toolkit" shows the free US data sources and brokers, and the US worked
   example runs the same method on American data.
 
-## 2. Get your Upstox Analytics token
+## 2. Get your market-data token (Upstox, as shipped)
+
+If you use another broker, follow its API guide to create a token instead, then let your AI assistant
+configure it (section 1).
 
 1. Open an Upstox account and finish its KYC.
 2. Sign in to the Upstox developer page at `account.upstox.com/developer/apps`.

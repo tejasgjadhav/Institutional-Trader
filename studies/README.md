@@ -1,6 +1,6 @@
 # Studies index
 
-> ⚠️ **READER EDITION FOR READERS OF *THE ALGO TRADING BIBLE*, FROZEN 3-SEP-2026. Read [READER_EDITION.md](../READER_EDITION.md) first.** It is built for the Indian market. It needs an account with Upstox, an Indian stockbroker, and a market-data token from that account. The token lets the system view and read market data; it cannot place orders. It has known defects, and its backtest figures are too high because they include option prices that never traded. Fixing them is up to you: clone it, use an AI assistant to study and change it, run the backtests and paper-trade before you deploy anything. You use it at your own risk. Not investment advice.
+> ⚠️ **READER EDITION FOR READERS OF *THE ALGO TRADING BIBLE*, FROZEN 3-SEP-2026. Read [READER_EDITION.md](../READER_EDITION.md) first.** It is built for the Indian market and needs a market-data token from an Indian stockbroker. The token lets the system view and read market data; it cannot place orders. It ships set up for Upstox. To use Zerodha, Groww, Angel One or another broker, ask your AI assistant to configure the data connection. It has known defects, and its backtest figures are too high because they include option prices that never traded. Fixing them is up to you: clone it, use an AI assistant to study and change it, run the backtests and paper-trade before you deploy anything. You use it at your own risk. Not investment advice.
 
 
 40 research write-ups. Every live tunable in this repo traces to one of them, and several document
