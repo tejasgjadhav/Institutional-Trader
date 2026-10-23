@@ -303,7 +303,7 @@ QScrollBar::handle:vertical {{ background: {BORDER}; border-radius: 4px; }}
         """Reader-edition warning shown at the top of the decision tabs (23-Oct-2026)."""
         l = QLabel("⚠️ READER EDITION for readers of The Algo Trading Bible, frozen 3-Sep-2026. Paper trading and "
                    "study only. It has known defects and its backtest win rates are too high. Read READER_EDITION.md "
-                   "before you trust any number here. The backtests are the author's own and can contain errors, so do your own. Not investment advice.")
+                   "before you trust any number here. The book may have printed older numbers. The backtests are the author's own and can contain errors, so do your own. Not investment advice.")
         l.setWordWrap(True); l.setFont(QFont("Menlo", 11, QFont.Weight.Bold))
         l.setStyleSheet(f"color:{RED}; border:2px solid {RED}; padding:6px 8px; margin:4px 0;")
         return l

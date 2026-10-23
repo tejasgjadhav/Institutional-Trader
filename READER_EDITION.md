@@ -17,8 +17,8 @@ anything. Everything you do with it is at your own risk. The book walks through 
 
 ## The book's numbers, corrected
 
-Appendix A of the book gives the strategy figures as they stood in July 2026. Later tests changed several of
-them. Compare win rates directly. Compare returns with care, because the book quotes some of them as a share of
+The book may have printed older numbers. Appendix A gives the strategy figures as they stood in July 2026, and
+later tests changed several of them. Compare win rates directly. Compare returns with care, because the book quotes some of them as a share of
 the spread's width and the re-runs quote them as a share of the margin.
 
 | Strategy | What the book says (Appendix A) | What later tests found |

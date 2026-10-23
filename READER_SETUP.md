@@ -4,6 +4,8 @@ This guide is for readers of *The Algo Trading Bible* by Tejas Jadhav, CFA, FRM.
 edition of the system described in the book. The reader edition is frozen at 3 September 2026. Read
 [READER_EDITION.md](READER_EDITION.md) first, because it lists the known defects and the weak backtest results.
 
+The book may have printed older numbers. The newer figures are in [READER_EDITION.md](READER_EDITION.md#the-books-numbers-corrected).
+
 This system is built for the Indian market. It needs a market-data token from an Indian stockbroker. It is a paper-trading research system and it never places an order. Nothing here is investment advice.
 
 ## Quick start (macOS, about 15 minutes once you have the token)
